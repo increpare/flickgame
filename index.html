@@ -1,11 +1,1290 @@
-<html>
-<style>
-body {
-	background-color:"blue";
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+<script type="text/javascript" > 
+
+
+  function floodfill (start,target_color,fill_color)
+  {
+    var pixelStack = [start]; //the stack of pixels to check
+
+    while (pixelStack.length > 0) 
+    {
+        var current = pixelStack[pixelStack.length-1]; //check the last pixel of the pixelstack
+        pixelStack.pop(); //delete current from stack
+
+        if (isSameColor(current)) //matches our target color
+        {
+            var mydat = ctx.createImageData(1,1);
+            mydat.data = new Array();
+            mydat.data[0] = hexToRGB(fill_color).r; //red
+            mydat.data[1] = hexToRGB(fill_color).g; //green
+            mydat.data[2] = hexToRGB(fill_color).b; //blue
+            mydat.data[3] = 255;
+            ctx.putImageData(mydat,current.x,current.y);
+
+            pixelStack.push(bit(current.x+1,current.y)); //right
+            pixelStack.push(bit(current.x-1,current.y)); //left
+            pixelStack.push(bit(current.x,current.y+1)); //up
+            pixelStack.push(bit(current.x,current.y-1)); //down
+        }
+    }
+
+    function isSameColor (pixel)
+    {
+        var imgdat = ctx.getImageData(pixel.x,pixel.y,1,1).data;
+        if (imgdat[0]== hexToRGB(target_color).r && imgdat[1]== hexToRGB(target_color).g, imgdat[2]== hexToRGB(target_color).b)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    function hexToRGB (hex)
+    {
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16),
+            rgb: parseInt(result[1], 16) + ", " + parseInt(result[2], 16) + ", " + parseInt(result[3], 16)
+        } : null;
+    }
 }
-</style>
-<head>
-</head>
-<body>
-</body>
+
+
+
+  var gametitle="Amazing 4x4 Game" 
+  var canvasses = new Array();
+  var contexts = new Array();
+  var width=320;
+  var height=200;
+  var zoomFactor=2;
+  var canvasIndex=0;
+  var radius=3;
+
+  var visibleCanvas;
+  var visibleContext;
+
+  var id;
+  var id_d;
+
+  var lastX=-1;
+  var lastY=-1;
+
+  var radiusElem = new Array();
+  var bucketElem;
+    function setRadius(newRadius) {
+      console.log("radius selected "+ newRadius);
+        radius=newRadius;
+        bucketElem.setAttribute("class","radius");
+        for(var i=0;i<16;i++){
+          if (radiusElem[i]!==null){
+            radiusElem[i].setAttribute("class","radius");
+          }
+        }
+        if (newRadius>0){
+          radiusElem[newRadius-1].setAttribute("class","radius selected");
+        } else {
+          bucketElem.setAttribute("class","radius selected");
+        }
+    }
+
+    function init() {
+      console.log("hello world");
+
+      radii = new Array();
+      for (var i=0;i<16;i++){
+        elem = document.getElementById("radius_"+(i+1));        
+        radiusElem[i]=elem;
+      }
+      bucketElem=document.getElementById("bucket");
+
+      for (var i=0;i<16;i++){
+        canvasses[i]=document.createElement("canvas");
+        canvasses[i].width=width;
+        canvasses[i].height=height;
+
+        contexts[i]=canvasses[i].getContext("2d");
+        contexts[i].imageSmoothingEnabled= false;
+        contexts[i].rect(0,0,width,height);
+        contexts[i].fillStyle="black";
+        contexts[i].fill();
+      }
+
+
+      visibleCanvas = document.getElementById("mainCanvas");
+      visibleCanvas.addEventListener('mousedown', mouseDown,false);
+      visibleCanvas.addEventListener('mouseup', mouseUp,false);
+      visibleCanvas.addEventListener('mouseout', mouseUp,false);
+      visibleCanvas.addEventListener('mousemove', mouseMove,false);
+      visibleContext = visibleCanvas.getContext("2d");
+      visibleContext.imageSmoothingEnabled= false;
+      id = visibleContext.createImageData(1,1); // only do this once per page
+      id_d=id.data;
+      setVisuals();
+
+    }
+    window.onload = init;
+
+    function setVisuals(){
+      //visibleContext.drawImage(canvasses[canvasIndex], 0, 0); 
+      visibleContext.drawImage(canvasses[canvasIndex], 0, 0,width*zoomFactor,height*zoomFactor); 
+    }
+
+
+  var drawing=0;
+
+
+  function mouseDown(e){
+    drawing=1;
+    startTargetX=e.offsetX;
+    startTargetY=e.offsetY;
+    mouseMove(e);
+  }
+
+  function mouseUp(e){
+    drawing=0;
+    lastX=-1;
+    lastY=-1;
+  }
+
+  function mouseMove(e){
+    if (drawing===0)
+      return;
+    var x = e.offsetX/2;
+    var y = e.offsetY/2;
+
+    var cr=0;
+    var cg=255;
+    var cb=0;
+
+    var context=contexts[canvasIndex];
+
+    if (radius>0){
+      drawCircle(context,x,y,radius,cr,cg,cb);
+    } else {
+      floodFill(canvasses[canvasIndex], x, y, cr,cg,cb);
+    }
+    /*context.beginPath();
+    context.arc(x, y, radius, 0, 2 * Math.PI, false);
+    context.lineWidth = 0;
+    context.fillStyle = 'green';
+    context.fill();*/
+    setVisuals();
+  }
+
+  function drawCircle(ctx,x,y,radius,r,g,b){
+    id_d[0]   = r;
+    id_d[1]   = g;
+    id_d[2]   = b;
+    id_d[3]   = 255;
+    for (var i=x-radius;i<=x+radius;i++){
+      for (var j=y-radius;j<=y+radius;j++){
+        var dx = i-x;
+        var dy = j-y;
+        if (dx*dx+dy*dy<radius*radius){
+          ctx.putImageData( id, i, j );             
+        }
+      }
+    }  
+  }
+</script>
+
+    <style type="text/css">
+/*<![CDATA[*/
+                 body {
+                 background-color:black;
+                 color: gray;
+                 margin-top: 0;
+                 padding-top: 0;
+                 border-top: 0;
+                 }
+                 ul {
+                 list-style-type: none;
+                 overflow:hidden; overflow-y:scroll;
+                 }
+                 input {
+                 background-color: black;
+                 color:white;
+                 font-size: 200%;
+                 text-align: center;
+                 margin-bottom: 5px;
+                 }
+                 li {
+                 font-size: 150%;
+                 }
+                 img.selected {
+                  border: 2px solid red;
+                 }
+                 li.selected  {
+                 cursor:auto;
+                 color:white;
+                 }
+                 div.selected {
+                 height:16px; 
+                 width:32px;
+                 border: 2px solid red;
+                 }
+                 div.unselected {
+                 height:16px; 
+                 width:32px;
+                 }
+                 img.radius {
+                  border: 1px solid black;
+                 }
+                 img.selected {
+                  border: 1px solid red; 
+                 }
+                 select {
+                 width:100%;
+                 -webkit-appearance: none;
+                 -moz-appearance: none;
+                 }
+                 select::-ms-expand {
+                 display: none;
+                 }
+    /*]]>*/
+    </style>
+    <title>
+      4x4
+    </title>
+  </head>
+  <body onload="init();">
+    <table cellpadding="10px">
+      <tr>
+        <td>
+          <ul>
+            <li>
+              <a href="poop">1</a>
+            </li>
+            <li>
+              <a href="poop">2</a>
+            </li>
+            <li>
+              <a href="poop">3</a>
+            </li>
+            <li class="selected">4
+            </li>
+            <li>
+              <a href="poop">5</a>
+            </li>
+            <li>
+              <a href="poop">6</a>
+            </li>
+            <li>
+              <a href="poop">7</a>
+            </li>
+            <li>
+              <a href="poop">8</a>
+            </li>
+            <li>
+              <a href="poop">9</a>
+            </li>
+            <li>
+              <a href="poop">10</a>
+            </li>
+            <li>
+              <a href="poop">11</a>
+            </li>
+            <li>
+              <a href="poop">12</a>
+            </li>
+            <li>
+              <a href="poop">13</a>
+            </li>
+            <li>
+              <a href="poop">14</a>
+            </li>
+            <li>
+              <a href="poop">15</a>
+            </li>
+            <li>
+              <a href="poop">16</a>
+            </li>
+          </ul>
+        </td>
+        <td valign="top">
+          <table>
+            <tr>
+              <td>
+                <table>
+                  <tr>
+                    <td>
+                      <center>
+                        <input width="640px" value="game title" />
+                        <br/>
+                        <canvas id="mainCanvas" width="640px" height="400px" style="border:2px solid gray; background-color:black;"></canvas>
+                        <br />
+                        <table border="1px" padding="0px" margin=
+                        "0px">
+                          <tr height="16px">
+                            <td>
+                              <div style=
+                              "background-color:#000000;" class=
+                              "unselected"></div>
+                            </td>
+                            <td>
+                              <div style=
+                              "background-color:#9D9D9D;" class=
+                              "unselected"></div>
+                            </td>
+                            <td>
+                              <div style=
+                              "background-color:#FFFFFF;" class=
+                              "selected"></div>
+                            </td>
+                            <td>
+                              <div style=
+                              "background-color:#BE2633;" class=
+                              "unselected"></div>
+                            </td>
+                            <td>
+                              <div style=
+                              "background-color:#E06F8B;" class=
+                              "unselected"></div>
+                            </td>
+                            <td>
+                              <div style=
+                              "background-color:#493C2B;" class=
+                              "unselected"></div>
+                            </td>
+                            <td>
+                              <div style=
+                              "background-color:#A46422;" class=
+                              "unselected"></div>
+                            </td>
+                            <td>
+                              <div style=
+                              "background-color:#EB8931;" class=
+                              "unselected"></div>
+                            </td>
+                            <td>
+                              <div style=
+                              "background-color:#F7E26B;" class=
+                              "unselected"></div>
+                            </td>
+                            <td>
+                              <div style=
+                              "background-color:#2F484E;" class=
+                              "unselected"></div>
+                            </td>
+                            <td>
+                              <div style=
+                              "background-color:#44891A;" class=
+                              "unselected"></div>
+                            </td>
+                            <td>
+                              <div style=
+                              "background-color:#A3CE27;" class=
+                              "unselected"></div>
+                            </td>
+                            <td>
+                              <div style=
+                              "background-color:#1B2632;" class=
+                              "unselected"></div>
+                            </td>
+                            <td>
+                              <div style=
+                              "background-color:#005784;" class=
+                              "unselected"></div>
+                            </td>
+                            <td>
+                              <div style=
+                              "background-color:#31A2F2;" class=
+                              "unselected"></div>
+                            </td>
+                            <td>
+                              <div style=
+                              "background-color:#B2DCEF;" class=
+                              "unselected"></div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>
+                              <select name="col1">
+<option value="col1-0"></option>
+                                <option value="col1-1">
+                                  1
+                                </option>
+                                <option value="col1-1">
+                                  2
+                                </option>
+                                <option value="col1-1">
+                                  3
+                                </option>
+                                <option value="col1-1">
+                                  4
+                                </option>
+                                <option value="col1-1">
+                                  5
+                                </option>
+                                <option value="col1-1">
+                                  6
+                                </option>
+                                <option value="col1-1">
+                                  7
+                                </option>
+                                <option value="col1-1">
+                                  8
+                                </option>
+                                <option value="col1-1">
+                                  9
+                                </option>
+                                <option value="col1-1">
+                                  10
+                                </option>
+                                <option value="col1-1">
+                                  11
+                                </option>
+                                <option value="col1-1">
+                                  12
+                                </option>
+                                <option value="col1-1">
+                                  13
+                                </option>
+                                <option value="col1-1">
+                                  14
+                                </option>
+                                <option value="col1-1">
+                                  15
+                                </option>
+                                <option value="col1-1">
+                                  16
+                                </option>
+                              </select>
+                            </td>
+                            <td>
+                              <select name="col1">
+<option value="col1-0"></option>
+                                <option value="col1-1">
+                                  1
+                                </option>
+                                <option value="col1-1">
+                                  2
+                                </option>
+                                <option value="col1-1">
+                                  3
+                                </option>
+                                <option value="col1-1">
+                                  4
+                                </option>
+                                <option value="col1-1">
+                                  5
+                                </option>
+                                <option value="col1-1">
+                                  6
+                                </option>
+                                <option value="col1-1">
+                                  7
+                                </option>
+                                <option value="col1-1">
+                                  8
+                                </option>
+                                <option value="col1-1">
+                                  9
+                                </option>
+                                <option value="col1-1">
+                                  10
+                                </option>
+                                <option value="col1-1">
+                                  11
+                                </option>
+                                <option value="col1-1">
+                                  12
+                                </option>
+                                <option value="col1-1">
+                                  13
+                                </option>
+                                <option value="col1-1">
+                                  14
+                                </option>
+                                <option value="col1-1">
+                                  15
+                                </option>
+                                <option value="col1-1">
+                                  16
+                                </option>
+                              </select>
+                            </td>
+                            <td>
+                              <select name="col1">
+<option value="col1-0"></option>
+                                <option value="col1-1">
+                                  1
+                                </option>
+                                <option value="col1-1">
+                                  2
+                                </option>
+                                <option value="col1-1">
+                                  3
+                                </option>
+                                <option value="col1-1">
+                                  4
+                                </option>
+                                <option value="col1-1">
+                                  5
+                                </option>
+                                <option value="col1-1">
+                                  6
+                                </option>
+                                <option value="col1-1">
+                                  7
+                                </option>
+                                <option value="col1-1">
+                                  8
+                                </option>
+                                <option value="col1-1">
+                                  9
+                                </option>
+                                <option value="col1-1">
+                                  10
+                                </option>
+                                <option value="col1-1">
+                                  11
+                                </option>
+                                <option value="col1-1">
+                                  12
+                                </option>
+                                <option value="col1-1">
+                                  13
+                                </option>
+                                <option value="col1-1">
+                                  14
+                                </option>
+                                <option value="col1-1">
+                                  15
+                                </option>
+                                <option value="col1-1">
+                                  16
+                                </option>
+                              </select>
+                            </td>
+                            <td>
+                              <select name="col1">
+<option value="col1-0"></option>
+                                <option value="col1-1">
+                                  1
+                                </option>
+                                <option value="col1-1">
+                                  2
+                                </option>
+                                <option value="col1-1">
+                                  3
+                                </option>
+                                <option value="col1-1">
+                                  4
+                                </option>
+                                <option value="col1-1">
+                                  5
+                                </option>
+                                <option value="col1-1">
+                                  6
+                                </option>
+                                <option value="col1-1">
+                                  7
+                                </option>
+                                <option value="col1-1">
+                                  8
+                                </option>
+                                <option value="col1-1">
+                                  9
+                                </option>
+                                <option value="col1-1">
+                                  10
+                                </option>
+                                <option value="col1-1">
+                                  11
+                                </option>
+                                <option value="col1-1">
+                                  12
+                                </option>
+                                <option value="col1-1">
+                                  13
+                                </option>
+                                <option value="col1-1">
+                                  14
+                                </option>
+                                <option value="col1-1">
+                                  15
+                                </option>
+                                <option value="col1-1">
+                                  16
+                                </option>
+                              </select>
+                            </td>
+                            <td>
+                              <select name="col1">
+<option value="col1-0"></option>
+                                <option value="col1-1">
+                                  1
+                                </option>
+                                <option value="col1-1">
+                                  2
+                                </option>
+                                <option value="col1-1">
+                                  3
+                                </option>
+                                <option value="col1-1">
+                                  4
+                                </option>
+                                <option value="col1-1">
+                                  5
+                                </option>
+                                <option value="col1-1">
+                                  6
+                                </option>
+                                <option value="col1-1">
+                                  7
+                                </option>
+                                <option value="col1-1">
+                                  8
+                                </option>
+                                <option value="col1-1">
+                                  9
+                                </option>
+                                <option value="col1-1">
+                                  10
+                                </option>
+                                <option value="col1-1">
+                                  11
+                                </option>
+                                <option value="col1-1">
+                                  12
+                                </option>
+                                <option value="col1-1">
+                                  13
+                                </option>
+                                <option value="col1-1">
+                                  14
+                                </option>
+                                <option value="col1-1">
+                                  15
+                                </option>
+                                <option value="col1-1">
+                                  16
+                                </option>
+                              </select>
+                            </td>
+                            <td>
+                              <select name="col1">
+<option value="col1-0"></option>
+                                <option value="col1-1">
+                                  1
+                                </option>
+                                <option value="col1-1">
+                                  2
+                                </option>
+                                <option value="col1-1">
+                                  3
+                                </option>
+                                <option value="col1-1">
+                                  4
+                                </option>
+                                <option value="col1-1">
+                                  5
+                                </option>
+                                <option value="col1-1">
+                                  6
+                                </option>
+                                <option value="col1-1">
+                                  7
+                                </option>
+                                <option value="col1-1">
+                                  8
+                                </option>
+                                <option value="col1-1">
+                                  9
+                                </option>
+                                <option value="col1-1">
+                                  10
+                                </option>
+                                <option value="col1-1">
+                                  11
+                                </option>
+                                <option value="col1-1">
+                                  12
+                                </option>
+                                <option value="col1-1">
+                                  13
+                                </option>
+                                <option value="col1-1">
+                                  14
+                                </option>
+                                <option value="col1-1">
+                                  15
+                                </option>
+                                <option value="col1-1">
+                                  16
+                                </option>
+                              </select>
+                            </td>
+                            <td>
+                              <select name="col1">
+<option value="col1-0"></option>
+                                <option value="col1-1">
+                                  1
+                                </option>
+                                <option value="col1-1">
+                                  2
+                                </option>
+                                <option value="col1-1">
+                                  3
+                                </option>
+                                <option value="col1-1">
+                                  4
+                                </option>
+                                <option value="col1-1">
+                                  5
+                                </option>
+                                <option value="col1-1">
+                                  6
+                                </option>
+                                <option value="col1-1">
+                                  7
+                                </option>
+                                <option value="col1-1">
+                                  8
+                                </option>
+                                <option value="col1-1">
+                                  9
+                                </option>
+                                <option value="col1-1">
+                                  10
+                                </option>
+                                <option value="col1-1">
+                                  11
+                                </option>
+                                <option value="col1-1">
+                                  12
+                                </option>
+                                <option value="col1-1">
+                                  13
+                                </option>
+                                <option value="col1-1">
+                                  14
+                                </option>
+                                <option value="col1-1">
+                                  15
+                                </option>
+                                <option value="col1-1">
+                                  16
+                                </option>
+                              </select>
+                            </td>
+                            <td>
+                              <select name="col1">
+<option value="col1-0"></option>
+                                <option value="col1-1">
+                                  1
+                                </option>
+                                <option value="col1-1">
+                                  2
+                                </option>
+                                <option value="col1-1">
+                                  3
+                                </option>
+                                <option value="col1-1">
+                                  4
+                                </option>
+                                <option value="col1-1">
+                                  5
+                                </option>
+                                <option value="col1-1">
+                                  6
+                                </option>
+                                <option value="col1-1">
+                                  7
+                                </option>
+                                <option value="col1-1">
+                                  8
+                                </option>
+                                <option value="col1-1">
+                                  9
+                                </option>
+                                <option value="col1-1">
+                                  10
+                                </option>
+                                <option value="col1-1">
+                                  11
+                                </option>
+                                <option value="col1-1">
+                                  12
+                                </option>
+                                <option value="col1-1">
+                                  13
+                                </option>
+                                <option value="col1-1">
+                                  14
+                                </option>
+                                <option value="col1-1">
+                                  15
+                                </option>
+                                <option value="col1-1">
+                                  16
+                                </option>
+                              </select>
+                            </td>
+                            <td>
+                              <select name="col1">
+<option value="col1-0"></option>
+                                <option value="col1-1">
+                                  1
+                                </option>
+                                <option value="col1-1">
+                                  2
+                                </option>
+                                <option value="col1-1">
+                                  3
+                                </option>
+                                <option value="col1-1">
+                                  4
+                                </option>
+                                <option value="col1-1">
+                                  5
+                                </option>
+                                <option value="col1-1">
+                                  6
+                                </option>
+                                <option value="col1-1">
+                                  7
+                                </option>
+                                <option value="col1-1">
+                                  8
+                                </option>
+                                <option value="col1-1">
+                                  9
+                                </option>
+                                <option value="col1-1">
+                                  10
+                                </option>
+                                <option value="col1-1">
+                                  11
+                                </option>
+                                <option value="col1-1">
+                                  12
+                                </option>
+                                <option value="col1-1">
+                                  13
+                                </option>
+                                <option value="col1-1">
+                                  14
+                                </option>
+                                <option value="col1-1">
+                                  15
+                                </option>
+                                <option value="col1-1">
+                                  16
+                                </option>
+                              </select>
+                            </td>
+                            <td>
+                              <select name="col1">
+<option value="col1-0"></option>
+                                <option value="col1-1">
+                                  1
+                                </option>
+                                <option value="col1-1">
+                                  2
+                                </option>
+                                <option value="col1-1">
+                                  3
+                                </option>
+                                <option value="col1-1">
+                                  4
+                                </option>
+                                <option value="col1-1">
+                                  5
+                                </option>
+                                <option value="col1-1">
+                                  6
+                                </option>
+                                <option value="col1-1">
+                                  7
+                                </option>
+                                <option value="col1-1">
+                                  8
+                                </option>
+                                <option value="col1-1">
+                                  9
+                                </option>
+                                <option value="col1-1">
+                                  10
+                                </option>
+                                <option value="col1-1">
+                                  11
+                                </option>
+                                <option value="col1-1">
+                                  12
+                                </option>
+                                <option value="col1-1">
+                                  13
+                                </option>
+                                <option value="col1-1">
+                                  14
+                                </option>
+                                <option value="col1-1">
+                                  15
+                                </option>
+                                <option value="col1-1">
+                                  16
+                                </option>
+                              </select>
+                            </td>
+                            <td>
+                              <select name="col1">
+<option value="col1-0"></option>
+                                <option value="col1-1">
+                                  1
+                                </option>
+                                <option value="col1-1">
+                                  2
+                                </option>
+                                <option value="col1-1">
+                                  3
+                                </option>
+                                <option value="col1-1">
+                                  4
+                                </option>
+                                <option value="col1-1">
+                                  5
+                                </option>
+                                <option value="col1-1">
+                                  6
+                                </option>
+                                <option value="col1-1">
+                                  7
+                                </option>
+                                <option value="col1-1">
+                                  8
+                                </option>
+                                <option value="col1-1">
+                                  9
+                                </option>
+                                <option value="col1-1">
+                                  10
+                                </option>
+                                <option value="col1-1">
+                                  11
+                                </option>
+                                <option value="col1-1">
+                                  12
+                                </option>
+                                <option value="col1-1">
+                                  13
+                                </option>
+                                <option value="col1-1">
+                                  14
+                                </option>
+                                <option value="col1-1">
+                                  15
+                                </option>
+                                <option value="col1-1">
+                                  16
+                                </option>
+                              </select>
+                            </td>
+                            <td>
+                              <select name="col1">
+<option value="col1-0"></option>
+                                <option value="col1-1">
+                                  1
+                                </option>
+                                <option value="col1-1">
+                                  2
+                                </option>
+                                <option value="col1-1">
+                                  3
+                                </option>
+                                <option value="col1-1">
+                                  4
+                                </option>
+                                <option value="col1-1">
+                                  5
+                                </option>
+                                <option value="col1-1">
+                                  6
+                                </option>
+                                <option value="col1-1">
+                                  7
+                                </option>
+                                <option value="col1-1">
+                                  8
+                                </option>
+                                <option value="col1-1">
+                                  9
+                                </option>
+                                <option value="col1-1">
+                                  10
+                                </option>
+                                <option value="col1-1">
+                                  11
+                                </option>
+                                <option value="col1-1">
+                                  12
+                                </option>
+                                <option value="col1-1">
+                                  13
+                                </option>
+                                <option value="col1-1">
+                                  14
+                                </option>
+                                <option value="col1-1">
+                                  15
+                                </option>
+                                <option value="col1-1">
+                                  16
+                                </option>
+                              </select>
+                            </td>
+                            <td>
+                              <select name="col1">
+<option value="col1-0"></option>
+                                <option value="col1-1">
+                                  1
+                                </option>
+                                <option value="col1-1">
+                                  2
+                                </option>
+                                <option value="col1-1">
+                                  3
+                                </option>
+                                <option value="col1-1">
+                                  4
+                                </option>
+                                <option value="col1-1">
+                                  5
+                                </option>
+                                <option value="col1-1">
+                                  6
+                                </option>
+                                <option value="col1-1">
+                                  7
+                                </option>
+                                <option value="col1-1">
+                                  8
+                                </option>
+                                <option value="col1-1">
+                                  9
+                                </option>
+                                <option value="col1-1">
+                                  10
+                                </option>
+                                <option value="col1-1">
+                                  11
+                                </option>
+                                <option value="col1-1">
+                                  12
+                                </option>
+                                <option value="col1-1">
+                                  13
+                                </option>
+                                <option value="col1-1">
+                                  14
+                                </option>
+                                <option value="col1-1">
+                                  15
+                                </option>
+                                <option value="col1-1">
+                                  16
+                                </option>
+                              </select>
+                            </td>
+                            <td>
+                              <select name="col1">
+<option value="col1-0"></option>
+                                <option value="col1-1">
+                                  1
+                                </option>
+                                <option value="col1-1">
+                                  2
+                                </option>
+                                <option value="col1-1">
+                                  3
+                                </option>
+                                <option value="col1-1">
+                                  4
+                                </option>
+                                <option value="col1-1">
+                                  5
+                                </option>
+                                <option value="col1-1">
+                                  6
+                                </option>
+                                <option value="col1-1">
+                                  7
+                                </option>
+                                <option value="col1-1">
+                                  8
+                                </option>
+                                <option value="col1-1">
+                                  9
+                                </option>
+                                <option value="col1-1">
+                                  10
+                                </option>
+                                <option value="col1-1">
+                                  11
+                                </option>
+                                <option value="col1-1">
+                                  12
+                                </option>
+                                <option value="col1-1">
+                                  13
+                                </option>
+                                <option value="col1-1">
+                                  14
+                                </option>
+                                <option value="col1-1">
+                                  15
+                                </option>
+                                <option value="col1-1">
+                                  16
+                                </option>
+                              </select>
+                            </td>
+                            <td>
+                              <select name="col1">
+<option value="col1-0"></option>
+                                <option value="col1-1">
+                                  1
+                                </option>
+                                <option value="col1-1">
+                                  2
+                                </option>
+                                <option value="col1-1">
+                                  3
+                                </option>
+                                <option value="col1-1">
+                                  4
+                                </option>
+                                <option value="col1-1">
+                                  5
+                                </option>
+                                <option value="col1-1">
+                                  6
+                                </option>
+                                <option value="col1-1">
+                                  7
+                                </option>
+                                <option value="col1-1">
+                                  8
+                                </option>
+                                <option value="col1-1">
+                                  9
+                                </option>
+                                <option value="col1-1">
+                                  10
+                                </option>
+                                <option value="col1-1">
+                                  11
+                                </option>
+                                <option value="col1-1">
+                                  12
+                                </option>
+                                <option value="col1-1">
+                                  13
+                                </option>
+                                <option value="col1-1">
+                                  14
+                                </option>
+                                <option value="col1-1">
+                                  15
+                                </option>
+                                <option value="col1-1">
+                                  16
+                                </option>
+                              </select>
+                            </td>
+                            <td>
+                              <select name="col1">
+<option value="col1-0"></option>
+                                <option value="col1-1">
+                                  1
+                                </option>
+                                <option value="col1-1">
+                                  2
+                                </option>
+                                <option value="col1-1">
+                                  3
+                                </option>
+                                <option value="col1-1">
+                                  4
+                                </option>
+                                <option value="col1-1">
+                                  5
+                                </option>
+                                <option value="col1-1">
+                                  6
+                                </option>
+                                <option value="col1-1">
+                                  7
+                                </option>
+                                <option value="col1-1">
+                                  8
+                                </option>
+                                <option value="col1-1">
+                                  9
+                                </option>
+                                <option value="col1-1">
+                                  10
+                                </option>
+                                <option value="col1-1">
+                                  11
+                                </option>
+                                <option value="col1-1">
+                                  12
+                                </option>
+                                <option value="col1-1">
+                                  13
+                                </option>
+                                <option value="col1-1">
+                                  14
+                                </option>
+                                <option value="col1-1">
+                                  15
+                                </option>
+                                <option value="col1-1">
+                                  16
+                                </option>
+                              </select>
+                            </td>
+                          </tr>
+                        </table>
+                      </center>
+                    </td>
+                    <td valign="top">
+                      <a href="blah">share</a><br />
+                      <a href="blah">export</a><br />
+                      <br />
+                      <br />
+                      <a href="#" onclick="setRadius(16);return false;"><img src="16.png" class="radius" id="radius_16" /></a>
+                      <br />
+                      <a href="#" onclick="setRadius(13);return false;"><img src="13.png" class="radius" id="radius_13" /></a>
+                      <br />
+                      <a href="#" onclick="setRadius(11);return false;"><img src="11.png" class="radius" id="radius_11" /></a>
+                      <br />
+                      <a href="#" onclick="setRadius(9);return false;"><img src="9.png" class="radius" id="radius_9" /></a>
+                      <br />
+                      <a href="#" onclick="setRadius(7);return false;"><img src="7.png" class="radius" id="radius_7" /></a>
+                      <br />
+                      <a href="#" onclick="setRadius(5);return false;"><img src="5.png" class="radius selected" id="radius_5" /></a>
+                      <br />
+                      <a href="#" onclick="setRadius(3);return false;"><img src="3.png" class="radius" id="radius_3" /></a>
+                      <br />
+                      <a href="#" onclick="setRadius(1);return false;"><img src="1.png" class="radius" id="radius_1" /></a>
+                      <br />
+                      <a href="#" onclick="setRadius(0);return false;"><img src="bucket.png" class="radius" id="bucket"/></a>
+                    </td>
+                  </tr>
+                </table>
+                <br />
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
 </html>
