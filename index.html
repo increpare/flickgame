@@ -400,12 +400,27 @@ function press(evt){
   var drawing=0;
 
 
+  function getCoords(e) {
+    var x,y; 
+    if(e.offsetX) {
+        x = e.offsetX;
+        y = e.offsetY;
+    }
+    else if(e.layerX) {
+        x = e.layerX;
+        y = e.layerY;
+    }
+
+    return [x,y];
+  }
+
   function mouseDown(e){
     drawing=1;
-    startTargetX=e.offsetX;
-    startTargetY=e.offsetY;
-    lastX=Math.floor(-1+e.offsetX/zoomFactor);
-    lastY=Math.floor(-1+e.offsetY/zoomFactor);
+    var coords = getCoords(e);
+    startTargetX=coords[x];
+    startTargetY=coords[y];
+    lastX=Math.floor(-1+e.startTargetX/zoomFactor);
+    lastY=Math.floor(-1+e.startTargetY/zoomFactor);
     mouseMove(e);
     if(radius===0){
       drawing=0;
@@ -457,8 +472,11 @@ function press(evt){
   function mouseMove(e){
     if (drawing===0)
       return;
-    var x = Math.floor(-1+e.offsetX/zoomFactor);
-    var y = Math.floor(-1+e.offsetY/zoomFactor);
+
+    var coords = getCoords(e);
+
+    var x = Math.floor(-1+coords[0]/zoomFactor);
+    var y = Math.floor(-1+coords[1]/zoomFactor);
 
 
     var canvas=canvasses[canvasIndex];
@@ -487,8 +505,10 @@ function press(evt){
     context.fillStyle = 'green';
     context.fill();*/
     setVisuals();
-    lastX=Math.floor(-1+e.offsetX/zoomFactor);
-    lastY=Math.floor(-1+e.offsetY/zoomFactor);
+
+    var coords = getCoords(e);
+    lastX=Math.floor(-1+coords[0]/zoomFactor);
+    lastY=Math.floor(-1+coords[1]/zoomFactor);
   }
 
   function drawCircle(canvas,x,y,radius,colorIndex){  
@@ -553,7 +573,9 @@ body {
                   background-color:black;
                   color:white;
                  }
-
+                canvas {
+                  position:relative;
+                }
                  body {
                  background-color:black;
                  color: gray;
