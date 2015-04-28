@@ -1,68 +1,34 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
 <script type="text/javascript" > 
-
-
-  function floodfill (start,target_color,fill_color)
-  {
-    var pixelStack = [start]; //the stack of pixels to check
-
-    while (pixelStack.length > 0) 
-    {
-        var current = pixelStack[pixelStack.length-1]; //check the last pixel of the pixelstack
-        pixelStack.pop(); //delete current from stack
-
-        if (isSameColor(current)) //matches our target color
-        {
-            var mydat = ctx.createImageData(1,1);
-            mydat.data = new Array();
-            mydat.data[0] = hexToRGB(fill_color).r; //red
-            mydat.data[1] = hexToRGB(fill_color).g; //green
-            mydat.data[2] = hexToRGB(fill_color).b; //blue
-            mydat.data[3] = 255;
-            ctx.putImageData(mydat,current.x,current.y);
-
-            pixelStack.push(bit(current.x+1,current.y)); //right
-            pixelStack.push(bit(current.x-1,current.y)); //left
-            pixelStack.push(bit(current.x,current.y+1)); //up
-            pixelStack.push(bit(current.x,current.y-1)); //down
-        }
-    }
-
-    function isSameColor (pixel)
-    {
-        var imgdat = ctx.getImageData(pixel.x,pixel.y,1,1).data;
-        if (imgdat[0]== hexToRGB(target_color).r && imgdat[1]== hexToRGB(target_color).g, imgdat[2]== hexToRGB(target_color).b)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    function hexToRGB (hex)
-    {
-        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        return result ? {
-            r: parseInt(result[1], 16),
-            g: parseInt(result[2], 16),
-            b: parseInt(result[3], 16),
-            rgb: parseInt(result[1], 16) + ", " + parseInt(result[2], 16) + ", " + parseInt(result[3], 16)
-        } : null;
-    }
-}
-
-
-
   var gametitle="Amazing 4x4 Game" 
-  var canvasses = new Array();
   var contexts = new Array();
-  var width=320;
-  var height=200;
-  var zoomFactor=2;
+  var canvasses = new Array();
+
+  var colorPalette = [
+            "#000000",
+            "#9D9D9D",
+            "#FFFFFF",
+            "#BE2633",
+            "#E06F8B",
+            "#493C2B",
+            "#A46422",
+            "#EB8931",
+            "#F7E26B",
+            "#2F484E",
+            "#44891A",
+            "#A3CE27",
+            "#1B2632",
+            "#005784",
+            "#31A2F2",
+            "#B2DCEF"
+            ];
+  var colorIndex=2;
+  var width=160;
+  var height=100;
+  var zoomFactor=4;
   var canvasIndex=0;
-  var radius=3;
+  var radius=5;
 
   var visibleCanvas;
   var visibleContext;
@@ -91,7 +57,20 @@
         }
     }
 
+  var colorElem = new Array();
+    function setColor(newColorIndex) {
+      console.log("color selected "+ newColorIndex);
+      colorIndex=newColorIndex;
+        for(var i=0;i<16;i++){
+          if (colorElem[i]!==null){
+            colorElem[i].setAttribute("class","unselected");
+          }
+        }
+        colorElem[colorIndex].setAttribute("class","selected");
+    }
+
     function init() {
+
       console.log("hello world");
 
       radii = new Array();
@@ -99,18 +78,19 @@
         elem = document.getElementById("radius_"+(i+1));        
         radiusElem[i]=elem;
       }
-      bucketElem=document.getElementById("bucket");
 
       for (var i=0;i<16;i++){
-        canvasses[i]=document.createElement("canvas");
-        canvasses[i].width=width;
-        canvasses[i].height=height;
+        elem = document.getElementById("color_"+(i));        
+        colorElem[i]=elem;
+      }
+      
 
-        contexts[i]=canvasses[i].getContext("2d");
-        contexts[i].imageSmoothingEnabled= false;
-        contexts[i].rect(0,0,width,height);
-        contexts[i].fillStyle="black";
-        contexts[i].fill();
+      bucketElem=document.getElementById("bucket");
+
+
+      for (var i=0;i<16;i++){
+        canvas = new Array(width*height);
+        canvasses[i]=canvas;
       }
 
 
@@ -124,13 +104,23 @@
       id = visibleContext.createImageData(1,1); // only do this once per page
       id_d=id.data;
       setVisuals();
-
     }
+
     window.onload = init;
 
     function setVisuals(){
       //visibleContext.drawImage(canvasses[canvasIndex], 0, 0); 
-      visibleContext.drawImage(canvasses[canvasIndex], 0, 0,width*zoomFactor,height*zoomFactor); 
+      //visibleContext.drawImage(canvasses[canvasIndex], 0, 0,width*zoomFactor,height*zoomFactor); 
+      canvas=canvasses[canvasIndex];
+      for (var i=0;i<width;i++){
+        for (var j=0;j<height;j++){
+          var pixelIndex = canvas[i+width*j]; 
+          if (pixelIndex!==undefined){
+            visibleContext.fillStyle=colorPalette[pixelIndex];
+            visibleContext.fillRect(i*zoomFactor,j*zoomFactor,zoomFactor,zoomFactor);
+          }
+        }
+      }
     }
 
 
@@ -141,7 +131,12 @@
     drawing=1;
     startTargetX=e.offsetX;
     startTargetY=e.offsetY;
+    lastX=Math.floor(e.offsetX/zoomFactor);
+    lastY=Math.floor(e.offsetY/zoomFactor);
     mouseMove(e);
+    if(radius===0){
+      drawing=0;
+    }
   }
 
   function mouseUp(e){
@@ -150,45 +145,116 @@
     lastY=-1;
   }
 
+  function line (x1, y1,x2,y2) {
+    var coordinatesArray = new Array();
+    // Translate coordinates
+    // Define differences and error check
+    var dx = Math.abs(x2 - x1);
+    var dy = Math.abs(y2 - y1);
+    var sx = (x1 < x2) ? 1 : -1;
+    var sy = (y1 < y2) ? 1 : -1;
+    var err = dx - dy;
+    // Set first coordinates
+    coordinatesArray.push([x1,y1]);
+    // Main loop
+    while (!((x1 == x2) && (y1 == y2))) {
+      var e2 = err << 1;
+      if (e2 > -dy) {
+        err -= dy;
+        x1 += sx;
+      }
+      if (e2 < dx) {
+        err += dx;
+        y1 += sy;
+      }
+      // Set coordinates
+      coordinatesArray.push([x1,y1]);
+    }
+    // Return the result
+    return coordinatesArray;
+  }
+
+
   function mouseMove(e){
     if (drawing===0)
       return;
-    var x = e.offsetX/2;
-    var y = e.offsetY/2;
+    var x = Math.floor(e.offsetX/zoomFactor);
+    var y = Math.floor(e.offsetY/zoomFactor);
 
-    var cr=0;
-    var cg=255;
-    var cb=0;
 
-    var context=contexts[canvasIndex];
+    var canvas=canvasses[canvasIndex];
 
-    if (radius>0){
-      drawCircle(context,x,y,radius,cr,cg,cb);
+    var points;
+    if (lastX===-1) {
+      points=[[x,y]];
     } else {
-      floodFill(canvasses[canvasIndex], x, y, cr,cg,cb);
+      points=line(x,y,lastX,lastY);
     }
+
+    for (var i=0;i<points.length;i++){
+      var p=points[i];
+
+      if (radius>0){
+        drawCircle(canvas,p[0],p[1],radius,colorIndex);
+      } else {
+        floodFill(canvas, p[0], p[1], colorIndex);
+      }
+    }
+  
+
     /*context.beginPath();
     context.arc(x, y, radius, 0, 2 * Math.PI, false);
     context.lineWidth = 0;
     context.fillStyle = 'green';
     context.fill();*/
     setVisuals();
+    lastX=Math.floor(e.offsetX/zoomFactor);
+    lastY=Math.floor(e.offsetY/zoomFactor);
   }
 
-  function drawCircle(ctx,x,y,radius,r,g,b){
-    id_d[0]   = r;
-    id_d[1]   = g;
-    id_d[2]   = b;
-    id_d[3]   = 255;
-    for (var i=x-radius;i<=x+radius;i++){
-      for (var j=y-radius;j<=y+radius;j++){
+  function drawCircle(canvas,x,y,radius,colorIndex){
+    for (var i=Math.max(x-radius,0);i<=Math.min(x+radius,width-1);i++){
+      for (var j=Math.max(y-radius,0);j<=Math.min(y+radius,height-1);j++){
         var dx = i-x;
         var dy = j-y;
         if (dx*dx+dy*dy<radius*radius){
-          ctx.putImageData( id, i, j );             
+          canvas[i+width*j]=colorIndex;          
         }
       }
     }  
+  }
+
+  function floodFill(canvas,x,y,colorIndex){
+    var points = [[x,y]];
+    originColor = canvas[x+width*y];
+    if (originColor===colorIndex){
+      return;
+    }
+
+    for (var i=0;i<points.length;i++){
+      var p = points[i];
+      var pIndex = p[0]+width*p[1];
+      if (canvas[pIndex]===colorIndex) {
+        continue;
+      } else {
+        canvas[pIndex]=colorIndex;
+        borderPoints = [[p[0]+1,p[1]],[p[0]-1,p[1]],[p[0],p[1]+1],[p[0],p[1]-1]];
+        for (var j=0;j<borderPoints.length;j++){
+          var borderPoint=borderPoints[j]; 
+          var bpx=borderPoint[0];
+          var bpy=borderPoint[1];
+          var bpi=bpx+width*bpy;
+          if (
+            bpx>=0 &&
+            bpx<width &&
+            bpy>=0 &&
+            bpy<height &&
+            canvasses[bpi]===originColor){
+            points.push([bpx,bpy]);
+          }
+        }
+      }
+    }
   }
 </script>
 
@@ -321,84 +387,100 @@
                         "0px">
                           <tr height="16px">
                             <td>
+                             <a href="#" onclick="setColor(0);return false;">
                               <div style=
                               "background-color:#000000;" class=
-                              "unselected"></div>
+                              "unselected" id="color_0"></div></a>
                             </td>
                             <td>
+                             <a href="#" onclick="setColor(1);return false;">
                               <div style=
                               "background-color:#9D9D9D;" class=
-                              "unselected"></div>
+                              "unselected" id="color_1"></div></a>
                             </td>
                             <td>
+                             <a href="#" onclick="setColor(2);return false;">
                               <div style=
                               "background-color:#FFFFFF;" class=
-                              "selected"></div>
+                              "selected" id="color_2"></div></a>
                             </td>
                             <td>
+                             <a href="#" onclick="setColor(3);return false;">
                               <div style=
                               "background-color:#BE2633;" class=
-                              "unselected"></div>
+                              "unselected" id="color_3"></div></a>
                             </td>
                             <td>
+                             <a href="#" onclick="setColor(4);return false;">
                               <div style=
                               "background-color:#E06F8B;" class=
-                              "unselected"></div>
+                              "unselected" id="color_4"></div></a>
                             </td>
                             <td>
+                             <a href="#" onclick="setColor(5);return false;">
                               <div style=
                               "background-color:#493C2B;" class=
-                              "unselected"></div>
+                              "unselected" id="color_5"></div></a>
                             </td>
                             <td>
+                             <a href="#" onclick="setColor(6);return false;">
                               <div style=
                               "background-color:#A46422;" class=
-                              "unselected"></div>
+                              "unselected" id="color_6"></div></a>
                             </td>
                             <td>
+                             <a href="#" onclick="setColor(7);return false;">
                               <div style=
                               "background-color:#EB8931;" class=
-                              "unselected"></div>
+                              "unselected" id="color_7"></div></a>
                             </td>
                             <td>
+                             <a href="#" onclick="setColor(8);return false;">
                               <div style=
                               "background-color:#F7E26B;" class=
-                              "unselected"></div>
+                              "unselected" id="color_8"></div></a>
                             </td>
                             <td>
+                             <a href="#" onclick="setColor(9);return false;">
                               <div style=
                               "background-color:#2F484E;" class=
-                              "unselected"></div>
+                              "unselected" id="color_9"></div></a>
                             </td>
                             <td>
+                             <a href="#" onclick="setColor(10);return false;">
                               <div style=
                               "background-color:#44891A;" class=
-                              "unselected"></div>
+                              "unselected" id="color_10"></div></a>
                             </td>
                             <td>
+                             <a href="#" onclick="setColor(11);return false;">
                               <div style=
                               "background-color:#A3CE27;" class=
-                              "unselected"></div>
+                              "unselected" id="color_11"></div></a>
                             </td>
                             <td>
+                             <a href="#" onclick="setColor(12);return false;">
                               <div style=
                               "background-color:#1B2632;" class=
-                              "unselected"></div>
+                              "unselected" id="color_12"></div></a>
                             </td>
                             <td>
+                             <a href="#" onclick="setColor(13);return false;">
                               <div style=
                               "background-color:#005784;" class=
-                              "unselected"></div>
+                              "unselected" id="color_13"></div></a>
                             </td>
                             <td>
+                             <a href="#" onclick="setColor(14);return false;">
                               <div style=
                               "background-color:#31A2F2;" class=
-                              "unselected"></div>
+                              "unselected" id="color_14"></div></a>
                             </td>
                             <td>
+                             <a href="#" onclick="setColor(15);return false;">
                               <div style=
                               "background-color:#B2DCEF;" class=
-                              "unselected"></div>
+                              "unselected" id="color_15"></div></a>
                             </td>
                           </tr>
                           <tr>
