@@ -525,17 +525,18 @@ function clearPalette(){
         x = e.offsetX;
         y = e.offsetY;
     }
-    else if(typeof e.layerX !== "undefined") {
-        x = e.layerX;
-        y = e.layerY;
-    } else {
-      return [-1,-1];
-    }
-
+    else {      
+      var target = e.target || e.srcElement;
+      var rect = target.getBoundingClientRect();
+      x = e.clientX - rect.left,
+      y = e.clientY - rect.top;
+    } 
     return [x,y];
   }
 
   function mouseDown(e){
+    e = e || window.event;
+
     drawing=1;
     var coords = getCoords(e);
     startTargetX=coords[0];
@@ -552,12 +553,16 @@ function clearPalette(){
   }
 
   function mouseUp(e){
+    e = e || window.event;
+
     drawing=0;
     lastX=-1;
     lastY=-1;
   }
 
   function mouseOut(e){
+    e = e || window.event;
+
     mouseMove(e);
     lastX=-1;
     lastY=-1;
@@ -595,6 +600,8 @@ function clearPalette(){
 
 
   function mouseMove(e){
+    e = e || window.event;
+
     if (drawing===0)
       return;
 
