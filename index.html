@@ -521,13 +521,15 @@ function clearPalette(){
 
   function getCoords(e) {
     var x,y; 
-    if(e.offsetX) {
+    if(typeof e.offsetX !== "undefined") {
         x = e.offsetX;
         y = e.offsetY;
     }
-    else if(e.layerX) {
+    else if(typeof e.layerX !== "undefined") {
         x = e.layerX;
         y = e.layerY;
+    } else {
+      return [-1,-1];
     }
 
     return [x,y];
@@ -540,6 +542,9 @@ function clearPalette(){
     startTargetY=coords[1];
     lastX=Math.floor(-1+startTargetX/zoomFactor);
     lastY=Math.floor(-1+startTargetY/zoomFactor);
+    if (isNaN(lastX)){
+      console.log("eek");
+    }
     mouseMove(e);
     if(radius===0){
       drawing=0;
@@ -602,7 +607,7 @@ function clearPalette(){
     var canvas=canvasses[canvasIndex];
 
     var points;
-    if (lastX===-1||isNaN(lastX)) {
+    if (lastX===-1) {
       points=[[x,y]];
     } else {
       points=line(x,y,lastX,lastY);
@@ -629,6 +634,9 @@ function clearPalette(){
     var coords = getCoords(e);
     lastX=Math.floor(-1+coords[0]/zoomFactor);
     lastY=Math.floor(-1+coords[1]/zoomFactor);
+    if (isNaN(lastX)){
+      console.log("eek");
+    }
   }
 
   function drawCircle(canvas,x,y,radius,colorIndex){  
