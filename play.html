@@ -1,0 +1,114 @@
+<html>
+<head>
+<style>
+
+#header h1 {
+  padding:0;
+  margin:0;
+  line-height: 80px;
+}
+#header {
+  position:absolute;
+  left:0px;
+  right:0px;
+  top:0px;
+  height:80px;
+  background-color: black;
+  color:white;
+  text-align: center;
+  padding: 0px;
+  margin:0px;
+  border:0px;
+}
+
+a {
+  color:white;
+}
+
+#content {
+  position: absolute;
+  top:80px;
+  bottom:30px;
+  left:0px;
+  right:0px;
+  background-color: white;
+  text-align: center;
+  padding:0;
+  margin:0;
+}
+
+#content canvas {
+ top:0;
+ bottom:0;
+ left:0;
+ right:0;
+ padding: 0;
+ margin:0; 
+}
+#editlink {
+  position: absolute;
+  right:10px;
+  float: right;
+}
+
+#homelink {
+  float: center;
+}
+#footer {
+  position:absolute;
+  left:0px;
+  right:0px;
+  bottom:0px;
+  height:30px;
+  margin:0;
+  padding:0;
+  background-color: black;
+  color:white;
+  text-align: center;
+  padding: 0;
+  line-height: 30px;
+}
+</style>
+<script>
+function resizeCanvas(){
+  console.log("resized "+window.innerWidth +"x"+window.innerHeight);  
+  mainCanvas.width=mainCanvasContainer.clientWidth;
+  mainCanvas.height=mainCanvasContainer.clientHeight;
+  mainCanvasCtx.width=mainCanvasContainer.clientWidth;
+  mainCanvasCtx.height=mainCanvasContainer.clientHeight;
+  mainCanvasCtx.fillStyle="#ff0000";
+  mainCanvasCtx.fillRect(0,0,mainCanvas.width/2,mainCanvas.height/2);
+  mainCanvasCtx.fillStyle="#00ff00";
+  mainCanvasCtx.fillRect(mainCanvas.width/2,0,mainCanvas.width/2,mainCanvas.height/2);
+  mainCanvasCtx.fillStyle="#ff00ff";
+  mainCanvasCtx.fillRect(0,mainCanvas.height/2,mainCanvas.width/2,mainCanvas.height/2);
+  mainCanvasCtx.fillStyle="#00ffff";
+  mainCanvasCtx.fillRect(mainCanvas.width/2,mainCanvas.height/2,mainCanvas.width/2,mainCanvas.height/2);
+}
+var mainCanvas;
+var mainCanvasCtx;
+var mainCanvasContainer;
+function init(){
+  window.addEventListener('resize', resizeCanvas, false);
+
+  mainCanvas=document.getElementById("mainCanvas");
+  mainCanvasCtx=mainCanvas.getContext("2d");
+  mainCanvasContainer=document.getElementById("content");
+  resizeCanvas();
+}
+</script>
+</head>
+<body onload="init()">
+<div id="header">
+<h1>Game Name</h1> 
+</div>
+<p>
+<div id="content">
+<canvas id="mainCanvas"></canvas>
+</div>
+<p>
+<div id="footer">
+ <a href="random link" id="editlink">&sdotb; edit</a> <a  id="homelink" href="random link">www.myhome.com</a> 
+</div>
+</body>
+</html>

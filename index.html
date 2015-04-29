@@ -2,8 +2,9 @@
   <head>
 <script type="text/javascript" > 
   var contexts = new Array();
-
+  var version="0.1";
   var gameTitle="My Game";
+  var gameLink="www.flipgame.org"
   var canvasIndex=0;
   var canvasses = new Array();
   var hyperlinks = new Array();
@@ -21,7 +22,7 @@ function shareClick() {
   var str = stateToString();
 
   var gistToCreate = {
-    "description" : "title",
+    "description" : title,
     "public" : true,
     "files": {
       "readme.txt" : {
@@ -100,6 +101,7 @@ function RLE_decode(encoded) {
 function stateToString(){
   var state = new Object();
   state.gameTitle=gameTitle;
+  state.gaemLink=gameLink;
   state.canvasses=new Array();
   for (var i=0;i<16;i++){
     var canvas=canvasses[i];
@@ -119,6 +121,7 @@ function stateToString(){
 function stringToState(str){
   var state = JSON.parse(str);
   gameTitle=state.gameTitle;
+  gameLink=state.gameLink;
   canvasIndex=0;
   canvasses=new Array();
   for (var k=0;k<state.canvasses.length;k++){
@@ -229,6 +232,7 @@ function press(evt){
   var visibleCanvas;
   var visibleContext;
   var titleInput;
+  var linkInput;
   var id;
   var id_d;
 
@@ -241,6 +245,12 @@ function press(evt){
     gameTitle=newTitle;
     console.log(newTitle);
   }
+
+  function linkChange(newLink){
+    gameLink=newLink;
+    console.log(gameLink);
+  }
+
     function setRadius(newRadius) {
       console.log("radius selected "+ newRadius);
         radius=newRadius;
@@ -298,6 +308,10 @@ function press(evt){
 
       titleInput=document.getElementById("titleInput");
       titleInput.value=gameTitle;
+
+      linkInput=document.getElementById("linkInput");
+      linkInput.value=gameLink;
+
       console.log("hello world");
 
       radii = new Array();
@@ -394,6 +408,8 @@ function press(evt){
         }
       }
       drawThumbnail(canvasIndex);
+      titleInput.value=gameTitle;
+      linkInput.value=gameLink;
     }
 
 
@@ -417,10 +433,10 @@ function press(evt){
   function mouseDown(e){
     drawing=1;
     var coords = getCoords(e);
-    startTargetX=coords[x];
-    startTargetY=coords[y];
-    lastX=Math.floor(-1+e.startTargetX/zoomFactor);
-    lastY=Math.floor(-1+e.startTargetY/zoomFactor);
+    startTargetX=coords[0];
+    startTargetY=coords[1];
+    lastX=Math.floor(-1+startTargetX/zoomFactor);
+    lastY=Math.floor(-1+startTargetY/zoomFactor);
     mouseMove(e);
     if(radius===0){
       drawing=0;
@@ -594,6 +610,14 @@ body {
                  text-align: center;
                  margin-bottom: 5px;
                  }
+                 input#linkInput {
+                 background-color: black;
+                 color:white;
+                 font-size: 150%;
+                 text-align: center;
+                 margin-bottom: 5px;
+                 padding-bottom:3px;
+                 }
                  li {
                  font-size: 150%;                 
                   text-align: center;
@@ -654,7 +678,7 @@ body {
     /*]]>*/
     </style>
     <title>
-      4x4
+      flipgame
     </title>
   </head>
   <body onload="init();" >
@@ -754,6 +778,7 @@ body {
                     <td>
                       <center>
                         <input width="640px" style="border:2px solid gray;"" value="game title"  id="titleInput" oninput="titleChange(this.value)" />
+                        <input width="640px" style="border:2px solid gray;"" value="www.flipgame.org"  id="linkInput" oninput="linkChange(this.value)" />
                         <br/>
                         <canvas id="mainCanvas" width="640px" height="400px" style="border:2px solid gray; background-color:black;"></canvas>
                         <br />
