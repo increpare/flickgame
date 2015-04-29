@@ -92,9 +92,9 @@ function redraw(){
     var hd = h/100.0;
     zoom=1;
     if (wd<hd){
-      zoom=Math.floor(wd);
+      zoom=wd;//Math.floor(wd);
     } else {
-      zoom=Math.floor(hd);
+      zoom=hd;//Math.floor(hd);
     }
     if(zoom<1){
       zoom=1;
@@ -151,9 +151,9 @@ function redraw(){
     var hd = h/100.0;
     zoom=1;
     if (wd<hd){
-      zoom=Math.floor(wd);
+      zoom=wd;//Math.floor(wd);
     } else {
-      zoom=Math.floor(hd);
+      zoom=hd;//Math.floor(hd);
     }
     if(zoom<1){
       zoom=1;
@@ -207,6 +207,11 @@ function qualifyURL(url) {
  return aurl.href;
 }
 
+var gameState;
+function loadState(code){
+    gameState=JSON.parse(code);
+}
+
 function getParameterByName(name) {
     name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
     var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
@@ -214,10 +219,6 @@ function getParameterByName(name) {
     return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
 
-var gameState;
-function loadState(code){
-    gameState=JSON.parse(code);
-}
 
 function strip_http(url) {
    url = url.replace(/^https?:\/\//,'');
