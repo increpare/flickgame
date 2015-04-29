@@ -184,7 +184,7 @@ function press(evt){
     }else if (radius===16) { 
       setRadius(13);
     }
-  } else if (evt.keyCode===187){
+  } else if (evt.keyCode===187){//+
     if (radius===1){
       setRadius(3);
     } else if (radius===3) {
@@ -199,6 +199,12 @@ function press(evt){
       setRadius(13);
     }else if (radius===13) {
       setRadius(16);
+    }
+  } else if (evt.keyCode===90){//z
+    if (undoList.length>0){
+      var dat = undoList.pop();
+      canvasses[dat.canvasIndex]=dat.canvasDat;
+      setLayer(dat.canvasIndex+1);
     }
   }
 }
@@ -534,6 +540,27 @@ function clearPalette(){
     return [x,y];
   }
 
+
+
+  function uint8ar_copy(src)  {
+      var dst = new Uint8Array(width*height);
+      for (var i=0;i<src.length;i++){
+        dst[i]=src[i];
+      }
+      return dst;
+  }
+
+  var undoList=new Array();
+  function preserveUndoState() {
+    var undoItem = new Object();
+    undoItem.canvasIndex=canvasIndex;
+    undoItem.canvasDat=uint8ar_copy(canvasses[canvasIndex]);
+    undoList.push(undoItem);
+    if (undoList.length>30){
+      undoList.shift();
+    }
+  }
+
   function mouseDown(e){
     e = e || window.event;
 
@@ -546,6 +573,7 @@ function clearPalette(){
     if (isNaN(lastX)){
       console.log("eek");
     }
+    preserveUndoState();
     mouseMove(e);
     if(radius===0){
       drawing=0;
@@ -821,8 +849,8 @@ body {
                  display: none;
                  }
                  canvas#dropdownthumb {
-                  style="border:2px solid gray; 
-                  background-color:black;"
+                  border:2px solid gray; 
+                  background-color:black;
                  }
     /*]]>*/
     </style>
