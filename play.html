@@ -46,7 +46,7 @@ a {
  padding: 0;
  margin:0; 
 }
-#editlink {
+#hackLink {
   position: absolute;
   right:10px;
   float: right;
@@ -71,20 +71,14 @@ a {
 }
 </style>
 <script>
+var zoom=1;
+var currentIndex=0;
 function redraw(){
   console.log("resized "+window.innerWidth +"x"+window.innerHeight);  
   mainCanvas.width=mainCanvasContainer.clientWidth;
   mainCanvas.height=mainCanvasContainer.clientHeight;
   mainCanvasCtx.width=mainCanvasContainer.clientWidth;
   mainCanvasCtx.height=mainCanvasContainer.clientHeight;
-  mainCanvasCtx.fillStyle="#ff0000";
-  mainCanvasCtx.fillRect(0,0,mainCanvas.width/2,mainCanvas.height/2);
-  mainCanvasCtx.fillStyle="#00ff00";
-  mainCanvasCtx.fillRect(mainCanvas.width/2,0,mainCanvas.width/2,mainCanvas.height/2);
-  mainCanvasCtx.fillStyle="#ff00ff";
-  mainCanvasCtx.fillRect(0,mainCanvas.height/2,mainCanvas.width/2,mainCanvas.height/2);
-  mainCanvasCtx.fillStyle="#00ffff";
-  mainCanvasCtx.fillRect(mainCanvas.width/2,mainCanvas.height/2,mainCanvas.width/2,mainCanvas.height/2);
 
   if (images.length>0){
     mainCanvasCtx.imageSmoothingEnabled = false;
@@ -93,10 +87,101 @@ function redraw(){
     mainCanvasCtx.webkitImageSmoothingEnabled = false;
 
     var w = mainCanvasCtx.width;
-    
-    mainCanvasCtx.drawImage(images[0],0,0,160,100,0,0,640,480);
+    var h = mainCanvasCtx.height;
+    var wd = w/160.0;
+    var hd = h/100.0;
+    zoom=1;
+    if (wd<hd){
+      zoom=Math.floor(wd);
+    } else {
+      zoom=Math.floor(hd);
+    }
+    if(zoom<1){
+      zoom=1;
+    }
+    var dx=(w-160*zoom)/2;
+    var dy=(h-100*zoom)/2;
+    mainCanvasCtx.fillStyle="#000000";
+    mainCanvasCtx.fillRect(0,0,w,h);
+    mainCanvasCtx.drawImage(images[currentIndex],0,0,160,100,dx,dy,160*zoom,100*zoom);
+  } else {    
+    mainCanvasCtx.fillStyle="#ff0000";
+    mainCanvasCtx.fillRect(0,0,mainCanvas.width/2,mainCanvas.height/2);
+    mainCanvasCtx.fillStyle="#00ff00";
+    mainCanvasCtx.fillRect(mainCanvas.width/2,0,mainCanvas.width/2,mainCanvas.height/2);
+    mainCanvasCtx.fillStyle="#ff00ff";
+    mainCanvasCtx.fillRect(0,mainCanvas.height/2,mainCanvas.width/2,mainCanvas.height/2);
+    mainCanvasCtx.fillStyle="#00ffff";
+    mainCanvasCtx.fillRect(mainCanvas.width/2,mainCanvas.height/2,mainCanvas.width/2,mainCanvas.height/2);
   }
 }
+
+
+  function getCoords(e) {
+    var x,y; 
+    if(e.offsetX) {
+        x = e.offsetX;
+        y = e.offsetY;
+    }
+    else if(e.layerX) {
+        x = e.layerX;
+        y = e.layerY;
+    }
+
+    return [x,y];
+  }
+
+  var target=0;
+
+  function mouseDown(e){
+    mouseMove(e);
+    if (target>0){
+      currentIndex=target-1;
+      redraw();
+      mouseMove(e);
+    }
+  }
+  function mouseMove(e){
+
+    var coords = getCoords(e);
+
+    var w = mainCanvasCtx.width;
+    var h = mainCanvasCtx.height;
+    var wd = w/160.0;
+    var hd = h/100.0;
+    zoom=1;
+    if (wd<hd){
+      zoom=Math.floor(wd);
+    } else {
+      zoom=Math.floor(hd);
+    }
+    if(zoom<1){
+      zoom=1;
+    }
+    var dx=(w-160*zoom)/2;
+    var dy=(h-100*zoom)/2;
+
+    var x=Math.floor((coords[0]-dx)/zoom);
+    var y=Math.floor((coords[1]-dy)/zoom);
+    target=0;
+    if(x>=0&&x<160&&y>=0&&y<100) {
+      var ch = gameState.imageDats[currentIndex][x+160*y];
+      var colIndex = parseInt(ch,16);
+      target=gameState.hyperlinks[currentIndex][colIndex];
+
+      if (gameState.hyperlinks[currentIndex][colIndex]!=0) {
+        mainCanvas.style.cursor="pointer";        
+      } else {
+        mainCanvas.style.cursor="default";        
+      }
+
+    } else {
+      mainCanvas.style.cursor="default";
+    }
+    console.log(x+","+y+","+ch);
+
+  }
+
 var mainCanvas;
 var mainCanvasCtx;
 var mainCanvasContainer;
@@ -108,6 +193,8 @@ function init(){
   mainCanvasCtx=mainCanvas.getContext("2d");
   mainCanvasContainer=document.getElementById("content");
 
+  mainCanvas.addEventListener('mousemove', mouseMove,false);
+  mainCanvas.addEventListener('mousedown', mouseDown,false);
 
   redraw();
 
@@ -179,7 +266,7 @@ function getData(){
 
     var hacklink = document.getElementById("hackLink");
 
-    var url = "index.html?hack="+id;
+    var url = "index.html?p="+id;
     url=qualifyURL(url);
     hacklink.href=url;
 
@@ -224,6 +311,8 @@ function RLE_decode(encoded) {
 var images = new Array();
 var imageCtxts = new Array();
 function renderImages(){
+  gameState.imageDats = new Array();
+
   for (var i=0;i<16;i++){
     var canvas = document.createElement('canvas');
     canvas.width="160";
@@ -240,12 +329,10 @@ function renderImages(){
       ctx.fillStyle=colorPalette[colIndex];
       ctx.fillRect(x,y,1,1);
     }
-
+    gameState.imageDats.push(descriptionString);
     images.push(canvas);
     imageCtxts.push(ctx);
   }
-  var img = document.getElementById("previewImage");
-  img.src=images[0].toDataURL();
   redraw();
 }
 </script>
@@ -261,7 +348,6 @@ function renderImages(){
 <p>
 <div id="footer">
  <a href="http://www.flipgame.org" id="hackLink">&sdotb; edit</a> <a  id="homeLink" href="http://www.flipgame.org"></a> 
-<img width=160 height=100 id="previewImage" src="boop.png">
 </div>
 </body>
 </html>
