@@ -26,9 +26,9 @@ function shareClick() {
     "public" : true,
     "files": {
       "readme.txt" : {
-        "content": "Play this game by pasting the script in http://www.crossstitch.net/editor.html"
+        "content": "A game made with www.flipcode.org"
       },
-      "script.txt" : {
+      "game.txt" : {
         "content": str
       }
     }
@@ -38,13 +38,16 @@ function shareClick() {
   var githubHTTPClient = new XMLHttpRequest();
   githubHTTPClient.open('POST', githubURL);
   githubHTTPClient.onreadystatechange = function() {    
+    var errorCount=0;
     if(githubHTTPClient.readyState!=4) {
       return;
     }   
     var result = JSON.parse(githubHTTPClient.responseText);
     if (githubHTTPClient.status===403) {
+      errorCount++;
       console.log(result.message);
     } else if (githubHTTPClient.status!==200&&githubHTTPClient.status!==201) {
+      errorCount++;
       console.log("HTTP Error "+ githubHTTPClient.status + ' - ' + githubHTTPClient.statusText);
     } else {
       var id = result.id;
@@ -101,7 +104,7 @@ function RLE_decode(encoded) {
 function stateToString(){
   var state = new Object();
   state.gameTitle=gameTitle;
-  state.gaemLink=gameLink;
+  state.gameLink=gameLink;
   state.canvasses=new Array();
   for (var i=0;i<16;i++){
     var canvas=canvasses[i];
@@ -681,7 +684,7 @@ body {
       flipgame
     </title>
   </head>
-  <body onload="init();" >
+  <body onload="init();" ondragstart="return false;" ondrop="return false;">
   <center>
     <table cellpadding="10px">
       <tr>

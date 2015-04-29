@@ -37,6 +37,7 @@ a {
   margin:0;
 }
 
+
 #content canvas {
  top:0;
  bottom:0;
@@ -70,7 +71,7 @@ a {
 }
 </style>
 <script>
-function resizeCanvas(){
+function redraw(){
   console.log("resized "+window.innerWidth +"x"+window.innerHeight);  
   mainCanvas.width=mainCanvasContainer.clientWidth;
   mainCanvas.height=mainCanvasContainer.clientHeight;
@@ -84,23 +85,174 @@ function resizeCanvas(){
   mainCanvasCtx.fillRect(0,mainCanvas.height/2,mainCanvas.width/2,mainCanvas.height/2);
   mainCanvasCtx.fillStyle="#00ffff";
   mainCanvasCtx.fillRect(mainCanvas.width/2,mainCanvas.height/2,mainCanvas.width/2,mainCanvas.height/2);
+
+  if (images.length>0){
+    mainCanvasCtx.imageSmoothingEnabled = false;
+    mainCanvasCtx.mozImageSmoothingEnabled = false;
+    mainCanvasCtx.oImageSmoothingEnabled = false;
+    mainCanvasCtx.webkitImageSmoothingEnabled = false;
+
+    var w = mainCanvasCtx.width;
+    
+    mainCanvasCtx.drawImage(images[0],0,0,160,100,0,0,640,480);
+  }
 }
 var mainCanvas;
 var mainCanvasCtx;
 var mainCanvasContainer;
 function init(){
-  window.addEventListener('resize', resizeCanvas, false);
+  window.addEventListener('resize', redraw, false);
+
 
   mainCanvas=document.getElementById("mainCanvas");
   mainCanvasCtx=mainCanvas.getContext("2d");
   mainCanvasContainer=document.getElementById("content");
-  resizeCanvas();
+
+
+  redraw();
+
+  getData();
+}
+
+var aurl = document.createElement('a');
+function qualifyURL(url) {
+ aurl.href = url;
+ return aurl.href;
+}
+
+function getParameterByName(name) {
+    name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+        results = regex.exec(location.search);
+    return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+}
+
+var gameState;
+function loadState(code){
+    gameState=JSON.parse(code);
+}
+
+function strip_http(url) {
+   url = url.replace(/^https?:\/\//,'');
+   return url;
+}
+
+function getData(){ 
+  var id = getParameterByName("p").replace(/[\\\/]/,"");
+  if (id===null||id.length===0) {
+    console.log("No ID specified in URL.")
+    return;
+  }
+
+  var githubURL = 'https://api.github.com/gists/'+id;
+
+  var githubHTTPClient = new XMLHttpRequest();
+  githubHTTPClient.open('GET', githubURL);
+  githubHTTPClient.onreadystatechange = function() {
+    if(githubHTTPClient.readyState!=4) {
+      return;
+    }   
+    var result = JSON.parse(githubHTTPClient.responseText);
+    if (githubHTTPClient.status===403) {
+      console.log(result.message);
+    } else if (githubHTTPClient.status!==200&&githubHTTPClient.status!==201) {
+      console.log("HTTP Error "+ githubHTTPClient.status + ' - ' + githubHTTPClient.statusText);
+    }
+    var result = JSON.parse(githubHTTPClient.responseText);
+    var code=result["files"]["game.txt"]["content"];
+    console.log(code);
+    loadState(code);
+
+    var homepage=gameState.gameLink;
+    var homepageLink = document.getElementById("homeLink");
+    homepageLink.innerHTML=strip_http(homepage);
+    if (!homepage.match(/^https?:\/\//)) {
+      homepage = "http://" + homepage;
+    }
+    homepageLink.href = homepage;
+  
+
+    var title=gameState.title;
+    var gameTitle = document.getElementById("gameTitle");
+    gameTitle.innerHTML=gameState.gameTitle;
+    window.document.title=gameState.gameTitle;
+
+    var hacklink = document.getElementById("hackLink");
+
+    var url = "index.html?hack="+id;
+    url=qualifyURL(url);
+    hacklink.href=url;
+
+    renderImages();
+  }
+  githubHTTPClient.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+  githubHTTPClient.send();
+}
+
+
+function RLE_decode(encoded) {
+    var output = "";
+    for (var i=0;i<encoded.length;i+=2) {
+      var count = encoded[i];
+      var ch = encoded[i+1];
+      for (var j=0;j<count;j++){
+        output+=ch;
+      }
+    }
+    return output;
+}
+
+ var colorPalette = [
+            "#140c1c",
+            "#442434",
+            "#30346d",
+            "#4e4a4e",
+            "#854c30",
+            "#346524",
+            "#d04648",
+            "#757161",
+            "#597dce",
+            "#d27d2c",
+            "#8595a1",
+            "#6daa2c",
+            "#d2aa99",
+            "#6dc2ca",
+            "#dad45e",
+            "#deeed6"
+            ];
+
+var images = new Array();
+var imageCtxts = new Array();
+function renderImages(){
+  for (var i=0;i<16;i++){
+    var canvas = document.createElement('canvas');
+    canvas.width="160";
+    canvas.height="100";
+    var ctx=canvas.getContext("2d");
+
+    var descriptionArray = gameState.canvasses[i];
+    var descriptionString = RLE_decode(descriptionArray);
+    for (var j=0;j<descriptionString.length;j++){
+      var x = j%160;
+      var y = Math.floor(j/160);
+      var ch=descriptionString[j];
+      var colIndex = parseInt(ch,16);
+      ctx.fillStyle=colorPalette[colIndex];
+      ctx.fillRect(x,y,1,1);
+    }
+
+    images.push(canvas);
+    imageCtxts.push(ctx);
+  }
+  var img = document.getElementById("previewImage");
+  img.src=images[0].toDataURL();
+  redraw();
 }
 </script>
 </head>
 <body onload="init()">
 <div id="header">
-<h1>Game Name</h1> 
+<h1 id="gameTitle">Game Loader</h1> 
 </div>
 <p>
 <div id="content">
@@ -108,7 +260,8 @@ function init(){
 </div>
 <p>
 <div id="footer">
- <a href="random link" id="editlink">&sdotb; edit</a> <a  id="homelink" href="random link">www.myhome.com</a> 
+ <a href="http://www.flipgame.org" id="hackLink">&sdotb; edit</a> <a  id="homeLink" href="http://www.flipgame.org"></a> 
+<img width=160 height=100 id="previewImage" src="boop.png">
 </div>
 </body>
 </html>
