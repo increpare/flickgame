@@ -148,16 +148,59 @@ function stringToState(str){
 
 document.addEventListener("keydown", press);
 
+var copyImage = null;
+
 var savedString;
 function press(evt){
   evt = evt || window.event;
+  /*
   if (evt.keyCode==83){//S(ave)
     savedString = stateToString();
   } else if (evt.keyCode==76){//L(oad)
     stringToState(savedString);
     setVisuals();
     setLayer(canvasIndex+1); 
-  } 
+  } */
+  if (evt.keyCode===67) { //c
+    copyImage=JSON.stringify(canvasses[canvasIndex])
+  } else if (evt.keyCode===86){ //v
+    if (copyImage!==null){
+      canvasses[canvasIndex]=JSON.parse(copyImage);
+      setVisuals();
+    }
+  } else if (evt.keyCode ===189 ) {//-
+    if (radius===3) {
+      setRadius(1);
+    } else if (radius===5) {
+      setRadius(3);
+    }else if (radius===7) {
+      setRadius(5);
+    }else if (radius===9) {
+      setRadius(7);
+    }else if (radius===11) {
+      setRadius(9);
+    }else if (radius===13) {
+      setRadius(11);
+    }else if (radius===16) { 
+      setRadius(13);
+    }
+  } else if (evt.keyCode===187){
+    if (radius===1){
+      setRadius(3);
+    } else if (radius===3) {
+      setRadius(5);
+    } else if (radius===5) {
+      setRadius(7);
+    }else if (radius===7) {
+      setRadius(9);
+    }else if (radius===9) {
+      setRadius(11);
+    }else if (radius===11) {
+      setRadius(13);
+    }else if (radius===13) {
+      setRadius(16);
+    }
+  }
 }
 
 /*
@@ -255,6 +298,13 @@ function press(evt){
     console.log(gameLink);
   }
 
+function clearPalette(){
+  var canvas=canvasses[canvasIndex];
+  for (var i=0;i<width*height;i++){
+    canvas[i]=colorIndex;
+  }
+  setVisuals();
+}
     function setRadius(newRadius) {
       console.log("radius selected "+ newRadius);
         radius=newRadius;
@@ -552,7 +602,7 @@ function press(evt){
     var canvas=canvasses[canvasIndex];
 
     var points;
-    if (lastX===-1) {
+    if (lastX===-1||isNaN(lastX)) {
       points=[[x,y]];
     } else {
       points=line(x,y,lastX,lastY);
@@ -860,12 +910,12 @@ body {
                   <tr>
                     <td>
                       <center>
-                        <input width="640px" style="border:2px solid gray;"" value="game title"  id="titleInput" oninput="titleChange(this.value)" />
-                        <input width="640px" style="border:2px solid gray;"" value="www.flipgame.org"  id="linkInput" oninput="linkChange(this.value)" />
+                        <input width="640px" style="border:2px solid gray;" onkeydown="event.stopPropagation();" value="game title"  id="titleInput" oninput="titleChange(this.value)" />
+                        <input width="640px" style="border:2px solid gray;" onkeydown="event.stopPropagation();" value="www.flipgame.org"  id="linkInput" oninput="linkChange(this.value)" />
                         <br/>
                         <canvas id="mainCanvas" width="640px" height="400px" style="border:2px solid gray; background-color:black;"></canvas>
                         <br />
-                        <table style="border:2px solid gray;" padding="0px" margin=
+                        <table style="border:2px solid gray; padding-top=2px" margin=
                         "0px">
                           <tr height="16px">
                             <td>
@@ -1797,6 +1847,7 @@ body {
                       <a href="#" onclick="shareClick();return false;">&ocir; share</a><br />
                       <div id="shareLink"></div>
                       <a href="blah">&sdotb; export</a><br />
+                      <a href="hints.html" target="_blank" title="blah">? hints</a>
                       <br />
                       <br />
                       <a href="#" onclick="setRadius(16);return false;"><img src="16.png" class="radius" id="radius_16" /></a>
@@ -1816,6 +1867,8 @@ body {
                       <a href="#" onclick="setRadius(1);return false;"><img src="1.png" class="radius" id="radius_1" /></a>
                       <br />
                       <a href="#" onclick="setRadius(0);return false;"><img src="bucket.png" class="radius" id="bucket"/></a>
+                      <br />
+                      <a href="#" onclick="clearPalette();return false;"><img src="clear.png" class="radius" id="bucket"/></a>
                     </td>
                   </tr>
                 </table>
