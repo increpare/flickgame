@@ -102,9 +102,6 @@ clientStandaloneRequest.onreadystatechange = function() {
     if(clientStandaloneRequest.readyState!=4) {
       return;
     }
-    if (clientStandaloneRequest.responseText==="") {
-      console.log("Couldn't find standalone template. Is there a connection problem to the internet?",true);
-    }
     standalone_HTML_String=clientStandaloneRequest.responseText;
 }
 clientStandaloneRequest.send();
@@ -116,7 +113,7 @@ var get_blob = function() {
 
 function buildStandalone(sourceCode) {
   if (standalone_HTML_String.length===0) {
-    console.log("Can't export yet - still downloading html template.",true);
+    alert("Can't export yet - still downloading html template.",true);
     return;
   }
   sourceCode=encodeURI(sourceCode);
@@ -145,7 +142,6 @@ function importClick(){
   reader.readAsText(file, encoding);
 }
 function shareClick() {
-  console.log("Sending code to github...",true)
   var title = gameTitle;
   var str = stateToString();
 
@@ -173,10 +169,10 @@ function shareClick() {
     var result = JSON.parse(githubHTTPClient.responseText);
     if (githubHTTPClient.status===403) {
       errorCount++;
-      console.log(result.message);
+      alert(result.message);
     } else if (githubHTTPClient.status!==200&&githubHTTPClient.status!==201) {
       errorCount++;
-      console.log("HTTP Error "+ githubHTTPClient.status + ' - ' + githubHTTPClient.statusText);
+      alert("HTTP Error "+ githubHTTPClient.status + ' - ' + githubHTTPClient.statusText);
     } else {
       var id = result.id;
       var url = "play.html?p="+id;
@@ -188,13 +184,12 @@ function shareClick() {
 
       var shareLink = document.getElementById("shareLink");
       shareLink.innerHTML = "<a target=\"_blank\" href=\""+url+"\">"+url+"</a><br>";
-      console.log("GitHub submission successful - " + sourceCodeLink,true);
 
 
       if (errorCount>0) {
-        console.log("Cannot link directly to playable game, because there are compiler errors.",true);
+        alert("Cannot link directly to playable game, because there are errors.",true);
       } else {
-        console.log("The game can now be played at this url:<br><a target=\"_blank\" href=\""+url+"\">"+url+"</a>",true);
+
       } 
 
 
@@ -246,7 +241,6 @@ function stateToString(){
   }
   state.hyperlinks=hyperlinks;
   var result=JSON.stringify(state);
-  console.log(result);
   return result;
 }
 
@@ -357,15 +351,14 @@ function press(evt){
   var bucketElem;
   function titleChange(newTitle){
     gameTitle=newTitle;
-    console.log(newTitle);
   }
 
   function linkChange(newLink){
     gameLink=newLink;
-    console.log(gameLink);
   }
 
 function clearPalette(){
+  preserveUndoState();
   var canvas=canvasses[canvasIndex];
   for (var i=0;i<width*height;i++){
     canvas[i]=0;
@@ -373,7 +366,6 @@ function clearPalette(){
   setVisuals();
 }
     function setRadius(newRadius) {
-      console.log("radius selected "+ newRadius);
         radius=newRadius;
         bucketElem.setAttribute("class","radius");
         for(var i=0;i<16;i++){
@@ -390,12 +382,10 @@ function clearPalette(){
 
 
   function dropDownSelect(dropdown,val) {
-    console.log(dropdown+"-"+val);
     hyperlinks[canvasIndex][dropdown-1]=val;
   }
 
     function setColor(newColorIndex) {
-      console.log("color selected "+ newColorIndex);
       colorIndex=newColorIndex;
         for(var i=0;i<16;i++){
           if (colorElem[i]!==null){
@@ -406,7 +396,6 @@ function clearPalette(){
     }
 
     function setLayer(newCanvasIndex) {
-      console.log("color selected "+ newCanvasIndex);
       canvasIndex=newCanvasIndex-1;
         for(var i=0;i<16;i++){
           if (layerElem[i]!==null){
@@ -508,7 +497,7 @@ function clearPalette(){
         var decoded = decodeURI(ss2);
         var decoded2 = decoded.substring(0, decoded.length - 3);
         stringToState(decoded2);
-        setVisuals();
+        setVisuals(true);
         setLayer(canvasIndex+1); 
       }
       r.readAsText(f);
@@ -535,7 +524,7 @@ function clearPalette(){
   function getData(){ 
     var id = getParameterByName("p").replace(/[\\\/]/,"");
     if (id===null||id.length===0) {
-      console.log("No ID specified in URL.")
+      
       return;
     }
 
@@ -549,16 +538,15 @@ function clearPalette(){
       }   
       var result = JSON.parse(githubHTTPClient.responseText);
       if (githubHTTPClient.status===403) {
-        console.log(result.message);
+        alert(result.message);
       } else if (githubHTTPClient.status!==200&&githubHTTPClient.status!==201) {
-        console.log("HTTP Error "+ githubHTTPClient.status + ' - ' + githubHTTPClient.statusText);
+        alert("HTTP Error "+ githubHTTPClient.status + ' - ' + githubHTTPClient.statusText);
       }
       var result = JSON.parse(githubHTTPClient.responseText);
       var code=result["files"]["game.txt"]["content"];
-      console.log(code);
       
       stringToState(code);
-      setVisuals();
+      setVisuals(true);
       setLayer(canvasIndex+1); 
     }
     githubHTTPClient.setRequestHeader("Content-type","application/x-www-form-urlencoded");
@@ -590,7 +578,7 @@ function clearPalette(){
 //      "dropdownOption"[0][0].style.backgroundImage="url("+dataUrl+")";
     }
 
-    function setVisuals(){
+    function setVisuals(genAllThumbnails){
       //visibleContext.drawImage(canvasses[canvasIndex], 0, 0); 
       //visibleContext.drawImage(canvasses[canvasIndex], 0, 0,width*zoomFactor,height*zoomFactor); 
       canvas=canvasses[canvasIndex];
@@ -601,7 +589,13 @@ function clearPalette(){
           visibleContext.fillRect(i*zoomFactor,j*zoomFactor,zoomFactor,zoomFactor);        
         }
       }
-      drawThumbnail(canvasIndex);
+      if (genAllThumbnails===true){
+        for (var i=0;i<16;i++){
+          drawThumbnail(canvasIndex);          
+        }
+      } else {
+        drawThumbnail(canvasIndex);
+      }
       titleInput.value=gameTitle;
       linkInput.value=gameLink;
     }
@@ -655,9 +649,7 @@ function clearPalette(){
     startTargetY=coords[1];
     lastX=Math.floor(-1+startTargetX/zoomFactor);
     lastY=Math.floor(-1+startTargetY/zoomFactor);
-    if (isNaN(lastX)){
-      console.log("eek");
-    }
+    
     preserveUndoState();
     mouseMove(e);
     if(radius===0){
@@ -754,9 +746,7 @@ function clearPalette(){
     var coords = getCoords(e);
     lastX=Math.floor(-1+coords[0]/zoomFactor);
     lastY=Math.floor(-1+coords[1]/zoomFactor);
-    if (isNaN(lastX)){
-      console.log("eek");
-    }
+    
   }
 
   function drawCircle(canvas,x,y,radius,colorIndex){  
