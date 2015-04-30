@@ -558,6 +558,7 @@ function clearPalette(){
       thumbCtx=thumbnailContext[n];
       thumbCtx.fillStyle="#FF0000";
       thumbCtx.fillRect(0,0,16,10);
+      var canvas=canvasses[n];
       for (var i=0;i<16;i++){
         for (var j=0;j<10;j++){
           var max=0;
@@ -591,7 +592,7 @@ function clearPalette(){
       }
       if (genAllThumbnails===true){
         for (var i=0;i<16;i++){
-          drawThumbnail(canvasIndex);          
+          drawThumbnail(i);          
         }
       } else {
         drawThumbnail(canvasIndex);
