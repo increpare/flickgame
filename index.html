@@ -504,13 +504,12 @@ function clearPalette(){
         var fromIndex=contents.indexOf(fromToken);
         var endIndex=contents.indexOf(endToken);
         var ss1 = contents.substr(fromIndex+fromToken.length,endIndex-fromIndex-fromToken.length);
-        var ss2=ss1.substr(ss1.indexOf("=")+3);
+        var ss2=ss1.substr(ss1.indexOf("=")+2);
         var decoded = decodeURI(ss2);
         var decoded2 = decoded.substring(0, decoded.length - 3);
         stringToState(decoded2);
         setVisuals();
         setLayer(canvasIndex+1); 
-        alert( substr );  
       }
       r.readAsText(f);
     } else { 
