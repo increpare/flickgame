@@ -1,5 +1,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+<script src="FileSaver.js"></script>
 <script type="text/javascript" > 
   var contexts = new Array();
   var version="0.1";
@@ -10,12 +11,139 @@
   var hyperlinks = new Array();
 
 
+
+/*
+//arne
+  var colorPalette = [
+           "#000000",
+            "#9D9D9D",
+            "#FFFFFF",
+            "#BE2633",
+            "#E06F8B",
+            "#493C2B",
+            "#A46422",
+            "#EB8931",
+            "#F7E26B",
+            "#2F484E",
+            "#44891A",
+            "#A3CE27",
+            "#1B2632",
+            "#005784",
+            "#31A2F2",
+            "#B2DCEF"
+            ];
+*/
+
+//dawnbringer
+//http://www.pixeljoint.com/forum/forum_posts.asp?TID=12795
+  var colorPalette = [
+            "#140c1c",
+            "#442434",
+            "#30346d",
+            "#4e4a4e",
+            "#854c30",
+            "#346524",
+            "#d04648",
+            "#757161",
+            "#597dce",
+            "#d27d2c",
+            "#8595a1",
+            "#6daa2c",
+            "#d2aa99",
+            "#6dc2ca",
+            "#dad45e",
+            "#deeed6"
+            ];
+
+/*
+//spectrum 
+  var colorPalette = [
+            "#000000",
+            "#888888",
+            "#CDCDCD",
+            "#FFFFFF",
+            "#0000CD",
+            "#0000FF",
+            "#CD0000",
+            "#FF0000",
+            "#CD00CD",
+            "#FF00FF",
+            "#00CD00",
+            "#00FF00",
+            "#00CDCD",
+            "#00FFFF",
+            "#CDCD00",
+            "#FFFF00"
+            ];
+*/
+  var colorElem = new Array();
+    var layerElem = new Array();
+  var colorIndex=getRandomInt(7,16);
+
 var aurl = document.createElement('a');
 function qualifyURL(url) {
   aurl.href = url;
   return aurl.href;
 }
 
+
+var radiusElem = new Array();
+  var thumbnailCanvas = new Array();
+  var thumbnailContext = new Array();
+  var dropdownOption = new Array();
+
+var standalone_HTML_String="";
+
+var clientStandaloneRequest = new XMLHttpRequest();
+
+clientStandaloneRequest.open('GET', 'play.html');
+clientStandaloneRequest.onreadystatechange = function() {
+
+    if(clientStandaloneRequest.readyState!=4) {
+      return;
+    }
+    if (clientStandaloneRequest.responseText==="") {
+      console.log("Couldn't find standalone template. Is there a connection problem to the internet?",true);
+    }
+    standalone_HTML_String=clientStandaloneRequest.responseText;
+}
+clientStandaloneRequest.send();
+
+
+var get_blob = function() {
+    return self.Blob;
+}
+
+function buildStandalone(sourceCode) {
+  if (standalone_HTML_String.length===0) {
+    console.log("Can't export yet - still downloading html template.",true);
+    return;
+  }
+  sourceCode=encodeURI(sourceCode);
+  var htmlString = standalone_HTML_String.concat("");
+
+
+  htmlString = htmlString.replace(/__EMBED__/g,sourceCode);
+
+  var BB = get_blob();
+  var blob = new BB([htmlString], {type: "text/plain;charset=utf-8"});
+  saveAs(blob, gameTitle+".html");
+}
+
+function exportClick(){
+  var embedDat = stateToString();
+  buildStandalone(embedDat);
+}
+
+function importClick(){
+  var reader = new FileReader();
+
+  reader.onload = function(e) {
+   var text = reader.result;
+  }
+
+  reader.readAsText(file, encoding);
+}
 function shareClick() {
   console.log("Sending code to github...",true)
   var title = gameTitle;
@@ -168,7 +296,7 @@ function press(evt){
       canvasses[canvasIndex]=JSON.parse(copyImage);
       setVisuals();
     }
-  } else if (evt.keyCode ===189 ) {//-
+  } else if (evt.keyCode ===189 || evt.keyCode===173 ) {//-
     if (radius===3) {
       setRadius(1);
     } else if (radius===5) {
@@ -184,7 +312,7 @@ function press(evt){
     }else if (radius===16) { 
       setRadius(13);
     }
-  } else if (evt.keyCode===187){//+
+  } else if (evt.keyCode===187 || evt.keyCode===61){//+
     if (radius===1){
       setRadius(3);
     } else if (radius===3) {
@@ -208,75 +336,9 @@ function press(evt){
     }
   }
 }
-
-/*
-//arne
-  var colorPalette = [
-           "#000000",
-            "#9D9D9D",
-            "#FFFFFF",
-            "#BE2633",
-            "#E06F8B",
-            "#493C2B",
-            "#A46422",
-            "#EB8931",
-            "#F7E26B",
-            "#2F484E",
-            "#44891A",
-            "#A3CE27",
-            "#1B2632",
-            "#005784",
-            "#31A2F2",
-            "#B2DCEF"
-            ];
-*/
-
-//dawnbringer
-//http://www.pixeljoint.com/forum/forum_posts.asp?TID=12795
-  var colorPalette = [
-            "#140c1c",
-            "#442434",
-            "#30346d",
-            "#4e4a4e",
-            "#854c30",
-            "#346524",
-            "#d04648",
-            "#757161",
-            "#597dce",
-            "#d27d2c",
-            "#8595a1",
-            "#6daa2c",
-            "#d2aa99",
-            "#6dc2ca",
-            "#dad45e",
-            "#deeed6"
-            ];
-
-/*
-//spectrum 
-  var colorPalette = [
-            "#000000",
-            "#888888",
-            "#CDCDCD",
-            "#FFFFFF",
-            "#0000CD",
-            "#0000FF",
-            "#CD0000",
-            "#FF0000",
-            "#CD00CD",
-            "#FF00FF",
-            "#00CD00",
-            "#00FF00",
-            "#00CDCD",
-            "#00FFFF",
-            "#CDCD00",
-            "#FFFF00"
-            ];
-*/
   function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min)) + min;
   }
-  var colorIndex=getRandomInt(7,16);
   var width=160;
   var height=100;
   var zoomFactor=4;
@@ -292,7 +354,6 @@ function press(evt){
   var lastX=-1;
   var lastY=-1;
 
-  var radiusElem = new Array();
   var bucketElem;
   function titleChange(newTitle){
     gameTitle=newTitle;
@@ -307,7 +368,7 @@ function press(evt){
 function clearPalette(){
   var canvas=canvasses[canvasIndex];
   for (var i=0;i<width*height;i++){
-    canvas[i]=colorIndex;
+    canvas[i]=0;
   }
   setVisuals();
 }
@@ -327,16 +388,12 @@ function clearPalette(){
         }
     }
 
-  var thumbnailCanvas = new Array();
-  var thumbnailContext = new Array();
 
-  var dropdownOption = new Array();
   function dropDownSelect(dropdown,val) {
     console.log(dropdown+"-"+val);
     hyperlinks[canvasIndex][dropdown-1]=val;
   }
 
-  var colorElem = new Array();
     function setColor(newColorIndex) {
       console.log("color selected "+ newColorIndex);
       colorIndex=newColorIndex;
@@ -348,7 +405,6 @@ function clearPalette(){
         colorElem[colorIndex].setAttribute("class","selected");
     }
 
-    var layerElem = new Array();
     function setLayer(newCanvasIndex) {
       console.log("color selected "+ newCanvasIndex);
       canvasIndex=newCanvasIndex-1;
@@ -372,12 +428,12 @@ function clearPalette(){
       linkInput=document.getElementById("linkInput");
       linkInput.value=gameLink;
 
-      console.log("hello world");
-
+      
       radii = new Array();
       for (var i=0;i<16;i++){
-        elem = document.getElementById("radius_"+(i+1));        
+        elem = document.getElementById("radius_"+(i+1));                
         radiusElem[i]=elem;
+        
       }
 
       for (var i=0;i<16;i++){
@@ -419,6 +475,8 @@ function clearPalette(){
       visibleCanvas.addEventListener('mousemove', mouseMove,false);
       visibleCanvas.addEventListener('mouseout', mouseOut,false);
 
+      var fileUploader = document.getElementById("my_file");
+      fileUploader.addEventListener('change', readFile, false);
 
       window.addEventListener('mouseup', mouseUp,false);
 
@@ -432,6 +490,34 @@ function clearPalette(){
 
       getData();
     }
+
+  function readFile(evt) {
+    //Retrieve the first (and only!) File from the FileList object
+    var f = evt.target.files[0]; 
+
+    if (f) {
+      var r = new FileReader();
+      r.onload = function(e) { 
+        var contents = e.target.result;
+        var fromToken="<!--__EmbedBegin__-->";
+        var endToken="<!--__EmbedEnd__-->";
+        var fromIndex=contents.indexOf(fromToken);
+        var endIndex=contents.indexOf(endToken);
+        var ss1 = contents.substr(fromIndex+fromToken.length,endIndex-fromIndex-fromToken.length);
+        var ss2=ss1.substr(ss1.indexOf("=")+3);
+        var decoded = decodeURI(ss2);
+        var decoded2 = decoded.substring(0, decoded.length - 3);
+        stringToState(decoded2);
+        setVisuals();
+        setLayer(canvasIndex+1); 
+        alert( substr );  
+      }
+      r.readAsText(f);
+    } else { 
+      alert("Failed to load file");
+    }
+  }
+
 
 
   function getParameterByName(name) {
@@ -1889,8 +1975,9 @@ body {
                     <td valign="top">
                       <a href="#" onclick="shareClick();return false;">&ocir; share</a><br />
                       <div id="shareLink"></div>
-                      <a href="blah">&sdotb; export</a><br />
-                      <a href="blah">&sdotb; import</a><br />
+                      <a href="#" onclick="exportClick();return false;">&sdotb; export</a><br />
+                      <a href="#" onclick="document.getElementById('my_file').click();return false;">&sdotb; import</a><br />
+                      <input type="file" accept=".html" id="my_file" style="display: none;" />
                       <a href="hints.html" target="_blank" title="blah">? hints</a>
                       <br />
                       <br />

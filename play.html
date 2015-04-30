@@ -71,6 +71,11 @@ a {
 }
 </style>
 <script>
+
+<!--__EmbedBegin__-->
+var embeddedDat="__EMBED__";
+<!--__EmbedEnd__-->
+
 var zoom=1;
 var currentIndex=0;
 function redraw(){
@@ -84,6 +89,7 @@ function redraw(){
     mainCanvasCtx.imageSmoothingEnabled = false;
     mainCanvasCtx.mozImageSmoothingEnabled = false;
     mainCanvasCtx.oImageSmoothingEnabled = false;
+    mainCanvasCtx.msImageSmoothingEnabled = false;
     mainCanvasCtx.webkitImageSmoothingEnabled = false;
 
     var w = mainCanvasCtx.width;
@@ -227,6 +233,21 @@ function strip_http(url) {
 }
 
 function getData(){ 
+  if (embeddedDat[0]!=='_'){
+    embeddedDat=decodeURI(embeddedDat);
+    loadState(embeddedDat);
+
+    var homepage=gameState.gameLink;
+    var homepageLink = document.getElementById("homeLink");
+    homepageLink.innerHTML=strip_http(homepage);
+    if (!homepage.match(/^https?:\/\//)) {
+      homepage = "http://" + homepage;
+    }
+    homepageLink.href = homepage;
+
+    renderImages();
+    return;
+  }
   var id = getParameterByName("p").replace(/[\\\/]/,"");
   if (id===null||id.length===0) {
     console.log("No ID specified in URL.")
@@ -271,7 +292,7 @@ function getData(){
     var url = "index.html?p="+id;
     url=qualifyURL(url);
     hacklink.href=url;
-
+    hacklink.innerHTML="&sdotb; edit";
     renderImages();
   }
   githubHTTPClient.setRequestHeader("Content-type","application/x-www-form-urlencoded");
@@ -357,7 +378,7 @@ document.addEventListener("keydown", goFullscreen);
 
 </script>
 </head>
-<body onload="init()" onkeydown="goFullscreen(e)">
+<body onload="init()" onkeydown="goFullscreen(event);">
 <div id="header">
 <h1 id="gameTitle">Game Loader</h1> 
 </div>
@@ -367,7 +388,7 @@ document.addEventListener("keydown", goFullscreen);
 </div>
 <p>
 <div id="footer">
- <a href="http://www.flipgame.org" id="hackLink">&sdotb; edit</a> <a  id="homeLink" href="http://www.flipgame.org"></a> 
+ <a href="http://www.flipgame.org" id="hackLink"></a> <a  id="homeLink" href="http://www.flipgame.org"></a> 
 </div>
 </body>
 </html>
