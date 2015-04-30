@@ -287,7 +287,13 @@ function press(evt){
     copyImage=JSON.stringify(canvasses[canvasIndex])
   } else if (evt.keyCode===86){ //v
     if (copyImage!==null){
-      canvasses[canvasIndex]=JSON.parse(copyImage);
+      preserveUndoState();
+      var ar = JSON.parse(copyImage);
+      var arui8 = new Uint8Array(width*height);
+      for (var i=0;i<width*height;i++){
+        arui8[i]=ar[i];
+      }
+      canvasses[canvasIndex]=arui8;
       setVisuals();
     }
   } else if (evt.keyCode ===189 || evt.keyCode===173 ) {//-
@@ -632,6 +638,7 @@ function clearPalette(){
 
   var undoList=new Array();
   function preserveUndoState() {
+    console.log("preserving undo state");
     var undoItem = new Object();
     undoItem.canvasIndex=canvasIndex;
     undoItem.canvasDat=uint8ar_copy(canvasses[canvasIndex]);
