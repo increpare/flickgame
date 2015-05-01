@@ -313,7 +313,9 @@ function press(evt){
       setRadius(13);
     }
   } else if (evt.keyCode===187 || evt.keyCode===61){//+
-    if (radius===1){
+    if (radius===0){
+      setRadius(1);
+    } else if (radius===1){
       setRadius(3);
     } else if (radius===3) {
       setRadius(5);
