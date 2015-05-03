@@ -1,15 +1,18 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+<link rel="icon" 
+      type="image/png" 
+      href="favicon.png">
 <script src="FileSaver.js"></script>
 <script type="text/javascript" > 
   var contexts = new Array();
   var version="0.1";
-  var gameTitle="My Game";
-  var gameLink="www.flipgame.org"
+  var gameLink="www.flickgame.org"
   var canvasIndex=0;
   var canvasses = new Array();
   var hyperlinks = new Array();
 
+  var shareLinkInner=null;
 
 
 /*
@@ -120,11 +123,12 @@ function buildStandalone(sourceCode) {
   var htmlString = standalone_HTML_String.concat("");
 
 
+  htmlString = "<!--Save as html file-->\n"+htmlString;
   htmlString = htmlString.replace(/__EMBED__/g,sourceCode);
 
   var BB = get_blob();
   var blob = new BB([htmlString], {type: "text/plain;charset=utf-8"});
-  saveAs(blob, gameTitle+".html");
+  saveAs(blob, "flickgame.html");
 }
 
 function exportClick(){
@@ -142,15 +146,14 @@ function importClick(){
   reader.readAsText(file, encoding);
 }
 function shareClick() {
-  var title = gameTitle;
   var str = stateToString();
 
   var gistToCreate = {
-    "description" : title,
+    "description" : "flickgame",
     "public" : true,
     "files": {
       "readme.txt" : {
-        "content": "A game made with www.flipcode.org"
+        "content": "A game made with www.flickgame.org.  You can import game.txt there to play the game."
       },
       "game.txt" : {
         "content": str
@@ -183,8 +186,8 @@ function shareClick() {
       var sourceCodeLink = "link to source code:<br><a href=\""+editurl+"\">"+editurl+"</a>";
 
       var shareLink = document.getElementById("shareLink");
-      shareLink.innerHTML = "<a target=\"_blank\" href=\""+url+"\">"+url+"</a><br>";
-
+      shareLink.innerHTML = "<a target=\"_blank\" href=\""+url+"\">&#8627;"+id+"</a><br>";
+      shareLinkInner = shareLink.childNodes[0];
 
       if (errorCount>0) {
         alert("Cannot link directly to playable game, because there are errors.",true);
@@ -227,7 +230,6 @@ function RLE_decode(encoded) {
 
 function stateToString(){
   var state = new Object();
-  state.gameTitle=gameTitle;
   state.gameLink=gameLink;
   state.canvasses=new Array();
   for (var i=0;i<16;i++){
@@ -246,7 +248,6 @@ function stateToString(){
 
 function stringToState(str){
   var state = JSON.parse(str);
-  gameTitle=state.gameTitle;
   gameLink=state.gameLink;
   canvasIndex=0;
   canvasses=new Array();
@@ -335,6 +336,10 @@ function press(evt){
       var dat = undoList.pop();
       canvasses[dat.canvasIndex]=dat.canvasDat;
       setLayer(dat.canvasIndex+1);
+      
+      if (shareLinkInner!==null){
+        shareLinkInner.style.color="gray";
+      }
     }
   }
 }
@@ -348,7 +353,6 @@ function press(evt){
 
   var visibleCanvas;
   var visibleContext;
-  var titleInput;
   var linkInput;
   var id;
   var id_d;
@@ -357,9 +361,6 @@ function press(evt){
   var lastY=-1;
 
   var bucketElem;
-  function titleChange(newTitle){
-    gameTitle=newTitle;
-  }
 
   function linkChange(newLink){
     gameLink=newLink;
@@ -371,6 +372,7 @@ function clearPalette(){
   for (var i=0;i<width*height;i++){
     canvas[i]=0;
   }
+
   setVisuals();
 }
     function setRadius(newRadius) {
@@ -419,9 +421,7 @@ function clearPalette(){
 
     function init() {
 
-      titleInput=document.getElementById("titleInput");
-      titleInput.value=gameTitle;
-
+      
       linkInput=document.getElementById("linkInput");
       linkInput.value=gameLink;
 
@@ -605,7 +605,6 @@ function clearPalette(){
       } else {
         drawThumbnail(canvasIndex);
       }
-      titleInput.value=gameTitle;
       linkInput.value=gameLink;
     }
 
@@ -647,6 +646,10 @@ function clearPalette(){
     undoList.push(undoItem);
     if (undoList.length>30){
       undoList.shift();
+    }
+
+    if (shareLinkInner!==null){
+      shareLinkInner.style.color="gray";
     }
   }
 
@@ -940,7 +943,7 @@ body {
     /*]]>*/
     </style>
     <title>
-      flipgame
+      flickgame.org
     </title>
   </head>
   <body onload="init();" ondragstart="return false;" ondrop="return false;">
@@ -1039,8 +1042,7 @@ body {
                   <tr>
                     <td>
                       <center>
-                        <input width="640" style="border:2px solid gray;" onkeydown="event.stopPropagation();" value="game title"  id="titleInput" oninput="titleChange(this.value)" />
-                        <input width="640" style="border:2px solid gray;" onkeydown="event.stopPropagation();" value="www.flipgame.org"  id="linkInput" oninput="linkChange(this.value)" />
+                        <input width="640" style="border:2px solid gray;" onkeydown="event.stopPropagation();" value="www.flickgame.org"  id="linkInput" oninput="linkChange(this.value)" />
                         <br/>
                         <canvas id="mainCanvas" width="640" height="400" style="border:2px solid gray; background-color:black;"></canvas>
                         <br />
@@ -1977,7 +1979,7 @@ body {
                       <a href="#" onclick="exportClick();return false;">&sdotb; export</a><br />
                       <a href="#" onclick="document.getElementById('my_file').click();return false;">&sdotb; import</a><br />
                       <input type="file" accept=".html" id="my_file" style="display: none;" />
-                      <a href="hints.html" target="_blank" title="blah">? hints</a>
+                      <a href="help.html" target="_blank" title="blah">? help</a>
                       <br />
                       <br />
                       <a href="#" onclick="setRadius(16);return false;"><img src="16.png" class="radius" id="radius_16" /></a>

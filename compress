@@ -1,0 +1,8 @@
+mkdir compressed
+ls *.png | while read line; do pngcrush -brute $line compressed/$line; done
+cd compressed
+mv *.png ../
+cd ..
+rm -rf compressed
+rm *.gz
+./gzipper

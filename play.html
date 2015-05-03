@@ -1,18 +1,22 @@
 <html>
 <head>
+<link rel="icon" 
+      type="image/png" 
+      href="favicon.png">
+<title>flickgame.org</title>
 <style>
 
 #header h1 {
   padding:0;
   margin:0;
-  line-height: 80px;
+  line-height: 40px;
 }
 #header {
   position:absolute;
   left:0px;
   right:0px;
   top:0px;
-  height:80px;
+  height:40px;
   background-color: black;
   color:white;
   text-align: center;
@@ -27,7 +31,7 @@ a {
 
 #content {
   position: absolute;
-  top:80px;
+  top:40px;
   bottom:30px;
   left:0px;
   right:0px;
@@ -282,12 +286,6 @@ function getData(){
     }
     homepageLink.href = homepage;
   
-
-    var title=gameState.title;
-    var gameTitle = document.getElementById("gameTitle");
-    gameTitle.innerHTML=gameState.gameTitle;
-    window.document.title=gameState.gameTitle;
-
     var hacklink = document.getElementById("hackLink");
 
     var url = "index.html?p="+id;
@@ -381,7 +379,6 @@ document.addEventListener("keydown", goFullscreen);
 </head>
 <body onload="init()" onkeydown="goFullscreen(event);">
 <div id="header">
-<h1 id="gameTitle">Game Loader</h1> 
 </div>
 <p>
 <div id="content">
@@ -389,7 +386,7 @@ document.addEventListener("keydown", goFullscreen);
 </div>
 <p>
 <div id="footer">
- <a href="http://www.flipgame.org" id="hackLink"></a> <a  id="homeLink" href="http://www.flipgame.org"></a> 
+ <a href="http://www.flickgame.org" id="hackLink"></a> <a  id="homeLink" href="http://www.flickgame.org"></a> 
 </div>
 </body>
 </html>
