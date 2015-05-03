@@ -1,5 +1,7 @@
 http://www.flickgame.org
-tiny game engine
+
+tiny game engine with online sharing as well as standalone export.
+
 
 The MIT License (MIT)
 
