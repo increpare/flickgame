@@ -472,6 +472,10 @@ function clearPalette(){
       visibleCanvas.addEventListener('mousemove', mouseMove,false);
       visibleCanvas.addEventListener('mouseout', mouseOut,false);
 
+      visibleCanvas.addEventListener('touchstart', mouseDown,false);
+      visibleCanvas.addEventListener('touchmove', mouseMove,false);
+      visibleCanvas.addEventListener('touchend', mouseUp,false);
+
       var fileUploader = document.getElementById("my_file");
       fileUploader.addEventListener('change', readFile, false);
 
@@ -612,17 +616,25 @@ function clearPalette(){
   var drawing=0;
 
 
-  function getCoords(e) {
+  function getCoords(e) {  
     var x,y; 
     if(typeof e.offsetX !== "undefined") {
         x = e.offsetX;
         y = e.offsetY;
     }
-    else {      
+    else {
       var target = e.target || e.srcElement;
       var rect = target.getBoundingClientRect();
-      x = e.clientX - rect.left,
-      y = e.clientY - rect.top;
+      var point;
+      if (e instanceof TouchEvent ) {
+        //use first touch as the pointer
+        point = e.touches[0];
+      } else {
+        //mouse pointer
+        point = e;
+      }
+      x = point.clientX - rect.left,
+      y = point.clientY - rect.top;
     } 
     return [x,y];
   }
@@ -760,6 +772,7 @@ function clearPalette(){
     lastX=Math.floor(-1+coords[0]/zoomFactor);
     lastY=Math.floor(-1+coords[1]/zoomFactor);
     
+    e.preventDefault();
   }
 
   function drawCircle(canvas,x,y,radius,colorIndex){  
