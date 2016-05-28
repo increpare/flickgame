@@ -660,8 +660,8 @@ function clearPalette(){
     var coords = getCoords(e);
     startTargetX=coords[0];
     startTargetY=coords[1];
-    lastX=Math.floor(-1+startTargetX/zoomFactor);
-    lastY=Math.floor(-1+startTargetY/zoomFactor);
+    lastX=Math.floor(startTargetX/zoomFactor);
+    lastY=Math.floor(startTargetY/zoomFactor);
     
     preserveUndoState();
     mouseMove(e);
@@ -725,8 +725,8 @@ function clearPalette(){
 
     var coords = getCoords(e);
 
-    var x = Math.floor(-1+coords[0]/zoomFactor);
-    var y = Math.floor(-1+coords[1]/zoomFactor);
+    var x = Math.floor(coords[0]/zoomFactor);
+    var y = Math.floor(coords[1]/zoomFactor);
 
 
     var canvas=canvasses[canvasIndex];
@@ -757,8 +757,8 @@ function clearPalette(){
     setVisuals();
 
     var coords = getCoords(e);
-    lastX=Math.floor(-1+coords[0]/zoomFactor);
-    lastY=Math.floor(-1+coords[1]/zoomFactor);
+    lastX=Math.floor(coords[0]/zoomFactor);
+    lastY=Math.floor(coords[1]/zoomFactor);
     
   }
 
