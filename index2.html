@@ -278,7 +278,13 @@ function press(evt){
   } else if (evt.keyCode===90){//z
     if (undoList.length>0){
       var dat = undoList.pop();
-      canvasses[dat.canvasIndex]=dat.canvasDat;
+      if (dat.canvasDat==null){
+        if (dat.canvasIndex in canvasses) {
+          delete canvasses[dat.canvasIndex];
+        }
+      } else {
+        canvasses[dat.canvasIndex]=dat.canvasDat;
+      }
       setLayer(dat.canvasIndex);
       checkEmpties();
       if (shareLinkInner!==null){
@@ -615,6 +621,11 @@ function clearPalette(){
         return;
       } else {
         document.getElementById('thumbnailcontainer'+(n+1)).style.visibility="";
+        if (canvasIndex[canvasIndex.length-1]=="0"){
+          document.getElementById('parentarrowcharacter').className='downarrowblue';
+        } else {
+          document.getElementById('parentarrowcharacter').className='downarrowred';              
+        }
       }
 
       thumbCtx=thumbnailContext[n+1];
@@ -714,9 +725,13 @@ function clearPalette(){
     console.log("preserving undo state");
     var undoItem = new Object();
     undoItem.canvasIndex=canvasIndex;
-    undoItem.canvasDat=uint8ar_copy(canvasses[canvasIndex]);
+    if ( (canvasIndex in canvasses)==false){
+      undoItem.canvasDat=null;
+    } else {
+      undoItem.canvasDat=uint8ar_copy(canvasses[canvasIndex]);
+    }
     undoList.push(undoItem);
-    if (undoList.length>30){
+    if (undoList.length>100){
       undoList.shift();
     }
 
