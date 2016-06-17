@@ -316,13 +316,9 @@ function redraw(){
         var y1=p[3]
         var dx=x1-x0
         var dy=y1-y0
-        if (dx!==0||dy!==0){
-//          var xt = Math.round(x0+progress*dx+Math.random()*0.5-0.25)
-//          var yt = Math.round(y0+progress*dy+Math.random()*0.5-0.25)
-          var xt = Math.round(x0+progress*dx)
-          var yt = Math.round(y0+progress*dy)
-          frame[xt+160*yt]=c;
-        }
+        var xt = Math.round(x0+progress*dx)
+        var yt = Math.round(y0+progress*dy)
+        frame[xt+160*yt]=c;
       }
     }
     return frame;
