@@ -80,6 +80,36 @@ a {
 var embeddedDat="__EMBED__";
 <!--__EmbedEnd__-->
 
+function getUrlVars() {
+    var vars = {};
+    var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi,    
+    function(m,key,value) {
+      vars[key] = value;
+    });
+    return vars;
+}
+
+var urlVars = getUrlVars();
+if (!("frameCount" in urlVars)){
+  urlVars["frameCount"]=1;
+}
+if (!("animationLength" in urlVars)){
+  urlVars["animationLength"]=0.5;
+}
+
+urlVars["frameCount"]=parseFloat(urlVars["frameCount"])
+urlVars["animationLength"]=parseFloat(urlVars["animationLength"])
+var frameCount=urlVars["frameCount"];
+var animationLength=urlVars["animationLength"];
+
+if(urlVars["a"]==="1"){
+  frameCount=8;
+  animationLength=0.5;
+}
+var showAnimation = frameCount>1;
+
+
+var animating=false;
 var zoom=1;
 var currentIndex=0;
 function redraw(){
@@ -114,7 +144,11 @@ function redraw(){
     var dy=(h-100*zoom)/2;
     mainCanvasCtx.fillStyle="#000000";
     mainCanvasCtx.fillRect(0,0,w,h);
-    mainCanvasCtx.drawImage(images[currentIndex],0,0,160,100,dx,dy,160*zoom,100*zoom);
+    if (curCanvasToDraw===null){
+      mainCanvasCtx.drawImage(images[currentIndex],0,0,160,100,dx,dy,160*zoom,100*zoom);
+    } else {
+      mainCanvasCtx.drawImage(curCanvasToDraw,0,0,160,100,dx,dy,160*zoom,100*zoom);
+    }
   } else {    
     mainCanvasCtx.fillStyle="#ff0000";
     mainCanvasCtx.fillRect(0,0,mainCanvas.width/2,mainCanvas.height/2);
@@ -144,16 +178,227 @@ function redraw(){
 
   var target=0;
 
+  function printNonZeros(a,stack){
+    var count=0;
+    for (var i=0;i<160;i++){
+      for (var j=0;j<100;j++){
+        if (a[j][i]!==null)
+          count++;
+      }
+    }
+    window.console.log(count + " non-zero entries.");
+    window.console.log("stack length " + stack.length+".");
+  }
+
+  var hex=['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f']
+
+  function calcHeatmap(cal,col,fromCal){
+    var map = []
+    var stack = []
+    var c = hex[col]
+
+    //initialize
+    for (var j=0;j<100;j++){
+      for (var i=0;i<160;i++){
+        if (cal[i+160*j]===c){
+          var entry = [0,i,j]
+          map.push([0,i,j])
+          stack.push([i,j,0,i,j])
+        } else {
+          map.push(null)
+        }
+      }
+    }
+
+    //should replace this with a center of mass calculation from the old one
+    if (stack.length===0){
+      var cx=0;
+      var cy=0;
+      var count=0;
+      for (var i=0;i<160;i++){
+        for (var j=0;j<100;j++){
+          if (fromCal[i+160*j]===c){
+            cx+=i;
+            cy+=j;
+            count++;
+          }
+        }
+      }
+      if (count>0){
+        cx=Math.round(cx/count);
+        cy=Math.round(cy/count);
+        for (var j=0;j<100;j++){
+          for (var i=0;i<160;i++){
+            map[i+160*j]=[0,cx,cy];
+          }
+        }
+      }
+    }
+
+    //propagate
+    while(stack.length>0){
+      var entry = stack.shift();
+      //[fromx,fromy,dist,tox,toy]
+      var x0=entry[0];
+      var y0=entry[1];
+      var d0=entry[2];
+      var xtarget=entry[3];
+      var ytarget=entry[4];
+      var d1=d0+1;
+      var neighbours = [[x0-1,y0],[x0+1,y0],[x0,y0-1],[x0,y0+1]];
+      for (var i=0;i<4;i++){
+        var n = neighbours[i];
+        var nx=n[0];
+        var ny=n[1];
+        if (nx<0||ny<0||nx>=160||ny>=100){
+          continue;
+        }
+        var existing = map[nx+160*ny];
+        if (existing===null||d1<existing[0]){
+          map[nx+160*ny]=[d1,xtarget,ytarget]
+          stack.push([nx,ny,d1,xtarget,ytarget])
+        }
+      }
+    }
+
+    return map;
+  }
+
+  function generateParticleMotions(sourceCanvas,targetHeatMap,colIndex,particles,reverse){
+    if (reverse){
+      var c = hex[colIndex];
+      for (var i=0;i<160;i++){
+        for (var j=0;j<100;j++){
+          var pixel = sourceCanvas[i+160*j];
+          if (pixel===c){
+            //[d,tx,ty]
+            var target = targetHeatMap[i+160*j];
+            var tx = target[1];
+            var ty = target[2];
+            if (i!==tx||j!==ty)
+              particles.push([tx,ty,i,j])
+          }
+        }
+      }
+    } else {
+      var c = hex[colIndex];
+      for (var i=0;i<160;i++){
+        for (var j=0;j<100;j++){
+          var pixel = sourceCanvas[i+160*j];
+          if (pixel===c){
+            //[d,tx,ty]
+            var target = targetHeatMap[i+160*j];
+            var tx = target[1];
+            var ty = target[2];
+            particles.push([i,j,tx,ty])
+          }
+        }
+      }
+    }
+  }
+
+  function generateFrame(sourceImage,particleMap,progress){
+    var frame = [];
+    for (var j=0;j<100;j++){
+      for (var i=0;i<160;i++){
+        frame.push(sourceImage[i+160*j]);
+      }
+    }
+
+    for (var cIndex=0;cIndex<particleMap.length;cIndex++){      
+      var c = hex[cIndex]
+      var particles = particleMap[cIndex]
+      for (var i=0;i<particles.length;i++){
+        var p = particles[i]
+        var x0=p[0]
+        var y0=p[1]
+        var x1=p[2]
+        var y1=p[3]
+        var dx=x1-x0
+        var dy=y1-y0
+        if (dx!==0||dy!==0){
+//          var xt = Math.round(x0+progress*dx+Math.random()*0.5-0.25)
+//          var yt = Math.round(y0+progress*dy+Math.random()*0.5-0.25)
+          var xt = Math.round(x0+progress*dx)
+          var yt = Math.round(y0+progress*dy)
+          frame[xt+160*yt]=c;
+        }
+      }
+    }
+    return frame;
+  }
+
+  function calcTransitionGrids(oldCanvas,newCanvas){
+    //generate 32 canvasses, for each color, for each direction
+    var particleMaps = []
+    for (var i=0;i<16;i++){
+      var forwardHeatmap = calcHeatmap(newCanvas,i,oldCanvas);
+      window.console.log("generated forward"+i);
+      var backwardHeatmap = calcHeatmap(oldCanvas,i,newCanvas);
+      window.console.log("generated backward"+i);
+      var particles=[]
+      var particleMotionsForward = generateParticleMotions(oldCanvas,forwardHeatmap,i,particles,false);
+      window.console.log("generated forward particles"+i);
+      var particleMotionsBackward = generateParticleMotions(newCanvas,backwardHeatmap,i,particles,true);
+      window.console.log("generated backwards particles"+i);
+      particleMaps.push(particles);      
+    }
+    var frames=[];
+    frames.push(oldCanvas)
+    for (var i=1;i<frameCount;i++){
+      var frame = generateFrame(oldCanvas,particleMaps,i/frameCount)
+      frames.push(frame);
+    }
+    frames.push(newCanvas)
+    return frames;
+  }
+
+  var curCanvasToDraw=null;
+  var curAnimationFrames=null;
+  function transition(oldIndex,newIndex){
+    var oldCanvas = gameState.imageDats[oldIndex];
+    var newCanvas = gameState.imageDats[newIndex];
+    var frames = calcTransitionGrids(oldCanvas,newCanvas);
+    curAnimationFrames = frames;
+    return frames;
+  }
+
+  function drawNextFrame(){
+      curCanvasToDraw=printCanvas(curAnimationFrames[animationIndex])[0];
+      redraw();
+      animationIndex++;
+      if (animationIndex<curAnimationFrames.length){
+        setTimeout(drawNextFrame,1000*animationLength/frameCount);
+      } else {
+        animating=false;
+      }
+  }
+  var animationIndex=1;
+  function doAnimation(){
+    animating=true;
+    animationIndex=1;
+    drawNextFrame();
+  }
+
   function mouseDown(e){
     mouseMove(e);
     if (target>0){
-      currentIndex=target-1;
-      redraw();
+      if (showAnimation){
+        transition(currentIndex,target-1);
+        currentIndex=target-1;
+        doAnimation();
+      } else {
+        currentIndex=target-1;
+        redraw();        
+      }
       mouseMove(e);
     } 
   }
   function mouseMove(e){
 
+    if (gameState==null){
+      return;
+    }
     var coords = getCoords(e);
 
     var w = mainCanvasCtx.width;
@@ -189,8 +434,7 @@ function redraw(){
     } else {
       mainCanvas.style.cursor="default";
     }
-    console.log(x+","+y+","+ch);
-
+    
   }
 
 var mainCanvas;
@@ -332,17 +576,12 @@ function RLE_decode(encoded) {
 
 var images = new Array();
 var imageCtxts = new Array();
-function renderImages(){
-  gameState.imageDats = new Array();
 
-  for (var i=0;i<16;i++){
+function printCanvas(descriptionString){
     var canvas = document.createElement('canvas');
     canvas.width="160";
     canvas.height="100";
     var ctx=canvas.getContext("2d");
-
-    var descriptionArray = gameState.canvasses[i];
-    var descriptionString = RLE_decode(descriptionArray);
     for (var j=0;j<descriptionString.length;j++){
       var x = j%160;
       var y = Math.floor(j/160);
@@ -351,6 +590,20 @@ function renderImages(){
       ctx.fillStyle=colorPalette[colIndex];
       ctx.fillRect(x,y,1,1);
     }
+    return [canvas,ctx];
+}
+
+function renderImages(){
+  gameState.imageDats = new Array();
+
+  for (var i=0;i<16;i++){
+    var descriptionArray = gameState.canvasses[i];
+    var descriptionString = RLE_decode(descriptionArray);
+
+    var canvas_context=printCanvas(descriptionString);
+    var canvas=canvas_context[0];
+    var ctx=canvas_context[1];
+
     gameState.imageDats.push(descriptionString);
     images.push(canvas);
     imageCtxts.push(ctx);
