@@ -1,0 +1,681 @@
+<html>
+<head>
+<link rel="icon" 
+      type="image/png" 
+      href="favicon.png">
+<title>flickuboy</title>
+<style>
+
+a {
+  color:white;
+}
+
+#leftLink,#rightLink {
+  color:white;
+  text-decoration: none;
+}
+
+#centerLink {
+  color:white;
+  text-decoration: underline;
+}
+
+#content {
+  position: absolute;
+  top:0px;
+  bottom:30px;
+  left:0px;
+  right:0px;
+  background-color: white;
+  text-align: center;
+  padding:0;
+  margin:0;
+}
+
+#linkCanvas {
+  position: absolute;
+  background: transparent;
+bottom:0;
+left:0;
+right:0;
+text-align: center;
+color: gray;
+font-family: "Courier New";
+}
+
+#textcanvas {
+  position: absolute;
+  top:0;
+  bottom: 30px;
+  left: 0;
+  right: 0;
+}
+
+#content canvas {
+ top:0;
+ bottom:0;
+ left:0;
+ right:0;
+ padding: 0;
+ margin:0; 
+}
+#hackLink {
+  position: absolute;
+  right:10px;
+  float: right;
+}
+
+#homelink {
+  float: center;
+}
+#footer {
+  position:absolute;
+  left:0px;
+  right:0px;
+  bottom:0px;
+  height:30px;
+  margin:0;
+  padding:0;
+  background-color: black;
+  color:white;
+  text-align: center;
+  padding: 0;
+  line-height: 30px;
+}
+</style>
+<script>
+
+<!--__EmbedBegin__-->
+var embeddedDat="__EMBED__";
+<!--__EmbedEnd__-->
+
+function getUrlVars() {
+    var vars = {};
+    var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi,    
+    function(m,key,value) {
+      vars[key] = value;
+    });
+    return vars;
+}
+
+var urlVars = getUrlVars();
+if (!("frameCount" in urlVars)){
+  urlVars["frameCount"]=1;
+}
+if (!("animationLength" in urlVars)){
+  urlVars["animationLength"]=0.5;
+}
+
+urlVars["frameCount"]=parseFloat(urlVars["frameCount"])
+urlVars["animationLength"]=parseFloat(urlVars["animationLength"])
+var frameCount=urlVars["frameCount"];
+var animationLength=urlVars["animationLength"];
+
+if(urlVars["a"]==="1"){
+  frameCount=8;
+  animationLength=0.5;
+}
+var showAnimation = frameCount>1;
+
+
+var animating=false;
+var zoom=1;
+var currentIndex=0;
+var currentVerb=0;
+
+function redraw(){
+  console.log("resized "+window.innerWidth +"x"+window.innerHeight);  
+  mainCanvas.width=mainCanvasContainer.clientWidth;
+  mainCanvas.height=mainCanvasContainer.clientHeight;
+  mainCanvasCtx.width=mainCanvasContainer.clientWidth;
+  mainCanvasCtx.height=mainCanvasContainer.clientHeight;
+  
+  textCanvas.width=mainCanvasContainer.clientWidth;
+  textCanvas.height=mainCanvasContainer.clientHeight;
+  textCanvasCtx.width=mainCanvasContainer.clientWidth;
+  textCanvasCtx.height=mainCanvasContainer.clientHeight;
+
+
+  if (images.length>0){
+
+    mainCanvasCtx.imageSmoothingEnabled = false;
+    mainCanvasCtx.mozImageSmoothingEnabled = false;
+    mainCanvasCtx.oImageSmoothingEnabled = false;
+    mainCanvasCtx.webkitImageSmoothingEnabled = false;
+    mainCanvasCtx.msImageSmoothingEnabled = false;
+
+    textCanvasCtx.imageSmoothingEnabled = false;
+    textCanvasCtx.mozImageSmoothingEnabled = false;
+    textCanvasCtx.oImageSmoothingEnabled = false;
+    textCanvasCtx.webkitImageSmoothingEnabled = false;
+    textCanvasCtx.msImageSmoothingEnabled = false;
+  
+
+    vs = gameState.verbs[currentIndex][currentVerb][0];
+    if (vs!==""){    
+      if (currentVerb>0){
+        leftLink.style.visibility="";
+      } else {
+        leftLink.style.visibility="hidden";
+      }
+
+      if (currentVerb<5 && gameState.verbs[currentIndex][currentVerb+1][0]!==""){      
+        rightLink.style.visibility="";
+      } else {
+        rightLink.style.visibility="hidden";      
+      }
+      actionLink.style.visibility="";
+      actionLink.innerText=vs;
+    } else {
+      actionLink.style.visibility="hidden";
+      leftLink.style.visibility="hidden";
+      rightLink.style.visibility="hidden";   
+    }
+
+    var w = mainCanvasCtx.width;
+    var h = mainCanvasCtx.height;
+    var wd = w/128.0;
+    var hd = h/64.0;
+    zoom=1;
+    if (wd<hd){
+      zoom=wd;//Math.floor(wd);
+    } else {
+      zoom=hd;//Math.floor(hd);
+    }
+    if(zoom<1){
+      zoom=1;
+    }
+    var dx=(w-128*zoom)/2;
+    var dy=(h-64*zoom)/2;
+    mainCanvasCtx.fillStyle="#000000";
+    mainCanvasCtx.fillRect(0,0,w,h);
+    linkCanvas.style.fontSize = `${8*zoom}px`;
+
+    if (curCanvasToDraw===null){
+      mainCanvasCtx.drawImage(images[currentIndex],0,0,128,64,dx,dy,128*zoom,64*zoom);
+      var zoomFactor=zoom;
+      var height=h;
+      textCanvasCtx.clearRect(0,0,w,h);
+      textCanvasCtx.textBaseline="top";
+      textCanvasCtx.textAlign="left";
+      textCanvasCtx.font=`${8*zoom}px Courier New`;
+      textCanvasCtx.fillStyle='white';
+      var s = gameState.texts[currentIndex];
+      var lines = s.split("\n");
+      for (var i=0;i<lines.length;i++){
+        var l = lines[i];
+        textCanvasCtx.fillText(l,dx+2*zoomFactor,dy+i*height/5.5)
+        textCanvasCtx.fillText(l,dx+2*zoomFactor,dy+i*height/5.5)
+        textCanvasCtx.fillText(l,dx+2*zoomFactor,dy+i*height/5.5)
+        textCanvasCtx.fillText(l,dx+2*zoomFactor,dy+i*height/5.5)
+        textCanvasCtx.fillText(l,dx+2*zoomFactor,dy+i*height/5.5)
+        textCanvasCtx.fillText(l,dx+2*zoomFactor,dy+i*height/5.5)
+        textCanvasCtx.fillText(l,dx+2*zoomFactor,dy+i*height/5.5)
+        textCanvasCtx.fillText(l,dx+2*zoomFactor,dy+i*height/5.5)
+      }
+
+
+
+    } else {
+      mainCanvasCtx.drawImage(curCanvasToDraw,0,0,128,64,dx,dy,128*zoom,64*zoom);
+    }
+  } else {    
+    mainCanvasCtx.fillStyle="#140c1c";
+    mainCanvasCtx.fillRect(0,0,mainCanvas.width/2,mainCanvas.height/2);
+    mainCanvasCtx.fillStyle="#8595a1";
+    mainCanvasCtx.fillRect(mainCanvas.width/2,0,mainCanvas.width/2,mainCanvas.height/2);
+    mainCanvasCtx.fillStyle="#8595a1";
+    mainCanvasCtx.fillRect(0,mainCanvas.height/2,mainCanvas.width/2,mainCanvas.height/2);
+    mainCanvasCtx.fillStyle="#140c1c";
+    mainCanvasCtx.fillRect(mainCanvas.width/2,mainCanvas.height/2,mainCanvas.width/2,mainCanvas.height/2);
+  }
+}
+
+
+  function getCoords(e) {
+    var x,y; 
+    if(e.offsetX) {
+        x = e.offsetX;
+        y = e.offsetY;
+    }
+    else if(e.layerX) {
+        x = e.layerX;
+        y = e.layerY;
+    }
+
+    return [x,y];
+  }
+
+  var target=0;
+
+  function printNonZeros(a,stack){
+    var count=0;
+    for (var i=0;i<128;i++){
+      for (var j=0;j<64;j++){
+        if (a[j][i]!==null)
+          count++;
+      }
+    }
+    window.console.log(count + " non-zero entries.");
+    window.console.log("stack length " + stack.length+".");
+  }
+
+  var hex=['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f']
+
+  function calcHeatmap(cal,col,fromCal){
+    var map = []
+    var stack = []
+    var c = hex[col]
+
+    //initialize
+    for (var j=0;j<64;j++){
+      for (var i=0;i<128;i++){
+        if (cal[i+128*j]===c){
+          var entry = [0,i,j]
+          map.push([0,i,j])
+          stack.push([i,j,0,i,j])
+        } else {
+          map.push(null)
+        }
+      }
+    }
+
+    //should replace this with a center of mass calculation from the old one
+    if (stack.length===0){
+      var cx=0;
+      var cy=0;
+      var count=0;
+      for (var i=0;i<128;i++){
+        for (var j=0;j<64;j++){
+          if (fromCal[i+128*j]===c){
+            cx+=i;
+            cy+=j;
+            count++;
+          }
+        }
+      }
+      if (count>0){
+        cx=Math.round(cx/count);
+        cy=Math.round(cy/count);
+        for (var j=0;j<64;j++){
+          for (var i=0;i<128;i++){
+            map[i+128*j]=[0,cx,cy];
+          }
+        }
+      }
+    }
+
+    //propagate
+    while(stack.length>0){
+      var entry = stack.shift();
+      //[fromx,fromy,dist,tox,toy]
+      var x0=entry[0];
+      var y0=entry[1];
+      var d0=entry[2];
+      var xtarget=entry[3];
+      var ytarget=entry[4];
+      var d1=d0+1;
+      var neighbours = [[x0-1,y0],[x0+1,y0],[x0,y0-1],[x0,y0+1]];
+      for (var i=0;i<4;i++){
+        var n = neighbours[i];
+        var nx=n[0];
+        var ny=n[1];
+        if (nx<0||ny<0||nx>=128||ny>=64){
+          continue;
+        }
+        var existing = map[nx+128*ny];
+        if (existing===null||d1<existing[0]){
+          map[nx+128*ny]=[d1,xtarget,ytarget]
+          stack.push([nx,ny,d1,xtarget,ytarget])
+        }
+      }
+    }
+
+    return map;
+  }
+
+  function generateParticleMotions(sourceCanvas,targetHeatMap,colIndex,particles,reverse){
+    if (reverse){
+      var c = hex[colIndex];
+      for (var i=0;i<128;i++){
+        for (var j=0;j<64;j++){
+          var pixel = sourceCanvas[i+128*j];
+          if (pixel===c){
+            //[d,tx,ty]
+            var target = targetHeatMap[i+128*j];
+            var tx = target[1];
+            var ty = target[2];
+            if (i!==tx||j!==ty)
+              particles.push([tx,ty,i,j])
+          }
+        }
+      }
+    } else {
+      var c = hex[colIndex];
+      for (var i=0;i<128;i++){
+        for (var j=0;j<64;j++){
+          var pixel = sourceCanvas[i+128*j];
+          if (pixel===c){
+            //[d,tx,ty]
+            var target = targetHeatMap[i+128*j];
+            var tx = target[1];
+            var ty = target[2];
+            particles.push([i,j,tx,ty])
+          }
+        }
+      }
+    }
+  }
+
+  function generateFrame(sourceImage,particleMap,progress){
+    var frame = [];
+    for (var j=0;j<64;j++){
+      for (var i=0;i<128;i++){
+        frame.push(sourceImage[i+128*j]);
+      }
+    }
+
+    for (var cIndex=0;cIndex<particleMap.length;cIndex++){      
+      var c = hex[cIndex]
+      var particles = particleMap[cIndex]
+      for (var i=0;i<particles.length;i++){
+        var p = particles[i]
+        var x0=p[0]
+        var y0=p[1]
+        var x1=p[2]
+        var y1=p[3]
+        var dx=x1-x0
+        var dy=y1-y0
+        if (dx!==0||dy!==0){
+//          var xt = Math.round(x0+progress*dx+Math.random()*0.5-0.25)
+//          var yt = Math.round(y0+progress*dy+Math.random()*0.5-0.25)
+          var xt = Math.round(x0+progress*dx)
+          var yt = Math.round(y0+progress*dy)
+          frame[xt+128*yt]=c;
+        }
+      }
+    }
+    return frame;
+  }
+
+  function calcTransitionGrids(oldCanvas,newCanvas){
+    //generate 32 canvasses, for each color, for each direction
+    var particleMaps = []
+    for (var i=0;i<16;i++){
+      var forwardHeatmap = calcHeatmap(newCanvas,i,oldCanvas);
+      window.console.log("generated forward"+i);
+      var backwardHeatmap = calcHeatmap(oldCanvas,i,newCanvas);
+      window.console.log("generated backward"+i);
+      var particles=[]
+      var particleMotionsForward = generateParticleMotions(oldCanvas,forwardHeatmap,i,particles,false);
+      window.console.log("generated forward particles"+i);
+      var particleMotionsBackward = generateParticleMotions(newCanvas,backwardHeatmap,i,particles,true);
+      window.console.log("generated backwards particles"+i);
+      particleMaps.push(particles);      
+    }
+    var frames=[];
+    frames.push(oldCanvas)
+    for (var i=1;i<frameCount;i++){
+      var frame = generateFrame(oldCanvas,particleMaps,i/frameCount)
+      frames.push(frame);
+    }
+    frames.push(newCanvas)
+    return frames;
+  }
+
+  var curCanvasToDraw=null;
+  var curAnimationFrames=null;
+  function transition(oldIndex,newIndex){
+    var oldCanvas = gameState.imageDats[oldIndex];
+    var newCanvas = gameState.imageDats[newIndex];
+    var frames = calcTransitionGrids(oldCanvas,newCanvas);
+    curAnimationFrames = frames;
+    return frames;
+  }
+
+  function drawNextFrame(){
+      curCanvasToDraw=printCanvas(curAnimationFrames[animationIndex])[0];
+      redraw();
+      animationIndex++;
+      if (animationIndex<curAnimationFrames.length){
+        setTimeout(drawNextFrame,1000*animationLength/frameCount);
+      } else {
+        animating=false;
+      }
+  }
+  var animationIndex=1;
+  function doAnimation(){
+    animating=true;
+    animationIndex=1;
+    drawNextFrame();
+  }
+
+function clickLeft(){
+    if (currentVerb>0){      
+      currentVerb--;   
+      redraw();  
+    }
+}
+
+function clickRight(){  
+    if (currentVerb<5 && gameState.verbs[currentIndex][currentVerb+1][0]!==""){      
+      currentVerb++;    
+      redraw(); 
+    }
+}
+
+function clickAction(){
+  if (gameState.verbs[currentIndex][currentVerb][0]!==""){
+    currentIndex=parseInt(gameState.verbs[currentIndex][currentVerb][1]);  
+    currentVerb=0;
+    redraw();
+  }
+}
+
+function keydown(evt){
+  switch(evt.keyCode){
+    case 37:{//left
+      clickLeft();
+      break;
+    }
+    case 39:{//right
+      clickRight();
+      break;
+    }
+    case 13://return
+    case 32://space
+    {
+      clickAction();
+      break;
+    }
+  }
+}
+
+var textCanvas;
+var textCanvasCtx;
+
+var mainCanvas;
+var mainCanvasCtx;
+var mainCanvasContainer;
+
+var leftLink;
+var rightLink;
+var actionLink;
+
+function init(){
+  window.addEventListener('resize', redraw, false);
+
+  leftLink=document.getElementById("leftLink");
+  rightLink=document.getElementById("rightLink");
+  actionLink=document.getElementById("actionLink");
+
+  leftLink.style.visibility="hidden";
+  rightLink.style.visibility="hidden";
+  actionLink.style.visibility="hidden";
+
+  textCanvas=document.getElementById("textCanvas");
+  textCanvasCtx=textCanvas.getContext("2d");  
+
+  mainCanvas=document.getElementById("mainCanvas");
+  mainCanvasCtx=mainCanvas.getContext("2d");  
+  mainCanvasContainer=document.getElementById("content");
+
+  document.addEventListener('keydown', keydown,false);
+
+  redraw();
+
+  getData();
+
+}
+
+var aurl = document.createElement('a');
+function qualifyURL(url) {
+ aurl.href = url;
+ return aurl.href;
+}
+
+var gameState;
+function loadState(code){
+    gameState=JSON.parse(code);
+}
+
+function getParameterByName(name) {
+    name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+        results = regex.exec(location.search);
+    return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+}
+
+
+function getData(){ 
+  if (embeddedDat[0]!=='_'){
+    embeddedDat=decodeURI(embeddedDat);
+    loadState(embeddedDat);
+    renderImages();
+    return;
+  }
+  var id = getParameterByName("p").replace(/[\\\/]/,"");
+  if (id===null||id.length===0) {
+    console.log("No ID specified in URL.")
+    return;
+  }
+
+  var githubURL = 'https://api.github.com/gists/'+id;
+
+  var githubHTTPClient = new XMLHttpRequest();
+  githubHTTPClient.open('GET', githubURL);
+  githubHTTPClient.onreadystatechange = function() {
+    if(githubHTTPClient.readyState!=4) {
+      return;
+    }   
+    var result = JSON.parse(githubHTTPClient.responseText);
+    if (githubHTTPClient.status===403) {
+      console.log(result.message);
+    } else if (githubHTTPClient.status!==200&&githubHTTPClient.status!==201) {
+      console.log("HTTP Error "+ githubHTTPClient.status + ' - ' + githubHTTPClient.statusText);
+    }
+    var result = JSON.parse(githubHTTPClient.responseText);
+    var code=result["files"]["game.txt"]["content"];
+    console.log(code);
+    loadState(code);
+
+    var hacklink = document.getElementById("hackLink");
+
+    var url = "index3.html?p="+id;
+    url=qualifyURL(url);
+    hacklink.href=url;
+    hacklink.innerHTML="&sdotb; edit";
+    renderImages();
+  }
+  githubHTTPClient.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+  githubHTTPClient.send();
+}
+
+
+function RLE_decode(encoded) {
+    var output = "";
+    for (var i=0;i<encoded.length;i+=2) {
+      var count = encoded[i];
+      var ch = encoded[i+1];
+      for (var j=0;j<count;j++){
+        output+=ch;
+      }
+    }
+    return output;
+}
+
+ var colorPalette = [
+            "#140c1c",
+            "#8595a1"
+            ];
+
+var images = new Array();
+var imageCtxts = new Array();
+
+function printCanvas(descriptionString){
+    var canvas = document.createElement('canvas');
+    canvas.width="128";
+    canvas.height="64";
+    var ctx=canvas.getContext("2d");
+    for (var j=0;j<descriptionString.length;j++){
+      var x = j%128;
+      var y = Math.floor(j/128);
+      var ch=descriptionString[j];
+      var colIndex = parseInt(ch,16);
+      ctx.fillStyle=colorPalette[colIndex];
+      ctx.fillRect(x,y,1,1);
+    }
+    return [canvas,ctx];
+}
+
+function renderImages(){
+  gameState.imageDats = new Array();
+
+  for (var i=0;i<16;i++){
+    var descriptionArray = gameState.canvasses[i];
+    var descriptionString = RLE_decode(descriptionArray);
+
+    var canvas_context=printCanvas(descriptionString);
+    var canvas=canvas_context[0];
+    var ctx=canvas_context[1];
+
+    gameState.imageDats.push(descriptionString);
+    images.push(canvas);
+    imageCtxts.push(ctx);
+  }
+  redraw();
+}
+
+function goFullscreen(evt){    
+  evt = evt || window.event;
+ if (evt.keyCode===70) { //f
+    var elem = document.getElementById("mainCanvas");
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen();
+    } else if (elem.msRequestFullscreen) {
+      elem.msRequestFullscreen();
+    } else if (elem.mozRequestFullScreen) {
+      elem.mozRequestFullScreen();
+    } else if (elem.webkitRequestFullscreen) {
+      elem.webkitRequestFullscreen();
+    }
+  }
+}
+document.addEventListener("keydown", goFullscreen);
+
+</script>
+</head>
+<body onload="init()" onkeydown="goFullscreen(event);">
+<div id="content">
+  <canvas id="mainCanvas"></canvas>
+  <canvas id="textCanvas"></canvas>
+  <div id="linkCanvas">
+    <a id="leftLink" href="javascript:void(0);" onclick="clickLeft()">&lt;</a> <a id="actionLink" href="javascript:void(0);" onclick="clickAction()">do something</a> <a id="rightLink"  href="javascript:void(0);" onclick="clickRight()">></a></canvas>
+  </div>
+  <p>
+</div>
+<div id="footer">
+ <a href="http://www.flickgame.org" id="hackLink"></a> <a  id="homeLink" href="http://www.flickgame.org"></a>
+</div>
+</body>
+</html>
