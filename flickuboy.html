@@ -85,7 +85,7 @@ var standalone_HTML_String="";
 
 var clientStandaloneRequest = new XMLHttpRequest();
 
-clientStandaloneRequest.open('GET', 'play3.html');
+clientStandaloneRequest.open('GET', 'flickuplay.html');
 clientStandaloneRequest.onreadystatechange = function() {
 
     if(clientStandaloneRequest.readyState!=4) {
@@ -114,7 +114,7 @@ function buildStandalone(sourceCode) {
 
   var BB = get_blob();
   var blob = new BB([htmlString], {type: "text/plain;charset=utf-8"});
-  saveAs(blob, "flickgame.html");
+  saveAs(blob, "flickuboy.html");
 }
 
 function exportClick(){
@@ -278,21 +278,23 @@ String.prototype.replaceAll = function(search, replacement) {
     return target.replace(new RegExp(search, 'g'), replacement);
 };
 
+var arduheader = `//A FLICKUBOY GAME\r\n\r\n//http://www.flickgame.org/flickuboy.html\r\n\r\n//Save as an .ino file and run in the Arduino IDE to run on your arduboy\r\n\r\n\r\n//embeds the arduboy2 library\r\n//https://github.com/MLXXXp/Arduboy2\r\n#ifndef ARDUBOY2_H\r\n#define ARDUBOY2_H\r\n#include <Arduino.h>\r\n#ifndef ARDUBOY2_CORE_H\r\n#define ARDUBOY2_CORE_H\r\n#include <Arduino.h>\r\n#include <avr/power.h>\r\n#include <SPI.h>\r\n#include <avr/sleep.h>\r\n#include <limits.h>\r\n#if !defined(ARDUBOY_10) && !defined(AB_DEVKIT)\r\n#define ARDUBOY_10   \r\n#endif\r\n#ifdef AB_DEVKIT\r\n#define SAFE_MODE    \r\n#endif\r\n#define RGB_ON LOW   \r\n#define RGB_OFF HIGH \r\n#ifdef ARDUBOY_10\r\n#define CS 12\r\n#define DC 4\r\n#define RST 6\r\n#define RED_LED 10   \r\n#define GREEN_LED 11 \r\n#define BLUE_LED 9   \r\n#define TX_LED 30    \r\n#define RX_LED 17    \r\n#define PIN_LEFT_BUTTON A2\r\n#define PIN_RIGHT_BUTTON A1\r\n#define PIN_UP_BUTTON A0\r\n#define PIN_DOWN_BUTTON A3\r\n#define PIN_A_BUTTON 7\r\n#define PIN_B_BUTTON 8\r\n#define LEFT_BUTTON _BV(5)  \r\n#define RIGHT_BUTTON _BV(6) \r\n#define UP_BUTTON _BV(7)    \r\n#define DOWN_BUTTON _BV(4)  \r\n#define A_BUTTON _BV(3)     \r\n#define B_BUTTON _BV(2)     \r\n#define PIN_SPEAKER_1 5  \r\n#define PIN_SPEAKER_2 13 \r\n#define PIN_SPEAKER_1_PORT &PORTC\r\n#define PIN_SPEAKER_2_PORT &PORTC\r\n#define PIN_SPEAKER_1_BITMASK _BV(6)\r\n#define PIN_SPEAKER_2_BITMASK _BV(7)\r\n#elif defined(AB_DEVKIT)\r\n#define CS 6\r\n#define DC 4\r\n#define RST 12\r\n#define RED_LED 17\r\n#define GREEN_LED 17\r\n#define BLUE_LED 17\r\n#define TX_LED 17\r\n#define RX_LED 17\r\n#define PIN_LEFT_BUTTON 9\r\n#define PIN_RIGHT_BUTTON 5\r\n#define PIN_UP_BUTTON 8\r\n#define PIN_DOWN_BUTTON 10\r\n#define PIN_A_BUTTON A0\r\n#define PIN_B_BUTTON A1\r\n#define LEFT_BUTTON _BV(5)\r\n#define RIGHT_BUTTON _BV(2)\r\n#define UP_BUTTON _BV(4)\r\n#define DOWN_BUTTON _BV(6)\r\n#define A_BUTTON _BV(1)\r\n#define B_BUTTON _BV(0)\r\n#define PIN_SPEAKER_1 A2\r\n#define PIN_SPEAKER_1_PORT &PORTF\r\n#define PIN_SPEAKER_1_BITMASK _BV(5)\r\n#endif\r\n#define OLED_PIXELS_INVERTED 0xA7 \r\n#define OLED_PIXELS_NORMAL 0xA6 \r\n#define OLED_ALL_PIXELS_ON 0xA5 \r\n#define OLED_PIXELS_FROM_RAM 0xA4 \r\n#define OLED_VERTICAL_FLIPPED 0xC0 \r\n#define OLED_VERTICAL_NORMAL 0xC8 \r\n#define OLED_HORIZ_FLIPPED 0xA0 \r\n#define OLED_HORIZ_NORMAL 0xA1 \r\n#define WIDTH 128 \r\n#define HEIGHT 64 \r\n#define COLUMN_ADDRESS_END (WIDTH - 1) & 127   \r\n#define PAGE_ADDRESS_END ((HEIGHT/8)-1) & 7    \r\nclass Arduboy2Core\r\n{\r\n  friend class Arduboy2Ex;\r\n  public:\r\n    Arduboy2Core();\r\n    void static idle();\r\n    void static LCDDataMode();\r\n    void static LCDCommandMode();\r\n    uint8_t static width();\r\n    uint8_t static height();\r\n    uint8_t static buttonsState();\r\n    void static paint8Pixels(uint8_t pixels);\r\n    void static paintScreen(const uint8_t *image);\r\n    void static paintScreen(uint8_t image[], bool clear = false);\r\n    void static blank();\r\n    void static invert(bool inverse);\r\n    void static allPixelsOn(bool on);\r\n    \r\n    void static flipVertical(bool flipped);\r\n    \r\n    void static flipHorizontal(bool flipped);\r\n    \r\n    void static sendLCDCommand(uint8_t command);\r\n    \r\n    void static setRGBled(uint8_t red, uint8_t green, uint8_t blue);\r\n    \r\n    void static digitalWriteRGB(uint8_t red, uint8_t green, uint8_t blue);\r\n    \r\n    void static boot();\r\n  protected:\r\n    \r\n    void static inline safeMode() __attribute__((always_inline));\r\n    \r\n    void static inline setCPUSpeed8MHz() __attribute__((always_inline));\r\n    void static inline bootOLED() __attribute__((always_inline));\r\n    void static inline bootPins() __attribute__((always_inline));\r\n    void static inline bootPowerSaving() __attribute__((always_inline));\r\n  private:\r\n    volatile static uint8_t *csport, *dcport;\r\n    uint8_t static cspinmask, dcpinmask;\r\n};\r\n#endif\r\n#ifndef Sprites_h\r\n#define Sprites_h\r\n#define SPRITE_MASKED 1\r\n#define SPRITE_UNMASKED 2\r\n#define SPRITE_OVERWRITE 2\r\n#define SPRITE_PLUS_MASK 3\r\n#define SPRITE_IS_MASK 250\r\n#define SPRITE_IS_MASK_ERASE 251\r\n#define SPRITE_AUTO_MODE 255\r\nclass Sprites\r\n{\r\n  public:\r\n    \r\n    void drawExternalMask(int16_t x, int16_t y, const uint8_t *bitmap,\r\n                          const uint8_t *mask, uint8_t frame, uint8_t mask_frame);\r\n    \r\n    void drawPlusMask(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t frame);\r\n    \r\n    void drawOverwrite(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t frame);\r\n    \r\n    void drawErase(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t frame);\r\n    \r\n    void drawSelfMasked(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t frame);\r\n    \r\n    \r\n    \r\n    void draw(int16_t x, int16_t y,\r\n              const uint8_t *bitmap, uint8_t frame,\r\n              const uint8_t *mask, uint8_t sprite_frame,\r\n              uint8_t drawMode);\r\n    \r\n    void drawBitmap(int16_t x, int16_t y,\r\n                    const uint8_t *bitmap, const uint8_t *mask,\r\n                    int8_t w, int8_t h, uint8_t draw_mode);\r\n};\r\n#endif\r\n#include <Print.h>\r\n#include <limits.h>\r\n#define ARDUBOY_LIB_VER 30000\r\n#define EEPROM_VERSION 0\r\n#define EEPROM_BRIGHTNESS 1\r\n#define EEPROM_AUDIO_ON_OFF 2\r\n#define EEPROM_STORAGE_SPACE_START 16\r\n#ifndef ARDUBOY2_AUDIO_H\r\n#define ARDUBOY2_AUDIO_H\r\n#include <Arduino.h>\r\n#include <EEPROM.h>\r\nclass Arduboy2Audio\r\n{\r\n friend class Arduboy2Ex;\r\n public:\r\n  \r\n  void static begin();\r\n  \r\n  void static on();\r\n  \r\n  void static off();\r\n  \r\n  void static saveOnOff();\r\n  \r\n  bool static enabled();\r\n protected:\r\n  bool static audio_enabled;\r\n};\r\n#endif\r\n#define PIXEL_SAFE_MODE\r\n#define BLACK 0  \r\n#define WHITE 1  \r\n#define INVERT 2\r\n#define CLEAR_BUFFER true \r\n#define ADC_VOLTAGE (_BV(REFS0) | _BV(MUX4) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1))\r\n#define ADC_TEMP (_BV(REFS0) | _BV(REFS1) | _BV(MUX2) | _BV(MUX1) | _BV(MUX0))\r\nstruct Rect\r\n{\r\n  int16_t x;      \r\n  int16_t y;      \r\n  uint8_t width;  \r\n  uint8_t height; \r\n};\r\nstruct Point\r\n{\r\n  int16_t x; \r\n  int16_t y; \r\n};\r\nclass Arduboy2Base : public Arduboy2Core\r\n{\r\n friend class Arduboy2Ex;\r\n friend class Sprites;\r\n public:\r\n  Arduboy2Base();\r\n  \r\n  Arduboy2Audio audio;\r\n  \r\n  void begin();\r\n  \r\n  void flashlight();\r\n  \r\n  void systemButtons();\r\n  \r\n  void bootLogo();\r\n  \r\n  void clear();\r\n  \r\n  void display();\r\n  \r\n  void display(bool clear);\r\n  \r\n  void drawPixel(int16_t x, int16_t y, uint8_t color = WHITE);\r\n  \r\n  uint8_t getPixel(uint8_t x, uint8_t y);\r\n  \r\n  void drawCircle(int16_t x0, int16_t y0, uint8_t r, uint8_t color = WHITE);\r\n  \r\n  \r\n  void drawCircleHelper(int16_t x0, int16_t y0, uint8_t r, uint8_t corners, uint8_t color = WHITE);\r\n  \r\n  void fillCircle(int16_t x0, int16_t y0, uint8_t r, uint8_t color = WHITE);\r\n  \r\n  \r\n  \r\n  void fillCircleHelper(int16_t x0, int16_t y0, uint8_t r, uint8_t sides, int16_t delta, uint8_t color = WHITE);\r\n  \r\n  void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint8_t color = WHITE);\r\n  \r\n  void drawRect(int16_t x, int16_t y, uint8_t w, uint8_t h, uint8_t color = WHITE);\r\n  \r\n  void drawFastVLine(int16_t x, int16_t y, uint8_t h, uint8_t color = WHITE);\r\n  \r\n  void drawFastHLine(int16_t x, int16_t y, uint8_t w, uint8_t color = WHITE);\r\n  \r\n  void fillRect(int16_t x, int16_t y, uint8_t w, uint8_t h, uint8_t color = WHITE);\r\n  \r\n  void fillScreen(uint8_t color = WHITE);\r\n  \r\n  void drawRoundRect(int16_t x, int16_t y, uint8_t w, uint8_t h, uint8_t r, uint8_t color = WHITE);\r\n  \r\n  void fillRoundRect(int16_t x, int16_t y, uint8_t w, uint8_t h, uint8_t r, uint8_t color = WHITE);\r\n  \r\n  void drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint8_t color = WHITE);\r\n  \r\n  void fillTriangle (int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint8_t color = WHITE);\r\n  \r\n  void drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t w, uint8_t h, uint8_t color = WHITE);\r\n  \r\n  void drawSlowXYBitmap(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t w, uint8_t h, uint8_t color = WHITE);\r\n  \r\n  void drawCompressed(int16_t sx, int16_t sy, const uint8_t *bitmap, uint8_t color = WHITE);\r\n  \r\n  uint8_t* getBuffer();\r\n  \r\n  void initRandomSeed();\r\n  \r\n  void swap(int16_t& a, int16_t& b);\r\n  \r\n  void setFrameRate(uint8_t rate);\r\n  \r\n  bool nextFrame();\r\n  \r\n  bool everyXFrames(uint8_t frames);\r\n  \r\n  int cpuLoad();\r\n  \r\n  uint16_t rawADC(uint8_t adc_bits);\r\n  \r\n  bool pressed(uint8_t buttons);\r\n  \r\n  bool notPressed(uint8_t buttons);\r\n  \r\n  void pollButtons();\r\n  \r\n  bool justPressed(uint8_t button);\r\n  \r\n  bool justReleased(uint8_t button);\r\n  \r\n  bool collide(Point point, Rect rect);\r\n  \r\n  bool collide(Rect rect1, Rect rect2);\r\n protected:\r\n  \r\n  void sysCtrlSound(uint8_t buttons, uint8_t led, uint8_t eeVal);\r\n  \r\n  static uint8_t sBuffer[(HEIGHT*WIDTH)/8];\r\n  \r\n  uint8_t currentButtonState;\r\n  uint8_t previousButtonState;\r\n  \r\n  uint16_t frameCount;\r\n  uint8_t eachFrameMillis;\r\n  unsigned long lastFrameStart;\r\n  unsigned long nextFrameStart;\r\n  bool post_render;\r\n  uint8_t lastFrameDurationMs;\r\n};\r\nclass Arduboy2 : public Print, public Arduboy2Base\r\n{\r\n friend class Arduboy2Ex;\r\n public:\r\n  Arduboy2();\r\n  \r\n  \r\n  virtual size_t write(uint8_t);\r\n  \r\n  void drawChar(int16_t x, int16_t y, unsigned char c, uint8_t color, uint8_t bg, uint8_t size);\r\n  \r\n  void setCursor(int16_t x, int16_t y);\r\n  \r\n  int16_t getCursorX();\r\n  \r\n  int16_t getCursorY();\r\n  \r\n  void setTextColor(uint8_t color);\r\n  \r\n  void setTextBackground(uint8_t bg);\r\n  \r\n  void setTextSize(uint8_t s);\r\n  \r\n  void setTextWrap(bool w);\r\n  \r\n  void clear();\r\n protected:\r\n  int16_t cursor_x;\r\n  int16_t cursor_y;\r\n  uint8_t textColor;\r\n  uint8_t textBackground;\r\n  uint8_t textSize;\r\n  bool textWrap;\r\n};\r\n#endif\r\n#include <avr/pgmspace.h>\r\n#ifndef ARDUBOY_LOGO_CREATED\r\n#define ARDUBOY_LOGO_CREATED\r\nPROGMEM const unsigned char arduboy_logo[] = {\r\n0xF0, 0xF8, 0x9C, 0x8E, 0x87, 0x83, 0x87, 0x8E, 0x9C, 0xF8, \r\n0xF0, 0x00, 0x00, 0xFE, 0xFF, 0x03, 0x03, 0x03, 0x03, 0x03, \r\n0x07, 0x0E, 0xFC, 0xF8, 0x00, 0x00, 0xFE, 0xFF, 0x03, 0x03, \r\n0x03, 0x03, 0x03, 0x07, 0x0E, 0xFC, 0xF8, 0x00, 0x00, 0xFF, \r\n0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, \r\n0x00, 0x00, 0xFE, 0xFF, 0x83, 0x83, 0x83, 0x83, 0x83, 0xC7, \r\n0xEE, 0x7C, 0x38, 0x00, 0x00, 0xF8, 0xFC, 0x0E, 0x07, 0x03, \r\n0x03, 0x03, 0x07, 0x0E, 0xFC, 0xF8, 0x00, 0x00, 0x3F, 0x7F, \r\n0xE0, 0xC0, 0x80, 0x80, 0xC0, 0xE0, 0x7F, 0x3F, 0xFF, 0xFF, \r\n0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0xFF, 0xFF, 0x00, \r\n0x00, 0xFF, 0xFF, 0x0C, 0x0C, 0x0C, 0x0C, 0x1C, 0x3E, 0x77, \r\n0xE3, 0xC1, 0x00, 0x00, 0x7F, 0xFF, 0xC0, 0xC0, 0xC0, 0xC0, \r\n0xC0, 0xE0, 0x70, 0x3F, 0x1F, 0x00, 0x00, 0x1F, 0x3F, 0x70, \r\n0xE0, 0xC0, 0xC0, 0xC0, 0xE0, 0x70, 0x3F, 0x1F, 0x00, 0x00, \r\n0x7F, 0xFF, 0xC1, 0xC1, 0xC1, 0xC1, 0xC1, 0xE3, 0x77, 0x3E, \r\n0x1C, 0x00, 0x00, 0x1F, 0x3F, 0x70, 0xE0, 0xC0, 0xC0, 0xC0, \r\n0xE0, 0x70, 0x3F, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, \r\n0xFF, 0xFF, 0x01, 0x00, 0x00, 0x00\r\n};\r\n#endif\r\n#include <avr/io.h>\r\n#include <avr/pgmspace.h>\r\n#ifndef FONT5X7_H\r\n#define FONT5X7_H\r\nstatic const unsigned char font[] PROGMEM =\r\n{\r\n    0x00, 0x00, 0x00, 0x00, 0x00,\r\n    0x3E, 0x5B, 0x4F, 0x5B, 0x3E,\r\n    0x3E, 0x6B, 0x4F, 0x6B, 0x3E,\r\n    0x1C, 0x3E, 0x7C, 0x3E, 0x1C,\r\n    0x18, 0x3C, 0x7E, 0x3C, 0x18,\r\n    0x1C, 0x57, 0x7D, 0x57, 0x1C,\r\n    0x1C, 0x5E, 0x7F, 0x5E, 0x1C,\r\n    0x00, 0x18, 0x3C, 0x18, 0x00,\r\n    0xFF, 0xE7, 0xC3, 0xE7, 0xFF,\r\n    0x00, 0x18, 0x24, 0x18, 0x00,\r\n    0xFF, 0xE7, 0xDB, 0xE7, 0xFF,\r\n    0x30, 0x48, 0x3A, 0x06, 0x0E,\r\n    0x26, 0x29, 0x79, 0x29, 0x26,\r\n    0x40, 0x7F, 0x05, 0x05, 0x07,\r\n    0x40, 0x7F, 0x05, 0x25, 0x3F,\r\n    0x5A, 0x3C, 0xE7, 0x3C, 0x5A,\r\n    0x7F, 0x3E, 0x1C, 0x1C, 0x08,\r\n    0x08, 0x1C, 0x1C, 0x3E, 0x7F,\r\n    0x14, 0x22, 0x7F, 0x22, 0x14,\r\n    0x5F, 0x5F, 0x00, 0x5F, 0x5F,\r\n    0x06, 0x09, 0x7F, 0x01, 0x7F,\r\n    0x00, 0x66, 0x89, 0x95, 0x6A,\r\n    0x60, 0x60, 0x60, 0x60, 0x60,\r\n    0x94, 0xA2, 0xFF, 0xA2, 0x94,\r\n    0x08, 0x04, 0x7E, 0x04, 0x08,\r\n    0x10, 0x20, 0x7E, 0x20, 0x10,\r\n    0x08, 0x08, 0x2A, 0x1C, 0x08,\r\n    0x08, 0x1C, 0x2A, 0x08, 0x08,\r\n    0x1E, 0x10, 0x10, 0x10, 0x10,\r\n    0x0C, 0x1E, 0x0C, 0x1E, 0x0C,\r\n    0x30, 0x38, 0x3E, 0x38, 0x30,\r\n    0x06, 0x0E, 0x3E, 0x0E, 0x06,\r\n    0x00, 0x00, 0x00, 0x00, 0x00,\r\n    0x00, 0x00, 0x5F, 0x00, 0x00,\r\n    0x00, 0x07, 0x00, 0x07, 0x00,\r\n    0x14, 0x7F, 0x14, 0x7F, 0x14,\r\n    0x24, 0x2A, 0x7F, 0x2A, 0x12,\r\n    0x23, 0x13, 0x08, 0x64, 0x62,\r\n    0x36, 0x49, 0x56, 0x20, 0x50,\r\n    0x00, 0x08, 0x07, 0x03, 0x00,\r\n    0x00, 0x1C, 0x22, 0x41, 0x00,\r\n    0x00, 0x41, 0x22, 0x1C, 0x00,\r\n    0x2A, 0x1C, 0x7F, 0x1C, 0x2A,\r\n    0x08, 0x08, 0x3E, 0x08, 0x08,\r\n    0x00, 0x80, 0x70, 0x30, 0x00,\r\n    0x08, 0x08, 0x08, 0x08, 0x08,\r\n    0x00, 0x00, 0x60, 0x60, 0x00,\r\n    0x20, 0x10, 0x08, 0x04, 0x02,\r\n    0x3E, 0x51, 0x49, 0x45, 0x3E,\r\n    0x00, 0x42, 0x7F, 0x40, 0x00,\r\n    0x72, 0x49, 0x49, 0x49, 0x46,\r\n    0x21, 0x41, 0x49, 0x4D, 0x33,\r\n    0x18, 0x14, 0x12, 0x7F, 0x10,\r\n    0x27, 0x45, 0x45, 0x45, 0x39,\r\n    0x3C, 0x4A, 0x49, 0x49, 0x31,\r\n    0x41, 0x21, 0x11, 0x09, 0x07,\r\n    0x36, 0x49, 0x49, 0x49, 0x36,\r\n    0x46, 0x49, 0x49, 0x29, 0x1E,\r\n    0x00, 0x00, 0x14, 0x00, 0x00,\r\n    0x00, 0x40, 0x34, 0x00, 0x00,\r\n    0x00, 0x08, 0x14, 0x22, 0x41,\r\n    0x14, 0x14, 0x14, 0x14, 0x14,\r\n    0x00, 0x41, 0x22, 0x14, 0x08,\r\n    0x02, 0x01, 0x59, 0x09, 0x06,\r\n    0x3E, 0x41, 0x5D, 0x59, 0x4E,\r\n    0x7C, 0x12, 0x11, 0x12, 0x7C,\r\n    0x7F, 0x49, 0x49, 0x49, 0x36,\r\n    0x3E, 0x41, 0x41, 0x41, 0x22,\r\n    0x7F, 0x41, 0x41, 0x41, 0x3E,\r\n    0x7F, 0x49, 0x49, 0x49, 0x41,\r\n    0x7F, 0x09, 0x09, 0x09, 0x01,\r\n    0x3E, 0x41, 0x41, 0x51, 0x73,\r\n    0x7F, 0x08, 0x08, 0x08, 0x7F,\r\n    0x00, 0x41, 0x7F, 0x41, 0x00,\r\n    0x20, 0x40, 0x41, 0x3F, 0x01,\r\n    0x7F, 0x08, 0x14, 0x22, 0x41,\r\n    0x7F, 0x40, 0x40, 0x40, 0x40,\r\n    0x7F, 0x02, 0x1C, 0x02, 0x7F,\r\n    0x7F, 0x04, 0x08, 0x10, 0x7F,\r\n    0x3E, 0x41, 0x41, 0x41, 0x3E,\r\n    0x7F, 0x09, 0x09, 0x09, 0x06,\r\n    0x3E, 0x41, 0x51, 0x21, 0x5E,\r\n    0x7F, 0x09, 0x19, 0x29, 0x46,\r\n    0x26, 0x49, 0x49, 0x49, 0x32,\r\n    0x03, 0x01, 0x7F, 0x01, 0x03,\r\n    0x3F, 0x40, 0x40, 0x40, 0x3F,\r\n    0x1F, 0x20, 0x40, 0x20, 0x1F,\r\n    0x3F, 0x40, 0x38, 0x40, 0x3F,\r\n    0x63, 0x14, 0x08, 0x14, 0x63,\r\n    0x03, 0x04, 0x78, 0x04, 0x03,\r\n    0x61, 0x59, 0x49, 0x4D, 0x43,\r\n    0x00, 0x7F, 0x41, 0x41, 0x41,\r\n    0x02, 0x04, 0x08, 0x10, 0x20,\r\n    0x00, 0x41, 0x41, 0x41, 0x7F,\r\n    0x04, 0x02, 0x01, 0x02, 0x04,\r\n    0x40, 0x40, 0x40, 0x40, 0x40,\r\n    0x00, 0x03, 0x07, 0x08, 0x00,\r\n    0x20, 0x54, 0x54, 0x78, 0x40,\r\n    0x7F, 0x28, 0x44, 0x44, 0x38,\r\n    0x38, 0x44, 0x44, 0x44, 0x28,\r\n    0x38, 0x44, 0x44, 0x28, 0x7F,\r\n    0x38, 0x54, 0x54, 0x54, 0x18,\r\n    0x00, 0x08, 0x7E, 0x09, 0x02,\r\n    0x18, 0xA4, 0xA4, 0x9C, 0x78,\r\n    0x7F, 0x08, 0x04, 0x04, 0x78,\r\n    0x00, 0x44, 0x7D, 0x40, 0x00,\r\n    0x20, 0x40, 0x40, 0x3D, 0x00,\r\n    0x7F, 0x10, 0x28, 0x44, 0x00,\r\n    0x00, 0x41, 0x7F, 0x40, 0x00,\r\n    0x7C, 0x04, 0x78, 0x04, 0x78,\r\n    0x7C, 0x08, 0x04, 0x04, 0x78,\r\n    0x38, 0x44, 0x44, 0x44, 0x38,\r\n    0xFC, 0x18, 0x24, 0x24, 0x18,\r\n    0x18, 0x24, 0x24, 0x18, 0xFC,\r\n    0x7C, 0x08, 0x04, 0x04, 0x08,\r\n    0x48, 0x54, 0x54, 0x54, 0x24,\r\n    0x04, 0x04, 0x3F, 0x44, 0x24,\r\n    0x3C, 0x40, 0x40, 0x20, 0x7C,\r\n    0x1C, 0x20, 0x40, 0x20, 0x1C,\r\n    0x3C, 0x40, 0x30, 0x40, 0x3C,\r\n    0x44, 0x28, 0x10, 0x28, 0x44,\r\n    0x4C, 0x90, 0x90, 0x90, 0x7C,\r\n    0x44, 0x64, 0x54, 0x4C, 0x44,\r\n    0x00, 0x08, 0x36, 0x41, 0x00,\r\n    0x00, 0x00, 0x77, 0x00, 0x00,\r\n    0x00, 0x41, 0x36, 0x08, 0x00,\r\n    0x02, 0x01, 0x02, 0x04, 0x02,\r\n    0x3C, 0x26, 0x23, 0x26, 0x3C,\r\n    0x1E, 0xA1, 0xA1, 0x61, 0x12,\r\n    0x3A, 0x40, 0x40, 0x20, 0x7A,\r\n    0x38, 0x54, 0x54, 0x55, 0x59,\r\n    0x21, 0x55, 0x55, 0x79, 0x41,\r\n    0x21, 0x54, 0x54, 0x78, 0x41,\r\n    0x21, 0x55, 0x54, 0x78, 0x40,\r\n    0x20, 0x54, 0x55, 0x79, 0x40,\r\n    0x0C, 0x1E, 0x52, 0x72, 0x12,\r\n    0x39, 0x55, 0x55, 0x55, 0x59,\r\n    0x39, 0x54, 0x54, 0x54, 0x59,\r\n    0x39, 0x55, 0x54, 0x54, 0x58,\r\n    0x00, 0x00, 0x45, 0x7C, 0x41,\r\n    0x00, 0x02, 0x45, 0x7D, 0x42,\r\n    0x00, 0x01, 0x45, 0x7C, 0x40,\r\n    0xF0, 0x29, 0x24, 0x29, 0xF0,\r\n    0xF0, 0x28, 0x25, 0x28, 0xF0,\r\n    0x7C, 0x54, 0x55, 0x45, 0x00,\r\n    0x20, 0x54, 0x54, 0x7C, 0x54,\r\n    0x7C, 0x0A, 0x09, 0x7F, 0x49,\r\n    0x32, 0x49, 0x49, 0x49, 0x32,\r\n    0x32, 0x48, 0x48, 0x48, 0x32,\r\n    0x32, 0x4A, 0x48, 0x48, 0x30,\r\n    0x3A, 0x41, 0x41, 0x21, 0x7A,\r\n    0x3A, 0x42, 0x40, 0x20, 0x78,\r\n    0x00, 0x9D, 0xA0, 0xA0, 0x7D,\r\n    0x39, 0x44, 0x44, 0x44, 0x39,\r\n    0x3D, 0x40, 0x40, 0x40, 0x3D,\r\n    0x3C, 0x24, 0xFF, 0x24, 0x24,\r\n    0x48, 0x7E, 0x49, 0x43, 0x66,\r\n    0x2B, 0x2F, 0xFC, 0x2F, 0x2B,\r\n    0xFF, 0x09, 0x29, 0xF6, 0x20,\r\n    0xC0, 0x88, 0x7E, 0x09, 0x03,\r\n    0x20, 0x54, 0x54, 0x79, 0x41,\r\n    0x00, 0x00, 0x44, 0x7D, 0x41,\r\n    0x30, 0x48, 0x48, 0x4A, 0x32,\r\n    0x38, 0x40, 0x40, 0x22, 0x7A,\r\n    0x00, 0x7A, 0x0A, 0x0A, 0x72,\r\n    0x7D, 0x0D, 0x19, 0x31, 0x7D,\r\n    0x26, 0x29, 0x29, 0x2F, 0x28,\r\n    0x26, 0x29, 0x29, 0x29, 0x26,\r\n    0x30, 0x48, 0x4D, 0x40, 0x20,\r\n    0x38, 0x08, 0x08, 0x08, 0x08,\r\n    0x08, 0x08, 0x08, 0x08, 0x38,\r\n    0x2F, 0x10, 0xC8, 0xAC, 0xBA,\r\n    0x2F, 0x10, 0x28, 0x34, 0xFA,\r\n    0x00, 0x00, 0x7B, 0x00, 0x00,\r\n    0x08, 0x14, 0x2A, 0x14, 0x22,\r\n    0x22, 0x14, 0x2A, 0x14, 0x08,\r\n    0x95, 0x00, 0x22, 0x00, 0x95,\r\n    0xAA, 0x00, 0x55, 0x00, 0xAA,\r\n    0xAA, 0x55, 0xAA, 0x55, 0xAA,\r\n    0x00, 0x00, 0x00, 0xFF, 0x00,\r\n    0x10, 0x10, 0x10, 0xFF, 0x00,\r\n    0x14, 0x14, 0x14, 0xFF, 0x00,\r\n    0x10, 0x10, 0xFF, 0x00, 0xFF,\r\n    0x10, 0x10, 0xF0, 0x10, 0xF0,\r\n    0x14, 0x14, 0x14, 0xFC, 0x00,\r\n    0x14, 0x14, 0xF7, 0x00, 0xFF,\r\n    0x00, 0x00, 0xFF, 0x00, 0xFF,\r\n    0x14, 0x14, 0xF4, 0x04, 0xFC,\r\n    0x14, 0x14, 0x17, 0x10, 0x1F,\r\n    0x10, 0x10, 0x1F, 0x10, 0x1F,\r\n    0x14, 0x14, 0x14, 0x1F, 0x00,\r\n    0x10, 0x10, 0x10, 0xF0, 0x00,\r\n    0x00, 0x00, 0x00, 0x1F, 0x10,\r\n    0x10, 0x10, 0x10, 0x1F, 0x10,\r\n    0x10, 0x10, 0x10, 0xF0, 0x10,\r\n    0x00, 0x00, 0x00, 0xFF, 0x10,\r\n    0x10, 0x10, 0x10, 0x10, 0x10,\r\n    0x10, 0x10, 0x10, 0xFF, 0x10,\r\n    0x00, 0x00, 0x00, 0xFF, 0x14,\r\n    0x00, 0x00, 0xFF, 0x00, 0xFF,\r\n    0x00, 0x00, 0x1F, 0x10, 0x17,\r\n    0x00, 0x00, 0xFC, 0x04, 0xF4,\r\n    0x14, 0x14, 0x17, 0x10, 0x17,\r\n    0x14, 0x14, 0xF4, 0x04, 0xF4,\r\n    0x00, 0x00, 0xFF, 0x00, 0xF7,\r\n    0x14, 0x14, 0x14, 0x14, 0x14,\r\n    0x14, 0x14, 0xF7, 0x00, 0xF7,\r\n    0x14, 0x14, 0x14, 0x17, 0x14,\r\n    0x10, 0x10, 0x1F, 0x10, 0x1F,\r\n    0x14, 0x14, 0x14, 0xF4, 0x14,\r\n    0x10, 0x10, 0xF0, 0x10, 0xF0,\r\n    0x00, 0x00, 0x1F, 0x10, 0x1F,\r\n    0x00, 0x00, 0x00, 0x1F, 0x14,\r\n    0x00, 0x00, 0x00, 0xFC, 0x14,\r\n    0x00, 0x00, 0xF0, 0x10, 0xF0,\r\n    0x10, 0x10, 0xFF, 0x10, 0xFF,\r\n    0x14, 0x14, 0x14, 0xFF, 0x14,\r\n    0x10, 0x10, 0x10, 0x1F, 0x00,\r\n    0x00, 0x00, 0x00, 0xF0, 0x10,\r\n    0xFF, 0xFF, 0xFF, 0xFF, 0xFF,\r\n    0xF0, 0xF0, 0xF0, 0xF0, 0xF0,\r\n    0xFF, 0xFF, 0xFF, 0x00, 0x00,\r\n    0x00, 0x00, 0x00, 0xFF, 0xFF,\r\n    0x0F, 0x0F, 0x0F, 0x0F, 0x0F,\r\n    0x38, 0x44, 0x44, 0x38, 0x44,\r\n    0x7C, 0x2A, 0x2A, 0x3E, 0x14,\r\n    0x7E, 0x02, 0x02, 0x06, 0x06,\r\n    0x02, 0x7E, 0x02, 0x7E, 0x02,\r\n    0x63, 0x55, 0x49, 0x41, 0x63,\r\n    0x38, 0x44, 0x44, 0x3C, 0x04,\r\n    0x40, 0x7E, 0x20, 0x1E, 0x20,\r\n    0x06, 0x02, 0x7E, 0x02, 0x02,\r\n    0x99, 0xA5, 0xE7, 0xA5, 0x99,\r\n    0x1C, 0x2A, 0x49, 0x2A, 0x1C,\r\n    0x4C, 0x72, 0x01, 0x72, 0x4C,\r\n    0x30, 0x4A, 0x4D, 0x4D, 0x30,\r\n    0x30, 0x48, 0x78, 0x48, 0x30,\r\n    0xBC, 0x62, 0x5A, 0x46, 0x3D,\r\n    0x3E, 0x49, 0x49, 0x49, 0x00,\r\n    0x7E, 0x01, 0x01, 0x01, 0x7E,\r\n    0x2A, 0x2A, 0x2A, 0x2A, 0x2A,\r\n    0x44, 0x44, 0x5F, 0x44, 0x44,\r\n    0x40, 0x51, 0x4A, 0x44, 0x40,\r\n    0x40, 0x44, 0x4A, 0x51, 0x40,\r\n    0x00, 0x00, 0xFF, 0x01, 0x03,\r\n    0xE0, 0x80, 0xFF, 0x00, 0x00,\r\n    0x08, 0x08, 0x6B, 0x6B, 0x08,\r\n    0x36, 0x12, 0x36, 0x24, 0x36,\r\n    0x06, 0x0F, 0x09, 0x0F, 0x06,\r\n    0x00, 0x00, 0x18, 0x18, 0x00,\r\n    0x00, 0x00, 0x10, 0x10, 0x00,\r\n    0x30, 0x40, 0xFF, 0x01, 0x01,\r\n    0x00, 0x1F, 0x01, 0x01, 0x1E,\r\n    0x00, 0x19, 0x1D, 0x17, 0x12,\r\n    0x00, 0x3C, 0x3C, 0x3C, 0x3C,\r\n    0x00, 0x00, 0x00, 0x00, 0x00,\r\n};\r\n#endif\r\nuint8_t Arduboy2Base::sBuffer[];\r\nArduboy2Base::Arduboy2Base()\r\n{\r\n  currentButtonState = 0;\r\n  previousButtonState = 0;\r\n  \r\n  setFrameRate(60);\r\n  frameCount = 0;\r\n  nextFrameStart = 0;\r\n  post_render = false;\r\n  \r\n  \r\n  \r\n}\r\nvoid Arduboy2Base::begin()\r\n{\r\n  boot(); \r\n  blank(); \r\n  flashlight(); \r\n  \r\n  systemButtons();\r\n  bootLogo();\r\n  audio.begin();\r\n}\r\nvoid Arduboy2Base::flashlight()\r\n{\r\n  if(!pressed(UP_BUTTON)) {\r\n    return;\r\n  }\r\n  sendLCDCommand(OLED_ALL_PIXELS_ON); \r\n  digitalWriteRGB(RGB_ON, RGB_ON, RGB_ON);\r\n  while(!pressed(DOWN_BUTTON)) {\r\n    idle();\r\n  }\r\n  digitalWriteRGB(RGB_OFF, RGB_OFF, RGB_OFF);\r\n  sendLCDCommand(OLED_PIXELS_FROM_RAM);\r\n}\r\nvoid Arduboy2Base::systemButtons() {\r\n  while (pressed(B_BUTTON)) {\r\n    digitalWrite(BLUE_LED, RGB_ON); \r\n    sysCtrlSound(UP_BUTTON + B_BUTTON, GREEN_LED, 0xff);\r\n    sysCtrlSound(DOWN_BUTTON + B_BUTTON, RED_LED, 0);\r\n    delay(200);\r\n  }\r\n  digitalWrite(BLUE_LED, RGB_OFF); \r\n}\r\nvoid Arduboy2Base::sysCtrlSound(uint8_t buttons, uint8_t led, uint8_t eeVal) {\r\n  if (pressed(buttons)) {\r\n    digitalWrite(BLUE_LED, RGB_OFF); \r\n    delay(200);\r\n    digitalWrite(led, RGB_ON); \r\n    EEPROM.update(EEPROM_AUDIO_ON_OFF, eeVal);\r\n    delay(500);\r\n    digitalWrite(led, RGB_OFF); \r\n    while (pressed(buttons)) {} \r\n  }\r\n}\r\nvoid Arduboy2Base::bootLogo()\r\n{\r\n  digitalWrite(RED_LED, RGB_ON);\r\n  for(int8_t y = -18; y <= 24; y++) {\r\n    if (y == -4) {\r\n      digitalWriteRGB(RGB_OFF, RGB_ON, RGB_OFF); \r\n    }\r\n    else if (y == 24) {\r\n      digitalWriteRGB(RGB_OFF, RGB_OFF, RGB_ON); \r\n    }\r\n    clear();\r\n    drawBitmap(20, y, arduboy_logo, 88, 16, WHITE);\r\n    display();\r\n    delay(27);\r\n    \r\n    \r\n    if (y==-16) {\r\n      delay(250);\r\n    }\r\n  }\r\n  delay(750);\r\n  digitalWrite(BLUE_LED, RGB_OFF);\r\n}\r\nvoid Arduboy2Base::setFrameRate(uint8_t rate)\r\n{\r\n  eachFrameMillis = 1000 / rate;\r\n}\r\nbool Arduboy2Base::everyXFrames(uint8_t frames)\r\n{\r\n  return frameCount % frames == 0;\r\n}\r\nbool Arduboy2Base::nextFrame()\r\n{\r\n  unsigned long now = millis();\r\n  \r\n  if (post_render) {\r\n    lastFrameDurationMs = now - lastFrameStart;\r\n    frameCount++;\r\n    post_render = false;\r\n  }\r\n  \r\n  if (now < nextFrameStart) {\r\n    \r\n    \r\n    if ((uint8_t)(nextFrameStart - now) > 1)\r\n      idle();\r\n    return false;\r\n  }\r\n  \r\n  nextFrameStart = now + eachFrameMillis;\r\n  lastFrameStart = now;\r\n  post_render = true;\r\n  return post_render;\r\n}\r\nint Arduboy2Base::cpuLoad()\r\n{\r\n  return lastFrameDurationMs*100 / eachFrameMillis;\r\n}\r\nvoid Arduboy2Base::initRandomSeed()\r\n{\r\n  power_adc_enable(); \r\n  randomSeed(~rawADC(ADC_TEMP) * ~rawADC(ADC_VOLTAGE) * ~micros() + micros());\r\n  power_adc_disable(); \r\n}\r\nuint16_t Arduboy2Base::rawADC(uint8_t adc_bits)\r\n{\r\n  ADMUX = adc_bits;\r\n  \r\n  if (adc_bits == ADC_TEMP) {\r\n    ADCSRB = _BV(MUX5);\r\n  }\r\n  delay(2); \r\n  ADCSRA |= _BV(ADSC); \r\n  while (bit_is_set(ADCSRA,ADSC)); \r\n  return ADC;\r\n}\r\nvoid Arduboy2Base::clear()\r\n{\r\n  fillScreen(BLACK);\r\n}\r\nvoid Arduboy2Base::drawPixel(int16_t x, int16_t y, uint8_t color)\r\n{\r\n  #ifdef PIXEL_SAFE_MODE\r\n  if (x < 0 || x > (WIDTH-1) || y < 0 || y > (HEIGHT-1))\r\n  {\r\n    return;\r\n  }\r\n  #endif\r\n  uint8_t row = (uint8_t)y / 8;\r\n  if (color)\r\n  {\r\n    sBuffer[(row*WIDTH) + (uint8_t)x] |=   _BV((uint8_t)y % 8);\r\n  }\r\n  else\r\n  {\r\n    sBuffer[(row*WIDTH) + (uint8_t)x] &= ~ _BV((uint8_t)y % 8);\r\n  }\r\n}\r\nuint8_t Arduboy2Base::getPixel(uint8_t x, uint8_t y)\r\n{\r\n  uint8_t row = y / 8;\r\n  uint8_t bit_position = y % 8;\r\n  return (sBuffer[(row*WIDTH) + x] & _BV(bit_position)) >> bit_position;\r\n}\r\nvoid Arduboy2Base::drawCircle(int16_t x0, int16_t y0, uint8_t r, uint8_t color)\r\n{\r\n  int16_t f = 1 - r;\r\n  int16_t ddF_x = 1;\r\n  int16_t ddF_y = -2 * r;\r\n  int16_t x = 0;\r\n  int16_t y = r;\r\n  drawPixel(x0, y0+r, color);\r\n  drawPixel(x0, y0-r, color);\r\n  drawPixel(x0+r, y0, color);\r\n  drawPixel(x0-r, y0, color);\r\n  while (x<y)\r\n  {\r\n    if (f >= 0)\r\n    {\r\n      y--;\r\n      ddF_y += 2;\r\n      f += ddF_y;\r\n    }\r\n    x++;\r\n    ddF_x += 2;\r\n    f += ddF_x;\r\n    drawPixel(x0 + x, y0 + y, color);\r\n    drawPixel(x0 - x, y0 + y, color);\r\n    drawPixel(x0 + x, y0 - y, color);\r\n    drawPixel(x0 - x, y0 - y, color);\r\n    drawPixel(x0 + y, y0 + x, color);\r\n    drawPixel(x0 - y, y0 + x, color);\r\n    drawPixel(x0 + y, y0 - x, color);\r\n    drawPixel(x0 - y, y0 - x, color);\r\n  }\r\n}\r\nvoid Arduboy2Base::drawCircleHelper\r\n(int16_t x0, int16_t y0, uint8_t r, uint8_t corners, uint8_t color)\r\n{\r\n  int16_t f = 1 - r;\r\n  int16_t ddF_x = 1;\r\n  int16_t ddF_y = -2 * r;\r\n  int16_t x = 0;\r\n  int16_t y = r;\r\n  while (x<y)\r\n  {\r\n    if (f >= 0)\r\n    {\r\n      y--;\r\n      ddF_y += 2;\r\n      f += ddF_y;\r\n    }\r\n    x++;\r\n    ddF_x += 2;\r\n    f += ddF_x;\r\n    if (corners & 0x4) \r\n    {\r\n      drawPixel(x0 + x, y0 + y, color);\r\n      drawPixel(x0 + y, y0 + x, color);\r\n    }\r\n    if (corners & 0x2) \r\n    {\r\n      drawPixel(x0 + x, y0 - y, color);\r\n      drawPixel(x0 + y, y0 - x, color);\r\n    }\r\n    if (corners & 0x8) \r\n    {\r\n      drawPixel(x0 - y, y0 + x, color);\r\n      drawPixel(x0 - x, y0 + y, color);\r\n    }\r\n    if (corners & 0x1) \r\n    {\r\n      drawPixel(x0 - y, y0 - x, color);\r\n      drawPixel(x0 - x, y0 - y, color);\r\n    }\r\n  }\r\n}\r\nvoid Arduboy2Base::fillCircle(int16_t x0, int16_t y0, uint8_t r, uint8_t color)\r\n{\r\n  drawFastVLine(x0, y0-r, 2*r+1, color);\r\n  fillCircleHelper(x0, y0, r, 3, 0, color);\r\n}\r\nvoid Arduboy2Base::fillCircleHelper\r\n(int16_t x0, int16_t y0, uint8_t r, uint8_t sides, int16_t delta,\r\n uint8_t color)\r\n{\r\n  int16_t f = 1 - r;\r\n  int16_t ddF_x = 1;\r\n  int16_t ddF_y = -2 * r;\r\n  int16_t x = 0;\r\n  int16_t y = r;\r\n  while (x < y)\r\n  {\r\n    if (f >= 0)\r\n    {\r\n      y--;\r\n      ddF_y += 2;\r\n      f += ddF_y;\r\n    }\r\n    x++;\r\n    ddF_x += 2;\r\n    f += ddF_x;\r\n    if (sides & 0x1) \r\n    {\r\n      drawFastVLine(x0+x, y0-y, 2*y+1+delta, color);\r\n      drawFastVLine(x0+y, y0-x, 2*x+1+delta, color);\r\n    }\r\n    if (sides & 0x2) \r\n    {\r\n      drawFastVLine(x0-x, y0-y, 2*y+1+delta, color);\r\n      drawFastVLine(x0-y, y0-x, 2*x+1+delta, color);\r\n    }\r\n  }\r\n}\r\nvoid Arduboy2Base::drawLine\r\n(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint8_t color)\r\n{\r\n  \r\n  bool steep = abs(y1 - y0) > abs(x1 - x0);\r\n  if (steep) {\r\n    swap(x0, y0);\r\n    swap(x1, y1);\r\n  }\r\n  if (x0 > x1) {\r\n    swap(x0, x1);\r\n    swap(y0, y1);\r\n  }\r\n  int16_t dx, dy;\r\n  dx = x1 - x0;\r\n  dy = abs(y1 - y0);\r\n  int16_t err = dx / 2;\r\n  int8_t ystep;\r\n  if (y0 < y1)\r\n  {\r\n    ystep = 1;\r\n  }\r\n  else\r\n  {\r\n    ystep = -1;\r\n  }\r\n  for (; x0 <= x1; x0++)\r\n  {\r\n    if (steep)\r\n    {\r\n      drawPixel(y0, x0, color);\r\n    }\r\n    else\r\n    {\r\n      drawPixel(x0, y0, color);\r\n    }\r\n    err -= dy;\r\n    if (err < 0)\r\n    {\r\n      y0 += ystep;\r\n      err += dx;\r\n    }\r\n  }\r\n}\r\nvoid Arduboy2Base::drawRect\r\n(int16_t x, int16_t y, uint8_t w, uint8_t h, uint8_t color)\r\n{\r\n  drawFastHLine(x, y, w, color);\r\n  drawFastHLine(x, y+h-1, w, color);\r\n  drawFastVLine(x, y, h, color);\r\n  drawFastVLine(x+w-1, y, h, color);\r\n}\r\nvoid Arduboy2Base::drawFastVLine\r\n(int16_t x, int16_t y, uint8_t h, uint8_t color)\r\n{\r\n  int end = y+h;\r\n  for (int a = max(0,y); a < min(end,HEIGHT); a++)\r\n  {\r\n    drawPixel(x,a,color);\r\n  }\r\n}\r\nvoid Arduboy2Base::drawFastHLine\r\n(int16_t x, int16_t y, uint8_t w, uint8_t color)\r\n{\r\n  int16_t xEnd; \r\n  \r\n  if (y < 0 || y >= HEIGHT)\r\n    return;\r\n  xEnd = x + w;\r\n  \r\n  if (xEnd <= 0 || x >= WIDTH)\r\n    return;\r\n  \r\n  if (x < 0)\r\n    x = 0;\r\n  \r\n  if (xEnd > WIDTH)\r\n    xEnd = WIDTH;\r\n  \r\n  w = xEnd - x;\r\n  \r\n  register uint8_t *pBuf = sBuffer + ((y / 8) * WIDTH) + x;\r\n  \r\n  register uint8_t mask = 1 << (y & 7);\r\n  switch (color)\r\n  {\r\n    case WHITE:\r\n      while (w--)\r\n      {\r\n        *pBuf++ |= mask;\r\n      }\r\n      break;\r\n    case BLACK:\r\n      mask = ~mask;\r\n      while (w--)\r\n      {\r\n        *pBuf++ &= mask;\r\n      }\r\n      break;\r\n  }\r\n}\r\nvoid Arduboy2Base::fillRect\r\n(int16_t x, int16_t y, uint8_t w, uint8_t h, uint8_t color)\r\n{\r\n  \r\n  for (int16_t i=x; i<x+w; i++)\r\n  {\r\n    drawFastVLine(i, y, h, color);\r\n  }\r\n}\r\nvoid Arduboy2Base::fillScreen(uint8_t color)\r\n{\r\n  \r\n  \r\n  \r\n  \r\n  asm volatile\r\n  (\r\n    \r\n    \"mov r27, %1 \\n\\t\"\r\n    \r\n    \"cpse r27, __zero_reg__ \\n\\t\"\r\n    \"ldi r27, 0xff \\n\\t\"\r\n    \r\n    \"movw  r30, %0\\n\\t\"\r\n    \r\n    \"clr __tmp_reg__ \\n\\t\"\r\n    \"loopto:   \\n\\t\"\r\n    \r\n    \r\n    \"st Z+, r27 \\n\\t\"\r\n    \"st Z+, r27 \\n\\t\"\r\n    \"st Z+, r27 \\n\\t\"\r\n    \"st Z+, r27 \\n\\t\"\r\n    \r\n    \"inc __tmp_reg__ \\n\\t\"\r\n    \r\n    \r\n    \"brne loopto \\n\\t\"\r\n    \r\n    \r\n    :\r\n    : \"r\" (sBuffer), \"r\" (color)\r\n    : \"r30\", \"r31\", \"r27\"\r\n  );\r\n}\r\nvoid Arduboy2Base::drawRoundRect\r\n(int16_t x, int16_t y, uint8_t w, uint8_t h, uint8_t r, uint8_t color)\r\n{\r\n  \r\n  drawFastHLine(x+r, y, w-2*r, color); \r\n  drawFastHLine(x+r, y+h-1, w-2*r, color); \r\n  drawFastVLine(x, y+r, h-2*r, color); \r\n  drawFastVLine(x+w-1, y+r, h-2*r, color); \r\n  \r\n  drawCircleHelper(x+r, y+r, r, 1, color);\r\n  drawCircleHelper(x+w-r-1, y+r, r, 2, color);\r\n  drawCircleHelper(x+w-r-1, y+h-r-1, r, 4, color);\r\n  drawCircleHelper(x+r, y+h-r-1, r, 8, color);\r\n}\r\nvoid Arduboy2Base::fillRoundRect\r\n(int16_t x, int16_t y, uint8_t w, uint8_t h, uint8_t r, uint8_t color)\r\n{\r\n  \r\n  fillRect(x+r, y, w-2*r, h, color);\r\n  \r\n  fillCircleHelper(x+w-r-1, y+r, r, 1, h-2*r-1, color);\r\n  fillCircleHelper(x+r, y+r, r, 2, h-2*r-1, color);\r\n}\r\nvoid Arduboy2Base::drawTriangle\r\n(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint8_t color)\r\n{\r\n  drawLine(x0, y0, x1, y1, color);\r\n  drawLine(x1, y1, x2, y2, color);\r\n  drawLine(x2, y2, x0, y0, color);\r\n}\r\nvoid Arduboy2Base::fillTriangle\r\n(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint8_t color)\r\n{\r\n  int16_t a, b, y, last;\r\n  \r\n  if (y0 > y1)\r\n  {\r\n    swap(y0, y1); swap(x0, x1);\r\n  }\r\n  if (y1 > y2)\r\n  {\r\n    swap(y2, y1); swap(x2, x1);\r\n  }\r\n  if (y0 > y1)\r\n  {\r\n    swap(y0, y1); swap(x0, x1);\r\n  }\r\n  if(y0 == y2)\r\n  { \r\n    a = b = x0;\r\n    if(x1 < a)\r\n    {\r\n      a = x1;\r\n    }\r\n    else if(x1 > b)\r\n    {\r\n      b = x1;\r\n    }\r\n    if(x2 < a)\r\n    {\r\n      a = x2;\r\n    }\r\n    else if(x2 > b)\r\n    {\r\n      b = x2;\r\n    }\r\n    drawFastHLine(a, y0, b-a+1, color);\r\n    return;\r\n  }\r\n  int16_t dx01 = x1 - x0,\r\n      dy01 = y1 - y0,\r\n      dx02 = x2 - x0,\r\n      dy02 = y2 - y0,\r\n      dx12 = x2 - x1,\r\n      dy12 = y2 - y1,\r\n      sa = 0,\r\n      sb = 0;\r\n  \r\n  \r\n  \r\n  \r\n  \r\n  \r\n  if (y1 == y2)\r\n  {\r\n    last = y1;   \r\n  }\r\n  else\r\n  {\r\n    last = y1-1; \r\n  }\r\n  for(y = y0; y <= last; y++)\r\n  {\r\n    a   = x0 + sa / dy01;\r\n    b   = x0 + sb / dy02;\r\n    sa += dx01;\r\n    sb += dx02;\r\n    if(a > b)\r\n    {\r\n      swap(a,b);\r\n    }\r\n    drawFastHLine(a, y, b-a+1, color);\r\n  }\r\n  \r\n  \r\n  sa = dx12 * (y - y1);\r\n  sb = dx02 * (y - y0);\r\n  for(; y <= y2; y++)\r\n  {\r\n    a   = x1 + sa / dy12;\r\n    b   = x0 + sb / dy02;\r\n    sa += dx12;\r\n    sb += dx02;\r\n    if(a > b)\r\n    {\r\n      swap(a,b);\r\n    }\r\n    drawFastHLine(a, y, b-a+1, color);\r\n  }\r\n}\r\nvoid Arduboy2Base::drawBitmap\r\n(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t w, uint8_t h,\r\n uint8_t color)\r\n{\r\n  \r\n  if (x+w < 0 || x > WIDTH-1 || y+h < 0 || y > HEIGHT-1)\r\n    return;\r\n  int yOffset = abs(y) % 8;\r\n  int sRow = y / 8;\r\n  if (y < 0) {\r\n    sRow--;\r\n    yOffset = 8 - yOffset;\r\n  }\r\n  int rows = h/8;\r\n  if (h%8!=0) rows++;\r\n  for (int a = 0; a < rows; a++) {\r\n    int bRow = sRow + a;\r\n    if (bRow > (HEIGHT/8)-1) break;\r\n    if (bRow > -2) {\r\n      for (int iCol = 0; iCol<w; iCol++) {\r\n        if (iCol + x > (WIDTH-1)) break;\r\n        if (iCol + x >= 0) {\r\n          if (bRow >= 0) {\r\n            if (color == WHITE)\r\n              sBuffer[(bRow*WIDTH) + x + iCol] |= pgm_read_byte(bitmap+(a*w)+iCol) << yOffset;\r\n            else if (color == BLACK)\r\n              sBuffer[(bRow*WIDTH) + x + iCol] &= ~(pgm_read_byte(bitmap+(a*w)+iCol) << yOffset);\r\n            else\r\n              sBuffer[(bRow*WIDTH) + x + iCol] ^= pgm_read_byte(bitmap+(a*w)+iCol) << yOffset;\r\n          }\r\n          if (yOffset && bRow<(HEIGHT/8)-1 && bRow > -2) {\r\n            if (color == WHITE)\r\n              sBuffer[((bRow+1)*WIDTH) + x + iCol] |= pgm_read_byte(bitmap+(a*w)+iCol) >> (8-yOffset);\r\n            else if (color == BLACK)\r\n              sBuffer[((bRow+1)*WIDTH) + x + iCol] &= ~(pgm_read_byte(bitmap+(a*w)+iCol) >> (8-yOffset));\r\n            else\r\n              sBuffer[((bRow+1)*WIDTH) + x + iCol] ^= pgm_read_byte(bitmap+(a*w)+iCol) >> (8-yOffset);\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\nvoid Arduboy2Base::drawSlowXYBitmap\r\n(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t w, uint8_t h, uint8_t color)\r\n{\r\n  \r\n  if (x+w < 0 || x > WIDTH-1 || y+h < 0 || y > HEIGHT-1)\r\n    return;\r\n  int16_t xi, yi, byteWidth = (w + 7) / 8;\r\n  for(yi = 0; yi < h; yi++) {\r\n    for(xi = 0; xi < w; xi++ ) {\r\n      if(pgm_read_byte(bitmap + yi * byteWidth + xi / 8) & (128 >> (xi & 7))) {\r\n        drawPixel(x + xi, y + yi, color);\r\n      }\r\n    }\r\n  }\r\n}\r\ntypedef struct CSESSION {\r\n  int byte;\r\n  int bit;\r\n  const uint8_t *src;\r\n  int src_pos;\r\n} CSESSION;\r\nstatic CSESSION cs;\r\nstatic int getval(int bits)\r\n{\r\n  int val = 0;\r\n  int i;\r\n  for (i = 0; i < bits; i++)\r\n  {\r\n    if (cs.bit == 0x100)\r\n    {\r\n      cs.bit = 0x1;\r\n      cs.byte = pgm_read_byte(&cs.src[cs.src_pos]);\r\n      cs.src_pos ++;\r\n    }\r\n    if (cs.byte & cs.bit)\r\n      val += (1 << i);\r\n    cs.bit <<= 1;\r\n  }\r\n  return val;\r\n}\r\nvoid Arduboy2Base::drawCompressed(int16_t sx, int16_t sy, const uint8_t *bitmap, uint8_t color)\r\n{\r\n  int bl, len;\r\n  int col;\r\n  int i;\r\n  int a, iCol;\r\n  int byte = 0;\r\n  int bit = 0;\r\n  int w, h;\r\n  \r\n  cs.src = bitmap;\r\n  cs.bit = 0x100;\r\n  cs.byte = 0;\r\n  cs.src_pos = 0;\r\n  \r\n  w = getval(8) + 1;\r\n  h = getval(8) + 1;\r\n  col = getval(1); \r\n  \r\n  if (sx + w < 0 || sx > WIDTH - 1 || sy + h < 0 || sy > HEIGHT - 1)\r\n    return;\r\n  \r\n  int yOffset = abs(sy) % 8;\r\n  int sRow = sy / 8;\r\n  if (sy < 0) {\r\n    sRow--;\r\n    yOffset = 8 - yOffset;\r\n  }\r\n  int rows = h / 8;\r\n  if (h % 8 != 0) rows++;\r\n  a = 0; \r\n  iCol = 0;\r\n  byte = 0; bit = 1;\r\n  while (a < rows) \r\n  {\r\n    bl = 1;\r\n    while (!getval(1))\r\n      bl += 2;\r\n    len = getval(bl) + 1; \r\n    \r\n    for (i = 0; i < len; i++)\r\n    {\r\n      if (col)\r\n        byte |= bit;\r\n      bit <<= 1;\r\n      if (bit == 0x100) \r\n      {\r\n        \r\n        int bRow = sRow + a;\r\n        \r\n        if (bRow <= (HEIGHT / 8) - 1)\r\n          if (bRow > -2)\r\n            if (iCol + sx <= (WIDTH - 1))\r\n              if (iCol + sx >= 0) {\r\n                if (bRow >= 0)\r\n                {\r\n                  if (color)\r\n                    sBuffer[(bRow * WIDTH) + sx + iCol] |= byte << yOffset;\r\n                  else\r\n                    sBuffer[(bRow * WIDTH) + sx + iCol] &= ~(byte << yOffset);\r\n                }\r\n                if (yOffset && bRow < (HEIGHT / 8) - 1 && bRow > -2)\r\n                {\r\n                  if (color)\r\n                    sBuffer[((bRow + 1)*WIDTH) + sx + iCol] |= byte >> (8 - yOffset);\r\n                  else\r\n                    sBuffer[((bRow + 1)*WIDTH) + sx + iCol] &= ~(byte >> (8 - yOffset));\r\n                }\r\n              }\r\n        \r\n        iCol ++;\r\n        if (iCol >= w)\r\n        {\r\n          iCol = 0;\r\n          a ++;\r\n        }\r\n        \r\n        byte = 0; bit = 1;\r\n      }\r\n    }\r\n    col = 1 - col; \r\n  }\r\n}\r\nvoid Arduboy2Base::display()\r\n{\r\n  paintScreen(sBuffer);\r\n}\r\nvoid Arduboy2Base::display(bool clear)\r\n{\r\n  paintScreen(sBuffer, clear);\r\n}\r\nuint8_t* Arduboy2Base::getBuffer()\r\n{\r\n  return sBuffer;\r\n}\r\nbool Arduboy2Base::pressed(uint8_t buttons)\r\n{\r\n  return (buttonsState() & buttons) == buttons;\r\n}\r\nbool Arduboy2Base::notPressed(uint8_t buttons)\r\n{\r\n  return (buttonsState() & buttons) == 0;\r\n}\r\nvoid Arduboy2Base::pollButtons()\r\n{\r\n  previousButtonState = currentButtonState;\r\n  currentButtonState = buttonsState();\r\n}\r\nbool Arduboy2Base::justPressed(uint8_t button)\r\n{\r\n  return (!(previousButtonState & button) && (currentButtonState & button));\r\n}\r\nbool Arduboy2Base::justReleased(uint8_t button)\r\n{\r\n  return ((previousButtonState & button) && !(currentButtonState & button));\r\n}\r\nbool Arduboy2Base::collide(Point point, Rect rect)\r\n{\r\n  return ((point.x >= rect.x) && (point.x < rect.x + rect.width) &&\r\n      (point.y >= rect.y) && (point.y < rect.y + rect.height));\r\n}\r\nbool Arduboy2Base::collide(Rect rect1, Rect rect2)\r\n{\r\n  return !(rect2.x                >= rect1.x + rect1.width  ||\r\n           rect2.x + rect2.width  <= rect1.x                ||\r\n           rect2.y                >= rect1.y + rect1.height ||\r\n           rect2.y + rect2.height <= rect1.y);\r\n}\r\nvoid Arduboy2Base::swap(int16_t& a, int16_t& b)\r\n{\r\n  int16_t temp = a;\r\n  a = b;\r\n  b = temp;\r\n}\r\nArduboy2::Arduboy2()\r\n{\r\n  cursor_x = 0;\r\n  cursor_y = 0;\r\n  textColor = 1;\r\n  textBackground = 0;\r\n  textSize = 1;\r\n  textWrap = 0;\r\n}\r\nsize_t Arduboy2::write(uint8_t c)\r\n{\r\n  if (c == '\\n')\r\n  {\r\n    cursor_y += textSize * 8;\r\n    cursor_x = 0;\r\n  }\r\n  else if (c == '\\r')\r\n  {\r\n    \r\n  }\r\n  else\r\n  {\r\n    drawChar(cursor_x, cursor_y, c, textColor, textBackground, textSize);\r\n    cursor_x += textSize * 6;\r\n    if (textWrap && (cursor_x > (WIDTH - textSize * 6)))\r\n    {\r\n      \r\n      \r\n      write('\\n');\r\n    }\r\n  }\r\n  return 1;\r\n}\r\nvoid Arduboy2::drawChar\r\n  (int16_t x, int16_t y, unsigned char c, uint8_t color, uint8_t bg, uint8_t size)\r\n{\r\n  bool draw_background = bg != color;\r\n  if ((x >= WIDTH) ||              \r\n      (y >= HEIGHT) ||             \r\n      ((x + 5 * size - 1) < 0) ||  \r\n      ((y + 8 * size - 1) < 0)     \r\n     )\r\n  {\r\n    return;\r\n  }\r\n  for (int8_t i=0; i<6; i++ )\r\n  {\r\n    uint8_t line;\r\n    if (i == 5)\r\n    {\r\n      line = 0x0;\r\n    }\r\n    else\r\n    {\r\n      line = pgm_read_byte(font+(c*5)+i);\r\n    }\r\n    for (int8_t j = 0; j<8; j++)\r\n    {\r\n      uint8_t draw_color = (line & 0x1) ? color : bg;\r\n      if (draw_color || draw_background) {\r\n        for (uint8_t a = 0; a < size; a++ ) {\r\n          for (uint8_t b = 0; b < size; b++ ) {\r\n            drawPixel(x + (i * size) + a, y + (j * size) + b, draw_color);\r\n          }\r\n        }\r\n      }\r\n      line >>= 1;\r\n    }\r\n  }\r\n}\r\nvoid Arduboy2::setCursor(int16_t x, int16_t y)\r\n{\r\n  cursor_x = x;\r\n  cursor_y = y;\r\n}\r\nint16_t Arduboy2::getCursorX() {\r\n  return cursor_x;\r\n}\r\nint16_t Arduboy2::getCursorY() {\r\n  return cursor_y;\r\n}\r\nvoid Arduboy2::setTextColor(uint8_t color)\r\n{\r\n  textColor = color;\r\n}\r\nvoid Arduboy2::setTextBackground(uint8_t bg)\r\n{\r\n  textBackground = bg;\r\n}\r\nvoid Arduboy2::setTextSize(uint8_t s)\r\n{\r\n  \r\n  textSize = max(1, s);\r\n}\r\nvoid Arduboy2::setTextWrap(bool w)\r\n{\r\n  textWrap = w;\r\n}\r\nvoid Arduboy2::clear() {\r\n    Arduboy2Base::clear();\r\n    cursor_x = cursor_y = 0;\r\n}\r\nvolatile uint8_t *Arduboy2Core::csport, *Arduboy2Core::dcport;\r\nuint8_t Arduboy2Core::cspinmask, Arduboy2Core::dcpinmask;\r\nconst uint8_t PROGMEM pinBootProgram[] = {\r\n  \r\n  PIN_LEFT_BUTTON, INPUT_PULLUP,\r\n  PIN_RIGHT_BUTTON, INPUT_PULLUP,\r\n  PIN_UP_BUTTON, INPUT_PULLUP,\r\n  PIN_DOWN_BUTTON, INPUT_PULLUP,\r\n  PIN_A_BUTTON, INPUT_PULLUP,\r\n  PIN_B_BUTTON, INPUT_PULLUP,\r\n  \r\n#ifdef ARDUBOY_10\r\n  RED_LED, INPUT_PULLUP,  \r\n  RED_LED, OUTPUT,        \r\n  GREEN_LED, INPUT_PULLUP,\r\n  GREEN_LED, OUTPUT,\r\n#endif\r\n  BLUE_LED, INPUT_PULLUP,\r\n  BLUE_LED, OUTPUT,\r\n  \r\n  \r\n  \r\n  \r\n  DC, OUTPUT,\r\n  CS, OUTPUT,\r\n  RST, OUTPUT,\r\n  0\r\n};\r\nconst uint8_t PROGMEM lcdBootProgram[] = {\r\n  \r\n  \r\n  \r\n  \r\n  \r\n  \r\n  \r\n  \r\n  \r\n  0xD5, 0xF0,\r\n  \r\n  \r\n  \r\n  \r\n  \r\n  \r\n  \r\n  \r\n  0x8D, 0x14,\r\n  \r\n  \r\n  0xA1,\r\n  \r\n  0xC8,\r\n  \r\n  \r\n  \r\n  0x81, 0xCF,\r\n  \r\n  0xD9, 0xF1,\r\n  \r\n  \r\n  \r\n  \r\n  \r\n  \r\n  \r\n  0xAF,\r\n  \r\n  0x20, 0x00,\r\n  \r\n  \r\n  \r\n  \r\n};\r\nArduboy2Core::Arduboy2Core() {}\r\nvoid Arduboy2Core::boot()\r\n{\r\n  #ifdef ARDUBOY_SET_CPU_8MHZ\r\n  \r\n  setCPUSpeed8MHz();\r\n  #endif\r\n  SPI.begin();\r\n  bootPins();\r\n  bootOLED();\r\n  #ifdef SAFE_MODE\r\n  if (buttonsState() == (LEFT_BUTTON | UP_BUTTON))\r\n    safeMode();\r\n  #endif\r\n  bootPowerSaving();\r\n}\r\n#ifdef ARDUBOY_SET_CPU_8MHZ\r\nvoid Arduboy2Core::setCPUSpeed8MHz()\r\n{\r\n  uint8_t oldSREG = SREG;\r\n  cli();                \r\n  PLLCSR = _BV(PINDIV); \r\n  CLKPR = _BV(CLKPCE);  \r\n  CLKPR = 1;            \r\n  PLLCSR = _BV(PLLE) | _BV(PINDIV); \r\n  SREG = oldSREG;       \r\n}\r\n#endif\r\nvoid Arduboy2Core::bootPins()\r\n{\r\n  uint8_t pin, mode;\r\n  const uint8_t *i = pinBootProgram;\r\n  while(true) {\r\n    pin = pgm_read_byte(i++);\r\n    mode = pgm_read_byte(i++);\r\n    if (pin==0) break;\r\n    pinMode(pin, mode);\r\n  }\r\n  digitalWrite(RST, HIGH);\r\n  delay(1);           \r\n  digitalWrite(RST, LOW);   \r\n  delay(10);          \r\n  digitalWrite(RST, HIGH);  \r\n}\r\nvoid Arduboy2Core::bootOLED()\r\n{\r\n  \r\n  csport = portOutputRegister(digitalPinToPort(CS));\r\n  cspinmask = digitalPinToBitMask(CS);\r\n  dcport = portOutputRegister(digitalPinToPort(DC));\r\n  dcpinmask = digitalPinToBitMask(DC);\r\n  SPI.setClockDivider(SPI_CLOCK_DIV2);\r\n  LCDCommandMode();\r\n  \r\n  \r\n  for (uint8_t i = 0; i < sizeof(lcdBootProgram); i++) {\r\n    SPI.transfer(pgm_read_byte(lcdBootProgram + i));\r\n  }\r\n  LCDDataMode();\r\n}\r\nvoid Arduboy2Core::LCDDataMode()\r\n{\r\n  *dcport |= dcpinmask;\r\n  *csport &= ~cspinmask;\r\n}\r\nvoid Arduboy2Core::LCDCommandMode()\r\n{\r\n  *csport |= cspinmask;\r\n  *dcport &= ~dcpinmask;\r\n  *csport &= ~cspinmask;\r\n}\r\nvoid Arduboy2Core::safeMode()\r\n{\r\n  blank(); \r\n  while (true) {\r\n    asm volatile(\"nop \\n\");\r\n  }\r\n}\r\nvoid Arduboy2Core::idle()\r\n{\r\n  set_sleep_mode(SLEEP_MODE_IDLE);\r\n  sleep_mode();\r\n}\r\nvoid Arduboy2Core::bootPowerSaving()\r\n{\r\n  power_adc_disable();\r\n  power_usart0_disable();\r\n  power_twi_disable();\r\n  \r\n  \r\n  power_timer2_disable();\r\n  power_usart1_disable();\r\n  \r\n  \r\n}\r\nuint8_t Arduboy2Core::width() { return WIDTH; }\r\nuint8_t Arduboy2Core::height() { return HEIGHT; }\r\nvoid Arduboy2Core::paint8Pixels(uint8_t pixels)\r\n{\r\n  SPI.transfer(pixels);\r\n}\r\nvoid Arduboy2Core::paintScreen(const uint8_t *image)\r\n{\r\n  for (int i = 0; i < (HEIGHT*WIDTH)/8; i++)\r\n  {\r\n    SPI.transfer(pgm_read_byte(image + i));\r\n  }\r\n}\r\nvoid Arduboy2Core::paintScreen(uint8_t image[], bool clear)\r\n{\r\n  uint8_t c;\r\n  int i = 0;\r\n  if (clear)\r\n  {\r\n    SPDR = image[i]; \r\n    image[i++] = 0;  \r\n  }\r\n  else\r\n    SPDR = image[i++];\r\n  \r\n  \r\n  while (i < (HEIGHT * WIDTH) / 8)\r\n  {\r\n    \r\n    \r\n    if (clear)\r\n    {\r\n      c = image[i];\r\n      \r\n      image[i++] = 0;\r\n    }\r\n    else\r\n      c = image[i++];\r\n    while (!(SPSR & _BV(SPIF))) { } \r\n    \r\n    \r\n    SPDR = c;\r\n  }\r\n  while (!(SPSR & _BV(SPIF))) { } \r\n}\r\nvoid Arduboy2Core::blank()\r\n{\r\n  for (int i = 0; i < (HEIGHT*WIDTH)/8; i++)\r\n    SPI.transfer(0x00);\r\n}\r\nvoid Arduboy2Core::sendLCDCommand(uint8_t command)\r\n{\r\n  LCDCommandMode();\r\n  SPI.transfer(command);\r\n  LCDDataMode();\r\n}\r\nvoid Arduboy2Core::invert(bool inverse)\r\n{\r\n  sendLCDCommand(inverse ? OLED_PIXELS_INVERTED : OLED_PIXELS_NORMAL);\r\n}\r\nvoid Arduboy2Core::allPixelsOn(bool on)\r\n{\r\n  sendLCDCommand(on ? OLED_ALL_PIXELS_ON : OLED_PIXELS_FROM_RAM);\r\n}\r\nvoid Arduboy2Core::flipVertical(bool flipped)\r\n{\r\n  sendLCDCommand(flipped ? OLED_VERTICAL_FLIPPED : OLED_VERTICAL_NORMAL);\r\n}\r\nvoid Arduboy2Core::flipHorizontal(bool flipped)\r\n{\r\n  sendLCDCommand(flipped ? OLED_HORIZ_FLIPPED : OLED_HORIZ_NORMAL);\r\n}\r\nvoid Arduboy2Core::setRGBled(uint8_t red, uint8_t green, uint8_t blue)\r\n{\r\n#ifdef ARDUBOY_10 \r\n  \r\n  analogWrite(RED_LED, 255 - red);\r\n  analogWrite(GREEN_LED, 255 - green);\r\n  analogWrite(BLUE_LED, 255 - blue);\r\n#elif defined(AB_DEVKIT)\r\n  \r\n  digitalWrite(BLUE_LED, ~blue);\r\n#endif\r\n}\r\nvoid Arduboy2Core::digitalWriteRGB(uint8_t red, uint8_t green, uint8_t blue)\r\n{\r\n#ifdef ARDUBOY_10\r\n  digitalWrite(RED_LED, red);\r\n  digitalWrite(GREEN_LED, green);\r\n  digitalWrite(BLUE_LED, blue);\r\n#elif defined(AB_DEVKIT)\r\n  digitalWrite(BLUE_LED, blue);\r\n#endif\r\n}\r\nuint8_t Arduboy2Core::buttonsState()\r\n{\r\n  uint8_t buttons;\r\n  \r\n#ifdef AB_DEVKIT\r\n  \r\n  buttons = ((~PINB) & B01110000);\r\n  \r\n  buttons = buttons | (((~PINC) & B01000000) >> 4);\r\n  \r\n  buttons = buttons | (((~PINF) & B11000000) >> 6);\r\n#elif defined(ARDUBOY_10)\r\n  \r\n  buttons = ((~PINF) & B11110000);\r\n  \r\n  buttons = buttons | (((~PINE) & B01000000) >> 3);\r\n  \r\n  buttons = buttons | (((~PINB) & B00010000) >> 2);\r\n#endif\r\n  return buttons;\r\n}\r\nbool Arduboy2Audio::audio_enabled = false;\r\nvoid Arduboy2Audio::on()\r\n{\r\n  \r\n#ifdef ARDUBOY_10\r\n  pinMode(PIN_SPEAKER_1, OUTPUT);\r\n  pinMode(PIN_SPEAKER_2, OUTPUT);\r\n#else\r\n  pinMode(PIN_SPEAKER_1, OUTPUT);\r\n#endif\r\n  audio_enabled = true;\r\n}\r\nvoid Arduboy2Audio::off()\r\n{\r\n  audio_enabled = false;\r\n  \r\n#ifdef ARDUBOY_10\r\n  pinMode(PIN_SPEAKER_1, INPUT);\r\n  pinMode(PIN_SPEAKER_2, INPUT);\r\n#else\r\n  pinMode(PIN_SPEAKER_1, INPUT);\r\n#endif\r\n}\r\nvoid Arduboy2Audio::saveOnOff()\r\n{\r\n  EEPROM.update(EEPROM_AUDIO_ON_OFF, audio_enabled);\r\n}\r\nvoid Arduboy2Audio::begin()\r\n{\r\n  if (EEPROM.read(EEPROM_AUDIO_ON_OFF))\r\n    on();\r\n}\r\nbool Arduboy2Audio::enabled()\r\n{\r\n  return audio_enabled;\r\n}\r\n`;
+
 function arduClick(){
   //var canvas = transposeCanvas(128,56,canvas);
   //var dat = serializeCanvas(width,height,canvas,"uc1");
   var s = "\n";
 
-  s+=`#include <Arduboy2.h>`;
+  s+=arduheader;
 
-  for (var i=0;i<20;i++){
+  for (var i=0;i<25;i++){
     var dat = compress_rle(width,height,canvasses[i],`screen_${i}`);
     s+=dat;
   }
   s+="\nconst PROGMEM uint8_t  * const (screens[]) = {"
-  for (var i=0;i<20;i++){
+  for (var i=0;i<25;i++){
     s+=`\n\tscreen_${i}`
-    if (i<19){
+    if (i<24){
       s+=","
     }
   }
@@ -300,7 +302,7 @@ function arduClick(){
 
 
 
-  for (var i=0;i<20;i++){
+  for (var i=0;i<25;i++){
     var lines = texts[i].split("\n");
     while(lines.length<5){
       lines.push("");
@@ -311,10 +313,10 @@ function arduClick(){
   }
 
   s+=`\nconst PROGMEM char *const (texts[])  = {`
-  for (var i=0;i<20;i++){
+  for (var i=0;i<25;i++){
     for (var j=0;j<5;j++){
       s+=`\n\ttext_${i}_${j}`
-      if (i<19||j<4){
+      if (i<24||j<4){
         s+=","
       }
     }
@@ -322,7 +324,7 @@ function arduClick(){
   s+="\n};"
 
 
-  for (var i=0;i<20;i++){
+  for (var i=0;i<25;i++){
     var v = verbs[i]
     for (var j=0;j<6;j++){
       var str=v[j][0];
@@ -342,11 +344,11 @@ function arduClick(){
   }
 
   s+=`\nconst PROGMEM char *const (verbs[])  = {`
-  for (var i=0;i<20;i++){
+  for (var i=0;i<25;i++){
 
     for (var j=0;j<6;j++){
       s+=`\n\tverb_${i}_${j}`
-      if (i<19||j<5){
+      if (i<24||j<5){
         s+=","
       }
     }
@@ -354,13 +356,13 @@ function arduClick(){
   s+="\n};"
 
   s+=`\nconst PROGMEM byte * const(verb_targets[])  = {`
-  for (var i=0;i<20;i++){
+  for (var i=0;i<25;i++){
     for (var j=0;j<6;j++){
       if (verbs[i][j].length===1){
         verbs[i][j][1]=0;
       }
       s+=verbs[i][j][1]
-      if (i<19||i<5){
+      if (i<24||i<5){
         s+=","
       }
     }
@@ -493,6 +495,11 @@ void loop() {
   render();
 }`;
 
+
+  var BB = get_blob();
+  var blob = new BB([s], {type: "text/plain;charset=utf-8"});
+  saveAs(blob, "flickuboy.ino");
+
   console.log(s);
 }
 
@@ -539,7 +546,7 @@ function shareClick() {
       alert("HTTP Error "+ githubHTTPClient.status + ' - ' + githubHTTPClient.statusText);
     } else {
       var id = result.id;
-      var url = "play3.html?p="+id;
+      var url = "flickuplay.html?p="+id;
       url=qualifyURL(url);
 
       var editurl = "editor.html?hack="+id;
@@ -592,7 +599,7 @@ function RLE_decode(encoded) {
 function stateToString(){
   var state = new Object();
   state.canvasses=new Array();
-  for (var i=0;i<20;i++){
+  for (var i=0;i<25;i++){
     var canvas=canvasses[i];
     var s="";
     for (var j=0;j<width*height;j++){
@@ -647,7 +654,7 @@ function press(evt){
     setVisuals();
     setLayer(canvasIndex+1); 
   } */
-  if (evt.keyCode===67) { //c
+  /*if (evt.keyCode===67) { //c
     copyImage=JSON.stringify(canvasses[canvasIndex])
   } else if (evt.keyCode===86){ //v
     if (copyImage!==null){
@@ -660,7 +667,7 @@ function press(evt){
       canvasses[canvasIndex]=arui8;
       setVisuals();
     }
-  } else if (evt.keyCode ===189 || evt.keyCode===173 ) {//-
+  } else*/ if (evt.keyCode ===189 || evt.keyCode===173 ) {//-
     if (radius===3) {
       setRadius(1);
     } else if (radius===5) {
@@ -762,7 +769,7 @@ function clearPalette(){
     function setLayer(newCanvasIndex) {
       canvasIndex=newCanvasIndex-1;
         displayText.value=texts[canvasIndex];
-        for(var i=0;i<20;i++){
+        for(var i=0;i<25;i++){
           if (layerElem[i]!==null){
             layerElem[i].setAttribute("class","layerItem");
           }
@@ -827,7 +834,7 @@ function ontextchange(evt){
         
       }
 
-      for (var i=0;i<20;i++){
+      for (var i=0;i<25;i++){
         elem = document.getElementById("thumbnail"+(i+1));        
         thumbnailCanvas[i]=elem;
         thumbnailContext[i]=elem.getContext("2d");
@@ -839,7 +846,7 @@ function ontextchange(evt){
         colorElem[i]=elem;
       }
 
-      for (var i=0;i<20;i++){
+      for (var i=0;i<25;i++){
         elem = document.getElementById("layerItem"+(i+1));        
         layerElem[i]=elem;
       }
@@ -848,10 +855,10 @@ function ontextchange(evt){
       bucketElem=document.getElementById("bucket");
 
 
-      for (var i=0;i<20;i++){
+      for (var i=0;i<25;i++){
         canvasses[i]=new Uint8Array(width*height);
       }
-      for (var i=0;i<20;i++){
+      for (var i=0;i<25;i++){
         texts[i]="";
         verb=[];
         for (var j=0;j<6;j++){
@@ -1300,6 +1307,7 @@ body {
                  ul {
                  list-style-type: none;
                  overflow:hidden; overflow-y:scroll;
+                  height:100%;
                  }
                  li {
                  font-size: 150%;                 
@@ -1463,128 +1471,155 @@ body {
         <td class="alignTop">
           <ul>
             <li> 
-              <a href="#" class="thumbnailBtn">☒</a>
+              
               <a class="layerItem selectedItem" id="layerItem1" href="#" onclick="setLayer(1);return false;">
               <canvas id="thumbnail1" width="26" height="12" class="thumbnailCanvas"></canvas>
               01</a>
             </li>
             <li> 
-              <a href="#" class="thumbnailBtn">☒</a>
+              
               <a class="layerItem" id="layerItem2" href="#" onclick="setLayer(2);return false;">
               <canvas id="thumbnail2" width="26" height="12" class="thumbnailCanvas"></canvas>
               02</a>
             </li>
             <li> 
-              <a href="#" class="thumbnailBtn">☒</a>
+              
               <a class="layerItem" id="layerItem3" href="#" onclick="setLayer(3);return false;">
               <canvas id="thumbnail3" width="26" height="12" class="thumbnailCanvas"></canvas>
               03</a>
             </li>
             <li> 
-              <a href="#" class="thumbnailBtn">☒</a>
+              
               <a class="layerItem" id="layerItem4" href="#" onclick="setLayer(4);return false;">
               <canvas id="thumbnail4" width="26" height="12" class="thumbnailCanvas"></canvas>
               04</a>
             </li>
             <li> 
-              <a href="#" class="thumbnailBtn">☒</a>
+              
               <a class="layerItem" id="layerItem5" href="#" onclick="setLayer(5);return false;">
               <canvas id="thumbnail5" width="26" height="12" class="thumbnailCanvas"></canvas>
               05</a>
             </li>
             <li> 
-              <a href="#" class="thumbnailBtn">☒</a>
+              
               <a class="layerItem" id="layerItem6" href="#" onclick="setLayer(6);return false;">
               <canvas id="thumbnail6" width="26" height="12" class="thumbnailCanvas"></canvas>
               06</a>
             </li>
             <li> 
-              <a href="#" class="thumbnailBtn">☒</a>
+              
               <a class="layerItem" id="layerItem7" href="#" onclick="setLayer(7);return false;">
               <canvas id="thumbnail7" width="26" height="12" class="thumbnailCanvas"></canvas>
               07</a>
             </li>
             <li> 
-              <a href="#" class="thumbnailBtn">☒</a>
+              
               <a class="layerItem" id="layerItem8" href="#" onclick="setLayer(8);return false;">
               <canvas id="thumbnail8" width="26" height="12" class="thumbnailCanvas"></canvas>
               08</a>
             </li>
             <li> 
-              <a href="#" class="thumbnailBtn">☒</a>
+              
               <a class="layerItem" id="layerItem9" href="#" onclick="setLayer(9);return false;">
               <canvas id="thumbnail9" width="26" height="12" class="thumbnailCanvas"></canvas>
               09</a>
             </li>
             <li> 
-              <a href="#" class="thumbnailBtn">☒</a>
+              
               <a class="layerItem" id="layerItem10" href="#" onclick="setLayer(10);return false;">
               <canvas id="thumbnail10" width="26" height="12" class="thumbnailCanvas"></canvas>
               10</a>
             </li>
             <li> 
-              <a href="#" class="thumbnailBtn">☒</a>
+              
               <a class="layerItem" id="layerItem11" href="#" onclick="setLayer(11);return false;">
               <canvas id="thumbnail11" width="26" height="12" class="thumbnailCanvas"></canvas>
               11</a>
             </li>
             <li> 
-              <a href="#" class="thumbnailBtn">☒</a>
+              
               <a class="layerItem" id="layerItem12" href="#" onclick="setLayer(12);return false;">
               <canvas id="thumbnail12" width="26" height="12" class="thumbnailCanvas"></canvas>
               12</a>
             </li>
             <li> 
-              <a href="#" class="thumbnailBtn">☒</a>
+              
               <a class="layerItem" id="layerItem13" href="#" onclick="setLayer(13);return false;">
               <canvas id="thumbnail13" width="26" height="12" class="thumbnailCanvas"></canvas>
               13</a>
             </li>
             <li> 
-              <a href="#" class="thumbnailBtn">☒</a>
+              
               <a class="layerItem" id="layerItem14" href="#" onclick="setLayer(14);return false;">
               <canvas id="thumbnail14" width="26" height="12" class="thumbnailCanvas"></canvas>
               14</a>
             </li>
             <li> 
-              <a href="#" class="thumbnailBtn">☒</a>
+              
               <a class="layerItem" id="layerItem15" href="#" onclick="setLayer(15);return false;">
               <canvas id="thumbnail15" width="26" height="12" class="thumbnailCanvas"></canvas>
               15</a>
             </li>
             <li> 
-              <a href="#" class="thumbnailBtn">☒</a>
+              
               <a class="layerItem" id="layerItem16" href="#" onclick="setLayer(16);return false;">
               <canvas id="thumbnail16" width="26" height="12" class="thumbnailCanvas"></canvas>
               16</a>
             </li>
             <li> 
-              <a href="#" class="thumbnailBtn">☒</a>
+              
               <a class="layerItem" id="layerItem17" href="#" onclick="setLayer(17);return false;">
               <canvas id="thumbnail17" width="26" height="12" class="thumbnailCanvas"></canvas>
               17</a>
             </li>
             <li> 
-              <a href="#" class="thumbnailBtn">☒</a>
+              
               <a class="layerItem" id="layerItem18" href="#" onclick="setLayer(18);return false;">
               <canvas id="thumbnail18" width="26" height="12" class="thumbnailCanvas"></canvas>
               18</a>
             </li>
             <li> 
-              <a href="#" class="thumbnailBtn">☒</a>
+              
               <a class="layerItem" id="layerItem19" href="#" onclick="setLayer(19);return false;">
               <canvas id="thumbnail19" width="26" height="12" class="thumbnailCanvas"></canvas>
               19</a>
             </li>
             <li> 
-              <a href="#" class="thumbnailBtn">☒</a>
+              
               <a class="layerItem" id="layerItem20" href="#" onclick="setLayer(20);return false;">
               <canvas id="thumbnail20" width="26" height="12" class="thumbnailCanvas"></canvas>
               20</a>
             </li>
             <li> 
-              <a href="#" class="thumbnailBtn">+</a>
+              
+              <a class="layerItem" id="layerItem21" href="#" onclick="setLayer(21);return false;">
+              <canvas id="thumbnail21" width="26" height="12" class="thumbnailCanvas"></canvas>
+              21</a>
             </li>
+            <li> 
+              
+              <a class="layerItem" id="layerItem22" href="#" onclick="setLayer(22);return false;">
+              <canvas id="thumbnail22" width="26" height="12" class="thumbnailCanvas"></canvas>
+              22</a>
+            </li>
+            <li> 
+              
+              <a class="layerItem" id="layerItem23" href="#" onclick="setLayer(23);return false;">
+              <canvas id="thumbnail23" width="26" height="12" class="thumbnailCanvas"></canvas>
+              23</a>
+            </li>
+            <li> 
+              
+              <a class="layerItem" id="layerItem24" href="#" onclick="setLayer(24);return false;">
+              <canvas id="thumbnail24" width="26" height="12" class="thumbnailCanvas"></canvas>
+              24</a>
+            </li>
+            <li> 
+              
+              <a class="layerItem" id="layerItem25" href="#" onclick="setLayer(25);return false;">
+              <canvas id="thumbnail25" width="26" height="12" class="thumbnailCanvas"></canvas>
+              25</a>
+            </li
             <li> 
           </ul>
         </td>
@@ -1653,10 +1688,12 @@ body {
                                         <option value="17">18</option>
                                         <option value="18">19</option>
                                         <option value="19">20</option>
+                                        <option value="20">21</option>
+                                        <option value="21">22</option>
+                                        <option value="22">23</option>
+                                        <option value="23">24</option>
+                                        <option value="24">25</option>
                                         </select>
-                                    </td>         
-                                    <td>
-                                    <a href="" class="icon">☒</a>
                                     </td>              
                                   </tr>
                                   <tr height="16">
@@ -1686,11 +1723,14 @@ body {
                                         <option value="17">18</option>
                                         <option value="18">19</option>
                                         <option value="19">20</option>
+                                        <option value="20">21</option>
+                                        <option value="21">22</option>
+                                        <option value="22">23</option>
+                                        <option value="23">24</option>
+                                        <option value="24">25</option>
                                         </select>
                                     </td>       
-                                    <td>
-                                    <a href="" class="icon">☒</a>
-                                    </td>                              
+                            
                                   </tr>
                                   <tr height="16">
                                     <td>
@@ -1719,11 +1759,13 @@ body {
                                         <option value="17">18</option>
                                         <option value="18">19</option>
                                         <option value="19">20</option>
+                                        <option value="20">21</option>
+                                        <option value="21">22</option>
+                                        <option value="22">23</option>
+                                        <option value="23">24</option>
+                                        <option value="24">25</option>
                                         </select>
-                                    </td>            
-                                    <td>
-                                    <a href="" class="icon">☒</a>
-                                    </td>                         
+                                    </td>                            
                                   </tr>
                                   <tr height="16">
                                     <td>
@@ -1752,10 +1794,12 @@ body {
                                         <option value="17">18</option>
                                         <option value="18">19</option>
                                         <option value="19">20</option>
+                                        <option value="20">21</option>
+                                        <option value="21">22</option>
+                                        <option value="22">23</option>
+                                        <option value="23">24</option>
+                                        <option value="24">25</option>
                                         </select>
-                                    </td>         
-                                    <td>
-                                    <a href="" class="icon">☒</a>
                                     </td>                            
                                   </tr>
                                   <tr height="16">
@@ -1785,11 +1829,13 @@ body {
                                         <option value="17">18</option>
                                         <option value="18">19</option>
                                         <option value="19">20</option>
+                                        <option value="20">21</option>
+                                        <option value="21">22</option>
+                                        <option value="22">23</option>
+                                        <option value="23">24</option>
+                                        <option value="24">25</option>
                                         </select>
-                                    </td>          
-                                    <td>
-                                    <a href="" class="icon">☒</a>
-                                    </td>                           
+                                    </td>                            
                                   </tr>
                                   <tr height="16">
                                     <td>
@@ -1818,11 +1864,14 @@ body {
                                         <option value="17">18</option>
                                         <option value="18">19</option>
                                         <option value="19">20</option>
+                                        <option value="20">21</option>
+                                        <option value="21">22</option>
+                                        <option value="22">23</option>
+                                        <option value="23">24</option>
+                                        <option value="24">25</option>
                                         </select>
                                     </td>      
-                                    <td>
-                                    <a href="" class="icon">☒</a>
-                                    </td>                               
+                             
                                   </tr>
                                   <tr>  
                                     <td colspan="3"><center>
@@ -1846,10 +1895,10 @@ body {
                       <a href="#" onclick="shareClick();return false;">&ocir; share</a><br />
                       <div id="shareLink"></div>
                       <a href="#" onclick="exportClick();return false;">&sdotb; html</a><br />
-                      <a href="#" onclick="arduClick();return false;">&VDash; arduboy</a><br />
                       <a href="#" onclick="document.getElementById('my_file').click();return false;">&sdotb; import</a><br />
+                      <a href="#" onclick="arduClick();return false;">&VDash; arduboy</a><br />
                       <input type="file" accept=".html" id="my_file" style="display: none;" />
-                      <a href="help.html" target="_blank" title="blah">? help</a>
+                      <a href="flickuboy_howto.html" target="_blank" title="blah">? help</a>
                       <br />
                       <br />
                       <a href="#" onclick="setRadius(16);return false;"><img src="16.png" class="radius" id="radius_16" /></a>

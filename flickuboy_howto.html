@@ -1,0 +1,119 @@
+<html>	
+<head>
+	
+<style type="text/css">
+#maincanvas {
+  cursor:crosshair;
+}
+body {
+    -webkit-user-select: none; /* webkit (safari, chrome) browsers */
+    -moz-user-select: none; /* mozilla browsers */
+    -khtml-user-select: none; /* webkit (konqueror) browsers */
+    -ms-user-select: none; /* IE10+ */ 
+}
+ select {
+  background-color:black;
+  color:white;
+ }
+canvas {
+  position:relative;
+}
+ body {
+ background-color:black;
+ color: white;
+ margin-top: 0;
+ padding-top: 0;
+ border-top: 0;
+ }
+ input {
+ background-color: black;
+ color:white;
+ font-size: 200%;
+ margin-bottom: 5px;
+ }
+ input#linkInput {
+ background-color: black;
+ color:white;
+ font-size: 150%;
+ text-align: center;
+ margin-bottom: 5px;
+ padding-bottom:3px;
+ }
+ a {
+  color:white;
+ }
+ a.layerItem{
+  color: white;
+  background-color: black;
+  text-decoration: none;
+  width:100%;
+  display:block;
+ }
+ a.layerItem.selectedItem{
+  color: black;
+  background-color: white;
+ }
+ img.selected {
+  border: 2px solid red;
+ }
+ a{
+  white-space:nowrap;
+}
+ div.selected {
+ height:16px; 
+ width:30px;
+ border: 2px solid red;
+ }
+ div.unselected {
+ height:16px; 
+ width:30px;
+ border: 2px solid black;
+ }
+ img.radius {
+  border: 1px solid black;
+ }
+ img.selected {
+  border: 1px solid red; 
+ }
+ select {
+ width:100%;
+ -webkit-appearance: none;
+ -moz-appearance: none;
+ }
+ select::-ms-expand {
+ display: none;
+ }
+ canvas#dropdownthumb {
+  border:2px solid gray; 
+  background-color:black;
+ }
+</style>
+</head>
+<body>
+	<h1>What is Flickuboy</h1>
+<p>
+Flickugame's a dialect of <a href="http://www.flickgame.org">flickgame</a> that can be used to make + share games for both online and the <a href="https://www.arduboy.com">arduboy</a>.
+<p>
+	<h2>How to make a game</h2>
+<p>
+<img src="flickuboy_helpimage.png" width=800px>
+<p>
+Keyboard shortcut: you can press + or - to change the brush size.
+<p>
+<h2>How to get my game on an arduboy</h2>
+<p>
+<ol>
+<li>Set up the Arduino environment as described here: <a href="http://community.arduboy.com/t/arduboy-quick-start-guide/725">http://community.arduboy.com/t/arduboy-quick-start-guide/725</a></li>
+<li>Click on the &VDash;arduboy link in the editor, save it to a .ino file, open it in the Arduino IDE, and build+run :D
+</li>
+</ol>
+<p>
+<h2>source code</h2>
+<p>
+<a href="https://github.com/increpare/flickgame">github</a>
+<p>
+Flickugame uses code from the unofficial <a href="">arduboy2</a> library. So thanks to those people!
+<p>
+<p>
+</body>
+</html>
