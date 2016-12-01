@@ -498,7 +498,7 @@ void loop() {
 
   var BB = get_blob();
   var blob = new BB([s], {type: "text/plain;charset=utf-8"});
-  saveAs(blob, "flickuboy.ino");
+  saveAs(blob, "flickuboy.ino",true);
 
   console.log(s);
 }
