@@ -401,7 +401,7 @@ function redraw(){
   function calcTransitionGrids(oldCanvas,newCanvas){
     //generate 32 canvasses, for each color, for each direction
     var particleMaps = []
-    for (var i=0;i<16;i++){
+    for (var i=0;i<25;i++){
       var forwardHeatmap = calcHeatmap(newCanvas,i,oldCanvas);
       window.console.log("generated forward"+i);
       var backwardHeatmap = calcHeatmap(oldCanvas,i,newCanvas);
@@ -631,7 +631,7 @@ function printCanvas(descriptionString){
 function renderImages(){
   gameState.imageDats = new Array();
 
-  for (var i=0;i<16;i++){
+  for (var i=0;i<25;i++){
     var descriptionArray = gameState.canvasses[i];
     var descriptionString = RLE_decode(descriptionArray);
 
