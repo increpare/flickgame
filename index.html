@@ -663,6 +663,11 @@ function clearPalette(){
     lastX=Math.floor(startTargetX/zoomFactor);
     lastY=Math.floor(startTargetY/zoomFactor);
     
+    if (e.ctrlKey) {
+      setColor(canvas[lastX+width*lastY])
+      return;
+    }
+
     preserveUndoState();
     mouseMove(e);
     if(radius===0){
@@ -741,7 +746,7 @@ function clearPalette(){
     for (var i=0;i<points.length;i++){
       var p=points[i];
 
-      if (radius>0){
+      if (radius>0 && !e.shiftKey){
         drawCircle(canvas,p[0],p[1],radius,colorIndex);
       } else {
         floodFill(canvas, p[0], p[1], colorIndex);
