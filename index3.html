@@ -3,6 +3,8 @@
 <link rel="icon" 
       type="image/png" 
       href="favicon.png">
+
+
 <script src="FileSaver.js"></script>
 <script type="text/javascript" > 
   var contexts = new Array();
@@ -10,7 +12,7 @@
   var gameLink="www.flickgame.org"
   var canvasIndex=0;
   var canvasses = new Array();
-  var hyperlinks = new Array();
+  var scripts = new Array();
 
   var shareLinkInner=null;
 
@@ -93,13 +95,13 @@ function qualifyURL(url) {
 var radiusElem = new Array();
   var thumbnailCanvas = new Array();
   var thumbnailContext = new Array();
-  var dropdownOption = new Array();
+  var scriptTextArea = new Array();
 
 var standalone_HTML_String="";
 
 var clientStandaloneRequest = new XMLHttpRequest();
 
-clientStandaloneRequest.open('GET', 'play.html');
+clientStandaloneRequest.open('GET', 'play3.html');
 clientStandaloneRequest.onreadystatechange = function() {
 
     if(clientStandaloneRequest.readyState!=4) {
@@ -230,9 +232,10 @@ function RLE_decode(encoded) {
 
 function stateToString(){
   var state = new Object();
+  state.canvasIndex=canvasIndex;
   state.gameLink=gameLink;
   state.canvasses=new Array();
-  for (var i=0;i<16;i++){
+  for (var i=0;i<pages;i++){
     var canvas=canvasses[i];
     var s="";
     for (var j=0;j<width*height;j++){
@@ -241,7 +244,7 @@ function stateToString(){
     var pairs=RLE_encode(s);    
     state.canvasses.push(pairs);
   }
-  state.hyperlinks=hyperlinks;
+  state.scripts=scripts;
   var result=JSON.stringify(state);
   return result;
 }
@@ -249,7 +252,7 @@ function stateToString(){
 function stringToState(str){
   var state = JSON.parse(str);
   gameLink=state.gameLink;
-  canvasIndex=0;
+  canvasIndex=state.canvasIndex;
   canvasses=new Array();
   for (var k=0;k<state.canvasses.length;k++){
     var s = state.canvasses[k];
@@ -266,7 +269,11 @@ function stringToState(str){
     canvasses.push(ar);
   }
 
-  hyperlinks=state.hyperlinks;
+  scripts=state.scripts;
+
+
+  setVisuals(true);
+  setLayer(canvasIndex+1); 
 }
 
 document.addEventListener("keydown", press);
@@ -346,10 +353,13 @@ function press(evt){
   function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min)) + min;
   }
-  var width=160;
+  var thumbwidth=20;
+  var thumbheight=10;
+  var width=200;
   var height=100;
   var zoomFactor=4;
   var radius=5;
+  var pages=100;
 
   var visibleCanvas;
   var visibleContext;
@@ -391,10 +401,6 @@ function clearPalette(){
     }
 
 
-  function dropDownSelect(dropdown,val) {
-    hyperlinks[canvasIndex][dropdown-1]=val;
-  }
-
     function setColor(newColorIndex) {
       colorIndex=newColorIndex;
         for(var i=0;i<16;i++){
@@ -407,7 +413,7 @@ function clearPalette(){
 
     function setLayer(newCanvasIndex) {
       canvasIndex=newCanvasIndex-1;
-        for(var i=0;i<16;i++){
+        for(var i=0;i<pages;i++){
           if (layerElem[i]!==null){
             layerElem[i].setAttribute("class","layerItem");
           }
@@ -415,12 +421,20 @@ function clearPalette(){
         layerElem[canvasIndex].setAttribute("class","layerItem selectedItem");
         setVisuals();
         for(var i=0;i<16;i++){
-          dropdownOption[i].value=hyperlinks[canvasIndex][i];
+          scriptTextArea[i].value=scripts[canvasIndex][i];
         }
     }
 
-    function init() {
+    function trace(s){
+      window.console.log(s);
+    }
+    
+    function onTextAreaChange(elem,i){
+      var s = elem.value;
+      scripts[canvasIndex][i]=s;
+    }
 
+    function init() {
       
       linkInput=document.getElementById("linkInput");
       linkInput.value=gameLink;
@@ -433,14 +447,21 @@ function clearPalette(){
         
       }
 
-      for (var i=0;i<16;i++){
+      for (var i=0;i<pages;i++){
         elem = document.getElementById("thumbnail"+(i+1));        
         thumbnailCanvas[i]=elem;
         thumbnailContext[i]=elem.getContext("2d");
       }
       for (var i=0;i<16;i++){
-        elem = document.getElementById("col"+(i+1));
-        dropdownOption[i] = elem;        
+        elem = document.getElementById("textarea_"+i);
+        var fn = function(e,i2){
+          return function(){
+            return onTextAreaChange(e,i2);
+          }
+        }
+        elem.oninput = fn(elem,i);
+        elem.onpropertychange = fn(elem,i);
+        scriptTextArea[i] = elem;        
       }
 
       for (var i=0;i<16;i++){
@@ -449,7 +470,7 @@ function clearPalette(){
         colorElem[i]=elem;
       }
 
-      for (var i=0;i<16;i++){
+      for (var i=0;i<pages;i++){
         elem = document.getElementById("layerItem"+(i+1));        
         layerElem[i]=elem;
       }
@@ -458,12 +479,12 @@ function clearPalette(){
       bucketElem=document.getElementById("bucket");
 
 
-      for (var i=0;i<16;i++){
+      for (var i=0;i<pages;i++){
         canvasses[i]=new Uint8Array(width*height);
       }
 
-      for (var i=0;i<16;i++){
-        hyperlinks[i] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+      for (var i=0;i<pages;i++){
+        scripts[i] = ["","","","","","","","","","","","","","","",""];
       }
 
       visibleCanvas = document.getElementById("mainCanvas");
@@ -486,6 +507,8 @@ function clearPalette(){
 
 
       getData();
+
+
     }
 
   function readFile(evt) {
@@ -529,10 +552,21 @@ function clearPalette(){
      return url;
   }
 
+function getFromLocalStorage(){
+
+  if (window.localStorage){
+    var s = localStorage.getItem("flickdeck_state");
+    if (s!=null){
+      stringToState(s);
+    }
+  }
+}
+
   function getData(){ 
     var id = getParameterByName("p").replace(/[\\\/]/,"");
     if (id===null||id.length===0) {
       
+      getFromLocalStorage();
       return;
     }
 
@@ -564,15 +598,20 @@ function clearPalette(){
 
     function drawThumbnail(n){
       thumbCtx=thumbnailContext[n];
+      thumbCtx.canvas.width=thumbwidth;
+      thumbCtx.canvas.height=thumbheight;
+      thumbCtx.width=thumbwidth;
+      thumbCtx.height=thumbheight;
       thumbCtx.fillStyle="#FF0000";
-      thumbCtx.fillRect(0,0,16,10);
+      thumbCtx.fillRect(0,0,thumbwidth,thumbheight);
       var canvas=canvasses[n];
-      for (var i=0;i<16;i++){
-        for (var j=0;j<10;j++){
+      var mag=width/thumbwidth;
+      for (var i=0;i<thumbwidth;i++){
+        for (var j=0;j<thumbheight;j++){
           var max=0;
-          for (var i2=0;i2<10;i2++){              
-            for (var j2=0;j2<10;j2++){
-                var sample = canvas[i*10+i2+width*(j*10+j2)];
+          for (var i2=0;i2<mag;i2++){              
+            for (var j2=0;j2<mag;j2++){
+                var sample = canvas[i*mag+i2+width*(j*mag+j2)];
                 if (sample>max){
                   max=sample;
                 }
@@ -599,7 +638,7 @@ function clearPalette(){
         }
       }
       if (genAllThumbnails===true){
-        for (var i=0;i<16;i++){
+        for (var i=0;i<pages;i++){
           drawThumbnail(i);          
         }
       } else {
@@ -627,8 +666,6 @@ function clearPalette(){
     return [x,y];
   }
 
-
-
   function uint8ar_copy(src)  {
       var dst = new Uint8Array(width*height);
       for (var i=0;i<src.length;i++){
@@ -637,9 +674,16 @@ function clearPalette(){
       return dst;
   }
 
+  function localStorageSave(){
+    if (window.localStorage){
+      localStorage.setItem("flickdeck_state",stateToString());
+    }
+  }
+
   var undoList=new Array();
   function preserveUndoState() {
     console.log("preserving undo state");
+    localStorageSave();
     var undoItem = new Object();
     undoItem.canvasIndex=canvasIndex;
     undoItem.canvasDat=uint8ar_copy(canvasses[canvasIndex]);
@@ -769,7 +813,7 @@ function clearPalette(){
       for (var i=0;i<points.length;i++){
         var px=points[i][0];
         var py=points[i][1];
-        if (px>=0&&px<160&&py>=0&&py<100){
+        if (px>=0&&px<width&&py>=0&&py<100){
           canvas[px+width*py]=colorIndex;
         }
       }
@@ -785,7 +829,7 @@ function clearPalette(){
       for (var i=0;i<points.length;i++){
         var px=points[i][0];
         var py=points[i][1];
-        if (px>=0&&px<160&&py>=0&&py<100){
+        if (px>=0&&px<width&&py>=0&&py<100){
           canvas[px+width*py]=colorIndex;
         }
       }
@@ -842,7 +886,17 @@ function clearPalette(){
 /*<![CDATA[*/
 #maincanvas {
   cursor:crosshair;
+  margin:0;
+  padding:0;
 }
+#undertable {
+  margin:0;
+  padding:0;  
+  /*border:2px solid gray; */
+  border-top:none;
+  width:800px;
+}
+
 body {
     -webkit-user-select: none; /* webkit (safari, chrome) browsers */
     -moz-user-select: none; /* mozilla browsers */
@@ -858,17 +912,37 @@ body {
                   position:relative;
                 }
                  body {
-                 background-color:black;
+                  margin:0;
+                  padding:0;
+                 background-color:#202020;
                  color: gray;
                  margin-top: 0;
                  padding-top: 0;
                  border-top: 0;
                  }
-                 ul {
-                 list-style-type: none;
-                 overflow:hidden; overflow-y:scroll;
-                 }
                  input {
+                 background-color: gray;
+                 color:white;
+                 font-size: 100%;
+                 text-align: left;
+                 margin-bottom: 0px;
+                 }
+                 textarea {
+                  font-family:Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace;
+
+                  background-color: black;
+                  color:white;
+                  font-size: 60%;
+                  text-align: left;
+                  margin-bottom: 0px;
+                  width:150px;
+                  border-top: 0;
+                  resize: none;
+                  height:60px;
+                  overflow:none ;
+                  border: 1px solid gray;
+                 }
+                 input#titleinput {
                  background-color: black;
                  color:white;
                  font-size: 200%;
@@ -891,11 +965,26 @@ body {
                  a {
                   color:white;
                  }
+
+                 .layerThumbnail {
+                  border:2px solid gray; 
+                  background-color:black;
+                  width:30;
+                  height:15;
+                 }
+                 ul {
+                 list-style-type: none;
+                 overflow:hidden; overflow-y:none;
+                 padding:0;
+                 margin:0;
+                 margin-right:5px;
+                 margin-left:5px;
+                 }
                  a.layerItem{
                   color: white;
-                  background-color: black;
+                  background-color: none;
                   text-decoration: none;
-                  width:100%;
+                  width:80px;
                   display:block;
                  }
                  a.layerItem.selectedItem{
@@ -913,12 +1002,12 @@ body {
                   white-space:nowrap;
                 }
                  div.selected {
-                 height:16px; 
+                 height:60px; 
                  width:30px;
                  border: 2px solid red;
                  }
                  div.unselected {
-                 height:16px; 
+                 height:60px; 
                  width:30px;
                  border: 2px solid black;
                  }
@@ -943,97 +1032,577 @@ body {
     /*]]>*/
     </style>
     <title>
-      flickgame.org
+      flickdeck
     </title>
   </head>
   <body onload="init();" ondragstart="return false;" ondrop="return false;">
   <center>
-    <table cellpadding="10">
+    <table cellpadding="0">
       <tr>
-        <td>
+        <td>          
           <ul>
             <li> 
               <a class="layerItem selectedItem" id="layerItem1" href="#" onclick="setLayer(1);return false;">
-              <canvas id="thumbnail1" width="16" height="10" style="border:2px solid gray; background-color:black;"></canvas>
+              <canvas id="thumbnail1" class="layerThumbnail"></canvas>
               1</a>
             </li>
             <li> 
               <a class="layerItem" id="layerItem2" href="#" onclick="setLayer(2);return false;">
-              <canvas id="thumbnail2" width="16" height="10" style="border:2px solid gray; background-color:black;"></canvas>
+              <canvas id="thumbnail2" class="layerThumbnail"></canvas>
               2</a>
             </li>
             <li> 
               <a class="layerItem" id="layerItem3" href="#" onclick="setLayer(3);return false;">
-              <canvas id="thumbnail3" width="16" height="10" style="border:2px solid gray; background-color:black;"></canvas>
+              <canvas id="thumbnail3" class="layerThumbnail"></canvas>
               3</a>
             </li>
             <li> 
               <a class="layerItem" id="layerItem4" href="#" onclick="setLayer(4);return false;">
-              <canvas id="thumbnail4" width="16" height="10" style="border:2px solid gray; background-color:black;"></canvas>
+              <canvas id="thumbnail4" class="layerThumbnail"></canvas>
               4</a>
             </li>
             <li> 
               <a class="layerItem" id="layerItem5" href="#" onclick="setLayer(5);return false;">
-              <canvas id="thumbnail5" width="16" height="10" style="border:2px solid gray; background-color:black;"></canvas>
+              <canvas id="thumbnail5" class="layerThumbnail"></canvas>
               5</a>
             </li>
             <li> 
               <a class="layerItem" id="layerItem6" href="#" onclick="setLayer(6);return false;">
-              <canvas id="thumbnail6" width="16" height="10" style="border:2px solid gray; background-color:black;"></canvas>
+              <canvas id="thumbnail6" class="layerThumbnail"></canvas>
               6</a>
             </li>
             <li> 
               <a class="layerItem" id="layerItem7" href="#" onclick="setLayer(7);return false;">
-              <canvas id="thumbnail7" width="16" height="10" style="border:2px solid gray; background-color:black;"></canvas>
+              <canvas id="thumbnail7" class="layerThumbnail"></canvas>
               7</a>
             </li>
             <li> 
               <a class="layerItem" id="layerItem8" href="#" onclick="setLayer(8);return false;">
-              <canvas id="thumbnail8" width="16" height="10" style="border:2px solid gray; background-color:black;"></canvas>
+              <canvas id="thumbnail8" class="layerThumbnail"></canvas>
               8</a>
             </li>
             <li> 
               <a class="layerItem" id="layerItem9" href="#" onclick="setLayer(9);return false;">
-              <canvas id="thumbnail9" width="16" height="10" style="border:2px solid gray; background-color:black;"></canvas>
+              <canvas id="thumbnail9" class="layerThumbnail"></canvas>
               9</a>
             </li>
             <li> 
               <a class="layerItem" id="layerItem10" href="#" onclick="setLayer(10);return false;">
-              <canvas id="thumbnail10" width="16" height="10" style="border:2px solid gray; background-color:black;"></canvas>
+              <canvas id="thumbnail10" class="layerThumbnail"></canvas>
               10</a>
             </li>
             <li> 
               <a class="layerItem" id="layerItem11" href="#" onclick="setLayer(11);return false;">
-              <canvas id="thumbnail11" width="16" height="10" style="border:2px solid gray; background-color:black;"></canvas>
+              <canvas id="thumbnail11" class="layerThumbnail"></canvas>
               11</a>
             </li>
             <li> 
               <a class="layerItem" id="layerItem12" href="#" onclick="setLayer(12);return false;">
-              <canvas id="thumbnail12" width="16" height="10" style="border:2px solid gray; background-color:black;"></canvas>
+              <canvas id="thumbnail12" class="layerThumbnail"></canvas>
               12</a>
             </li>
             <li> 
               <a class="layerItem" id="layerItem13" href="#" onclick="setLayer(13);return false;">
-              <canvas id="thumbnail13" width="16" height="10" style="border:2px solid gray; background-color:black;"></canvas>
+              <canvas id="thumbnail13" class="layerThumbnail"></canvas>
               13</a>
             </li>
             <li> 
               <a class="layerItem" id="layerItem14" href="#" onclick="setLayer(14);return false;">
-              <canvas id="thumbnail14" width="16" height="10" style="border:2px solid gray; background-color:black;"></canvas>
+              <canvas id="thumbnail14" class="layerThumbnail"></canvas>
               14</a>
             </li>
             <li> 
               <a class="layerItem" id="layerItem15" href="#" onclick="setLayer(15);return false;">
-              <canvas id="thumbnail15" width="16" height="10" style="border:2px solid gray; background-color:black;"></canvas>
+              <canvas id="thumbnail15" class="layerThumbnail"></canvas>
               15</a>
             </li>
             <li> 
               <a class="layerItem" id="layerItem16" href="#" onclick="setLayer(16);return false;">
-              <canvas id="thumbnail16" width="16" height="10" style="border:2px solid gray; background-color:black;"></canvas>
+              <canvas id="thumbnail16" class="layerThumbnail"></canvas>
               16</a>
             </li>
+            <li> 
+              <a class="layerItem" id="layerItem17" href="#" onclick="setLayer(17);return false;">
+              <canvas id="thumbnail17" class="layerThumbnail"></canvas>
+              17</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem18" href="#" onclick="setLayer(18);return false;">
+              <canvas id="thumbnail18" class="layerThumbnail"></canvas>
+              18</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem19" href="#" onclick="setLayer(19);return false;">
+              <canvas id="thumbnail19" class="layerThumbnail"></canvas>
+              19</a>
+            </li>
+            
+            <li> 
+              <a class="layerItem" id="layerItem20" href="#" onclick="setLayer(20);return false;">
+              <canvas id="thumbnail20" class="layerThumbnail"></canvas>
+              20</a>
+            </li>
+
+            
+            <li> 
+              <a class="layerItem" id="layerItem21" href="#" onclick="setLayer(21);return false;">
+              <canvas id="thumbnail21" class="layerThumbnail"></canvas>
+              21</a>
+            </li>
+
+            
+            <li> 
+              <a class="layerItem" id="layerItem22" href="#" onclick="setLayer(22);return false;">
+              <canvas id="thumbnail22" class="layerThumbnail"></canvas>
+              22</a>
+            </li>
+
+            
+            <li> 
+              <a class="layerItem" id="layerItem23" href="#" onclick="setLayer(23);return false;">
+              <canvas id="thumbnail23" class="layerThumbnail"></canvas>
+              23</a>
+            </li>
+
+            
+            <li> 
+              <a class="layerItem" id="layerItem24" href="#" onclick="setLayer(24);return false;">
+              <canvas id="thumbnail24" class="layerThumbnail"></canvas>
+              24</a>
+            </li>
+
+            
+            <li> 
+              <a class="layerItem" id="layerItem25" href="#" onclick="setLayer(25);return false;">
+              <canvas id="thumbnail25" class="layerThumbnail"></canvas>
+              25</a>
+            </li>
+
           </ul>
         </td>
+        <td>          
+          <ul>
+            
+            <li> 
+              <a class="layerItem" id="layerItem26" href="#" onclick="setLayer(26);return false;">
+              <canvas id="thumbnail26" class="layerThumbnail"></canvas>
+              26</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem27" href="#" onclick="setLayer(27);return false;">
+              <canvas id="thumbnail27" class="layerThumbnail"></canvas>
+              27</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem28" href="#" onclick="setLayer(28);return false;">
+              <canvas id="thumbnail28" class="layerThumbnail"></canvas>
+              28</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem29" href="#" onclick="setLayer(29);return false;">
+              <canvas id="thumbnail29" class="layerThumbnail"></canvas>
+              29</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem30" href="#" onclick="setLayer(30);return false;">
+              <canvas id="thumbnail30" class="layerThumbnail"></canvas>
+              30</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem31" href="#" onclick="setLayer(31);return false;">
+              <canvas id="thumbnail31" class="layerThumbnail"></canvas>
+              31</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem32" href="#" onclick="setLayer(32);return false;">
+              <canvas id="thumbnail32" class="layerThumbnail"></canvas>
+              32</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem33" href="#" onclick="setLayer(33);return false;">
+              <canvas id="thumbnail33" class="layerThumbnail"></canvas>
+              33</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem34" href="#" onclick="setLayer(34);return false;">
+              <canvas id="thumbnail34" class="layerThumbnail"></canvas>
+              34</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem35" href="#" onclick="setLayer(35);return false;">
+              <canvas id="thumbnail35" class="layerThumbnail"></canvas>
+              35</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem36" href="#" onclick="setLayer(36);return false;">
+              <canvas id="thumbnail36" class="layerThumbnail"></canvas>
+              36</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem37" href="#" onclick="setLayer(37);return false;">
+              <canvas id="thumbnail37" class="layerThumbnail"></canvas>
+              37</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem38" href="#" onclick="setLayer(38);return false;">
+              <canvas id="thumbnail38" class="layerThumbnail"></canvas>
+              38</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem39" href="#" onclick="setLayer(39);return false;">
+              <canvas id="thumbnail39" class="layerThumbnail"></canvas>
+              39</a>
+            </li>
+            
+            <li> 
+              <a class="layerItem" id="layerItem40" href="#" onclick="setLayer(40);return false;">
+              <canvas id="thumbnail40" class="layerThumbnail"></canvas>
+              40</a>
+            </li>
+
+            <li> 
+              <a class="layerItem" id="layerItem41" href="#" onclick="setLayer(41);return false;">
+              <canvas id="thumbnail41" class="layerThumbnail"></canvas>
+              41</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem42" href="#" onclick="setLayer(42);return false;">
+              <canvas id="thumbnail42" class="layerThumbnail"></canvas>
+              42</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem43" href="#" onclick="setLayer(43);return false;">
+              <canvas id="thumbnail43" class="layerThumbnail"></canvas>
+              43</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem44" href="#" onclick="setLayer(44);return false;">
+              <canvas id="thumbnail44" class="layerThumbnail"></canvas>
+              44</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem45" href="#" onclick="setLayer(45);return false;">
+              <canvas id="thumbnail45" class="layerThumbnail"></canvas>
+              45</a>
+            </li>
+
+
+            <li> 
+              <a class="layerItem" id="layerItem46" href="#" onclick="setLayer(46);return false;">
+              <canvas id="thumbnail46" class="layerThumbnail"></canvas>
+              46</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem47" href="#" onclick="setLayer(47);return false;">
+              <canvas id="thumbnail47" class="layerThumbnail"></canvas>
+              47</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem48" href="#" onclick="setLayer(48);return false;">
+              <canvas id="thumbnail48" class="layerThumbnail"></canvas>
+              48</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem49" href="#" onclick="setLayer(49);return false;">
+              <canvas id="thumbnail49" class="layerThumbnail"></canvas>
+              49</a>
+            </li>
+            
+            <li> 
+              <a class="layerItem" id="layerItem50" href="#" onclick="setLayer(50);return false;">
+              <canvas id="thumbnail50" class="layerThumbnail"></canvas>
+              50</a>
+            </li>
+
+          </ul>
+        </td>
+       
+
+        <td>          
+          <ul>
+            <li> 
+              <a class="layerItem" id="layerItem51" href="#" onclick="setLayer(51);return false;">
+              <canvas id="thumbnail51" class="layerThumbnail"></canvas>
+              51</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem52" href="#" onclick="setLayer(52);return false;">
+              <canvas id="thumbnail52" class="layerThumbnail"></canvas>
+              52</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem53" href="#" onclick="setLayer(53);return false;">
+              <canvas id="thumbnail53" class="layerThumbnail"></canvas>
+              53</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem54" href="#" onclick="setLayer(54);return false;">
+              <canvas id="thumbnail54" class="layerThumbnail"></canvas>
+              54</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem55" href="#" onclick="setLayer(55);return false;">
+              <canvas id="thumbnail55" class="layerThumbnail"></canvas>
+              55</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem56" href="#" onclick="setLayer(56);return false;">
+              <canvas id="thumbnail56" class="layerThumbnail"></canvas>
+              56</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem57" href="#" onclick="setLayer(57);return false;">
+              <canvas id="thumbnail57" class="layerThumbnail"></canvas>
+              57</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem58" href="#" onclick="setLayer(58);return false;">
+              <canvas id="thumbnail58" class="layerThumbnail"></canvas>
+              58</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem59" href="#" onclick="setLayer(59);return false;">
+              <canvas id="thumbnail59" class="layerThumbnail"></canvas>
+              59</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem60" href="#" onclick="setLayer(60);return false;">
+              <canvas id="thumbnail60" class="layerThumbnail"></canvas>
+              60</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem61" href="#" onclick="setLayer(61);return false;">
+              <canvas id="thumbnail61" class="layerThumbnail"></canvas>
+              61</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem62" href="#" onclick="setLayer(62);return false;">
+              <canvas id="thumbnail62" class="layerThumbnail"></canvas>
+              62</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem63" href="#" onclick="setLayer(63);return false;">
+              <canvas id="thumbnail63" class="layerThumbnail"></canvas>
+              63</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem64" href="#" onclick="setLayer(64);return false;">
+              <canvas id="thumbnail64" class="layerThumbnail"></canvas>
+              64</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem65" href="#" onclick="setLayer(65);return false;">
+              <canvas id="thumbnail65" class="layerThumbnail"></canvas>
+              65</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem66" href="#" onclick="setLayer(66);return false;">
+              <canvas id="thumbnail66" class="layerThumbnail"></canvas>
+              66</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem67" href="#" onclick="setLayer(67);return false;">
+              <canvas id="thumbnail67" class="layerThumbnail"></canvas>
+              67</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem68" href="#" onclick="setLayer(68);return false;">
+              <canvas id="thumbnail68" class="layerThumbnail"></canvas>
+              68</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem69" href="#" onclick="setLayer(69);return false;">
+              <canvas id="thumbnail69" class="layerThumbnail"></canvas>
+              69</a>
+            </li>
+            
+            <li> 
+              <a class="layerItem" id="layerItem70" href="#" onclick="setLayer(70);return false;">
+              <canvas id="thumbnail70" class="layerThumbnail"></canvas>
+              70</a>
+            </li>
+
+            
+            <li> 
+              <a class="layerItem" id="layerItem71" href="#" onclick="setLayer(71);return false;">
+              <canvas id="thumbnail71" class="layerThumbnail"></canvas>
+              71</a>
+            </li>
+
+            
+            <li> 
+              <a class="layerItem" id="layerItem72" href="#" onclick="setLayer(72);return false;">
+              <canvas id="thumbnail72" class="layerThumbnail"></canvas>
+              72</a>
+            </li>
+
+            
+            <li> 
+              <a class="layerItem" id="layerItem73" href="#" onclick="setLayer(73);return false;">
+              <canvas id="thumbnail73" class="layerThumbnail"></canvas>
+              73</a>
+            </li>
+
+            
+            <li> 
+              <a class="layerItem" id="layerItem74" href="#" onclick="setLayer(74);return false;">
+              <canvas id="thumbnail74" class="layerThumbnail"></canvas>
+              74</a>
+            </li>
+
+            
+            <li> 
+              <a class="layerItem" id="layerItem75" href="#" onclick="setLayer(75);return false;">
+              <canvas id="thumbnail75" class="layerThumbnail"></canvas>
+              75</a>
+            </li>
+
+          </ul>
+        </td>
+
+        <td>          
+          <ul>
+            <li> 
+              <a class="layerItem" id="layerItem76" href="#" onclick="setLayer(76);return false;">
+              <canvas id="thumbnail76" class="layerThumbnail"></canvas>
+              76</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem77" href="#" onclick="setLayer(77);return false;">
+              <canvas id="thumbnail77" class="layerThumbnail"></canvas>
+              77</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem78" href="#" onclick="setLayer(78);return false;">
+              <canvas id="thumbnail78" class="layerThumbnail"></canvas>
+              78</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem79" href="#" onclick="setLayer(79);return false;">
+              <canvas id="thumbnail79" class="layerThumbnail"></canvas>
+              79</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem80" href="#" onclick="setLayer(80);return false;">
+              <canvas id="thumbnail80" class="layerThumbnail"></canvas>
+              80</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem81" href="#" onclick="setLayer(81);return false;">
+              <canvas id="thumbnail81" class="layerThumbnail"></canvas>
+              81</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem82" href="#" onclick="setLayer(82);return false;">
+              <canvas id="thumbnail82" class="layerThumbnail"></canvas>
+              82</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem83" href="#" onclick="setLayer(83);return false;">
+              <canvas id="thumbnail83" class="layerThumbnail"></canvas>
+              83</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem84" href="#" onclick="setLayer(84);return false;">
+              <canvas id="thumbnail84" class="layerThumbnail"></canvas>
+              84</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem85" href="#" onclick="setLayer(85);return false;">
+              <canvas id="thumbnail85" class="layerThumbnail"></canvas>
+              85</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem86" href="#" onclick="setLayer(86);return false;">
+              <canvas id="thumbnail86" class="layerThumbnail"></canvas>
+              86</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem87" href="#" onclick="setLayer(87);return false;">
+              <canvas id="thumbnail87" class="layerThumbnail"></canvas>
+              87</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem88" href="#" onclick="setLayer(88);return false;">
+              <canvas id="thumbnail88" class="layerThumbnail"></canvas>
+              88</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem89" href="#" onclick="setLayer(89);return false;">
+              <canvas id="thumbnail89" class="layerThumbnail"></canvas>
+              89</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem90" href="#" onclick="setLayer(90);return false;">
+              <canvas id="thumbnail90" class="layerThumbnail"></canvas>
+              90</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem91" href="#" onclick="setLayer(92);return false;">
+              <canvas id="thumbnail91" class="layerThumbnail"></canvas>
+              91</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem92" href="#" onclick="setLayer(92);return false;">
+              <canvas id="thumbnail92" class="layerThumbnail"></canvas>
+              92</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem93" href="#" onclick="setLayer(93);return false;">
+              <canvas id="thumbnail93" class="layerThumbnail"></canvas>
+              93</a>
+            </li>
+            <li> 
+              <a class="layerItem" id="layerItem94" href="#" onclick="setLayer(94);return false;">
+              <canvas id="thumbnail94" class="layerThumbnail"></canvas>
+              94</a>
+            </li>
+            
+            <li> 
+              <a class="layerItem" id="layerItem95" href="#" onclick="setLayer(95);return false;">
+              <canvas id="thumbnail95" class="layerThumbnail"></canvas>
+              95</a>
+            </li>
+
+            
+            <li> 
+              <a class="layerItem" id="layerItem96" href="#" onclick="setLayer(96);return false;">
+              <canvas id="thumbnail96" class="layerThumbnail"></canvas>
+              96</a>
+            </li>
+
+            
+            <li> 
+              <a class="layerItem" id="layerItem97" href="#" onclick="setLayer(97);return false;">
+              <canvas id="thumbnail97" class="layerThumbnail"></canvas>
+              97</a>
+            </li>
+
+            
+            <li> 
+              <a class="layerItem" id="layerItem98" href="#" onclick="setLayer(98);return false;">
+              <canvas id="thumbnail98" class="layerThumbnail"></canvas>
+              98</a>
+            </li>
+
+            
+            <li> 
+              <a class="layerItem" id="layerItem99" href="#" onclick="setLayer(99);return false;">
+              <canvas id="thumbnail99" class="layerThumbnail"></canvas>
+              99</a>
+            </li>
+
+            
+            <li> 
+              <a class="layerItem" id="layerItem100" href="#" onclick="setLayer(100);return false;">
+              <canvas id="thumbnail100" class="layerThumbnail"></canvas>
+              100</a>
+            </li>
+
+          </ul>
+        </td>
+
+
         <td valign="top">
           <table>
             <tr>
@@ -1042,934 +1611,187 @@ body {
                   <tr>
                     <td>
                       <center>
-                        <input width="640" style="border:2px solid gray;" onkeydown="event.stopPropagation();" value="www.flickgame.org"  id="linkInput" oninput="linkChange(this.value)" />
+                        <input width="800" style="border:2px solid gray;" onkeydown="event.stopPropagation();" value="www.flickgame.org"  id="linkInput" oninput="linkChange(this.value)" />
                         <br/>
-                        <canvas id="mainCanvas" width="640" height="400" style="border:2px solid gray; background-color:black;"></canvas>
+                        <canvas id="mainCanvas" width="800" height="400" style="border:2px solid gray; background-color:black;"></canvas>
                         <br />
-                        <table style="border:2px solid gray; margin-top:2px" margin="0">
+                        <table id="underTable" margin="0">
+
+
                           <tr height="16">
                             <td>
                              <a href="#" onclick="setColor(0);return false;">
                               <div  class=
                               "unselected" id="color_0"></div></a>
                             </td>
+
+                            <td>
+                              <textarea id="textarea_0" name="textarea_0"></textarea>
+                            </td>
+
                             <td>
                              <a href="#" onclick="setColor(1);return false;">
                               <div class=
                               "unselected" id="color_1"></div></a>
                             </td>
+
+                            <td>
+                              <textarea id="textarea_1" name="textarea_1"></textarea>
+                            </td>
+
                             <td>
                              <a href="#" onclick="setColor(2);return false;">
                               <div  class=
                               "selected" id="color_2"></div></a>
                             </td>
+
+                            <td>
+                              <textarea id="textarea_2" name="textarea_2"></textarea>
+                            </td>
+
                             <td>
                              <a href="#" onclick="setColor(3);return false;">
                               <div class=
                               "unselected" id="color_3"></div></a>
                             </td>
+
+                            <td>
+                              <textarea id="textarea_3" name="textarea_3"></textarea>
+                            </td>                                              
+                          </tr>
+                          
+
+                          <tr height="16">
                             <td>
                              <a href="#" onclick="setColor(4);return false;">
-                              <div class=
+                              <div  class=
                               "unselected" id="color_4"></div></a>
                             </td>
+
+                            <td>
+                              <textarea id="textarea_4" name="textarea_4"></textarea>
+                            </td>
+
                             <td>
                              <a href="#" onclick="setColor(5);return false;">
                               <div class=
                               "unselected" id="color_5"></div></a>
                             </td>
+
+                            <td>
+                              <textarea id="textarea_5" name="textarea_5"></textarea>
+                            </td>
+
                             <td>
                              <a href="#" onclick="setColor(6);return false;">
-                              <div class=
+                              <div  class=
                               "unselected" id="color_6"></div></a>
                             </td>
+
+                            <td>
+                              <textarea id="textarea_6" name="textarea_6"></textarea>
+                            </td>
+
                             <td>
                              <a href="#" onclick="setColor(7);return false;">
                               <div class=
                               "unselected" id="color_7"></div></a>
                             </td>
+
+                            <td>
+                              <textarea id="textarea_7" name="textarea_7"></textarea>
+                            </td>                                              
+                          </tr>
+
+                          
+
+                          <tr height="16">
                             <td>
                              <a href="#" onclick="setColor(8);return false;">
-                              <div class=
+                              <div  class=
                               "unselected" id="color_8"></div></a>
                             </td>
+
+                            <td>
+                              <textarea id="textarea_8" name="textarea_8"></textarea>
+                            </td>
+
                             <td>
                              <a href="#" onclick="setColor(9);return false;">
                               <div class=
                               "unselected" id="color_9"></div></a>
                             </td>
+
+                            <td>
+                              <textarea id="textarea_9" name="textarea_9"></textarea>
+                            </td>
+
                             <td>
                              <a href="#" onclick="setColor(10);return false;">
-                              <div class=
+                              <div  class=
                               "unselected" id="color_10"></div></a>
                             </td>
+
+                            <td>
+                              <textarea id="textarea_10" name="textarea_10"></textarea>
+                            </td>
+
                             <td>
                              <a href="#" onclick="setColor(11);return false;">
                               <div class=
                               "unselected" id="color_11"></div></a>
                             </td>
+
+                            <td>
+                              <textarea id="textarea_11" name="textarea_11"></textarea>
+                            </td>                                              
+                          </tr>
+
+                          
+
+                          <tr height="16">
                             <td>
                              <a href="#" onclick="setColor(12);return false;">
-                              <div class=
+                              <div  class=
                               "unselected" id="color_12"></div></a>
                             </td>
+
+                            <td>
+                              <textarea id="textarea_12" name="textarea_12"></textarea>
+                            </td>
+
                             <td>
                              <a href="#" onclick="setColor(13);return false;">
                               <div class=
                               "unselected" id="color_13"></div></a>
                             </td>
+
+                            <td>
+                              <textarea id="textarea_13" name="textarea_13"></textarea>
+                            </td>
+
                             <td>
                              <a href="#" onclick="setColor(14);return false;">
-                              <div class=
+                              <div  class=
                               "unselected" id="color_14"></div></a>
                             </td>
+
+                            <td>
+                              <textarea id="textarea_14" name="textarea_14"></textarea>
+                            </td>
+
                             <td>
                              <a href="#" onclick="setColor(15);return false;">
                               <div class=
                               "unselected" id="color_15"></div></a>
                             </td>
+
+                            <td>
+                              <textarea id="textarea_15" name="textarea_15"></textarea>
+                            </td>                                              
                           </tr>
-                          <tr>
-                            <td>
-                              <select id="col1" onchange="dropDownSelect(1,this.value)" >
-                                <option value="0"></option>
-                                <option value="1" id="col1-1" >
-                                  1
-                                </option>
-                                <option value="2" id="col1-2" >
-                                  2
-                                </option>
-                                <option value="3" id="col1-3" >
-                                  3
-                                </option>
-                                <option value="4" id="col1-4" >
-                                  4
-                                </option>
-                                <option value="5" id="col1-5" >
-                                  5
-                                </option>
-                                <option value="6" id="col1-6" >
-                                  6
-                                </option>
-                                <option value="7" id="col1-7" >
-                                  7
-                                </option>
-                                <option value="8" id="col1-8" >
-                                  8
-                                </option>
-                                <option value="9" id="col1-9" >
-                                  9
-                                </option>
-                                <option value="10" id="col1-10"> 
-                                  10
-                                </option>
-                                <option value="11" id="col1-11"> 
-                                  11
-                                </option>
-                                <option value="12" id="col1-12"> 
-                                  12
-                                </option>
-                                <option value="13" id="col1-13"> 
-                                  13
-                                </option>
-                                <option value="14" id="col1-14"> 
-                                  14
-                                </option>
-                                <option value="15" id="col1-15"> 
-                                  15
-                                </option>
-                                <option value="16" id="col1-16"> 
-                                  16
-                                </option>
-                              </select>
-                            </td>
-                            <td>
-                              <select id="col2"  onchange="dropDownSelect(2,this.value)" >
-                                <option value="0" id="col2-0" ></option>
-                                <option value="1" id="col2-1" >
-                                  1
-                                </option>
-                                <option value="2" id="col2-2" >
-                                  2
-                                </option>
-                                <option value="3" id="col2-3" >
-                                  3
-                                </option>
-                                <option value="4" id="col2-4" >
-                                  4
-                                </option>
-                                <option value="5" id="col2-5" >
-                                  5
-                                </option>
-                                <option value="6" id="col2-6" >
-                                  6
-                                </option>
-                                <option value="7" id="col2-7" >
-                                  7
-                                </option>
-                                <option value="8" id="col2-8" >
-                                  8
-                                </option>
-                                <option value="9" id="col2-9" >
-                                  9
-                                </option>
-                                <option value="10" id="col2-10"> 
-                                  10
-                                </option>
-                                <option value="11" id="col2-11"> 
-                                  11
-                                </option>
-                                <option value="12" id="col2-12"> 
-                                  12
-                                </option>
-                                <option value="13" id="col2-13"> 
-                                  13
-                                </option>
-                                <option value="14" id="col2-14"> 
-                                  14
-                                </option>
-                                <option value="15" id="col2-15"> 
-                                  15
-                                </option>
-                                <option value="16" id="col2-16"> 
-                                  16
-                                </option>
-                              </select>
-                            </td>
-                            <td>
-                              <select id="col3" onchange="dropDownSelect(3,this.value)"  >
-                                <option value="0" id="col3-0" ></option>
-                                <option value="1" id="col3-1" >
-                                  1
-                                </option>
-                                <option value="2" id="col3-2" >
-                                  2
-                                </option>
-                                <option value="3" id="col3-3" >
-                                  3
-                                </option>
-                                <option value="4" id="col3-4" >
-                                  4
-                                </option>
-                                <option value="5" id="col3-5" >
-                                  5
-                                </option>
-                                <option value="6" id="col3-6" >
-                                  6
-                                </option>
-                                <option value="7" id="col3-7" >
-                                  7
-                                </option>
-                                <option value="8" id="col3-8" >
-                                  8
-                                </option>
-                                <option value="9" id="col3-9" >
-                                  9
-                                </option>
-                                <option value="10" id="col3-10"> 
-                                  10
-                                </option>
-                                <option value="11" id="col3-11"> 
-                                  11
-                                </option>
-                                <option value="12" id="col3-12"> 
-                                  12
-                                </option>
-                                <option value="13" id="col3-13"> 
-                                  13
-                                </option>
-                                <option value="14" id="col3-14"> 
-                                  14
-                                </option>
-                                <option value="15" id="col3-15"> 
-                                  15
-                                </option>
-                                <option value="16" id="col3-16"> 
-                                  16
-                                </option>
-                              </select>
-                            </td>
-                            <td>
-                              <select id="col4" onchange="dropDownSelect(4,this.value)"  >
-                                <option value="0" id="col4-0" ></option>
-                                <option value="1" id="col4-1" >
-                                  1
-                                </option>
-                                <option value="2" id="col4-2" >
-                                  2
-                                </option>
-                                <option value="3" id="col4-3" >
-                                  3
-                                </option>
-                                <option value="4" id="col4-4" >
-                                  4
-                                </option>
-                                <option value="5" id="col4-5" >
-                                  5
-                                </option>
-                                <option value="6" id="col4-6" >
-                                  6
-                                </option>
-                                <option value="7" id="col4-7" >
-                                  7
-                                </option>
-                                <option value="8" id="col4-8" >
-                                  8
-                                </option>
-                                <option value="9" id="col4-9" >
-                                  9
-                                </option>
-                                <option value="10" id="col4-10"> 
-                                  10
-                                </option>
-                                <option value="11" id="col4-11"> 
-                                  11
-                                </option>
-                                <option value="12" id="col4-12"> 
-                                  12
-                                </option>
-                                <option value="13" id="col4-13"> 
-                                  13
-                                </option>
-                                <option value="14" id="col4-14"> 
-                                  14
-                                </option>
-                                <option value="15" id="col4-15"> 
-                                  15
-                                </option>
-                                <option value="16" id="col4-16"> 
-                                  16
-                                </option>
-                              </select>
-                            </td>
-                            <td>
-                              <select id="col5" onchange="dropDownSelect(5,this.value)"  >
-                                <option value="0" id="col5-0" ></option>
-                                <option value="1" id="col5-1" >
-                                  1
-                                </option>
-                                <option value="2" id="col5-2" >
-                                  2
-                                </option>
-                                <option value="3" id="col5-3" >
-                                  3
-                                </option>
-                                <option value="4" id="col5-4" >
-                                  4
-                                </option>
-                                <option value="5" id="col5-5" >
-                                  5
-                                </option>
-                                <option value="6" id="col5-6" >
-                                  6
-                                </option>
-                                <option value="7" id="col5-7" >
-                                  7
-                                </option>
-                                <option value="8" id="col5-8" >
-                                  8
-                                </option>
-                                <option value="9" id="col5-9" >
-                                  9
-                                </option>
-                                <option value="10" id="col5-10"> 
-                                  10
-                                </option>
-                                <option value="11" id="col5-11"> 
-                                  11
-                                </option>
-                                <option value="12" id="col5-12"> 
-                                  12
-                                </option>
-                                <option value="13" id="col5-13"> 
-                                  13
-                                </option>
-                                <option value="14" id="col5-14"> 
-                                  14
-                                </option>
-                                <option value="15" id="col5-15"> 
-                                  15
-                                </option>
-                                <option value="16" id="col5-16"> 
-                                  16
-                                </option>
-                              </select>
-                            </td>
-                            <td>
-                              <select id="col6" onchange="dropDownSelect(6,this.value)"  >
-                                <option value="0" id="col6-0" ></option>
-                                <option value="1" id="col6-1" >
-                                  1
-                                </option>
-                                <option value="2" id="col6-2" >
-                                  2
-                                </option>
-                                <option value="3" id="col6-3" >
-                                  3
-                                </option>
-                                <option value="4" id="col6-4" >
-                                  4
-                                </option>
-                                <option value="5" id="col6-5" >
-                                  5
-                                </option>
-                                <option value="6" id="col6-6" >
-                                  6
-                                </option>
-                                <option value="7" id="col6-7" >
-                                  7
-                                </option>
-                                <option value="8" id="col6-8" >
-                                  8
-                                </option>
-                                <option value="9" id="col6-9" >
-                                  9
-                                </option>
-                                <option value="10" id="col6-10"> 
-                                  10
-                                </option>
-                                <option value="11" id="col6-11"> 
-                                  11
-                                </option>
-                                <option value="12" id="col6-12"> 
-                                  12
-                                </option>
-                                <option value="13" id="col6-13"> 
-                                  13
-                                </option>
-                                <option value="14" id="col6-14"> 
-                                  14
-                                </option>
-                                <option value="15" id="col6-15"> 
-                                  15
-                                </option>
-                                <option value="16" id="col6-16"> 
-                                  16
-                                </option>
-                              </select>
-                            </td><td>
-                              <select id="col7" onchange="dropDownSelect(7,this.value)"  >
-                                <option value="0" id="col7-0" ></option>
-                                <option value="1" id="col7-1" >
-                                  1
-                                </option>
-                                <option value="2" id="col7-2" >
-                                  2
-                                </option>
-                                <option value="3" id="col7-3" >
-                                  3
-                                </option>
-                                <option value="4" id="col7-4" >
-                                  4
-                                </option>
-                                <option value="5" id="col7-5" >
-                                  5
-                                </option>
-                                <option value="6" id="col7-6" >
-                                  6
-                                </option>
-                                <option value="7" id="col7-7" >
-                                  7
-                                </option>
-                                <option value="8" id="col7-8" >
-                                  8
-                                </option>
-                                <option value="9" id="col7-9" >
-                                  9
-                                </option>
-                                <option value="10" id="col7-10"> 
-                                  10
-                                </option>
-                                <option value="11" id="col7-11"> 
-                                  11
-                                </option>
-                                <option value="12" id="col7-12"> 
-                                  12
-                                </option>
-                                <option value="13" id="col7-13"> 
-                                  13
-                                </option>
-                                <option value="14" id="col7-14"> 
-                                  14
-                                </option>
-                                <option value="15" id="col7-15"> 
-                                  15
-                                </option>
-                                <option value="16" id="col7-16"> 
-                                  16
-                                </option>
-                              </select>
-                            </td><td>
-                              <select id="col8" onchange="dropDownSelect(8,this.value)"  >
-                                <option value="0" id="col8-0" ></option>
-                                <option value="1" id="col8-1" >
-                                  1
-                                </option>
-                                <option value="2" id="col8-2" >
-                                  2
-                                </option>
-                                <option value="3" id="col8-3" >
-                                  3
-                                </option>
-                                <option value="4" id="col8-4" >
-                                  4
-                                </option>
-                                <option value="5" id="col8-5" >
-                                  5
-                                </option>
-                                <option value="6" id="col8-6" >
-                                  6
-                                </option>
-                                <option value="7" id="col8-7" >
-                                  7
-                                </option>
-                                <option value="8" id="col8-8" >
-                                  8
-                                </option>
-                                <option value="9" id="col8-9" >
-                                  9
-                                </option>
-                                <option value="10" id="col8-10"> 
-                                  10
-                                </option>
-                                <option value="11" id="col8-11"> 
-                                  11
-                                </option>
-                                <option value="12" id="col8-12"> 
-                                  12
-                                </option>
-                                <option value="13" id="col8-13"> 
-                                  13
-                                </option>
-                                <option value="14" id="col8-14"> 
-                                  14
-                                </option>
-                                <option value="15" id="col8-15"> 
-                                  15
-                                </option>
-                                <option value="16" id="col8-16"> 
-                                  16
-                                </option>
-                              </select>
-                            </td><td>
-                              <select id="col9" onchange="dropDownSelect(9,this.value)"  >
-                                <option value="0" id="col9-0" ></option>
-                                <option value="1" id="col9-1" >
-                                  1
-                                </option>
-                                <option value="2" id="col9-2" >
-                                  2
-                                </option>
-                                <option value="3" id="col9-3" >
-                                  3
-                                </option>
-                                <option value="4" id="col9-4" >
-                                  4
-                                </option>
-                                <option value="5" id="col9-5" >
-                                  5
-                                </option>
-                                <option value="6" id="col9-6" >
-                                  6
-                                </option>
-                                <option value="7" id="col9-7" >
-                                  7
-                                </option>
-                                <option value="8" id="col9-8" >
-                                  8
-                                </option>
-                                <option value="9" id="col9-9" >
-                                  9
-                                </option>
-                                <option value="10" id="col9-10"> 
-                                  10
-                                </option>
-                                <option value="11" id="col9-11"> 
-                                  11
-                                </option>
-                                <option value="12" id="col9-12"> 
-                                  12
-                                </option>
-                                <option value="13" id="col9-13"> 
-                                  13
-                                </option>
-                                <option value="14" id="col9-14"> 
-                                  14
-                                </option>
-                                <option value="15" id="col9-15"> 
-                                  15
-                                </option>
-                                <option value="16" id="col9-16"> 
-                                  16
-                                </option>
-                              </select>
-                            </td><td>
-                              <select id="col10" onchange="dropDownSelect(10,this.value)"  >
-                                <option value="0" id="col10-0"> </option>
-                                <option value="1" id="col10-1"> 
-                                  1
-                                </option>
-                                <option value="2" id="col10-2"> 
-                                  2
-                                </option>
-                                <option value="3" id="col10-3"> 
-                                  3
-                                </option>
-                                <option value="4" id="col10-4"> 
-                                  4
-                                </option>
-                                <option value="5" id="col10-5"> 
-                                  5
-                                </option>
-                                <option value="6" id="col10-6"> 
-                                  6
-                                </option>
-                                <option value="7" id="col10-7"> 
-                                  7
-                                </option>
-                                <option value="8" id="col10-8"> 
-                                  8
-                                </option>
-                                <option value="9" id="col10-9"> 
-                                  9
-                                </option>
-                                <option value="10" id="col10-10"> 
-                                  10
-                                </option>
-                                <option value="11" id="col10-11"> 
-                                  11
-                                </option>
-                                <option value="12" id="col10-12"> 
-                                  12
-                                </option>
-                                <option value="13" id="col10-13"> 
-                                  13
-                                </option>
-                                <option value="14" id="col10-14"> 
-                                  14
-                                </option>
-                                <option value="15" id="col10-15"> 
-                                  15
-                                </option>
-                                <option value="16" id="col10-16"> 
-                                  16
-                                </option>
-                              </select>
-                            </td><td>
-                              <select id="col11" onchange="dropDownSelect(11,this.value)"  >
-                                <option value="0" id="col11-0"> </option>
-                                <option value="1" id="col11-1"> 
-                                  1
-                                </option>
-                                <option value="2" id="col11-2"> 
-                                  2
-                                </option>
-                                <option value="3" id="col11-3"> 
-                                  3
-                                </option>
-                                <option value="4" id="col11-4"> 
-                                  4
-                                </option>
-                                <option value="5" id="col11-5"> 
-                                  5
-                                </option>
-                                <option value="6" id="col11-6"> 
-                                  6
-                                </option>
-                                <option value="7" id="col11-7"> 
-                                  7
-                                </option>
-                                <option value="8" id="col11-8"> 
-                                  8
-                                </option>
-                                <option value="9" id="col11-9"> 
-                                  9
-                                </option>
-                                <option value="10" id="col11-10"> 
-                                  10
-                                </option>
-                                <option value="11" id="col11-11"> 
-                                  11
-                                </option>
-                                <option value="12" id="col11-12"> 
-                                  12
-                                </option>
-                                <option value="13" id="col11-13"> 
-                                  13
-                                </option>
-                                <option value="14" id="col11-14"> 
-                                  14
-                                </option>
-                                <option value="15" id="col11-15"> 
-                                  15
-                                </option>
-                                <option value="16" id="col11-16"> 
-                                  16
-                                </option>
-                              </select>
-                            </td><td>
-                              <select id="col12" onchange="dropDownSelect(12,this.value)"  >
-                                <option value="0" id="col12-0"> </option>
-                                <option value="1" id="col12-1"> 
-                                  1
-                                </option>
-                                <option value="2" id="col12-2"> 
-                                  2
-                                </option>
-                                <option value="3" id="col12-3"> 
-                                  3
-                                </option>
-                                <option value="4" id="col12-4"> 
-                                  4
-                                </option>
-                                <option value="5" id="col12-5"> 
-                                  5
-                                </option>
-                                <option value="6" id="col12-6"> 
-                                  6
-                                </option>
-                                <option value="7" id="col12-7"> 
-                                  7
-                                </option>
-                                <option value="8" id="col12-8"> 
-                                  8
-                                </option>
-                                <option value="9" id="col12-9"> 
-                                  9
-                                </option>
-                                <option value="10" id="col12-10"> 
-                                  10
-                                </option>
-                                <option value="11" id="col12-11"> 
-                                  11
-                                </option>
-                                <option value="12" id="col12-12"> 
-                                  12
-                                </option>
-                                <option value="13" id="col12-13"> 
-                                  13
-                                </option>
-                                <option value="14" id="col12-14"> 
-                                  14
-                                </option>
-                                <option value="15" id="col12-15"> 
-                                  15
-                                </option>
-                                <option value="16" id="col12-16"> 
-                                  16
-                                </option>
-                              </select>
-                            </td><td>
-                              <select id="col13" onchange="dropDownSelect(13,this.value)"  >
-                                <option value="0" id="col13-0"> </option>
-                                <option value="1" id="col13-1"> 
-                                  1
-                                </option>
-                                <option value="2" id="col13-2"> 
-                                  2
-                                </option>
-                                <option value="3" id="col13-3"> 
-                                  3
-                                </option>
-                                <option value="4" id="col13-4"> 
-                                  4
-                                </option>
-                                <option value="5" id="col13-5"> 
-                                  5
-                                </option>
-                                <option value="6" id="col13-6"> 
-                                  6
-                                </option>
-                                <option value="7" id="col13-7"> 
-                                  7
-                                </option>
-                                <option value="8" id="col13-8"> 
-                                  8
-                                </option>
-                                <option value="9" id="col13-9"> 
-                                  9
-                                </option>
-                                <option value="10" id="col13-10"> 
-                                  10
-                                </option>
-                                <option value="11" id="col13-11"> 
-                                  11
-                                </option>
-                                <option value="12" id="col13-12"> 
-                                  12
-                                </option>
-                                <option value="13" id="col13-13"> 
-                                  13
-                                </option>
-                                <option value="14" id="col13-14"> 
-                                  14
-                                </option>
-                                <option value="15" id="col13-15"> 
-                                  15
-                                </option>
-                                <option value="16" id="col13-16"> 
-                                  16
-                                </option>
-                              </select>
-                            </td><td>
-                              <select id="col14" onchange="dropDownSelect(14,this.value)"  >
-                                <option value="0" id="col14-0"> </option>
-                                <option value="1" id="col14-1"> 
-                                  1
-                                </option>
-                                <option value="2" id="col14-2"> 
-                                  2
-                                </option>
-                                <option value="3" id="col14-3"> 
-                                  3
-                                </option>
-                                <option value="4" id="col14-4"> 
-                                  4
-                                </option>
-                                <option value="5" id="col14-5"> 
-                                  5
-                                </option>
-                                <option value="6" id="col14-6"> 
-                                  6
-                                </option>
-                                <option value="7" id="col14-7"> 
-                                  7
-                                </option>
-                                <option value="8" id="col14-8"> 
-                                  8
-                                </option>
-                                <option value="9" id="col14-9"> 
-                                  9
-                                </option>
-                                <option value="10" id="col14-10"> 
-                                  10
-                                </option>
-                                <option value="11" id="col14-11"> 
-                                  11
-                                </option>
-                                <option value="12" id="col14-12"> 
-                                  12
-                                </option>
-                                <option value="13" id="col14-13"> 
-                                  13
-                                </option>
-                                <option value="14" id="col14-14"> 
-                                  14
-                                </option>
-                                <option value="15" id="col14-15"> 
-                                  15
-                                </option>
-                                <option value="16" id="col14-16"> 
-                                  16
-                                </option>
-                              </select>
-                            </td><td>
-                              <select id="col15" onchange="dropDownSelect(15,this.value)"  >
-                                <option value="0" id="col15-0"> </option>
-                                <option value="1" id="col15-1"> 
-                                  1
-                                </option>
-                                <option value="2" id="col15-2"> 
-                                  2
-                                </option>
-                                <option value="3" id="col15-3"> 
-                                  3
-                                </option>
-                                <option value="4" id="col15-4"> 
-                                  4
-                                </option>
-                                <option value="5" id="col15-5"> 
-                                  5
-                                </option>
-                                <option value="6" id="col15-6"> 
-                                  6
-                                </option>
-                                <option value="7" id="col15-7"> 
-                                  7
-                                </option>
-                                <option value="8" id="col15-8"> 
-                                  8
-                                </option>
-                                <option value="9" id="col15-9"> 
-                                  9
-                                </option>
-                                <option value="10" id="col15-10"> 
-                                  10
-                                </option>
-                                <option value="11" id="col15-11"> 
-                                  11
-                                </option>
-                                <option value="12" id="col15-12"> 
-                                  12
-                                </option>
-                                <option value="13" id="col15-13"> 
-                                  13
-                                </option>
-                                <option value="14" id="col15-14"> 
-                                  14
-                                </option>
-                                <option value="15" id="col15-15"> 
-                                  15
-                                </option>
-                                <option value="16" id="col15-16"> 
-                                  16
-                                </option>
-                              </select>
-                            </td><td>
-                              <select id="col16" onchange="dropDownSelect(16,this.value)"  >
-                                <option value="0" id="col16-0"> </option>
-                                <option value="1" id="col16-1"> 
-                                  1
-                                </option>
-                                <option value="2" id="col16-2"> 
-                                  2
-                                </option>
-                                <option value="3" id="col16-3"> 
-                                  3
-                                </option>
-                                <option value="4" id="col16-4"> 
-                                  4
-                                </option>
-                                <option value="5" id="col16-5"> 
-                                  5
-                                </option>
-                                <option value="6" id="col16-6"> 
-                                  6
-                                </option>
-                                <option value="7" id="col16-7"> 
-                                  7
-                                </option>
-                                <option value="8" id="col16-8"> 
-                                  8
-                                </option>
-                                <option value="9" id="col16-9"> 
-                                  9
-                                </option>
-                                <option value="10" id="col16-10"> 
-                                  10
-                                </option>
-                                <option value="11" id="col16-11"> 
-                                  11
-                                </option>
-                                <option value="12" id="col16-12"> 
-                                  12
-                                </option>
-                                <option value="13" id="col16-13"> 
-                                  13
-                                </option>
-                                <option value="14" id="col16-14"> 
-                                  14
-                                </option>
-                                <option value="15" id="col16-15"> 
-                                  15
-                                </option>
-                                <option value="16" id="col16-16"> 
-                                  16
-                                </option>
-                              </select>
-                            </td>
-                            
-                          </tr>
+                          
+
                         </table>
                       </center>
                     </td>
@@ -2004,7 +1826,6 @@ body {
                     </td>
                   </tr>
                 </table>
-                <br />
               </td>
             </tr>
           </table>

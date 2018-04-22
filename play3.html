@@ -1,0 +1,530 @@
+<html>
+<head>
+<link rel="icon" 
+      type="image/png" 
+      href="favicon.png">
+<title>flickgame.org</title>
+<style>
+
+#header h1 {
+  padding:0;
+  margin:0;
+  line-height: 40px;
+}
+#header {
+  position:absolute;
+  left:0px;
+  right:0px;
+  top:0px;
+  height:40px;
+  background-color: black;
+  color:white;
+  text-align: center;
+  padding: 0px;
+  margin:0px;
+  border:0px;
+}
+
+a {
+  color:white;
+}
+
+#content {
+  position: absolute;
+  top:40px;
+  bottom:30px;
+  left:0px;
+  right:0px;
+  background-color: white;
+  text-align: center;
+  padding:0;
+  margin:0;
+}
+
+
+#content canvas {
+ top:0;
+ bottom:0;
+ left:0;
+ right:0;
+ padding: 0;
+ margin:0; 
+}
+#hackLink {
+  position: absolute;
+  right:10px;
+  float: right;
+}
+
+#homelink {
+  float: center;
+}
+#footer {
+  position:absolute;
+  left:0px;
+  right:0px;
+  bottom:0px;
+  height:30px;
+  margin:0;
+  padding:0;
+  background-color: black;
+  color:white;
+  text-align: center;
+  padding: 0;
+  line-height: 30px;
+}
+</style>
+<script>
+
+<!--__EmbedBegin__-->
+var embeddedDat="__EMBED__";
+<!--__EmbedEnd__-->
+
+function getUrlVars() {
+    var vars = {};
+    var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi,    
+    function(m,key,value) {
+      vars[key] = value;
+    });
+    return vars;
+}
+
+var urlVars = getUrlVars();
+
+var zoom=1;
+var currentIndex=0;
+function redraw(){
+  console.log("resized "+window.innerWidth +"x"+window.innerHeight);  
+  mainCanvas.width=mainCanvasContainer.clientWidth;
+  mainCanvas.height=mainCanvasContainer.clientHeight;
+  mainCanvasCtx.width=mainCanvasContainer.clientWidth;
+  mainCanvasCtx.height=mainCanvasContainer.clientHeight;
+
+  if (images.length>0){
+
+    mainCanvasCtx.imageSmoothingEnabled = false;
+    mainCanvasCtx.mozImageSmoothingEnabled = false;
+    mainCanvasCtx.oImageSmoothingEnabled = false;
+    mainCanvasCtx.webkitImageSmoothingEnabled = false;
+    mainCanvasCtx.msImageSmoothingEnabled = false;
+
+    var w = mainCanvasCtx.width;
+    var h = mainCanvasCtx.height;
+    var wd = w/200.0;
+    var hd = h/100.0;
+    zoom=1;
+    if (wd<hd){
+      zoom=wd;//Math.floor(wd);
+    } else {
+      zoom=hd;//Math.floor(hd);
+    }
+    if(zoom<1){
+      zoom=1;
+    }
+    var dx=(w-200*zoom)/2;
+    var dy=(h-100*zoom)/2;
+    mainCanvasCtx.fillStyle="#000000";
+    mainCanvasCtx.fillRect(0,0,w,h);
+    if (curCanvasToDraw===null){
+      mainCanvasCtx.drawImage(images[currentIndex],0,0,200,100,dx,dy,200*zoom,100*zoom);
+    } else {
+      mainCanvasCtx.drawImage(curCanvasToDraw,0,0,200,100,dx,dy,200*zoom,100*zoom);
+    }
+  } else {    
+    mainCanvasCtx.fillStyle="#ff0000";
+    mainCanvasCtx.fillRect(0,0,mainCanvas.width/2,mainCanvas.height/2);
+    mainCanvasCtx.fillStyle="#00ff00";
+    mainCanvasCtx.fillRect(mainCanvas.width/2,0,mainCanvas.width/2,mainCanvas.height/2);
+    mainCanvasCtx.fillStyle="#ff00ff";
+    mainCanvasCtx.fillRect(0,mainCanvas.height/2,mainCanvas.width/2,mainCanvas.height/2);
+    mainCanvasCtx.fillStyle="#00ffff";
+    mainCanvasCtx.fillRect(mainCanvas.width/2,mainCanvas.height/2,mainCanvas.width/2,mainCanvas.height/2);
+  }
+}
+
+
+  function getCoords(e) {
+    var x,y; 
+    if(e.offsetX) {
+        x = e.offsetX;
+        y = e.offsetY;
+    }
+    else if(e.layerX) {
+        x = e.layerX;
+        y = e.layerY;
+    }
+
+    return [x,y];
+  }
+
+  var target=0;
+
+  function printNonZeros(a,stack){
+    var count=0;
+    for (var i=0;i<200;i++){
+      for (var j=0;j<100;j++){
+        if (a[j][i]!==null)
+          count++;
+      }
+    }
+    window.console.log(count + " non-zero entries.");
+    window.console.log("stack length " + stack.length+".");
+  }
+
+  var hex=['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f']
+
+  function calcHeatmap(cal,col,fromCal){
+    var map = []
+    var stack = []
+    var c = hex[col]
+
+    //initialize
+    for (var j=0;j<100;j++){
+      for (var i=0;i<200;i++){
+        if (cal[i+200*j]===c){
+          var entry = [0,i,j]
+          map.push([0,i,j])
+          stack.push([i,j,0,i,j])
+        } else {
+          map.push(null)
+        }
+      }
+    }
+
+    //should replace this with a center of mass calculation from the old one
+    if (stack.length===0){
+      var cx=0;
+      var cy=0;
+      var count=0;
+      for (var i=0;i<200;i++){
+        for (var j=0;j<100;j++){
+          if (fromCal[i+200*j]===c){
+            cx+=i;
+            cy+=j;
+            count++;
+          }
+        }
+      }
+      if (count>0){
+        cx=Math.round(cx/count);
+        cy=Math.round(cy/count);
+        for (var j=0;j<100;j++){
+          for (var i=0;i<200;i++){
+            map[i+200*j]=[0,cx,cy];
+          }
+        }
+      }
+    }
+
+    //propagate
+    while(stack.length>0){
+      var entry = stack.shift();
+      //[fromx,fromy,dist,tox,toy]
+      var x0=entry[0];
+      var y0=entry[1];
+      var d0=entry[2];
+      var xtarget=entry[3];
+      var ytarget=entry[4];
+      var d1=d0+1;
+      var neighbours = [[x0-1,y0],[x0+1,y0],[x0,y0-1],[x0,y0+1]];
+      for (var i=0;i<4;i++){
+        var n = neighbours[i];
+        var nx=n[0];
+        var ny=n[1];
+        if (nx<0||ny<0||nx>=200||ny>=100){
+          continue;
+        }
+        var existing = map[nx+200*ny];
+        if (existing===null||d1<existing[0]){
+          map[nx+200*ny]=[d1,xtarget,ytarget]
+          stack.push([nx,ny,d1,xtarget,ytarget])
+        }
+      }
+    }
+
+    return map;
+  }
+
+ 
+
+
+  var curCanvasToDraw=null;
+
+  function nullScript(s){
+    return s==null || s=="" || s==0;
+  }
+
+  function mouseDown(e){
+    mouseMove(e);
+    if (!nullScript(target)){
+      runScript(target);
+      redraw();        
+      mouseMove(e);
+    } 
+  }
+
+  var gotoset=false;  
+  function goto(t){
+    gotoset=true;
+    currentIndex=parseInt(t);
+  }
+
+  function runScript(s){
+    gotoset=false;
+    var result = eval(s);
+    if (!gotoset){
+      if (result!=null){
+        goto(result);
+      }
+    }
+  }
+
+  function mouseMove(e){
+
+    if (gameState==null){
+      return;
+    }
+    var coords = getCoords(e);
+
+    var w = mainCanvasCtx.width;
+    var h = mainCanvasCtx.height;
+    var wd = w/200.0;
+    var hd = h/100.0;
+    zoom=1;
+    if (wd<hd){
+      zoom=wd;//Math.floor(wd);
+    } else {
+      zoom=hd;//Math.floor(hd);
+    }
+    if(zoom<1){
+      zoom=1;
+    }
+    var dx=(w-200*zoom)/2;
+    var dy=(h-100*zoom)/2;
+
+    var x=Math.floor((coords[0]-dx)/zoom);
+    var y=Math.floor((coords[1]-dy)/zoom);
+    target=0;
+    if(x>=0&&x<200&&y>=0&&y<100) {
+      var ch = gameState.imageDats[currentIndex][x+200*y];
+      var colIndex = parseInt(ch,16);
+      target=gameState.scripts[currentIndex][colIndex];
+
+      if (gameState.scripts[currentIndex][colIndex]!=0) {
+        mainCanvas.style.cursor="pointer";        
+      } else {
+        mainCanvas.style.cursor="default";        
+      }
+
+    } else {
+      mainCanvas.style.cursor="default";
+    }
+    
+  }
+
+var mainCanvas;
+var mainCanvasCtx;
+var mainCanvasContainer;
+function init(){
+  window.addEventListener('resize', redraw, false);
+
+
+  mainCanvas=document.getElementById("mainCanvas");
+  mainCanvasCtx=mainCanvas.getContext("2d");
+  mainCanvasContainer=document.getElementById("content");
+
+  mainCanvas.addEventListener('mousemove', mouseMove,false);
+  mainCanvas.addEventListener('mousedown', mouseDown,false);
+
+  redraw();
+
+  getData();
+
+}
+
+var aurl = document.createElement('a');
+function qualifyURL(url) {
+ aurl.href = url;
+ return aurl.href;
+}
+
+var gameState;
+function loadState(code){
+    gameState=JSON.parse(code);
+}
+
+function getParameterByName(name) {
+    name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+        results = regex.exec(location.search);
+    return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+}
+
+
+function strip_http(url) {
+   url = url.replace(/^https?:\/\//,'');
+   return url;
+}
+
+function getData(){ 
+  if (embeddedDat[0]!=='_'){
+    embeddedDat=decodeURI(embeddedDat);
+    loadState(embeddedDat);
+
+    var homepage=gameState.gameLink;
+    var homepageLink = document.getElementById("homeLink");
+    homepageLink.innerHTML=strip_http(homepage);
+    if (!homepage.match(/^https?:\/\//)) {
+      homepage = "http://" + homepage;
+    }
+    homepageLink.href = homepage;
+
+    renderImages();
+    return;
+  }
+  var id = getParameterByName("p").replace(/[\\\/]/,"");
+  if (id===null||id.length===0) {
+    console.log("No ID specified in URL.")
+    return;
+  }
+
+  var githubURL = 'https://api.github.com/gists/'+id;
+
+  var githubHTTPClient = new XMLHttpRequest();
+  githubHTTPClient.open('GET', githubURL);
+  githubHTTPClient.onreadystatechange = function() {
+    if(githubHTTPClient.readyState!=4) {
+      return;
+    }   
+    var result = JSON.parse(githubHTTPClient.responseText);
+    if (githubHTTPClient.status===403) {
+      console.log(result.message);
+    } else if (githubHTTPClient.status!==200&&githubHTTPClient.status!==201) {
+      console.log("HTTP Error "+ githubHTTPClient.status + ' - ' + githubHTTPClient.statusText);
+    }
+    var result = JSON.parse(githubHTTPClient.responseText);
+    var code=result["files"]["game.txt"]["content"];
+    console.log(code);
+    loadState(code);
+
+    var homepage=gameState.gameLink;
+    var homepageLink = document.getElementById("homeLink");
+    homepageLink.innerHTML=strip_http(homepage);
+    if (!homepage.match(/^https?:\/\//)) {
+      homepage = "http://" + homepage;
+    }
+    homepageLink.href = homepage;
+  
+    var hacklink = document.getElementById("hackLink");
+
+    var url = "index.html?p="+id;
+    url=qualifyURL(url);
+    hacklink.href=url;
+    hacklink.innerHTML="&sdotb; edit";
+    renderImages();
+  }
+  githubHTTPClient.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+  githubHTTPClient.send();
+}
+
+
+function RLE_decode(encoded) {
+    var output = "";
+    for (var i=0;i<encoded.length;i+=2) {
+      var count = encoded[i];
+      var ch = encoded[i+1];
+      for (var j=0;j<count;j++){
+        output+=ch;
+      }
+    }
+    return output;
+}
+
+  var colorPalette = [
+           "#000000",
+            "#9D9D9D",
+            "#FFFFFF",
+            "#BE2633",
+            "#E06F8B",
+            "#493C2B",
+            "#A46422",
+            "#EB8931",
+            "#F7E26B",
+            "#2F484E",
+            "#44891A",
+            "#A3CE27",
+            "#1B2632",
+            "#005784",
+            "#31A2F2",
+            "#B2DCEF"
+            ];
+
+var images = new Array();
+var imageCtxts = new Array();
+
+function printCanvas(descriptionString){
+    var canvas = document.createElement('canvas');
+    canvas.width="200";
+    canvas.height="100";
+    var ctx=canvas.getContext("2d");
+    for (var j=0;j<descriptionString.length;j++){
+      var x = j%200;
+      var y = Math.floor(j/200);
+      var ch=descriptionString[j];
+      var colIndex = parseInt(ch,16);
+      ctx.fillStyle=colorPalette[colIndex];
+      ctx.fillRect(x,y,1,1);
+    }
+    return [canvas,ctx];
+}
+
+function renderImages(){
+  gameState.imageDats = new Array();
+
+  for (var i=0;i<16;i++){
+    var descriptionArray = gameState.canvasses[i];
+    var descriptionString = RLE_decode(descriptionArray);
+
+    var canvas_context=printCanvas(descriptionString);
+    var canvas=canvas_context[0];
+    var ctx=canvas_context[1];
+
+    gameState.imageDats.push(descriptionString);
+    images.push(canvas);
+    imageCtxts.push(ctx);
+  }
+  redraw();
+}
+
+function goFullscreen(evt){    
+  evt = evt || window.event;
+ if (evt.keyCode===70) { //f
+    var elem = document.getElementById("mainCanvas");
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen();
+    } else if (elem.msRequestFullscreen) {
+      elem.msRequestFullscreen();
+    } else if (elem.mozRequestFullScreen) {
+      elem.mozRequestFullScreen();
+    } else if (elem.webkitRequestFullscreen) {
+      elem.webkitRequestFullscreen();
+    }
+  }
+}
+document.addEventListener("keydown", goFullscreen);
+
+</script>
+</head>
+<body onload="init()" onkeydown="goFullscreen(event);">
+<div id="header">
+</div>
+<p>
+<div id="content">
+<canvas id="mainCanvas"></canvas>
+</div>
+<p>
+<div id="footer">
+ <a href="http://www.flickgame.org" id="hackLink"></a> <a  id="homeLink" href="http://www.flickgame.org"></a> 
+</div>
+</body>
+</html>
