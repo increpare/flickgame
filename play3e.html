@@ -93,6 +93,8 @@ var urlVars = getUrlVars();
 
 var zoom=1;
 var currentIndex=0;
+var pages=100;
+
 function redraw(){
   console.log("resized "+window.innerWidth +"x"+window.innerHeight);  
   mainCanvas.width=mainCanvasContainer.clientWidth;
@@ -266,7 +268,17 @@ function redraw(){
   var gotoset=false;  
   function goto(t){
     gotoset=true;
-    currentIndex=parseInt(t);
+    currentIndex=parseInt(t)-1;
+  }
+
+  function next(){
+    gotoset=true;
+    currentIndex++;
+  }
+
+  function skip(n){
+    gotoset=true;
+    currentIndex+=n;
   }
 
   function runScript(s){
@@ -481,7 +493,7 @@ function printCanvas(descriptionString){
 function renderImages(){
   gameState.imageDats = new Array();
 
-  for (var i=0;i<16;i++){
+  for (var i=0;i<pages;i++){
     var descriptionArray = gameState.canvasses[i];
     var descriptionString = RLE_decode(descriptionArray);
 

@@ -101,7 +101,7 @@ var standalone_HTML_String="";
 
 var clientStandaloneRequest = new XMLHttpRequest();
 
-clientStandaloneRequest.open('GET', 'play3.html');
+clientStandaloneRequest.open('GET', 'play3e.html');
 clientStandaloneRequest.onreadystatechange = function() {
 
     if(clientStandaloneRequest.readyState!=4) {
@@ -283,6 +283,10 @@ var copyImage = null;
 var savedString;
 function press(evt){
   evt = evt || window.event;
+
+  if (evt.target.nodeName=="TEXTAREA"){
+    return;
+  }
   /*
   if (evt.keyCode==83){//S(ave)
     savedString = stateToString();
