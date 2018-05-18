@@ -147,7 +147,57 @@ function importClick(){
 
   reader.readAsText(file, encoding);
 }
+
+
+
+OAUTH_CLIENT_ID = "eb2aad12c63aec0136b1";
+
+
+function getAuthURL(){
+  var randomState = window.btoa(Array.prototype.map.call(
+    window.crypto.getRandomValues(new Uint8Array(24)),
+    function(x) { return String.fromCharCode(x); }).join(""));
+
+  var authUrl = "https://github.com/login/oauth/authorize"
+    + "?client_id=" + OAUTH_CLIENT_ID
+    + "&scope=gist"
+    + "&state=" + randomState
+    + "&allow_signup=true";
+
+  return authUrl;
+}
+
+function printUnauthorized(){
+
+  var authUrl = getAuthURL();
+  var toPrint = "<a target=\"_blank\" href=\"" + authUrl + "\">Log in with Github to share</a><br>";
+
+    var shareLink = document.getElementById("shareLink");
+    shareLink.innerHTML = toPrint;
+    shareLinkInner=null;
+}
+
+
+
+function githubLogOut(){
+  window.localStorage.removeItem("oauth_access_token");
+  var authUrl = getAuthURL();
+  var toPrint = "Logged out of Github.<br>";
+  var shareLink = document.getElementById("shareLink");
+  shareLink.innerHTML = toPrint;
+  shareLinkInner=null;
+}
+
+
 function shareClick() {
+  var oauthAccessToken = window.localStorage.getItem("oauth_access_token");
+  if (typeof oauthAccessToken !== "string") {
+    // Generates 32 letters of random data, like "liVsr/e+luK9tC02fUob75zEKaL4VpQn".
+    printUnauthorized();
+    return;
+  }
+
+
   var str = stateToString();
 
   var gistToCreate = {
@@ -155,7 +205,7 @@ function shareClick() {
     "public" : true,
     "files": {
       "readme.txt" : {
-        "content": "A game made with www.flickgame.org.  You can import game.txt there to play the game."
+        "content": "A game made with www.flickgame.org.  You can import game.txt there to play the game.  Uh, too lazy to describe - HMU at analytic@gmail.com if you want to know how (basically just use the gist ID in the url like other flickgames do...) "
       },
       "game.txt" : {
         "content": str
@@ -163,7 +213,7 @@ function shareClick() {
     }
   };
 
-  var githubURL = 'https://api.github.com/gists';
+  var githubURL = 'https://api.github.com/gists?access_token=' + oauthAccessToken;
   var githubHTTPClient = new XMLHttpRequest();
   githubHTTPClient.open('POST', githubURL);
   githubHTTPClient.onreadystatechange = function() {    
@@ -176,11 +226,21 @@ function shareClick() {
       errorCount++;
       alert(result.message);
     } else if (githubHTTPClient.status!==200&&githubHTTPClient.status!==201) {
+
+      if (githubHTTPClient.statusText==="Unauthorized"){      
+        alert("Authorization check failed.  You have to log back into GitHub (or give it permission again or something).");
+        window.localStorage.removeItem("oauth_access_token");
+      } else {
+        alert("HTTP Error "+ githubHTTPClient.status + ' - ' + githubHTTPClient.  statusText);
+      }
+
+      printUnauthorized();
+    } else if (githubHTTPClient.status!==200&&githubHTTPClient.status!==201) {
       errorCount++;
       alert("HTTP Error "+ githubHTTPClient.status + ' - ' + githubHTTPClient.statusText);
     } else {
       var id = result.id;
-      var url = "play.html?p="+id;
+      var url = "play3e.html?p="+id;
       url=qualifyURL(url);
 
       var editurl = "editor.html?hack="+id;
@@ -188,7 +248,8 @@ function shareClick() {
       var sourceCodeLink = "link to source code:<br><a href=\""+editurl+"\">"+editurl+"</a>";
 
       var shareLink = document.getElementById("shareLink");
-      shareLink.innerHTML = "<a target=\"_blank\" href=\""+url+"\">&#8627;"+id+"</a><br>";
+      shareLink.innerHTML = "<a target=\"_blank\" href=\""+url+"\">&#8627;"+id+"</a><br>"+
+        '(<a onclick="githubLogOut();"  href="javascript:void(0);">log out of GitHub</a>)<br>';
       shareLinkInner = shareLink.childNodes[0];
 
       if (errorCount>0) {
@@ -205,6 +266,7 @@ function shareClick() {
   githubHTTPClient.send(stringifiedGist);
     lastDownTarget=canvas;  
 }
+
 
 function RLE_encode(input) {
     var encoding = [];
