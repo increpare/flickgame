@@ -287,7 +287,58 @@ function redraw(){
     gotoset=true;
     currentIndex+=n;
   }
-
+  
+  function box(x,y,w,h,c){
+    var ch=c.toString(16);
+    imageCtxts[currentIndex].fillStyle=colorPalette[c];
+    imageCtxts[currentIndex].fillRect(x,y,w,h);
+    var str = gameState.imageDats[currentIndex];
+    for (var row=y;row<(y+h);row++){
+      var p = x+200*row;
+      var q = x+w+200*row;
+      str = str.substr(0,p)+ch.repeat(w)+str.substr(q);
+    }
+    gameState.imageDats[currentIndex]=str;
+  }
+  
+  function circle(x,y,r,c){
+    for (var dy=-r;dy<(r+1);dy++){
+      var dx=Math.floor(Math.sqrt((r+0.4)*(r+0.4) - dy*dy));
+      box(x-dx,y+dy,2*dx+1,1,c);
+    }
+  }
+  
+  function line(x0,y0,x1,y1,c){
+    dx=x1-x0;
+    dy=y1-y0;
+    if (dx==0 && dy==0){
+      box(x0,y0,1,1,c);     
+    } else if (Math.abs(dx)>Math.abs(dy)){
+      var left = Math.min(x0,x1);
+      var right = Math.max(x0,x1);
+      for (var x=left;x<=right;x++){
+        y=Math.round(y0+dy*(x-x0)/dx);
+        box(x,y,1,1,c);        
+      }
+    } else {
+      var top = Math.min(y0,y1);
+      var bottom = Math.max(y0,y1);
+      for (var y=top;y<=bottom;y++){
+        x=Math.round(x0+dx*(y-y0)/dy);
+        box(x,y,1,1,c);        
+      }
+    }
+  }
+  
+  function resetImage(){
+    var descriptionArray = gameState.canvasses[currentIndex];
+    var descriptionString = RLE_decode(descriptionArray);
+    gameState.imageDats[currentIndex]=descriptionString;
+    ctx=imageCtxts[currentIndex];
+    drawCanvasPixels(descriptionString, ctx);
+    redraw();
+  }
+  
   function runScript(s){
     gotoset=false;
     var result = eval(s);
@@ -481,19 +532,23 @@ function RLE_decode(encoded) {
 var images = new Array();
 var imageCtxts = new Array();
 
+function drawCanvasPixels(descriptionString, ctx){
+  for (var j=0;j<descriptionString.length;j++){
+    var x = j%200;
+    var y = Math.floor(j/200);
+    var ch=descriptionString[j];
+    var colIndex = parseInt(ch,16);
+    ctx.fillStyle=colorPalette[colIndex];
+    ctx.fillRect(x,y,1,1);
+  }
+}
+
 function printCanvas(descriptionString){
     var canvas = document.createElement('canvas');
     canvas.width="200";
     canvas.height="100";
     var ctx=canvas.getContext("2d");
-    for (var j=0;j<descriptionString.length;j++){
-      var x = j%200;
-      var y = Math.floor(j/200);
-      var ch=descriptionString[j];
-      var colIndex = parseInt(ch,16);
-      ctx.fillStyle=colorPalette[colIndex];
-      ctx.fillRect(x,y,1,1);
-    }
+    drawCanvasPixels(descriptionString, ctx)
     return [canvas,ctx];
 }
 
