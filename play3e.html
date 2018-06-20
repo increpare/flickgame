@@ -349,6 +349,22 @@ function redraw(){
     redraw();
   }
   
+  function overlayImage(sourceIndex, transparentColorIndex){
+    var transparent=transparentColorIndex.toString(16);
+    var s0=gameState.imageDats[currentIndex];
+    var s1=gameState.imageDats[sourceIndex-1];
+    var s2=""
+    for (i=0;i<s0.length;i++){
+      if (s1[i]==transparent){
+        s2+=s0[i];
+      } else {
+        s2+=s1[i];
+      }
+    }
+    gameState.imageDats[currentIndex] = s2;
+    drawCanvasPixels(s2, imageCtxts[currentIndex]);
+  }
+  
   function runScript(s){
     gotoset=false;
     var result = eval(s);
