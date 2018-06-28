@@ -24,6 +24,7 @@
 <script type="text/javascript" > 
 
 
+var colorIndex=getRandomInt(7,16);
 
 var trace = console.log
 
@@ -264,7 +265,6 @@ var canvasIndex = 0;
 
 var canvasses = new Array();
 var scripts = new Array();
-var colors = new Array();
 var visibleCanvasses = new Array();
 
 var shareLinkInner = null;
@@ -528,28 +528,27 @@ function shareClick() {
 function RLE_encode(input) {
     var encoding = [];
     var prev, count, i;
-    if (input[0] === "1") {
-        encoding.push(0);
-    }
-
     for (count = 1, prev = input[0], i = 1; i < input.length; i++) {
         if (input[i] != prev) {
             encoding.push(count);
+            encoding.push(prev);
             count = 1;
             prev = input[i];
-        } else
-            count++;
+        }
+        else 
+            count ++;
     }
     encoding.push(count);
+    encoding.push(prev);
     return encoding;
 }
+
 
 function stateToString() {
     var state = new Object();
     state.canvasIndex = canvasIndex;
     state.gameLink = gameLink;
     state.canvasses = new Array();
-    state.colors = new Array();
     state.visibleCanvasses = new Array();
     state.scripts = [];
     for (var i = 0; i < pages; i++) {
@@ -560,7 +559,6 @@ function stateToString() {
         }
         var pairs = RLE_encode(s);
         state.canvasses.push(pairs);
-        state.colors.push(colors[i]);
         state.visibleCanvasses.push(visibleCanvasses[i])
         state.scripts.push(scripts[i].trim())
     }
@@ -573,24 +571,23 @@ function stringToState(str) {
     gameLink = state.gameLink;
     canvasIndex = state.canvasIndex;
     canvasses = new Array();
-    colors = new Array();
     visibleCanvasses = new Array();
-    for (var k = 0; k < state.canvasses.length; k++) {
+
+
+    for (var k=0;k<state.canvasses.length;k++){
         var s = state.canvasses[k];
-        var ar = new Uint8Array(width * height);
-        var index = 0;
-        var curchar = 0;
-        for (var i = 0; i < s.length; i++) {
-            var count = s[i];
-            for (var j = 0; j < count; j++) {
-                ar[index] = curchar;
-                index++;
-            }
-            curchar = 1 - curchar;
+        var ar = new Uint8Array(width*height);
+        var index=0;
+        for (var i=0;i<s.length;i+=2){
+          var count=s[i];
+          var ch=s[i+1];
+          for (var j=0;j<count;j++){
+            ar[index]=parseInt(ch,16);
+            index++;
+          }
         }
-        colors.push(parseInt(state.colors[k]))
-        visibleCanvasses.push(parseInt(state.visibleCanvasses[k]))
         canvasses.push(ar);
+        visibleCanvasses.push(parseInt(state.visibleCanvasses[k]))
     }
 
     scripts = state.scripts;
@@ -625,14 +622,12 @@ function press(evt) {
         preserveUndoState();
         clipboard = {
             image: JSON.stringify(canvasses[canvasIndex]),
-            color: colors[canvasIndex],
             script: scripts[canvasIndex]
         };
     } else if (evt.keyCode === 88) { //x
         clearPalette();
         clipboard = {
             image: JSON.stringify(canvasses[canvasIndex]),
-            color: colors[canvasIndex],
             script: scripts[canvasIndex]
         };
         scripts[canvasIndex] = "";
@@ -646,7 +641,6 @@ function press(evt) {
                 arui8[i] = ar[i];
             }
             canvasses[canvasIndex] = arui8;
-            colors[canvasIndex] = clipboard.color;
             scripts[canvasIndex] = clipboard.script;
             editor.setValue(scripts[canvasIndex]);
             setVisuals();
@@ -695,7 +689,6 @@ function press(evt) {
                 setLayer(canvasIndex + 1);
             } else {
                 canvasses[dat.canvasIndex] = dat.canvasDat;
-                colors[dat.canvasIndex] = dat.color;
                 scripts[dat.canvasIndex] = dat.script;
                 visibleCanvasses = dat.visibleCanvasses.slice();
                 setLayer(dat.canvasIndex + 1);
@@ -784,27 +777,14 @@ function setRadius(newRadius) {
 }
 
 
-function setColor(newColorIndex, onlyvisual) {
-
-    if (onlyvisual === true) {} else {
-        preserveUndoState();
-    }
-
-    colors[canvasIndex] = newColorIndex;
-    drawThumbnail(canvasIndex);
-
-    for (var i = 0; i < 16; i++) {
-        if (colorElem[i] !== null && i !== newColorIndex) {
-            colorElem[i].setAttribute("class", "unselected");
+function setColor(newColorIndex) {
+      colorIndex=newColorIndex;
+        for(var i=0;i<16;i++){
+          if (colorElem[i]!==null){
+            colorElem[i].setAttribute("class","unselected");
+          }
         }
-    }
-    setLayerVisible(canvasIndex);
-    colorElem[newColorIndex].setAttribute("class", "selected");
-    if (onlyvisual === true) {
-
-    } else {
-        setVisuals();
-    }
+        colorElem[colorIndex].setAttribute("class","selected");
 }
 
 function setVisibilityIcons() {
@@ -866,14 +846,12 @@ function setLayer(newCanvasIndex) {
 
     setLayerVisible(newCanvasIndex - 1)
     canvasIndex = newCanvasIndex - 1;
-    var col = colors[canvasIndex];
     for (var i = 0; i < pages; i++) {
         if (layerElem[i] !== null) {
             layerElem[i].setAttribute("class", "layerItem");
         }
     }
     layerElem[canvasIndex].setAttribute("class", "layerItem selectedItem");
-    setColor(colors[canvasIndex])
     editor.setValue(scripts[canvasIndex]);
     setVisuals();
 }
@@ -893,11 +871,9 @@ function createBlankDoc() {
     }
     canvasIndex = 0;
     scripts = []
-    colors = [];
     visibleCanvasses = []
     for (var i = 0; i < pages; i++) {
         scripts.push("")
-        colors.push((i + 1) % 16)
         visibleCanvasses.push(0);
     }
     setLayer(1);
@@ -1049,7 +1025,7 @@ function init() {
     createBlankDoc();
 
     setLayerVisible(0);
-    setColor(colors[0], true);
+    setColor(colorIndex);
 
     getData();
 
@@ -1144,7 +1120,6 @@ function getData() {
 
 
 function drawThumbnail(n) {
-    var col = colors[n];
 
     thumbCtx = thumbnailContext[n];
     thumbCtx.canvas.width = thumbwidth;
@@ -1155,7 +1130,6 @@ function drawThumbnail(n) {
     thumbCtx.fillStyle = "#202020";
     thumbCtx.fillRect(0, 0, thumbwidth, thumbheight);
 
-    thumbCtx.fillStyle = colorPalette[col];
     var canvas = canvasses[n];
     var mag = width / thumbwidth;
 
@@ -1169,17 +1143,17 @@ function drawThumbnail(n) {
                         var sample = canvas[i * mag + i2 + width * (j * mag + j2)];
                         if (sample > 0) {
                             max = sample;
-                            break outerloop;
                         }
                     }
                 }
             if (max > 0) {
+                thumbCtx.fillStyle = colorPalette[max-1];
                 thumbCtx.fillRect(i, j, 1, 1);
             }
         }
     }
 
-    thumbnailCanvas[n].style.cssText = "border: 2px solid " + colorPalette[col] + ";";
+    //thumbnailCanvas[n].style.cssText = "border: 2px solid " + colorPalette[col] + ";";
     //      var dataUrl = thumbnailCanvas[n].toDataURL();
     //      "dropdownOption"[0][0].style.backgroundImage="url("+dataUrl+")";
 }
@@ -1192,12 +1166,11 @@ function setVisuals(genAllThumbnails) {
             continue;
         }
         var canvas = canvasses[k];
-        var col = colors[k];
-        visibleContext.fillStyle = colorPalette[col];
         for (var i = 0; i < width; i++) {
             for (var j = 0; j < height; j++) {
                 var pixelIndex = canvas[i + width * j];
                 if (pixelIndex > 0) {
+                    visibleContext.fillStyle = colorPalette[pixelIndex-1];
                     visibleContext.fillRect(i * zoomFactor, j * zoomFactor, zoomFactor, zoomFactor);
                 }
             }
@@ -1264,7 +1237,6 @@ function preserveUndoState(full) {
     } else {
         undoItem.canvasIndex = canvasIndex;
         undoItem.script = scripts[canvasIndex];
-        undoItem.color = colors[canvasIndex];
         undoItem.canvasDat = uint8ar_copy(canvasses[canvasIndex]);
         undoItem.visibleCanvasses = visibleCanvasses.slice();
     }
@@ -1368,7 +1340,7 @@ function mouseMove(e) {
         points = line(x, y, lastX, lastY);
     }
 
-    var col = drawing > 0 ? 1 : 0;
+    var col = drawing > 0 ? (colorIndex+1) : 0;
 
     for (var i = 0; i < points.length; i++) {
         var p = points[i];

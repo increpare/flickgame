@@ -645,18 +645,10 @@ function getData(){
   githubHTTPClient.send();
 }
 
+
 function RLE_decode(encoded) {
     var output = "";
-    var chars = ["0","1"]
-    var charindex=0;
-    for (var i=0;i<encoded.length;i++) {
-      var count = encoded[i];
-      var ch = encoded[i+1];
-      for (var j=0;j<count;j++){
-        output+=chars[charindex];;
-      }
-      charindex=1-charindex;
-    }
+    encoded.forEach(function(pair){ output += new Array(1+pair[0]).join(pair[1]) })
     return output;
 }
 
@@ -682,18 +674,20 @@ function RLE_decode(encoded) {
 var images = new Array();
 var imageCtxts = new Array();
 
-function printCanvas(descriptionString,color){
+function printCanvas(descriptionString){
     var canvas = document.createElement('canvas');
     canvas.width=width;
     canvas.height=height;
     var ctx=canvas.getContext("2d");
-    ctx.fillStyle=color;
     for (var j=0;j<descriptionString.length;j++){
       var x = j%width;
       var y = Math.floor(j/width);
       var ch=descriptionString[j];
-      if (ch==="1")
+      var pint = parseInt(ch,17);
+
+      if (ch>0)
       {
+        ctx.fillStyle=colorPalette[ch-1];
         ctx.fillRect(x,y,1,1);
       }
     }
@@ -704,11 +698,10 @@ function renderImages(){
   gameState.imageDats = new Array();
 
   for (var i=0;i<pages;i++){
-    var col = colorPalette[gameState.colors[i]];
     var descriptionArray = gameState.canvasses[i];
     var descriptionString = RLE_decode(descriptionArray);
 
-    var canvas_context=printCanvas(descriptionString,col);
+    var canvas_context=printCanvas(descriptionString);
     var canvas=canvas_context[0];
     var ctx=canvas_context[1];
 
