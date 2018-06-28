@@ -4,6 +4,8 @@
       type="image/png" 
       href="favicon.png">
 <title>flickgame.org</title>
+
+
 <style>
 
 #header h1 {
@@ -86,6 +88,12 @@ a {
 var embeddedDat="__EMBED__";
 <!--__EmbedEnd__-->
 
+
+var pages = 50;
+  var width=200;
+  var height=100;
+var curCanvasToDraw=null;
+
 function getUrlVars() {
     var vars = {};
     var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi,    
@@ -96,28 +104,8 @@ function getUrlVars() {
 }
 
 var urlVars = getUrlVars();
-if (!("frameCount" in urlVars)){
-  urlVars["frameCount"]=1;
-}
-if (!("animationLength" in urlVars)){
-  urlVars["animationLength"]=0.5;
-}
 
-urlVars["frameCount"]=parseFloat(urlVars["frameCount"])
-urlVars["animationLength"]=parseFloat(urlVars["animationLength"])
-var frameCount=urlVars["frameCount"];
-var animationLength=urlVars["animationLength"];
-
-if(urlVars["a"]==="1"){
-  frameCount=8;
-  animationLength=0.5;
-}
-var showAnimation = frameCount>1;
-
-
-var animating=false;
 var zoom=1;
-var currentIndex=0;
 function redraw(){
   console.log("resized "+window.innerWidth +"x"+window.innerHeight);  
   mainCanvas.width=mainCanvasContainer.clientWidth;
@@ -135,8 +123,8 @@ function redraw(){
 
     var w = mainCanvasCtx.width;
     var h = mainCanvasCtx.height;
-    var wd = w/160.0;
-    var hd = h/100.0;
+    var wd = w/width;
+    var hd = h/height;
     zoom=1;
     if (wd<hd){
       zoom=wd;//Math.floor(wd);
@@ -146,14 +134,20 @@ function redraw(){
     if(zoom<1){
       zoom=1;
     }
-    var dx=(w-160*zoom)/2;
-    var dy=(h-100*zoom)/2;
+    var dx=(w-width*zoom)/2;
+    var dy=(h-height*zoom)/2;
     mainCanvasCtx.fillStyle="#000000";
     mainCanvasCtx.fillRect(0,0,w,h);
     if (curCanvasToDraw===null){
-      mainCanvasCtx.drawImage(images[currentIndex],0,0,160,100,dx,dy,160*zoom,100*zoom);
+      for (var i=0;i<pages;i++)
+      {
+        if (gameState.visibleCanvasses[i]===1)
+        {
+          mainCanvasCtx.drawImage(images[i],0,0,width,height,dx,dy,width*zoom,height*zoom);
+        }
+      }
     } else {
-      mainCanvasCtx.drawImage(curCanvasToDraw,0,0,160,100,dx,dy,160*zoom,100*zoom);
+      mainCanvasCtx.drawImage(curCanvasToDraw,0,0,width,height,dx,dy,width*zoom,height*zoom);
     }
   } else {    
     mainCanvasCtx.fillStyle="#ff0000";
@@ -186,8 +180,8 @@ function redraw(){
 
   function printNonZeros(a,stack){
     var count=0;
-    for (var i=0;i<160;i++){
-      for (var j=0;j<100;j++){
+    for (var i=0;i<width;i++){
+      for (var j=0;j<height;j++){
         if (a[j][i]!==null)
           count++;
       }
@@ -196,207 +190,14 @@ function redraw(){
     window.console.log("stack length " + stack.length+".");
   }
 
-  var hex=['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f']
 
-  function calcHeatmap(cal,col,fromCal){
-    var map = []
-    var stack = []
-    var c = hex[col]
-
-    //initialize
-    for (var j=0;j<100;j++){
-      for (var i=0;i<160;i++){
-        if (cal[i+160*j]===c){
-          var entry = [0,i,j]
-          map.push([0,i,j])
-          stack.push([i,j,0,i,j])
-        } else {
-          map.push(null)
-        }
-      }
-    }
-
-    //should replace this with a center of mass calculation from the old one
-    if (stack.length===0){
-      var cx=0;
-      var cy=0;
-      var count=0;
-      for (var i=0;i<160;i++){
-        for (var j=0;j<100;j++){
-          if (fromCal[i+160*j]===c){
-            cx+=i;
-            cy+=j;
-            count++;
-          }
-        }
-      }
-      if (count>0){
-        cx=Math.round(cx/count);
-        cy=Math.round(cy/count);
-        for (var j=0;j<100;j++){
-          for (var i=0;i<160;i++){
-            map[i+160*j]=[0,cx,cy];
-          }
-        }
-      }
-    }
-
-    //propagate
-    while(stack.length>0){
-      var entry = stack.shift();
-      //[fromx,fromy,dist,tox,toy]
-      var x0=entry[0];
-      var y0=entry[1];
-      var d0=entry[2];
-      var xtarget=entry[3];
-      var ytarget=entry[4];
-      var d1=d0+1;
-      var neighbours = [[x0-1,y0],[x0+1,y0],[x0,y0-1],[x0,y0+1]];
-      for (var i=0;i<4;i++){
-        var n = neighbours[i];
-        var nx=n[0];
-        var ny=n[1];
-        if (nx<0||ny<0||nx>=160||ny>=100){
-          continue;
-        }
-        var existing = map[nx+160*ny];
-        if (existing===null||d1<existing[0]){
-          map[nx+160*ny]=[d1,xtarget,ytarget]
-          stack.push([nx,ny,d1,xtarget,ytarget])
-        }
-      }
-    }
-
-    return map;
-  }
-
-  function generateParticleMotions(sourceCanvas,targetHeatMap,colIndex,particles,reverse){
-    if (reverse){
-      var c = hex[colIndex];
-      for (var i=0;i<160;i++){
-        for (var j=0;j<100;j++){
-          var pixel = sourceCanvas[i+160*j];
-          if (pixel===c){
-            //[d,tx,ty]
-            var target = targetHeatMap[i+160*j];
-            var tx = target[1];
-            var ty = target[2];
-            if (i!==tx||j!==ty)
-              particles.push([tx,ty,i,j])
-          }
-        }
-      }
-    } else {
-      var c = hex[colIndex];
-      for (var i=0;i<160;i++){
-        for (var j=0;j<100;j++){
-          var pixel = sourceCanvas[i+160*j];
-          if (pixel===c){
-            //[d,tx,ty]
-            var target = targetHeatMap[i+160*j];
-            var tx = target[1];
-            var ty = target[2];
-            particles.push([i,j,tx,ty])
-          }
-        }
-      }
-    }
-  }
-
-  function generateFrame(sourceImage,particleMap,progress){
-    var frame = [];
-    for (var j=0;j<100;j++){
-      for (var i=0;i<160;i++){
-        frame.push(sourceImage[i+160*j]);
-      }
-    }
-
-    for (var cIndex=0;cIndex<particleMap.length;cIndex++){      
-      var c = hex[cIndex]
-      var particles = particleMap[cIndex]
-      for (var i=0;i<particles.length;i++){
-        var p = particles[i]
-        var x0=p[0]
-        var y0=p[1]
-        var x1=p[2]
-        var y1=p[3]
-        var dx=x1-x0
-        var dy=y1-y0
-        if (dx!==0||dy!==0){
-//          var xt = Math.round(x0+progress*dx+Math.random()*0.5-0.25)
-//          var yt = Math.round(y0+progress*dy+Math.random()*0.5-0.25)
-          var xt = Math.round(x0+progress*dx)
-          var yt = Math.round(y0+progress*dy)
-          frame[xt+160*yt]=c;
-        }
-      }
-    }
-    return frame;
-  }
-
-  function calcTransitionGrids(oldCanvas,newCanvas){
-    //generate 32 canvasses, for each color, for each direction
-    var particleMaps = []
-    for (var i=0;i<16;i++){
-      var forwardHeatmap = calcHeatmap(newCanvas,i,oldCanvas);
-      window.console.log("generated forward"+i);
-      var backwardHeatmap = calcHeatmap(oldCanvas,i,newCanvas);
-      window.console.log("generated backward"+i);
-      var particles=[]
-      var particleMotionsForward = generateParticleMotions(oldCanvas,forwardHeatmap,i,particles,false);
-      window.console.log("generated forward particles"+i);
-      var particleMotionsBackward = generateParticleMotions(newCanvas,backwardHeatmap,i,particles,true);
-      window.console.log("generated backwards particles"+i);
-      particleMaps.push(particles);      
-    }
-    var frames=[];
-    frames.push(oldCanvas)
-    for (var i=1;i<frameCount;i++){
-      var frame = generateFrame(oldCanvas,particleMaps,i/frameCount)
-      frames.push(frame);
-    }
-    frames.push(newCanvas)
-    return frames;
-  }
-
-  var curCanvasToDraw=null;
-  var curAnimationFrames=null;
-  function transition(oldIndex,newIndex){
-    var oldCanvas = gameState.imageDats[oldIndex];
-    var newCanvas = gameState.imageDats[newIndex];
-    var frames = calcTransitionGrids(oldCanvas,newCanvas);
-    curAnimationFrames = frames;
-    return frames;
-  }
-
-  function drawNextFrame(){
-      curCanvasToDraw=printCanvas(curAnimationFrames[animationIndex])[0];
-      redraw();
-      animationIndex++;
-      if (animationIndex<curAnimationFrames.length){
-        setTimeout(drawNextFrame,1000*animationLength/frameCount);
-      } else {
-        animating=false;
-      }
-  }
-  var animationIndex=1;
-  function doAnimation(){
-    animating=true;
-    animationIndex=1;
-    drawNextFrame();
-  }
 
   function mouseDown(e){
     mouseMove(e);
     if (target>0){
-      if (showAnimation){
-        transition(currentIndex,target-1);
-        currentIndex=target-1;
-        doAnimation();
-      } else {
-        currentIndex=target-1;
-        redraw();        
-      }
+      //currentIndex=target-1;
+      //EVAL
+      redraw();        
       mouseMove(e);
     } 
   }
@@ -409,8 +210,8 @@ function redraw(){
 
     var w = mainCanvasCtx.width;
     var h = mainCanvasCtx.height;
-    var wd = w/160.0;
-    var hd = h/100.0;
+    var wd = w/width;
+    var hd = h/height;
     zoom=1;
     if (wd<hd){
       zoom=wd;//Math.floor(wd);
@@ -420,22 +221,29 @@ function redraw(){
     if(zoom<1){
       zoom=1;
     }
-    var dx=(w-160*zoom)/2;
-    var dy=(h-100*zoom)/2;
+    var dx=(w-width*zoom)/2;
+    var dy=(h-height*zoom)/2;
 
     var x=Math.floor((coords[0]-dx)/zoom);
     var y=Math.floor((coords[1]-dy)/zoom);
     target=0;
-    if(x>=0&&x<160&&y>=0&&y<100) {
-      var ch = gameState.imageDats[currentIndex][x+160*y];
-      var colIndex = parseInt(ch,16);
-      target=gameState.hyperlinks[currentIndex][colIndex];
-
-      if (gameState.hyperlinks[currentIndex][colIndex]!=0) {
-        mainCanvas.style.cursor="pointer";        
-      } else {
-        mainCanvas.style.cursor="default";        
-      }
+    if(x>=0&&x<width&&y>=0&&y<height) {
+      
+      loopblock: {
+        for (var i=pages-1;i>=0;i--){
+          if (
+            gameState.visibleCanvasses[i]===1 && 
+            gameState.imageDats[i][x+width*y]==="1"){
+              if (gameState.scripts[i].trim()!=="" && gameState.enabled[i]===1){
+                mainCanvas.style.cursor="pointer";        
+              } else {
+                mainCanvas.style.cursor="default";                     
+              }
+              break loopblock;
+            }
+          }
+        mainCanvas.style.cursor="default";              
+      }      
 
     } else {
       mainCanvas.style.cursor="default";
@@ -446,7 +254,205 @@ function redraw(){
 var mainCanvas;
 var mainCanvasCtx;
 var mainCanvasContainer;
-function init(){
+
+var sampleScript = `
+;comment
+show +1
+show +2
+if +1, +2 then
+    show -3
+end
+if 3, not 4 then
+    show 4
+`
+
+function logError(s,orig_line,orig_line_number){
+        window.alert("ERROR"+"\n"+"Line " + orig_line_number +" : " + s+"\n"+orig_line);
+}
+
+var commands = ["enable","disable","show","hide","reset"];
+
+
+function enable(l){
+    console.log("enabling layer "+l);
+    gameState.enabled[l]=true;
+}
+
+function disable(l){
+    console.log("disabling layer "+l);
+    gameState.enabled[l]=false;
+}
+
+
+function setLayerVisible(index){
+    for (var i=0;i<pages;i++){
+        if (gameState.visibleCanvasses[i]===1 && gameState.colors[i]===gameState.colors[index]){
+            gameState.visibleCanvasses[i]=0;
+        }
+    }
+    gameState.enabled[index]=1;
+    gameState.visibleCanvasses[index]=1;
+}
+
+
+
+function setLayerInvisible(index){
+    gameState.visibleCanvasses[index]=0;
+}
+
+function show(l){
+    console.log("showing layer "+l);
+    setLayerVisible(l)
+
+}
+
+function hide(l){
+    console.log("hiding layer "+l);
+    setLayerInvisible(l)
+}
+
+function reset(){
+
+}
+function calculateFrameReference(t,frameNumber, orig_line,orig_line_number){
+    if (t.match("this")){
+        return frameNumber;
+    } else if (t.match(/^[+-]?[\d]+$/)===null){
+        logError("malformed thing given to " +tokens[0]+".",orig_line,orig_line_number)
+        return frameNumber;
+    }
+    var target = frameNumber;
+    if (t[0]==="+" || t[0]==="-"){
+        target+=parseInt(t)
+    } else {
+        target=parseInt(t)-1;
+    }
+
+    if (target<0||target>=pages){
+        logError("trying to access frame number "+(target+1)+", which is out of range");
+    }
+    return target;
+}
+
+
+//assumes line already nicely formatted
+function runCommandLine(line,frameNumber,orig_line, orig_line_number){
+    var tokens = line.split(/\s+/);
+    var command = tokens[0];
+
+    if (tokens.length<=1){
+        logError(`command ${command} requires a parameter - like "move 3" or "remove -1"`,orig_line,orig_line_number)
+        return;
+    }
+
+    for (var i=1;i<tokens.length;i++){
+        var t= tokens[i];
+        var target = calculateFrameReference(t)
+
+        switch(command){
+            case "enable":
+            {
+                enable(target);
+                break;
+            }
+            case "disable":
+            {
+                disable(target);
+                break;
+            }
+            case "show":
+            {
+                show(target);
+                break;
+            }
+            case "hide":
+            {
+                hide(target);
+                break;
+            }
+        }
+    }
+}
+
+var trace = console.log
+
+function evaluateIf(line, frameNumber, orig_line,orig_line_number){
+
+    //i know there's an if at the start and a then at the end
+    var substr = line.substr(2,line.length-6).trim();
+    var tokens = substr.split(",").map( t => t.trim() );
+    if (tokens.length===0){
+        logError("if statement must have arguments, e.g. 'IF 1, 3 THEN' ",orig_line,orig_line_number)        
+        return true;
+    }
+
+    var truthfulness=true;
+    trace("evaluatig truthfuless")
+    for (var i=0;i<tokens.length;i++){
+        var t = tokens[i];
+        var s = t.split(/\s+/);
+        var fr = s[s.length-1];
+        var target = calculateFrameReference(fr);
+        if (s[0]==="not"){
+            trace("\t"+t)
+            truthfulness = truthfulness && gameState.visibleCanvasses[target]===0;
+        } else {
+            trace("\t"+t)
+            truthfulness = truthfulness && gameState.visibleCanvasses[target]===1;            
+        }
+    }
+    trace("T = "+truthfulness);
+    return truthfulness;
+}
+function runScript(s, frameNumber){
+    trace("running script")
+    var lines = s.split('\n');
+    var depth=0;
+    for (var i=0;i<lines.length;i++){
+        var orig_line = lines[i];
+        var line = orig_line.split(";",1)[0].trim().toLowerCase();
+        if (line===""){
+            continue;
+        }
+        var tokens = line.split(/\s+/,1);
+        if (commands.indexOf(tokens[0])>=0){
+            runCommandLine(line,frameNumber,orig_line, i)
+        }
+        else if (tokens[0]==="if"){
+            if (evaluateIf(line,frameNumber,orig_line, i)){
+                //keep going as usual
+            }
+            else {
+                //skip ahead until "else" or "end"
+                for (var j=i+1;j<lines.length;j++){
+                    var line2= lines[j]
+                    var firsttoken = line2.trim().split(";",1)[0].split(/\s+/,1);
+                    if (firsttoken==="else" || firsttoken ==="end") {
+                        i=j+1;
+                        break;
+                    }
+                }
+            }
+            //no nested if statements allowed
+        } else if (tokens[0]==="else"){
+            //skip ahead to end
+            for (var j=i+1;j<lines.length;j++){
+                var line2= lines[j]
+                if (line2.trim().split(";",1)[0].split(/\s+/,1)==="end") {
+                    i=j+1;
+                    break;
+                }
+            }   
+        } else if (tokens[0]==="end"){
+            //do nothing
+        } else {
+            logError("ERROR here "+orig_line,orig_line,i);
+        }
+    }
+}
+
+
+function init(){  
   window.addEventListener('resize', redraw, false);
 
 
@@ -460,7 +466,6 @@ function init(){
   redraw();
 
   getData();
-
 }
 
 var aurl = document.createElement('a');
@@ -470,8 +475,17 @@ function qualifyURL(url) {
 }
 
 var gameState;
+
+
 function loadState(code){
     gameState=JSON.parse(code);
+    gameState.enabled=[]
+
+    gameState.visibleCanvasses[0]=1;
+    for (var i=1;i<pages;i++){
+      gameState.enabled[i]=1;
+      gameState.visibleCanvasses[i]=0;
+    }
 }
 
 function getParameterByName(name) {
@@ -525,7 +539,6 @@ function getData(){
     }
     var result = JSON.parse(githubHTTPClient.responseText);
     var code=result["files"]["game.txt"]["content"];
-    console.log(code);
     loadState(code);
 
     var homepage=gameState.gameLink;
@@ -548,65 +561,71 @@ function getData(){
   githubHTTPClient.send();
 }
 
-
 function RLE_decode(encoded) {
     var output = "";
-    for (var i=0;i<encoded.length;i+=2) {
+    var chars = ["0","1"]
+    var charindex=0;
+    for (var i=0;i<encoded.length;i++) {
       var count = encoded[i];
       var ch = encoded[i+1];
       for (var j=0;j<count;j++){
-        output+=ch;
+        output+=chars[charindex];;
       }
+      charindex=1-charindex;
     }
     return output;
 }
 
  var colorPalette = [
-            "#140c1c",
-            "#442434",
-            "#30346d",
-            "#4e4a4e",
-            "#854c30",
-            "#346524",
-            "#d04648",
-            "#757161",
-            "#597dce",
-            "#d27d2c",
-            "#8595a1",
-            "#6daa2c",
-            "#d2aa99",
-            "#6dc2ca",
-            "#dad45e",
-            "#deeed6"
+           "#000000",
+            "#9D9D9D",
+            "#FFFFFF",
+            "#BE2633",
+            "#E06F8B",
+            "#493C2B",
+            "#A46422",
+            "#EB8931",
+            "#F7E26B",
+            "#2F484E",
+            "#44891A",
+            "#A3CE27",
+            "#1B2632",
+            "#005784",
+            "#31A2F2",
+            "#B2DCEF"
             ];
 
 var images = new Array();
 var imageCtxts = new Array();
 
-function printCanvas(descriptionString){
+function printCanvas(descriptionString,color){
     var canvas = document.createElement('canvas');
-    canvas.width="160";
-    canvas.height="100";
+    canvas.width=width;
+    canvas.height=height;
     var ctx=canvas.getContext("2d");
+    ctx.fillStyle=color;
     for (var j=0;j<descriptionString.length;j++){
-      var x = j%160;
-      var y = Math.floor(j/160);
+      var x = j%width;
+      var y = Math.floor(j/width);
       var ch=descriptionString[j];
-      var colIndex = parseInt(ch,16);
-      ctx.fillStyle=colorPalette[colIndex];
-      ctx.fillRect(x,y,1,1);
+      if (ch==="1")
+      {
+        ctx.fillRect(x,y,1,1);
+      }
     }
     return [canvas,ctx];
 }
 
 function renderImages(){
+  runScript(sampleScript,5);//run pretending in frame 5
   gameState.imageDats = new Array();
 
-  for (var i=0;i<16;i++){
+  for (var i=0;i<pages;i++){
+    var col = colorPalette[gameState.colors[i]];
     var descriptionArray = gameState.canvasses[i];
     var descriptionString = RLE_decode(descriptionArray);
 
-    var canvas_context=printCanvas(descriptionString);
+    var canvas_context=printCanvas(descriptionString,col);
     var canvas=canvas_context[0];
     var ctx=canvas_context[1];
 

@@ -5,6 +5,17 @@
       href="favicon.png">
 
 
+<link rel="stylesheet" href="lib/codemirror.css">
+<link rel="stylesheet" href="theme/darcula.css">
+<script src="lib/codemirror.js"></script>
+<script src="addon/mode/simple.js"></script>
+<script src="mode/xml/xml.js"></script>
+<style type="text/css">
+  .CodeMirror {border: 1px solid black; margin-bottom: 1em; }
+  dt { text-indent: -2em; padding-left: 2em; margin-top: 1em; }
+  dd { margin-left: 1.5em; margin-bottom: 1em; }
+  dt {margin-top: 1em;}
+</style>
 
 <script src="FileSaver.js"></script>
 <script type="text/javascript" > 
@@ -20,7 +31,7 @@
 
   var shareLinkInner=null;
   var nosave=false;
-
+  var editor=null;
 
 //arne
   var colorPalette = [
@@ -99,7 +110,6 @@ function qualifyURL(url) {
 var radiusElem = new Array();
   var thumbnailCanvas = new Array();
   var thumbnailContext = new Array();
-  var scriptTextArea = null;
 
 var standalone_HTML_String="";
 
@@ -268,17 +278,20 @@ function shareClick() {
   githubHTTPClient.setRequestHeader("Content-type","application/x-www-form-urlencoded");
   var stringifiedGist = JSON.stringify(gistToCreate);
   githubHTTPClient.send(stringifiedGist);
-    lastDownTarget=canvas;  
+  lastDownTarget=visibleCanvas;  
 }
 
 
 function RLE_encode(input) {
     var encoding = [];
     var prev, count, i;
+    if (input[0]==="1"){
+      encoding.push(0);
+    }
+
     for (count = 1, prev = input[0], i = 1; i < input.length; i++) {
         if (input[i] != prev) {
-            encoding.push(count);
-            encoding.push(prev);
+            encoding.push(count);            
             count = 1;
             prev = input[i];
         }
@@ -286,14 +299,7 @@ function RLE_encode(input) {
             count ++;
     }
     encoding.push(count);
-    encoding.push(prev);
     return encoding;
-}
-
-function RLE_decode(encoded) {
-    var output = "";
-    encoded.forEach(function(pair){ output += new Array(1+pair[0]).join(pair[1]) })
-    return output;
 }
 
 function stateToString(){
@@ -303,6 +309,7 @@ function stateToString(){
   state.canvasses=new Array();
   state.colors=new Array();
   state.visibleCanvasses = new Array();
+  state.scripts=[];
   for (var i=0;i<pages;i++){
     var canvas=canvasses[i];
     var s="";
@@ -313,8 +320,8 @@ function stateToString(){
     state.canvasses.push(pairs);
     state.colors.push(colors[i]);
     state.visibleCanvasses.push(visibleCanvasses[i])
+    state.scripts.push(scripts[i].trim())
   }
-  state.scripts=scripts;
   var result=JSON.stringify(state);
   return result;
 }
@@ -330,13 +337,14 @@ function stringToState(str){
     var s = state.canvasses[k];
     var ar = new Uint8Array(width*height);
     var index=0;
-    for (var i=0;i<s.length;i+=2){
+    var curchar=0;
+    for (var i=0;i<s.length;i++){
       var count=s[i];
-      var ch=s[i+1];
       for (var j=0;j<count;j++){
-        ar[index]=parseInt(ch,16);
+        ar[index]=curchar;
         index++;
       }
+      curchar=1-curchar;
     }
     colors.push(parseInt(state.colors[k]))
     visibleCanvasses.push(parseInt(state.visibleCanvasses[k]))
@@ -383,7 +391,7 @@ function press(evt){
       script:scripts[canvasIndex]
     };
      scripts[canvasIndex]="";
-    scriptTextArea.value="";
+    editor.setValue("");
     clearPalette();
   } else if (evt.keyCode===86){ //v
     if (clipboard!==null){
@@ -396,7 +404,7 @@ function press(evt){
       canvasses[canvasIndex]=arui8;
       colors[canvasIndex]=clipboard.color;
       scripts[canvasIndex]=clipboard.script;
-      scriptTextArea.value=scripts[canvasIndex];
+      editor.setValue(scripts[canvasIndex]);
       setVisuals();
     }
   } else if (evt.keyCode ===189 || evt.keyCode===173 ) {//-
@@ -578,7 +586,7 @@ function clearPalette(){
         }
         layerElem[canvasIndex].setAttribute("class","layerItem selectedItem");
         setColor(colors[canvasIndex])
-        scriptTextArea.value=scripts[canvasIndex];
+        editor.setValue(scripts[canvasIndex]);
         setVisuals();
     }
 
@@ -586,8 +594,8 @@ function clearPalette(){
       window.console.log(s);
     }
     
-    function onTextAreaChange(elem){
-      var s = elem.value;
+    function onTextAreaChange(){
+      var s = editor.getValue();
       scripts[canvasIndex]=s;
     }
 
@@ -614,6 +622,39 @@ function clearPalette(){
     }
 
     function init() {
+
+        CodeMirror.defineSimpleMode("flickgamescript", {
+        // The start state contains the rules that are intially used
+        start: [
+          {regex: /;.*/,token:"comment"},
+          {regex: /\bthis\b/i, token: "number"},
+          {regex: /\b(if|then|end|else)\b/i,token: "keyword"},
+          {regex: /\bnot\b/, token: "atom"},
+          {regex: /[\+\-][\d]/i,  token: "number"},
+          {regex: /\b[\d]+\b/i,  token: "number"},
+          {regex: /[\+\-]/i,  token: "number"},
+          {regex: /\b(enable|disable|show|hide|reset)\b/i, token: "variable"},
+          {regex: /,/i, token: "variable"},
+        ],
+        meta: {
+          lineComment: ";"
+        }
+      });
+
+            editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+            lineNumbers: true,
+            matchBrackets: true,
+            continueComments: "Enter",
+            mode: "flickgamescript",
+            extraKeys: {"Ctrl-Q": "toggleComment"},
+            theme: "darcula",
+            lineWrapping:true
+          });
+           editor.setSize(708, 258);
+
+      editor.on("change",onTextAreaChange)
+
+
       nosave=true;
 
       linkInput=document.getElementById("linkInput");
@@ -633,16 +674,7 @@ function clearPalette(){
         thumbnailContext[i]=elem.getContext("2d");
       }
 
-      elem = document.getElementById("code");
-      var fn = function(e){
-        return function(){
-          return onTextAreaChange(e);
-        }
-      }
-      //FFFF//need to come bac kand fix this
-      elem.oninput = fn(elem);
-      elem.onpropertychange = fn(elem);
-      scriptTextArea = elem;        
+   
 
       for (var i=0;i<16;i++){
         elem = document.getElementById("color_"+(i));        
@@ -743,7 +775,7 @@ function clearPalette(){
 function getFromLocalStorage(){
 
   if (window.localStorage){
-    var s = localStorage.getItem("flickdeck_state");
+    var s = localStorage.getItem("flickdeck_frames_state");
     if (s!=null){
       stringToState(s);
     }
@@ -887,7 +919,7 @@ function getFromLocalStorage(){
     }
     if (window.localStorage){
       var result = stateToString();
-      localStorage.setItem("flickdeck_state",result);
+      localStorage.setItem("flickdeck_frames_state",result);
       return result;
     }
   }
@@ -1129,7 +1161,7 @@ canvas {
   padding:5px;  
   /*border:2px solid gray; */
   border-top:none;
-  width:800px;
+  width:820px;
   display: inline-block;
 }
 
@@ -1277,7 +1309,7 @@ body {
     /*]]>*/
     </style>
     <title>
-      flickdeck
+      flickdeck frames
     </title>
   </head>
   <body onload="init();" ondragstart="return false;" ondrop="return false;">
@@ -1749,5 +1781,7 @@ body {
       </tr>
     </table>
     </center>
+
+
   </body>
 </html>
