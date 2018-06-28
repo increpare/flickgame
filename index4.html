@@ -13,7 +13,6 @@
 <script src="addon/mode/simple.js"></script>
 <script src="addon/lint/lint.js"></script>
 
-<script src="mode/xml/xml.js"></script>
 <style type="text/css">
     .CodeMirror {border: 1px solid black; margin-bottom: 1em; }
     dt { text-indent: -2em; padding-left: 2em; margin-top: 1em; }
@@ -198,10 +197,13 @@ function runScript(s, frameNumber){
                 //skip ahead until "else" or "end"
                 for (var j=i+1;j<lines.length;j++){
                     var line2= lines[j]
-                    var firsttoken = line2.trim().split(";",1)[0].split(/\s+/,1);
-                    if (firsttoken==="else" || firsttoken ==="end") {
-                        i=j+1;
-                        break;
+                    var firsttokens = line2.trim().split(";",1)[0].split(/\s+/,1);
+                    if (firsttokens.length>0){
+                        var firsttoken = firsttokens[0];
+                        if (firsttoken==="else" || firsttoken ==="end") {
+                            i=j+1;
+                            break;
+                        }
                     }
                 }
             }
@@ -848,13 +850,13 @@ function toggleLayerVisible(index) {
 }
 
 function setLayerVisible(index) {
-    for (var i = 0; i < pages; i++) {
-        if (visibleCanvasses[i] === 1 && colors[i] === colors[index]) {
+    // for (var i = 0; i < pages; i++) {
+    //     if (visibleCanvasses[i] === 1 && colors[i] === colors[index]) {
 
-            visibilityElem[i].src = "eye2.png";
-            visibleCanvasses[i] = 0;
-        }
-    }
+    //         visibilityElem[i].src = "eye2.png";
+    //         visibleCanvasses[i] = 0;
+    //     }
+    // }
     visibleCanvasses[index] = 1;
     visibilityElem[index].src = "eye.png";
 }
@@ -905,6 +907,7 @@ function newDoc() {
     preserveUndoState(true);
     createBlankDoc();
     setVisuals(true);
+    setVisibilityIcons();
 }
 
 function canvasContextMenu(e) {

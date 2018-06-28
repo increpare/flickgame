@@ -313,11 +313,11 @@ function disable(l){
 
 
 function setLayerVisible(index){
-    for (var i=0;i<pages;i++){
-        if (gameState.visibleCanvasses[i]===1 && gameState.colors[i]===gameState.colors[index]){
-            gameState.visibleCanvasses[i]=0;
-        }
-    }
+    // for (var i=0;i<pages;i++){
+    //     if (gameState.visibleCanvasses[i]===1 && gameState.colors[i]===gameState.colors[index]){
+    //         gameState.visibleCanvasses[i]=0;
+    //     }
+    // }
     gameState.enabled[index]=1;
     gameState.visibleCanvasses[index]=1;
 }
@@ -346,6 +346,9 @@ function reset(){
 
 
 tate=null;//just used for interpreter
+
+
+
 
 /***************/
 /* START SCRIPT*/
@@ -475,25 +478,40 @@ function runScript(s, frameNumber){
             }
             else {
                 //skip ahead until "else" or "end"
-                for (var j=i+1;j<lines.length;j++){
-                    var line2= lines[j]
-                    var firsttoken = line2.trim().split(";",1)[0].split(/\s+/,1);
-                    if (firsttoken==="else" || firsttoken ==="end") {
-                        i=j+1;
-                        break;
+                outloop:
+                {
+                    for (var j=i+1;j<lines.length;j++){
+                        var line2= lines[j]
+                        var firsttokens = line2.trim().split(";",1)[0].split(/\s+/,1);
+                        if (firsttokens.length>0){
+                            var firsttoken = firsttokens[0];
+                            if (firsttoken==="else" || firsttoken ==="end") {
+                                i=j;
+                                break outloop;
+                            }
+                        }
                     }
+                    i=lines.length;
                 }
             }
             //no nested if statements allowed
         } else if (tokens[0]==="else"){
             //skip ahead to end
-            for (var j=i+1;j<lines.length;j++){
-                var line2= lines[j]
-                if (line2.trim().split(";",1)[0].split(/\s+/,1)==="end") {
-                    i=j+1;
-                    break;
-                }
-            }   
+            outloop:
+            {
+                for (var j=i+1;j<lines.length;j++){
+                    var line2= lines[j]
+                    var firsttokens = line2.trim().split(";",1)[0].split(/\s+/,1);
+                    if (firsttokens.length>0){
+                        var firsttoken= firsttokens[0]
+                        if (firsttoken==="end") {
+                            i=j;
+                            break outloop;
+                        }
+                    }
+                }   
+                i=lines.length;
+            }
         } else if (tokens[0]==="end"){
             //do nothing
         } else if (tokens[0]==="reset"){
@@ -507,7 +525,6 @@ function runScript(s, frameNumber){
 /**************/
 /* END SCRIPT */
 /**************/
-
 
 
 function init(){  
@@ -618,7 +635,7 @@ function getData(){
   
     var hacklink = document.getElementById("hackLink");
 
-    var url = "index.html?p="+id;
+    var url = "index4.html?p="+id;
     url=qualifyURL(url);
     hacklink.href=url;
     hacklink.innerHTML="&sdotb; edit";
