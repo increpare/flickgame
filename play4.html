@@ -191,15 +191,53 @@ function redraw(){
   }
 
 
+  function processClick(e){
+
+    var coords = getCoords(e);
+
+    var w = mainCanvasCtx.width;
+    var h = mainCanvasCtx.height;
+    var wd = w/width;
+    var hd = h/height;
+    zoom=1;
+    if (wd<hd){
+      zoom=wd;//Math.floor(wd);
+    } else {
+      zoom=hd;//Math.floor(hd);
+    }
+    if(zoom<1){
+      zoom=1;
+    }
+    var dx=(w-width*zoom)/2;
+    var dy=(h-height*zoom)/2;
+
+    var x=Math.floor((coords[0]-dx)/zoom);
+    var y=Math.floor((coords[1]-dy)/zoom);
+    target=0;
+
+    if(x<0||x>=width||y<0||y>=height) {
+        return;
+    }
+
+    for (var i=pages-1;i>=0;i--){
+      if (
+        gameState.visibleCanvasses[i]===1 && 
+        gameState.imageDats[i][x+width*y]==="1"){
+          if (gameState.scripts[i].trim()!=="" && gameState.enabled[i]===1){
+            executeScript(i);
+            redraw();        
+            mouseMove(e);
+            return;
+          } else {
+            return;
+          }
+        }
+      }
+  }
 
   function mouseDown(e){
     mouseMove(e);
-    if (target>0){
-      //currentIndex=target-1;
-      //EVAL
-      redraw();        
-      mouseMove(e);
-    } 
+    processClick(e);
   }
   function mouseMove(e){
 
@@ -255,22 +293,12 @@ var mainCanvas;
 var mainCanvasCtx;
 var mainCanvasContainer;
 
-var sampleScript = `
-;comment
-show +1
-show +2
-if +1, +2 then
-    show -3
-end
-if 3, not 4 then
-    show 4
-`
+var trace = console.log
 
 function logError(s,orig_line,orig_line_number){
         window.alert("ERROR"+"\n"+"Line " + orig_line_number +" : " + s+"\n"+orig_line);
 }
 
-var commands = ["enable","disable","show","hide","reset"];
 
 
 function enable(l){
@@ -312,16 +340,35 @@ function hide(l){
 }
 
 function reset(){
-
+    loadState(gamecode);
 }
+
+
+
+tate=null;//just used for interpreter
+
+/***************/
+/* START SCRIPT*/
+/***************/
+
+var commands = ["enable","disable","show","hide"];
+
+function isNumeric(n) {
+  return !isNaN(parseFloat(n)) && isFinite(n);
+}
+
 function calculateFrameReference(t,frameNumber, orig_line,orig_line_number){
     if (t.match("this")){
         return frameNumber;
-    } else if (t.match(/^[+-]?[\d]+$/)===null){
-        logError("malformed thing given to " +tokens[0]+".",orig_line,orig_line_number)
+    } else if (t.match(/^[\+\-]?[\d]+$/)===null){
+        logError("malformed thing given '"+t+"'.  Expected a reference to a frame, like '4' or '+2' or '-1' or 'this'" ,orig_line,orig_line_number)
         return frameNumber;
     }
     var target = frameNumber;
+    if (!isNumeric(t)){
+        logError(`${t} isn't a frame reference. I'm expecting a one here, something like '2' or '-3' or '+4' or 'this'.`, orig_line,orig_line_number);
+    }
+
     if (t[0]==="+" || t[0]==="-"){
         target+=parseInt(t)
     } else {
@@ -329,7 +376,7 @@ function calculateFrameReference(t,frameNumber, orig_line,orig_line_number){
     }
 
     if (target<0||target>=pages){
-        logError("trying to access frame number "+(target+1)+", which is out of range");
+        logError("trying to access frame number "+(target+1)+", which is out of range", orig_line,orig_line_number);
     }
     return target;
 }
@@ -341,13 +388,13 @@ function runCommandLine(line,frameNumber,orig_line, orig_line_number){
     var command = tokens[0];
 
     if (tokens.length<=1){
-        logError(`command ${command} requires a parameter - like "move 3" or "remove -1"`,orig_line,orig_line_number)
+        logError(`command ${command} requires a parameter - like "${command} 3" or "${command} -1"`,orig_line,orig_line_number)
         return;
     }
 
     for (var i=1;i<tokens.length;i++){
         var t= tokens[i];
-        var target = calculateFrameReference(t)
+        var target = calculateFrameReference(t,frameNumber, orig_line, orig_line_number)
 
         switch(command){
             case "enable":
@@ -374,7 +421,6 @@ function runCommandLine(line,frameNumber,orig_line, orig_line_number){
     }
 }
 
-var trace = console.log
 
 function evaluateIf(line, frameNumber, orig_line,orig_line_number){
 
@@ -392,18 +438,21 @@ function evaluateIf(line, frameNumber, orig_line,orig_line_number){
         var t = tokens[i];
         var s = t.split(/\s+/);
         var fr = s[s.length-1];
-        var target = calculateFrameReference(fr);
-        if (s[0]==="not"){
-            trace("\t"+t)
-            truthfulness = truthfulness && gameState.visibleCanvasses[target]===0;
-        } else {
-            trace("\t"+t)
-            truthfulness = truthfulness && gameState.visibleCanvasses[target]===1;            
+        var target = calculateFrameReference(fr,frameNumber,orig_line, orig_line_number);
+        if (gameState!==null){
+            if (s[0]==="not"){
+                trace("\t"+t)
+                truthfulness = truthfulness && gameState.visibleCanvasses[target]===0;
+            } else {
+                trace("\t"+t)
+                truthfulness = truthfulness && gameState.visibleCanvasses[target]===1;            
+            }
         }
     }
     trace("T = "+truthfulness);
     return truthfulness;
 }
+
 function runScript(s, frameNumber){
     trace("running script")
     var lines = s.split('\n');
@@ -414,12 +463,14 @@ function runScript(s, frameNumber){
         if (line===""){
             continue;
         }
-        var tokens = line.split(/\s+/,1);
+        var tokens = line.split(/\s+/);
         if (commands.indexOf(tokens[0])>=0){
             runCommandLine(line,frameNumber,orig_line, i)
         }
         else if (tokens[0]==="if"){
-            if (evaluateIf(line,frameNumber,orig_line, i)){
+            if (tokens[tokens.length-1]!=="then"){
+                logError("IF statement must have a THEN at the end - of the form like 'IF 3, 4, +2 THEN'"+orig_line,orig_line,i);
+            } else if (evaluateIf(line,frameNumber,orig_line, i)){
                 //keep going as usual
             }
             else {
@@ -445,11 +496,18 @@ function runScript(s, frameNumber){
             }   
         } else if (tokens[0]==="end"){
             //do nothing
+        } else if (tokens[0]==="reset"){
+            reset();
         } else {
             logError("ERROR here "+orig_line,orig_line,i);
         }
     }
 }
+
+/**************/
+/* END SCRIPT */
+/**************/
+
 
 
 function init(){  
@@ -466,6 +524,7 @@ function init(){
   redraw();
 
   getData();
+
 }
 
 var aurl = document.createElement('a');
@@ -475,9 +534,15 @@ function qualifyURL(url) {
 }
 
 var gameState;
+var gamecode;
 
+function executeScript(frameNumber){
+    var s = gameState.scripts[frameNumber];
+    runScript(s,frameNumber);
+}
 
 function loadState(code){
+    gamecode=code;
     gameState=JSON.parse(code);
     gameState.enabled=[]
 
@@ -485,7 +550,10 @@ function loadState(code){
     for (var i=1;i<pages;i++){
       gameState.enabled[i]=1;
       gameState.visibleCanvasses[i]=0;
-    }
+    }    
+
+    executeScript(0);
+    renderImages();
 }
 
 function getParameterByName(name) {
@@ -514,7 +582,6 @@ function getData(){
     }
     homepageLink.href = homepage;
 
-    renderImages();
     return;
   }
   var id = getParameterByName("p").replace(/[\\\/]/,"");
@@ -617,7 +684,6 @@ function printCanvas(descriptionString,color){
 }
 
 function renderImages(){
-  runScript(sampleScript,5);//run pretending in frame 5
   gameState.imageDats = new Array();
 
   for (var i=0;i<pages;i++){
