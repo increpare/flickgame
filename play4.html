@@ -222,7 +222,7 @@ function redraw(){
     for (var i=pages-1;i>=0;i--){
       if (
         gameState.visibleCanvasses[i]===1 && 
-        gameState.imageDats[i][x+width*y]==="1"){
+        gameState.imageDats[i][x+width*y]!=="0"){
           if (gameState.scripts[i].trim()!=="" && gameState.enabled[i]===1){
             executeScript(i);
             redraw();        
@@ -271,7 +271,7 @@ function redraw(){
         for (var i=pages-1;i>=0;i--){
           if (
             gameState.visibleCanvasses[i]===1 && 
-            gameState.imageDats[i][x+width*y]==="1"){
+            gameState.imageDats[i][x+width*y]!=="0"){
               if (gameState.scripts[i].trim()!=="" && gameState.enabled[i]===1){
                 mainCanvas.style.cursor="pointer";        
               } else {
@@ -648,10 +648,15 @@ function getData(){
 
 function RLE_decode(encoded) {
     var output = "";
-    encoded.forEach(function(pair){ output += new Array(1+pair[0]).join(pair[1]) })
+    for (var i=0;i<encoded.length;i+=2) {
+      var count = encoded[i];
+      var ch = encoded[i+1];
+      for (var j=0;j<count;j++){
+        output+=ch;
+      }
+    }
     return output;
 }
-
  var colorPalette = [
            "#000000",
             "#9D9D9D",
@@ -685,9 +690,9 @@ function printCanvas(descriptionString){
       var ch=descriptionString[j];
       var pint = parseInt(ch,17);
 
-      if (ch>0)
+      if (pint>0)
       {
-        ctx.fillStyle=colorPalette[ch-1];
+        ctx.fillStyle=colorPalette[pint-1];
         ctx.fillRect(x,y,1,1);
       }
     }

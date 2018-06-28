@@ -26,6 +26,8 @@
 
 var colorIndex=getRandomInt(7,16);
 
+var interpreterActive=false;
+
 var trace = console.log
 
 var logError = function(s,orig_line,orig_line_number){
@@ -35,35 +37,47 @@ var logError = function(s,orig_line,orig_line_number){
 
 function enable(l){
     console.log("enabling layer "+l);
+    gameState.enabled[l]=true;
 }
 
 function disable(l){
     console.log("disabling layer "+l);
+    gameState.enabled[l]=false;
 }
 
 
 function setLayerVisible(index){
-    console.log("set layer visible  "+l);
+    // for (var i=0;i<pages;i++){
+    //     if (gameState.visibleCanvasses[i]===1 && gameState.colors[i]===gameState.colors[index]){
+    //         gameState.visibleCanvasses[i]=0;
+    //     }
+    // }
+    gameState.enabled[index]=1;
+    gameState.visibleCanvasses[index]=1;
 }
 
 
 
 function setLayerInvisible(index){
-    console.log("set layer invisible  "+l);
+    gameState.visibleCanvasses[index]=0;
 }
 
 function show(l){
     console.log("showing layer "+l);
+    setLayerVisible(l)
 
 }
 
 function hide(l){
     console.log("hiding layer "+l);
+    setLayerInvisible(l)
 }
 
 function reset(){
-    console.log("resetting");
+    loadState(gamecode);
 }
+
+var gamecode=null;
 
 
 var gameState=null;//just used for interpreter
@@ -347,6 +361,7 @@ function qualifyURL(url) {
 
 
 var radiusElem = new Array();
+var handElem = null;
 var thumbnailCanvas = new Array();
 var thumbnailContext = new Array();
 
@@ -555,7 +570,7 @@ function stateToString() {
         var canvas = canvasses[i];
         var s = "";
         for (var j = 0; j < width * height; j++) {
-            s += canvas[j].toString(16);
+            s += canvas[j].toString(17);
         }
         var pairs = RLE_encode(s);
         state.canvasses.push(pairs);
@@ -582,7 +597,7 @@ function stringToState(str) {
           var count=s[i];
           var ch=s[i+1];
           for (var j=0;j<count;j++){
-            ar[index]=parseInt(ch,16);
+            ar[index]=parseInt(ch,17);
             index++;
           }
         }
@@ -761,19 +776,44 @@ function clearPalette() {
     setVisuals();
 }
 
-function setRadius(newRadius) {
-    radius = newRadius;
+
+function setToolsSelection(){
+    handElem.setAttribute("class","radius");
     bucketElem.setAttribute("class", "radius");
     for (var i = 0; i < 16; i++) {
         if (radiusElem[i] !== null) {
             radiusElem[i].setAttribute("class", "radius");
         }
     }
-    if (newRadius > 0) {
-        radiusElem[newRadius - 1].setAttribute("class", "radius selected");
+
+    if (handMode){
+        handElem.setAttribute("class","radius selected");
     } else {
-        bucketElem.setAttribute("class", "radius selected");
+
+        if (radius > 0) {
+            radiusElem[radius - 1].setAttribute("class", "radius selected");
+        } else {
+            bucketElem.setAttribute("class", "radius selected");
+        }
     }
+}
+
+var handMode=false;
+function setHand(){
+    handMode=true;
+    gamecode = stateToString();
+    setToolsSelection();
+}
+
+function rewind(){
+    reset();
+}
+
+function setRadius(newRadius) {
+    handMode=false;
+    radius = newRadius;
+    updateCursor();
+    setToolsSelection();
 }
 
 
@@ -970,6 +1010,7 @@ function init() {
         radiusElem[i] = elem;
 
     }
+    handElem = document.getElementById("sethand");
 
     for (var i = 0; i < pages; i++) {
         elem = document.getElementById("thumbnail" + (i + 1));
@@ -1118,7 +1159,6 @@ function getData() {
     githubHTTPClient.send();
 }
 
-
 function drawThumbnail(n) {
 
     thumbCtx = thumbnailContext[n];
@@ -1258,6 +1298,18 @@ function mouseDown(e) {
         drawing = -1;
     }
     var coords = getCoords(e);
+
+     if (handMode){            
+        var target = getPixelTarget(coords);
+        if (target>0){
+            interpreterActive=true;
+            runScript(scripts[target-1],target-1)
+            interpreterActive=false;
+            mouseMove(e);
+        } 
+        return;
+    }
+
     startTargetX = coords[0];
     startTargetY = coords[1];
     lastX = Math.floor(startTargetX / zoomFactor);
@@ -1317,13 +1369,76 @@ function line(x1, y1, x2, y2) {
 }
 
 
+function updateCursor(){
+    if (handMode){
+        mainCanvas.style.cursor="default";  
+    } else {
+        mainCanvas.style.cursor="crosshair";  
+    }
+}
+
+//returns -1 if nothing found, otherwise index of page whose script you could trigger
+//doesn't check for disabled/enabled
+function getPixelTarget(coords){
+    var w = visibleCanvas.width;
+    var h = visibleCanvas.height;
+    var wd = w/width;
+    var hd = h/height;
+    zoom=1;
+    if (wd<hd){
+      zoom=wd;//Math.floor(wd);
+    } else {
+      zoom=hd;//Math.floor(hd);
+    }
+    if(zoom<1){
+      zoom=1;
+    }
+    var dx=(w-width*zoom)/2;
+    var dy=(h-height*zoom)/2;
+
+    var x=Math.floor((coords[0]-dx)/zoom);
+    var y=Math.floor((coords[1]-dy)/zoom);
+
+
+    if(x>=0&&x<width&&y>=0&&y<height) {
+      
+        for (var i=pages-1;i>=0;i--){
+          if (
+            visibleCanvasses[i]===1 && 
+            canvasses[i][x+width*y]>0){
+                if (scripts[i].trim()!=="" && visibleCanvasses[i]===1){
+                    return i;       
+                } else {
+                    return -1;  
+                }                 
+            } 
+        }
+
+      }      
+    return -1;      
+}
+
 function mouseMove(e) {
     e = e || window.event;
+
+
+    var coords = getCoords(e);
+
+    if (handMode){            
+        var target = getPixelTarget(coords);
+        if (target>0){
+            visibleCanvas.style.cursor="pointer"
+        } else {
+            visibleCanvas.style.cursor="default"
+        }
+        return;
+    } else {
+        updateCursor();
+    }
 
     if (drawing === 0)
         return;
 
-    var coords = getCoords(e);
 
     var x = Math.floor(coords[0] / zoomFactor);
     var y = Math.floor(coords[1] / zoomFactor);
@@ -1363,6 +1478,7 @@ function mouseMove(e) {
     var coords = getCoords(e);
     lastX = Math.floor(coords[0] / zoomFactor);
     lastY = Math.floor(coords[1] / zoomFactor);
+
 
 }
 
@@ -2081,6 +2197,12 @@ body {
                         <a href="#" onclick="document.getElementById('my_file').click();return false;">&sdotb; import</a><br />
                         <input type="file" accept=".html" id="my_file" style="display: none;" />
                         <a href="help.html" target="_blank" title="blah">? help</a>
+                        <br />
+                        <br />
+                        <a href="#" onclick="rewind();return false;"><img src="rewind.png" class="radius" id="rewind" /></a>
+                        <br />
+                        <br />
+                        <a href="#" onclick="setHand();return false;"><img src="hand.png" class="radius" id="sethand" /></a>
                         <br />
                         <br />
                         <a href="#" onclick="setRadius(16);return false;"><img src="16.png" class="radius" id="radius_16" /></a>
