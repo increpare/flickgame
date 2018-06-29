@@ -489,7 +489,7 @@ function runScript(s, frameNumber){
                             if (firsttoken==="if"){
                               depth++;
                             }
-                            else if (firsttoken==="else" || firsttoken ==="end") {
+                            else if ((depth==1&&firsttoken==="else") || firsttoken ==="end") {
                               depth--;
                               if (depth===0){                                
                                 i=j;
