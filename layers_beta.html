@@ -317,7 +317,7 @@ CodeMirror.registerHelper("lint", "flickgamescript", function(text, options) {
 
    var contexts = new Array();
 var version = "0.1";
-var gameLink = "www.flickgame.org"
+var gameLink = "www.flickgame.org/layers_beta.html"
 var canvasIndex = 0;
 
 var canvasses = new Array();
@@ -414,7 +414,7 @@ var standalone_HTML_String = "";
 
 var clientStandaloneRequest = new XMLHttpRequest();
 
-clientStandaloneRequest.open('GET', 'play4.html');
+clientStandaloneRequest.open('GET', 'layers_beta_play.html');
 clientStandaloneRequest.onreadystatechange = function() {
 
     if (clientStandaloneRequest.readyState != 4) {
@@ -445,7 +445,7 @@ function buildStandalone(sourceCode) {
     var blob = new BB([htmlString], {
         type: "text/plain;charset=utf-8"
     });
-    saveAs(blob, "flickgame.html");
+    saveAs(blob, "flickgame_layers.html");
 }
 
 function exportClick() {
@@ -522,7 +522,7 @@ function shareClick() {
         "public": true,
         "files": {
             "readme.txt": {
-                "content": "A game made with www.flickgame.org.  You can import game.txt there to play the game.  Uh, too lazy to describe - HMU at analytic@gmail.com if you want to know how (basically just use the gist ID in the url like other flickgames do...) "
+                "content": "A game made with www.flickgame.org/layers_beta.html.  You can import game.txt there to play the game.  Uh, too lazy to describe - HMU at analytic@gmail.com if you want to know how (basically just use the gist ID in the url like other flickgames do...) "
             },
             "game.txt": {
                 "content": str
@@ -557,10 +557,10 @@ function shareClick() {
             alert("HTTP Error " + githubHTTPClient.status + ' - ' + githubHTTPClient.statusText);
         } else {
             var id = result.id;
-            var url = "play4.html?p=" + id;
+            var url = "layers_beta_play.html?p=" + id;
             url = qualifyURL(url);
 
-            var editurl = "index4.html?hack=" + id;
+            var editurl = "layers_beta.html?hack=" + id;
             editurl = qualifyURL(editurl);
             var sourceCodeLink = "link to source code:<br><a href=\"" + editurl + "\">" + editurl + "</a>";
 
@@ -848,13 +848,24 @@ function setToolsSelection(){
 var handMode=false;
 function setHand(){
     handMode=true;
+    gamecode = stateToString();
+    reset();
+
     for (var i=0;i <pages;i++){
         enabled[i]=1;
+        visibleCanvasses[i]= (i===0)?1:0;
     }
     gamecode = stateToString();
+
+
+    interpreterActive=true;
+    runScript(scripts[0],0)
+    interpreterActive=false;
+
     setToolsSelection();
     updateLayerLabels();
     setVisualEnabledIndicator();
+    setVisuals();
 }
 
 function rewind(){
@@ -1832,7 +1843,7 @@ body {
     /*]]>*/
     </style>
     <title>
-        flickdeck 
+        FLICKGAME_LAYERS 
     </title>
     </head>
     <body onload="init();" ondragstart="return false;" ondrop="return false;">
@@ -2127,7 +2138,7 @@ body {
                     <tr>
                     <td>
                         <center>
-                        <input width="800" style="border:2px solid gray;" onkeydown="event.stopPropagation();" value="www.flickgame.org"  id="linkInput" oninput="linkChange(this.value)" />
+                        <input width="800" style="border:2px solid gray;" onkeydown="event.stopPropagation();" value="www.flickgame.org/layers_beta.html"  id="linkInput" oninput="linkChange(this.value)" />
                         <br/>
                         <canvas id="mainCanvas" width="800" height="400" style="border:2px solid gray; background-color:black;"></canvas>
                         <br />
@@ -2270,7 +2281,7 @@ body {
                         <a href="#" onclick="exportClick();return false;">&sdotb; export</a><br />
                         <a href="#" onclick="document.getElementById('my_file').click();return false;">&sdotb; import</a><br />
                         <input type="file" accept=".html" id="my_file" style="display: none;" />
-                        <a href="help4.html" target="_blank" title="blah">? help</a>
+                        <a href="layers_help.html" target="_blank" title="blah">? help</a>
                         <br />
                         <br />
                         <a href="#" onclick="rewind();return false;"><img src="rewind.png" class="radius" id="rewind" /></a>
