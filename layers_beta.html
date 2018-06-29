@@ -59,7 +59,7 @@ function leavePlayMode(){
 
 function enable(l){
     if (interpreterActive){
-        console.log("enabling layer "+l);
+        console.log("enabling layer "+(l+1));
         enabled[l]=true;
         setVisualEnabledIndicator();
     }
@@ -67,7 +67,7 @@ function enable(l){
 
 function disable(l){
     if (interpreterActive){
-        console.log("disabling layer "+l);
+        console.log("disabling layer "+(l+1));
         enabled[l]=false;
         setVisualEnabledIndicator();
     }
@@ -100,7 +100,7 @@ function setLayerInvisible(index){
 
 function show(l){
     if (interpreterActive){
-        console.log("showing layer "+l);
+        console.log("showing layer "+(l+1));
         setLayerVisible(l)
     }
 
@@ -109,7 +109,7 @@ function show(l){
 function hide(l){
 
     if (interpreterActive){
-        console.log("hiding layer "+l);
+        console.log("hiding layer "+(l+1));
         setLayerInvisible(l)
     }
 }
@@ -211,30 +211,31 @@ function evaluateIf(line, frameNumber, orig_line,orig_line_number){
     }
 
     var truthfulness=true;
-    trace("evaluatig truthfuless")
+    if (interpreterActive){
+        trace("evaluatig truthfuless")
+    }
     for (var i=0;i<tokens.length;i++){
         var t = tokens[i];
         var s = t.split(/\s+/);
         var fr = s[s.length-1];
         var target = calculateFrameReference(fr,frameNumber,orig_line, orig_line_number);
-        if (gameState!==null){
-            if (s[0]==="not"){
-                trace("\t"+t)
-                truthfulness = truthfulness && gameState.visibleCanvasses[target]===0;
-            } else {
-                trace("\t"+t)
-                truthfulness = truthfulness && gameState.visibleCanvasses[target]===1;            
-            }
+        if (s[0]==="not"){
+            trace("\t"+t)
+            truthfulness = truthfulness && visibleCanvasses[target]===0;
+        } else {
+            trace("\t"+t)
+            truthfulness = truthfulness && visibleCanvasses[target]===1;            
         }
     }
-    trace("T = "+truthfulness);
+    if (interpreterActive){
+        trace("T = "+truthfulness);
+    }
     return truthfulness;
 }
 
 function runScript(s, frameNumber){
     trace("running script")
     var lines = s.split('\n');
-    var depth=0;
     for (var i=0;i<lines.length;i++){
         var orig_line = lines[i];
         var line = orig_line.split(";",1)[0].trim().toLowerCase();
@@ -253,28 +254,54 @@ function runScript(s, frameNumber){
             }
             else {
                 //skip ahead until "else" or "end"
-                for (var j=i+1;j<lines.length;j++){
-                    var line2= lines[j]
-                    var firsttokens = line2.trim().split(";",1)[0].split(/\s+/,1);
-                    if (firsttokens.length>0){
-                        var firsttoken = firsttokens[0];
-                        if (firsttoken==="else" || firsttoken ==="end") {
-                            i=j+1;
-                            break;
+                outloop:
+                {
+                    var depth=1;
+                    for (var j=i+1;j<lines.length;j++){
+                        var line2= lines[j]
+                        var firsttokens = line2.trim().split(";",1)[0].split(/\s+/,1);
+                        if (firsttokens.length>0){
+                            var firsttoken = firsttokens[0];
+                            if (firsttoken==="if"){
+                              depth++;
+                            }
+                            else if ((depth==1&&firsttoken==="else") || firsttoken ==="end") {
+                              depth--;
+                              if (depth===0){                                
+                                i=j;
+                                break outloop;
+                              }
+                            }
                         }
                     }
+                    i=lines.length;
                 }
             }
             //no nested if statements allowed
         } else if (tokens[0]==="else"){
             //skip ahead to end
-            for (var j=i+1;j<lines.length;j++){
-                var line2= lines[j]
-                if (line2.trim().split(";",1)[0].split(/\s+/,1)==="end") {
-                    i=j+1;
-                    break;
-                }
-            }   
+            outloop:
+            {
+                var depth=1;
+                for (var j=i+1;j<lines.length;j++){
+                    var line2= lines[j]
+                    var firsttokens = line2.trim().split(";",1)[0].split(/\s+/,1);
+                    if (firsttokens.length>0){
+                        var firsttoken= firsttokens[0]
+                        if (firsttoken==="if"){
+                          depth++;
+                        }
+                        if (firsttoken==="end") {
+                            depth--;
+                            if (depth===0){
+                              i=j;
+                              break outloop;
+                            }
+                        }
+                    }
+                }   
+                i=lines.length;
+            }
         } else if (tokens[0]==="end"){
             //do nothing
         } else if (tokens[0]==="reset"){
@@ -681,17 +708,16 @@ function press(evt) {
        setLayer(canvasIndex+1); 
        } */
     if (evt.keyCode === 67) { //c
-        preserveUndoState();
         clipboard = {
             image: JSON.stringify(canvasses[canvasIndex]),
             script: scripts[canvasIndex]
         };
     } else if (evt.keyCode === 88) { //x
-        clearPalette();
         clipboard = {
             image: JSON.stringify(canvasses[canvasIndex]),
             script: scripts[canvasIndex]
         };
+        clearPalette();
         scripts[canvasIndex] = "";
         editor.setValue("");
     } else if (evt.keyCode === 86) { //v
@@ -870,6 +896,10 @@ function setHand(){
 
 function rewind(){
     reset();
+    setToolsSelection();
+    updateLayerLabels();
+    setVisualEnabledIndicator();
+    setVisuals();
 }
 
 function setRadius(newRadius) {
@@ -952,6 +982,7 @@ function setLayerVisible(index) {
     //         visibleCanvasses[i] = 0;
     //     }
     // }
+    enabled[index]=1;
     visibleCanvasses[index] = 1;
     visibilityElem[index].src = "eye.png";
 }
@@ -1900,93 +1931,93 @@ body {
             <li> 
                 <img id="visibility10" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem10" href="#" onclick="setLayer(10);return false;">
                 <canvas id="thumbnail10" class="layerThumbnail"></canvas>
-                <span id="layername10" class="enabledlayer">0</span></a>
+                <span id="layername10" class="enabledlayer">10</span></a>
             </li>
             <li> 
                 <img id="visibility11" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem11" href="#" onclick="setLayer(11);return false;">
                 <canvas id="thumbnail11" class="layerThumbnail"></canvas>
-                <span id="layername11" class="enabledlayer">1</span></a>
+                <span id="layername11" class="enabledlayer">11</span></a>
             </li>
             <li> 
                 <img id="visibility12" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem12" href="#" onclick="setLayer(12);return false;">
                 <canvas id="thumbnail12" class="layerThumbnail"></canvas>
-                <span id="layername12" class="enabledlayer">2</span></a>
+                <span id="layername12" class="enabledlayer">12</span></a>
             </li>
             <li> 
                 <img id="visibility13" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem13" href="#" onclick="setLayer(13);return false;">
                 <canvas id="thumbnail13" class="layerThumbnail"></canvas>
-                <span id="layername13" class="enabledlayer">3</span></a>
+                <span id="layername13" class="enabledlayer">13</span></a>
             </li>
             <li> 
                 <img id="visibility14" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem14" href="#" onclick="setLayer(14);return false;">
                 <canvas id="thumbnail14" class="layerThumbnail"></canvas>
-                <span id="layername14" class="enabledlayer">4</span></a>
+                <span id="layername14" class="enabledlayer">14</span></a>
             </li>
             <li> 
                 <img id="visibility15" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem15" href="#" onclick="setLayer(15);return false;">
                 <canvas id="thumbnail15" class="layerThumbnail"></canvas>
-                <span id="layername15" class="enabledlayer">5</span></a>
+                <span id="layername15" class="enabledlayer">15</span></a>
             </li>
             <li> 
                 <img id="visibility16" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem16" href="#" onclick="setLayer(16);return false;">
                 <canvas id="thumbnail16" class="layerThumbnail"></canvas>
-                <span id="layername16" class="enabledlayer">6</span></a>
+                <span id="layername16" class="enabledlayer">16</span></a>
             </li>
             <li> 
                 <img id="visibility17" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem17" href="#" onclick="setLayer(17);return false;">
                 <canvas id="thumbnail17" class="layerThumbnail"></canvas>
-                <span id="layername17" class="enabledlayer">7</span></a>
+                <span id="layername17" class="enabledlayer">17</span></a>
             </li>
             <li> 
                 <img id="visibility18" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem18" href="#" onclick="setLayer(18);return false;">
                 <canvas id="thumbnail18" class="layerThumbnail"></canvas>
-                <span id="layername18" class="enabledlayer">8</span></a>
+                <span id="layername18" class="enabledlayer">18</span></a>
             </li>
             <li> 
                 <img id="visibility19" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem19" href="#" onclick="setLayer(19);return false;">
                 <canvas id="thumbnail19" class="layerThumbnail"></canvas>
-                <span id="layername19" class="enabledlayer">9</span></a>
+                <span id="layername19" class="enabledlayer">19</span></a>
             </li>
             
             <li> 
                 <img id="visibility20" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem20" href="#" onclick="setLayer(20);return false;">
                 <canvas id="thumbnail20" class="layerThumbnail"></canvas>
-                <span id="layername20" class="enabledlayer">0</span></a>
+                <span id="layername20" class="enabledlayer">20</span></a>
             </li>
 
             
             <li> 
                 <img id="visibility21" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem21" href="#" onclick="setLayer(21);return false;">
                 <canvas id="thumbnail21" class="layerThumbnail"></canvas>
-                <span id="layername21" class="enabledlayer">1</span></a>
+                <span id="layername21" class="enabledlayer">21</span></a>
             </li>
 
             
             <li> 
                 <img id="visibility22" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem22" href="#" onclick="setLayer(22);return false;">
                 <canvas id="thumbnail22" class="layerThumbnail"></canvas>
-                <span id="layername22" class="enabledlayer">2</span></a>
+                <span id="layername22" class="enabledlayer">22</span></a>
             </li>
 
             
             <li> 
                 <img id="visibility23" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem23" href="#" onclick="setLayer(23);return false;">
                 <canvas id="thumbnail23" class="layerThumbnail"></canvas>
-                <span id="layername23" class="enabledlayer">3</span></a>
+                <span id="layername23" class="enabledlayer">23</span></a>
             </li>
 
             
             <li> 
                 <img id="visibility24" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem24" href="#" onclick="setLayer(24);return false;">
                 <canvas id="thumbnail24" class="layerThumbnail"></canvas>
-                <span id="layername24" class="enabledlayer">4</span></a>
+                <span id="layername24" class="enabledlayer">24</span></a>
             </li>
 
             
             <li> 
                 <img id="visibility25" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem25" href="#" onclick="setLayer(25);return false;">
                 <canvas id="thumbnail25" class="layerThumbnail"></canvas>
-                <span id="layername25" class="enabledlayer">5</span></a>
+                <span id="layername25" class="enabledlayer">25</span></a>
             </li>
 
             </ul>
@@ -1997,132 +2028,132 @@ body {
             <li> 
                 <img id="visibility26" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem26" href="#" onclick="setLayer(26);return false;">
                 <canvas id="thumbnail26" class="layerThumbnail"></canvas>
-                <span id="layername26" class="enabledlayer">6</span></a>
+                <span id="layername26" class="enabledlayer">26</span></a>
             </li>
             <li> 
                 <img id="visibility27" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem27" href="#" onclick="setLayer(27);return false;">
                 <canvas id="thumbnail27" class="layerThumbnail"></canvas>
-                <span id="layername27" class="enabledlayer">7</span></a>
+                <span id="layername27" class="enabledlayer">27</span></a>
             </li>
             <li> 
                 <img id="visibility28" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem28" href="#" onclick="setLayer(28);return false;">
                 <canvas id="thumbnail28" class="layerThumbnail"></canvas>
-                <span id="layername28" class="enabledlayer">8</span></a>
+                <span id="layername28" class="enabledlayer">28</span></a>
             </li>
             <li> 
                 <img id="visibility29" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem29" href="#" onclick="setLayer(29);return false;">
                 <canvas id="thumbnail29" class="layerThumbnail"></canvas>
-                <span id="layername29" class="enabledlayer">9</span></a>
+                <span id="layername29" class="enabledlayer">29</span></a>
             </li>
             <li> 
                 <img id="visibility30" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem30" href="#" onclick="setLayer(30);return false;">
                 <canvas id="thumbnail30" class="layerThumbnail"></canvas>
-                <span id="layername30" class="enabledlayer">0</span></a>
+                <span id="layername30" class="enabledlayer">30</span></a>
             </li>
             <li> 
                 <img id="visibility31" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem31" href="#" onclick="setLayer(31);return false;">
                 <canvas id="thumbnail31" class="layerThumbnail"></canvas>
-                <span id="layername31" class="enabledlayer">1</span></a>
+                <span id="layername31" class="enabledlayer">31</span></a>
             </li>
             <li> 
                 <img id="visibility32" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem32" href="#" onclick="setLayer(32);return false;">
                 <canvas id="thumbnail32" class="layerThumbnail"></canvas>
-                <span id="layername32" class="enabledlayer">2</span></a>
+                <span id="layername32" class="enabledlayer">32</span></a>
             </li>
             <li> 
                 <img id="visibility33" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem33" href="#" onclick="setLayer(33);return false;">
                 <canvas id="thumbnail33" class="layerThumbnail"></canvas>
-                <span id="layername33" class="enabledlayer">3</span></a>
+                <span id="layername33" class="enabledlayer">33</span></a>
             </li>
             <li> 
                 <img id="visibility34" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem34" href="#" onclick="setLayer(34);return false;">
                 <canvas id="thumbnail34" class="layerThumbnail"></canvas>
-                <span id="layername34" class="enabledlayer">4</span></a>
+                <span id="layername34" class="enabledlayer">34</span></a>
             </li>
             <li> 
                 <img id="visibility35" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem35" href="#" onclick="setLayer(35);return false;">
                 <canvas id="thumbnail35" class="layerThumbnail"></canvas>
-                <span id="layername35" class="enabledlayer">5</span></a>
+                <span id="layername35" class="enabledlayer">35</span></a>
             </li>
             <li> 
                 <img id="visibility36" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem36" href="#" onclick="setLayer(36);return false;">
                 <canvas id="thumbnail36" class="layerThumbnail"></canvas>
-                <span id="layername36" class="enabledlayer">6</span></a>
+                <span id="layername36" class="enabledlayer">36</span></a>
             </li>
             <li> 
                 <img id="visibility37" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem37" href="#" onclick="setLayer(37);return false;">
                 <canvas id="thumbnail37" class="layerThumbnail"></canvas>
-                <span id="layername37" class="enabledlayer">7</span></a>
+                <span id="layername37" class="enabledlayer">37</span></a>
             </li>
             <li> 
                 <img id="visibility38" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem38" href="#" onclick="setLayer(38);return false;">
                 <canvas id="thumbnail38" class="layerThumbnail"></canvas>
-                <span id="layername38" class="enabledlayer">8</span></a>
+                <span id="layername38" class="enabledlayer">38</span></a>
             </li>
             <li> 
                 <img id="visibility39" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem39" href="#" onclick="setLayer(39);return false;">
                 <canvas id="thumbnail39" class="layerThumbnail"></canvas>
-                <span id="layername39" class="enabledlayer">9</span></a>
+                <span id="layername39" class="enabledlayer">39</span></a>
             </li>
             
             <li> 
                 <img id="visibility40" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem40" href="#" onclick="setLayer(40);return false;">
                 <canvas id="thumbnail40" class="layerThumbnail"></canvas>
-                <span id="layername40" class="enabledlayer">0</span></a>
+                <span id="layername40" class="enabledlayer">40</span></a>
             </li>
 
             <li> 
                 <img id="visibility41" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem41" href="#" onclick="setLayer(41);return false;">
                 <canvas id="thumbnail41" class="layerThumbnail"></canvas>
-                <span id="layername41" class="enabledlayer">1</span></a>
+                <span id="layername41" class="enabledlayer">41</span></a>
             </li>
             <li> 
                 <img id="visibility42" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem42" href="#" onclick="setLayer(42);return false;">
                 <canvas id="thumbnail42" class="layerThumbnail"></canvas>
-                <span id="layername42" class="enabledlayer">2</span></a>
+                <span id="layername42" class="enabledlayer">42</span></a>
             </li>
             <li> 
                 <img id="visibility43" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem43" href="#" onclick="setLayer(43);return false;">
                 <canvas id="thumbnail43" class="layerThumbnail"></canvas>
-                <span id="layername43" class="enabledlayer">3</span></a>
+                <span id="layername43" class="enabledlayer">43</span></a>
             </li>
             <li> 
                 <img id="visibility44" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem44" href="#" onclick="setLayer(44);return false;">
                 <canvas id="thumbnail44" class="layerThumbnail"></canvas>
-                <span id="layername44" class="enabledlayer">4</span></a>
+                <span id="layername44" class="enabledlayer">44</span></a>
             </li>
             <li> 
                 <img id="visibility45" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem45" href="#" onclick="setLayer(45);return false;">
                 <canvas id="thumbnail45" class="layerThumbnail"></canvas>
-                <span id="layername45" class="enabledlayer">5</span></a>
+                <span id="layername45" class="enabledlayer">45</span></a>
             </li>
 
 
             <li> 
                 <img id="visibility46" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem46" href="#" onclick="setLayer(46);return false;">
                 <canvas id="thumbnail46" class="layerThumbnail"></canvas>
-                <span id="layername46" class="enabledlayer">6</span></a>
+                <span id="layername46" class="enabledlayer">46</span></a>
             </li>
             <li> 
                 <img id="visibility47" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem47" href="#" onclick="setLayer(47);return false;">
                 <canvas id="thumbnail47" class="layerThumbnail"></canvas>
-                <span id="layername47" class="enabledlayer">7</span></a>
+                <span id="layername47" class="enabledlayer">47</span></a>
             </li>
             <li> 
                 <img id="visibility48" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem48" href="#" onclick="setLayer(48);return false;">
                 <canvas id="thumbnail48" class="layerThumbnail"></canvas>
-                <span id="layername48" class="enabledlayer">8</span></a>
+                <span id="layername48" class="enabledlayer">48</span></a>
             </li>
             <li> 
                 <img id="visibility49" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem49" href="#" onclick="setLayer(49);return false;">
                 <canvas id="thumbnail49" class="layerThumbnail"></canvas>
-                <span id="layername49" class="enabledlayer">9</span></a>
+                <span id="layername49" class="enabledlayer">49</span></a>
             </li>
             
             <li> 
                 <img id="visibility50" class="eyeButton" src="eye2.png" > <a class="layerItem" id="layerItem50" href="#" onclick="setLayer(50);return false;">
                 <canvas id="thumbnail50" class="layerThumbnail"></canvas>
-                <span id="layername50" class="enabledlayer">0</span></a>
+                <span id="layername50" class="enabledlayer">50</span></a>
             </li>
 
             </ul>

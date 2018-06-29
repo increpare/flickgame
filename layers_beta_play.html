@@ -459,7 +459,6 @@ function evaluateIf(line, frameNumber, orig_line,orig_line_number){
 function runScript(s, frameNumber){
     trace("running script")
     var lines = s.split('\n');
-    var depth=0;
     for (var i=0;i<lines.length;i++){
         var orig_line = lines[i];
         var line = orig_line.split(";",1)[0].trim().toLowerCase();
@@ -477,17 +476,25 @@ function runScript(s, frameNumber){
                 //keep going as usual
             }
             else {
+                var targetdepth=depth-1;
                 //skip ahead until "else" or "end"
                 outloop:
                 {
+                    var depth=1;
                     for (var j=i+1;j<lines.length;j++){
                         var line2= lines[j]
                         var firsttokens = line2.trim().split(";",1)[0].split(/\s+/,1);
                         if (firsttokens.length>0){
                             var firsttoken = firsttokens[0];
-                            if (firsttoken==="else" || firsttoken ==="end") {
+                            if (firsttoken==="if"){
+                              depth++;
+                            }
+                            else if (firsttoken==="else" || firsttoken ==="end") {
+                              depth--;
+                              if (depth===0){                                
                                 i=j;
                                 break outloop;
+                              }
                             }
                         }
                     }
@@ -496,17 +503,25 @@ function runScript(s, frameNumber){
             }
             //no nested if statements allowed
         } else if (tokens[0]==="else"){
+            var targetdepth=depth-1;
             //skip ahead to end
             outloop:
             {
+                var depth=1;
                 for (var j=i+1;j<lines.length;j++){
                     var line2= lines[j]
                     var firsttokens = line2.trim().split(";",1)[0].split(/\s+/,1);
                     if (firsttokens.length>0){
                         var firsttoken= firsttokens[0]
+                        if (firsttoken==="if"){
+                          depth++;
+                        }
                         if (firsttoken==="end") {
-                            i=j;
-                            break outloop;
+                            depth--;
+                            if (depth===0){
+                              i=j;
+                              break outloop;
+                            }
                         }
                     }
                 }   
