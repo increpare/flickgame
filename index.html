@@ -527,9 +527,12 @@ function clearPalette(){
 
       visibleCanvas = document.getElementById("mainCanvas");
       visibleCanvas.addEventListener('mousedown', mouseDown,false);
+      visibleCanvas.addEventListener('touchstart', mouseDown,false);
       visibleCanvas.addEventListener('mouseup', mouseUp,false);
       visibleCanvas.addEventListener('mousemove', mouseMove,false);
+      visibleCanvas.addEventListener('touchmove', mouseMove,false);
       visibleCanvas.addEventListener('mouseout', mouseOut,false);
+      visibleCanvas.addEventListener('touchend', mouseOut,false);
 
       var fileUploader = document.getElementById("my_file");
       fileUploader.addEventListener('change', readFile, false);
@@ -677,7 +680,23 @@ function clearPalette(){
         x = e.offsetX;
         y = e.offsetY;
     }
-    else {      
+    else if (e.touches!==null){
+      if (e.touches.length===0){
+        return null;
+      }
+      var target = e.target || e.srcElement;
+      var rect = target.getBoundingClientRect();
+
+      x=0;
+      y=0;
+      for (var i=0;i<e.touches.length;i++){
+        x += e.touches[i].clientX-rect.left;
+        y += e.touches[i].clientY-rect.top;
+      }
+      x/=e.touches.length;
+      y/=e.touches.length;
+      
+    } else {      
       var target = e.target || e.srcElement;
       var rect = target.getBoundingClientRect();
       x = e.clientX - rect.left,
@@ -717,6 +736,12 @@ function clearPalette(){
 
     drawing=1;
     var coords = getCoords(e);
+    if (coords===null){
+      lastX=-1;
+      lastY=-1;
+      e.preventDefault();
+      return !1;
+    }
     startTargetX=coords[0];
     startTargetY=coords[1];
     lastX=Math.floor(startTargetX/zoomFactor);
@@ -738,6 +763,8 @@ function clearPalette(){
     drawing=0;
     lastX=-1;
     lastY=-1;
+
+    e.preventDefault();
   }
 
   function mouseOut(e){
@@ -746,6 +773,8 @@ function clearPalette(){
     mouseMove(e);
     lastX=-1;
     lastY=-1;
+
+    e.preventDefault();
   }
 
 
@@ -786,6 +815,12 @@ function clearPalette(){
       return;
 
     var coords = getCoords(e);
+    if (coords===null){
+      lastX=-1;
+      lastY=-1;
+      e.preventDefault();
+      return !1;
+    }
 
     var x = Math.floor(coords[0]/zoomFactor);
     var y = Math.floor(coords[1]/zoomFactor);
@@ -830,6 +865,12 @@ function clearPalette(){
     setVisuals();
 
     var coords = getCoords(e);
+    if (coords===null){
+      lastX=-1;
+      lastY=-1;
+      e.preventDefault();
+      return !1;
+    }
     lastX=Math.floor(coords[0]/zoomFactor);
     lastY=Math.floor(coords[1]/zoomFactor);
     
