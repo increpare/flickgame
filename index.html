@@ -727,6 +727,9 @@ function clearPalette(){
     if(radius===0){
       drawing=0;
     }
+
+    e.preventDefault();
+    return !1;
   }
 
   function mouseUp(e){
@@ -786,7 +789,18 @@ function clearPalette(){
 
     var x = Math.floor(coords[0]/zoomFactor);
     var y = Math.floor(coords[1]/zoomFactor);
-
+    console.log(`button = ${e.button}`);
+    if (e.metaKey||e.altKey||e.shiftKey||e.ctrlKey||e.button>0){
+      
+      var pIndex = x+width*y;
+      var canvas=canvasses[canvasIndex];
+      var newColorIndex = canvas[pIndex];
+      
+      // console.log(` x = ${x}; y = ${y}; pIndex = ${pIndex}; newColorIndex = ${newColorIndex}`);
+      setColor(newColorIndex);
+      e.preventDefault();
+      return false;
+    }
 
     var canvas=canvasses[canvasIndex];
 
@@ -1109,7 +1123,7 @@ body {
                       <center>
                         <input width="640" style="border:2px solid gray;" onkeydown="event.stopPropagation();" value="www.flickgame.org"  id="linkInput" oninput="linkChange(this.value)" />
                         <br/>
-                        <canvas id="mainCanvas" width="640" height="400" style="border:2px solid gray; background-color:black;"></canvas>
+                        <canvas id="mainCanvas" oncontextmenu="return false;" width="640" height="400" style="border:2px solid gray; background-color:black;"></canvas>
                         <br />
                         <table style="border:2px solid gray; margin-top:2px" margin="0">
                           <tr height="16">
