@@ -1064,6 +1064,7 @@ body {
                  }
                  img.selected {
                   border: 2px solid red;
+                  touch-action: manipulation
                  }
                  li.selected  {
                  cursor:auto;
@@ -1071,19 +1072,23 @@ body {
                  }
                  a{
                   white-space:nowrap;
+                  touch-action: manipulation
                 }
                  div.selected {
                  height:16px; 
                  width:30px;
                  border: 2px solid red;
+                 touch-action: manipulation
                  }
                  div.unselected {
                  height:16px; 
                  width:30px;
                  border: 2px solid black;
+                 touch-action: manipulation
                  }
                  img.radius {
                   border: 1px solid black;
+                  touch-action: manipulation
                  }
                  img.toolbar {
                   width:30px;
@@ -1093,12 +1098,13 @@ body {
                  font-size: 200%;
                  text-align: center;
                  margin-bottom: 5px;
-
+                 touch-action: manipulation
                  }
                  #toolbarcontainer{
                   float:right;
                   margin-right: 20px;
                   margin-top: 5px;
+                  touch-action: manipulation
                  }
                  img.selected {
                   border: 1px solid red; 
@@ -1114,6 +1120,7 @@ body {
                  canvas#dropdownthumb {
                   border:2px solid gray; 
                   background-color:black;
+                  touch-action: manipulation
                  }
     /*]]>*/
     </style>
@@ -1221,7 +1228,7 @@ body {
                         <span id="toolbarcontainer">
                           <a href="#" onclick="toolbar_undo();return false;"><img src="SVG/undo.svg" title="undo (U)" alt="undo" class="toolbar" id="toolbar_undo" /></a>
                           &nbsp;
-                          <a href="#" onclick="toolbar_copy();return false;"><img src="SVG/copy.SVG" title="copy to clipboard (C)" alt="copy to clipboard" class="toolbar" id="toolbar_copy" /></a>
+                          <a href="#" onclick="toolbar_copy();return false;"><img src="SVG/copy.svg" title="copy to clipboard (C)" alt="copy to clipboard" class="toolbar" id="toolbar_copy" /></a>
                           &nbsp;
                         <a href="#" onclick="toolbar_paste();return false;"><img src="SVG/paste.svg" title="paste from clipboard (V)" alt="paste from clipboard" class="toolbar" id="toolbar_paste" /></a>
                       </span>
