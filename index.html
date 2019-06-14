@@ -333,6 +333,7 @@ function stringToState(str){
 document.addEventListener("keydown", press);
 
 var copyImage = null;
+var copyLinks = null;
 
 var savedString;
 function press(evt){
@@ -346,18 +347,9 @@ function press(evt){
     setLayer(canvasIndex+1); 
   } */
   if (evt.keyCode===67) { //c
-    copyImage=JSON.stringify(canvasses[canvasIndex])
+    doCopy();
   } else if (evt.keyCode===86){ //v
-    if (copyImage!==null){
-      preserveUndoState();
-      var ar = JSON.parse(copyImage);
-      var arui8 = new Uint8Array(width*height);
-      for (var i=0;i<width*height;i++){
-        arui8[i]=ar[i];
-      }
-      canvasses[canvasIndex]=arui8;
-      setVisuals();
-    }
+    doPaste();
   } else if (evt.keyCode ===189 || evt.keyCode===173 ) {//-
     if (radius===3) {
       setRadius(1);
@@ -393,7 +385,11 @@ function press(evt){
       setRadius(16);
     }
   } else if (evt.keyCode===90){//z
-    if (undoList.length>0){
+    doUndo();
+  }
+}
+function doUndo(){
+  if (undoList.length>0){
       var dat = undoList.pop();
       canvasses[dat.canvasIndex]=dat.canvasDat;
       setLayer(dat.canvasIndex+1);
@@ -402,8 +398,34 @@ function press(evt){
         shareLinkInner.style.color="gray";
       }
     }
-  }
 }
+
+function doCopy(){
+  copyImage=JSON.stringify(canvasses[canvasIndex])
+  copyLinks=JSON.stringify(hyperlinks[canvasIndex])
+}
+
+function doPaste(){
+  if (copyImage!==null){
+      preserveUndoState();
+      var ar = JSON.parse(copyImage);
+      var arui8 = new Uint8Array(width*height);
+      for (var i=0;i<width*height;i++){
+        arui8[i]=ar[i];
+      }
+      canvasses[canvasIndex]=arui8;
+      hyperlinks[canvasIndex]=JSON.parse(copyLinks);
+      setVisuals();
+      setDropdowns();
+    }
+}
+
+  function setDropdowns(){
+    for(var i=0;i<16;i++){
+      dropdownOption[i].value=hyperlinks[canvasIndex][i];
+    }
+  }
+
   function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min)) + min;
   }
@@ -475,9 +497,7 @@ function clearPalette(){
         }
         layerElem[canvasIndex].setAttribute("class","layerItem selectedItem");
         setVisuals();
-        for(var i=0;i<16;i++){
-          dropdownOption[i].value=hyperlinks[canvasIndex][i];
-        }
+        setDropdowns();
     }
 
     function init() {
@@ -959,6 +979,16 @@ function clearPalette(){
       }
     }
   }
+
+  function toolbar_undo(){
+    doUndo();
+  }
+  function toolbar_copy(){
+    doCopy();
+  }
+  function toolbar_paste(){
+    doPaste();
+  }
 </script>
 
     <style type="text/css">
@@ -972,6 +1002,7 @@ function clearPalette(){
   image-rendering: pixelated;
   -ms-interpolation-mode: nearest-neighbor;
 }
+
 body {
     -webkit-user-select: none; /* webkit (safari, chrome) browsers */
     -moz-user-select: none; /* mozilla browsers */
@@ -1053,6 +1084,21 @@ body {
                  }
                  img.radius {
                   border: 1px solid black;
+                 }
+                 img.toolbar {
+                  width:30px;
+                  height:30px;
+                 background-color: black;
+                 color:white;
+                 font-size: 200%;
+                 text-align: center;
+                 margin-bottom: 5px;
+
+                 }
+                 #toolbarcontainer{
+                  float:right;
+                  margin-right: 20px;
+                  margin-top: 5px;
                  }
                  img.selected {
                   border: 1px solid red; 
@@ -1172,6 +1218,13 @@ body {
                     <td>
                       <center>
                         <input width="640" style="border:2px solid gray;" onkeydown="event.stopPropagation();" value="www.flickgame.org"  id="linkInput" oninput="linkChange(this.value)" />
+                        <span id="toolbarcontainer">
+                          <a href="#" onclick="toolbar_undo();return false;"><img src="SVG/undo.svg" title="undo (U)" alt="undo" class="toolbar" id="toolbar_undo" /></a>
+                          &nbsp;
+                          <a href="#" onclick="toolbar_copy();return false;"><img src="SVG/copy.SVG" title="copy to clipboard (C)" alt="copy to clipboard" class="toolbar" id="toolbar_copy" /></a>
+                          &nbsp;
+                        <a href="#" onclick="toolbar_paste();return false;"><img src="SVG/paste.svg" title="paste from clipboard (V)" alt="paste from clipboard" class="toolbar" id="toolbar_paste" /></a>
+                      </span>
                         <br/>
                         <canvas id="mainCanvas" oncontextmenu="return false;" width="640" height="400" style="border:2px solid gray; background-color:black;"></canvas>
                         <br />
