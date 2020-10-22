@@ -708,60 +708,76 @@ var copyImage = null;
 var savedString;
 function press(evt){
   evt = evt || window.event;
-  /*
-  if (evt.keyCode==83){//S(ave)
-    savedString = stateToString();
-  } else if (evt.keyCode==76){//L(oad)
-    stringToState(savedString);
-    setVisuals();
-    setLayer(canvasIndex+1); 
-  } */
-  /*if (evt.keyCode===67) { //c
-    copyImage=JSON.stringify(canvasses[canvasIndex])
-  } else if (evt.keyCode===86){ //v
-    if (copyImage!==null){
-      preserveUndoState();
-      var ar = JSON.parse(copyImage);
-      var arui8 = new Uint8Array(width*height);
-      for (var i=0;i<width*height;i++){
-        arui8[i]=ar[i];
-      }
-      canvasses[canvasIndex]=arui8;
+  if (document.activeElement.tagName != 'INPUT' && document.activeElement.tagName != 'TEXTAREA'){
+    /*
+    if (evt.keyCode==83){//S(ave)
+      savedString = stateToString();
+    } else if (evt.keyCode==76){//L(oad)
+      stringToState(savedString);
       setVisuals();
-    }
-  } else*/ if (evt.keyCode ===189 || evt.keyCode===173 ) {//-
-    if (radius===3) {
-      setRadius(1);
-    } else if (radius===5) {
-      setRadius(3);
-    }else if (radius===7) {
-      setRadius(5);
-    }else if (radius===9) {
-      setRadius(7);
-    }else if (radius===11) {
-      setRadius(9);
-    }else if (radius===13) {
-      setRadius(11);
-    }else if (radius===16) { 
-      setRadius(13);
-    }
-  } else if (evt.keyCode===187 || evt.keyCode===61){//+
-    if (radius===0){
-      setRadius(1);
-    } else if (radius===1){
-      setRadius(3);
-    } else if (radius===3) {
-      setRadius(5);
-    } else if (radius===5) {
-      setRadius(7);
-    }else if (radius===7) {
-      setRadius(9);
-    }else if (radius===9) {
-      setRadius(11);
-    }else if (radius===11) {
-      setRadius(13);
-    }else if (radius===13) {
-      setRadius(16);
+      setLayer(canvasIndex+1); 
+    } */
+    if (evt.keyCode===67) { //c
+      copyImage=JSON.stringify(canvasses[canvasIndex])
+    } else if (evt.keyCode===86){ //v
+      if (copyImage!==null){
+        preserveUndoState();
+        var ar = JSON.parse(copyImage);
+        var arui8 = new Uint8Array(width*height);
+        for (var i=0;i<width*height;i++){
+          arui8[i]=ar[i];
+        }
+        canvasses[canvasIndex]=arui8;
+        setVisuals();
+      }
+    } else if (evt.keyCode ===189 || evt.keyCode===173 ) {//-
+      if (radius===3) {
+        setRadius(1);
+      } else if (radius===5) {
+        setRadius(3);
+      }else if (radius===7) {
+        setRadius(5);
+      }else if (radius===9) {
+        setRadius(7);
+      }else if (radius===11) {
+        setRadius(9);
+      }else if (radius===13) {
+        setRadius(11);
+      }else if (radius===16) { 
+        setRadius(13);
+      }
+    } else if (evt.keyCode===187 || evt.keyCode===61){//+
+      if (radius===0){
+        setRadius(1);
+      } else if (radius===1){
+        setRadius(3);
+      } else if (radius===3) {
+        setRadius(5);
+      } else if (radius===5) {
+        setRadius(7);
+      }else if (radius===7) {
+        setRadius(9);
+      }else if (radius===9) {
+        setRadius(11);
+      }else if (radius===11) {
+        setRadius(13);
+      }else if (radius===13) {
+        setRadius(16);
+      }
+    } else if (evt.keyCode === 49){//1
+      setColor(0);
+    } else if (evt.keyCode === 50){//2
+      setColor(1);
+    } else if (evt.keyCode===90){//z
+      if (undoList.length>0){
+        var dat = undoList.pop();
+        canvasses[dat.canvasIndex]=dat.canvasDat;
+        setLayer(dat.canvasIndex+1);
+        
+        if (shareLinkInner!==null){
+          shareLinkInner.style.color="gray";
+        }
+      }
     }
   }
 }
@@ -1166,6 +1182,11 @@ function ontextchange(evt){
     lastX=Math.floor(startTargetX/zoomFactor);
     lastY=Math.floor(startTargetY/zoomFactor);
     
+    if (e.ctrlKey) {
+      setColor(canvas[lastX+width*lastY])
+      return;
+    }
+    
     preserveUndoState();
     mouseMove(e);
     if(radius===0){
@@ -1243,7 +1264,7 @@ function ontextchange(evt){
     for (var i=0;i<points.length;i++){
       var p=points[i];
 
-      if (radius>0){
+      if (radius>0 && !e.shiftKey){
         drawCircle(canvas,p[0],p[1],radius,colorIndex);
       } else {
         floodFill(canvas, p[0], p[1], colorIndex);
