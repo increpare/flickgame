@@ -548,13 +548,11 @@ function clearPalette(){
       }
 
       visibleCanvas = document.getElementById("mainCanvas");
-      visibleCanvas.addEventListener('mousedown', mouseDown,false);
-      visibleCanvas.addEventListener('touchstart', mouseDown,false);
-      visibleCanvas.addEventListener('mouseup', mouseUp,false);
-      visibleCanvas.addEventListener('mousemove', mouseMove,false);
-      visibleCanvas.addEventListener('touchmove', mouseMove,false);
-      visibleCanvas.addEventListener('mouseout', mouseOut,false);
-      visibleCanvas.addEventListener('touchend', mouseOut,false);
+      visibleCanvas.addEventListener('pointerdown', mouseDown,false);
+      visibleCanvas.addEventListener('pointerup', mouseUp,false);
+      visibleCanvas.addEventListener('pointermove', mouseMove,false);
+      visibleCanvas.addEventListener('pointerout', mouseOut,false);
+      visibleCanvas.addEventListener('pointerleave', mouseOut,false);
 
       var fileUploader = document.getElementById("my_file");
       fileUploader.addEventListener('change', readFile, false);
@@ -799,7 +797,8 @@ function clearPalette(){
 
   function mouseOut(e){
     e = e || window.event;
-
+    window.console.log("mouseOut");
+    window.console.log(e);
     mouseMove(e);
     lastX=-1;
     lastY=-1;
@@ -852,9 +851,13 @@ function clearPalette(){
       return !1;
     }
 
+    if (e.pressure===0){
+      mouseUp(e);
+      return;
+    }
     var x = Math.floor(coords[0]/zoomFactor);
     var y = Math.floor(coords[1]/zoomFactor);
-    console.log(`button = ${e.button}`);
+    //console.log(`button = ${e.button}`);
     if (e.metaKey||e.altKey||e.shiftKey||e.ctrlKey||e.button>0){
       
       var pIndex = x+width*y;
@@ -873,6 +876,10 @@ function clearPalette(){
     if (lastX===-1) {
       points=[[x,y]];
     } else {
+      if (x<0||y<0){
+        console.log("NEGATIVE TIME");
+        console.log(e);
+      }
       points=line(x,y,lastX,lastY);
     }
 
@@ -1009,6 +1016,7 @@ body {
     -moz-user-select: none; /* mozilla browsers */
     -khtml-user-select: none; /* webkit (konqueror) browsers */
     -ms-user-select: none; /* IE10+ */ 
+    touch-action: none;
 }
                  select {
                   background-color:black;
