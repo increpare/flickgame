@@ -855,6 +855,7 @@ function clearPalette(){
       mouseUp(e);
       return;
     }
+    
     var x = Math.floor(coords[0]/zoomFactor);
     var y = Math.floor(coords[1]/zoomFactor);
     //console.log(`button = ${e.button}`);
@@ -887,7 +888,8 @@ function clearPalette(){
       var p=points[i];
 
       if (radius>0){
-        drawCircle(canvas,p[0],p[1],radius,colorIndex);
+        var r=radius*(e.pressure*2);
+        drawCircle(canvas,p[0],p[1],r,colorIndex);
       } else {
         floodFill(canvas, p[0], p[1], colorIndex);
       }
