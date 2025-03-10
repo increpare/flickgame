@@ -1,0 +1,1224 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+<link rel="icon" 
+      type="image/png" 
+      href="favicon.png">
+<script src="FileSaver.js"></script>
+<script type="text/javascript" > 
+
+  var maxCanvasses=64;
+  var width=160;
+  var height=100;
+  var zoomFactor=4;
+  var radius=2;
+
+  var contexts = new Array();
+  var version="0.1";
+  var gameLink="my game by increpare"
+  var canvasIndex="R";
+  var canvasses = {};
+
+  var shareLinkInner=null;
+
+
+/*
+//arne
+  var colorPalette = [
+           "#000000",
+            "#9D9D9D",
+            "#FFFFFF",
+            "#BE2633",
+            "#E06F8B",
+            "#493C2B",
+            "#A46422",
+            "#EB8931",
+            "#F7E26B",
+            "#2F484E",
+            "#44891A",
+            "#A3CE27",
+            "#1B2632",
+            "#005784",
+            "#31A2F2",
+            "#B2DCEF"
+            ];
+*/
+
+//dawnbringer
+//http://www.pixeljoint.com/forum/forum_posts.asp?TID=12795
+  var colorPalette = [
+            "#000",
+            "#f00",
+            "#00f",
+            "#fff"
+
+            ];
+
+/*
+//spectrum 
+  var colorPalette = [
+            "#000000",
+            "#888888",
+            "#CDCDCD",
+            "#FFFFFF",
+            "#0000CD",
+            "#0000FF",
+            "#CD0000",
+            "#FF0000",
+            "#CD00CD",
+            "#FF00FF",
+            "#00CD00",
+            "#00FF00",
+            "#00CDCD",
+            "#00FFFF",
+            "#CDCD00",
+            "#FFFF00"
+            ];
+*/
+  var colorElem = new Array();
+    var layerElem = new Array();
+  var colorIndex=3;
+
+var aurl = document.createElement('a');
+function qualifyURL(url) {
+  aurl.href = url;
+  return aurl.href;
+}
+
+
+var radiusElem = new Array();
+  var thumbnailCanvas = new Array();
+  var thumbnailContext = new Array();
+
+var standalone_HTML_String="";
+
+var clientStandaloneRequest = new XMLHttpRequest();
+
+clientStandaloneRequest.open('GET', 'play.html');
+clientStandaloneRequest.onreadystatechange = function() {
+
+    if(clientStandaloneRequest.readyState!=4) {
+      return;
+    }
+    standalone_HTML_String=clientStandaloneRequest.responseText;
+}
+clientStandaloneRequest.send();
+
+
+var get_blob = function() {
+    return self.Blob;
+}
+
+function buildStandalone(sourceCode) {
+  if (standalone_HTML_String.length===0) {
+    alert("Can't export yet - still downloading html template.",true);
+    return;
+  }
+  sourceCode=encodeURI(sourceCode);
+  var htmlString = standalone_HTML_String.concat("");
+
+
+  htmlString = "<!--Save as html file-->\n"+htmlString;
+  htmlString = htmlString.replace(/__EMBED__/g,sourceCode);
+
+  var BB = get_blob();
+  var blob = new BB([htmlString], {type: "text/plain;charset=utf-8"});
+  saveAs(blob, "flickgame.html");
+}
+
+function exportClick(){
+  var embedDat = stateToString();
+  buildStandalone(embedDat);
+}
+
+function importClick(){
+  var reader = new FileReader();
+
+  reader.onload = function(e) {
+   var text = reader.result;
+  }
+
+  reader.readAsText(file, encoding);
+}
+function shareClick() {
+  var str = stateToString();
+
+  var gistToCreate = {
+    "description" : "flickgame",
+    "public" : true,
+    "files": {
+      "readme.txt" : {
+        "content": "A game made with www.flickgame.org.  You can import game.txt there to play the game."
+      },
+      "game.txt" : {
+        "content": str
+      }
+    }
+  };
+
+  var githubURL = 'https://api.github.com/gists';
+  var githubHTTPClient = new XMLHttpRequest();
+  githubHTTPClient.open('POST', githubURL);
+  githubHTTPClient.onreadystatechange = function() {    
+    var errorCount=0;
+    if(githubHTTPClient.readyState!=4) {
+      return;
+    }   
+    var result = JSON.parse(githubHTTPClient.responseText);
+    if (githubHTTPClient.status===403) {
+      errorCount++;
+      alert(result.message);
+    } else if (githubHTTPClient.status!==200&&githubHTTPClient.status!==201) {
+      errorCount++;
+      alert("HTTP Error "+ githubHTTPClient.status + ' - ' + githubHTTPClient.statusText);
+    } else {
+      var id = result.id;
+      var url = "play.html?p="+id;
+      url=qualifyURL(url);
+
+      var editurl = "editor.html?hack="+id;
+      editurl=qualifyURL(editurl);
+      var sourceCodeLink = "link to source code:<br><a href=\""+editurl+"\">"+editurl+"</a>";
+
+      var shareLink = document.getElementById("shareLink");
+      shareLink.innerHTML = "<a target=\"_blank\" href=\""+url+"\">&#8627;"+id+"</a>";
+      shareLinkInner = shareLink.childNodes[0];
+
+      if (errorCount>0) {
+        alert("Cannot link directly to playable game, because there are errors.",true);
+      } else {
+
+      } 
+
+
+    }
+  }
+  githubHTTPClient.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+  var stringifiedGist = JSON.stringify(gistToCreate);
+  githubHTTPClient.send(stringifiedGist);
+    lastDownTarget=canvas;  
+}
+
+var RLE_encoding_cache = new Uint32Array(width*height*2);
+function RLE_encode(input) {
+    var occupied=0;
+    var prev, count, i;
+    for (count = 1, prev = input[0], i = 1; i < input.length; i++) {
+        if (input[i] != prev) {
+            RLE_encoding_cache[occupied]=count;
+            RLE_encoding_cache[occupied+1]=prev;
+            occupied+=2;
+            count = 1;
+            prev = input[i];
+        }
+        else 
+            count ++;
+    }
+    RLE_encoding_cache[occupied]=count;
+    RLE_encoding_cache[occupied+1]=prev;
+    occupied+=2;
+
+    var encoding_cropped = [];
+    for (var i=0;i<occupied;i++){
+      encoding_cropped.push(RLE_encoding_cache[i]);
+    }
+    return encoding_cropped;
+}
+
+function RLE_decode(encoded) {
+    var output = "";
+    encoded.forEach(function(pair){ output += new Array(1+pair[0]).join(pair[1]) })
+    return output;
+}
+
+function stateToString(){
+  return serializeState();
+}
+
+function stringToState(str){
+  deserializeState(str);
+  setVisuals(true);
+}
+
+document.addEventListener("keydown", press);
+
+var copyImage = null;
+
+var savedString;
+function press(evt){
+  evt = evt || window.event;
+  /*
+  if (evt.keyCode==83){//S(ave)
+    savedString = stateToString();
+  } else if (evt.keyCode==76){//L(oad)
+    stringToState(savedString);
+    setVisuals();
+    setLayer(canvasIndex+1); 
+  } */
+  if (evt.keyCode===67) { //c
+    copyImage=JSON.stringify(canvasses[canvasIndex])
+  } else if (evt.keyCode===86){ //v
+    if (copyImage!==null){
+      preserveUndoState();
+      var ar = JSON.parse(copyImage);
+      var arui8 = new Uint8Array(width*height);
+      for (var i=0;i<width*height;i++){
+        arui8[i]=ar[i];
+      }
+      canvasses[canvasIndex]=arui8;
+      setVisuals();
+    }
+  } else if (evt.keyCode ===189 || evt.keyCode===173 ) {//-
+    if (radius>1) {
+      setRadius(radius-1);
+    }
+  } else if (evt.keyCode===187 || evt.keyCode===61){//+
+    if (radius<6) {
+      setRadius(radius+1);
+    }
+  } else if (evt.keyCode===90){//z
+    if (undoList.length>0){
+      var dat = undoList.pop();
+      canvasses[dat.canvasIndex]=dat.canvasDat;
+      setLayer(dat.canvasIndex);
+      checkEmpties();
+      if (shareLinkInner!==null){
+        shareLinkInner.style.color="gray";
+      }
+    }
+  } else if (evt.keyCode ===37 || evt.keyCode === 65 || evt.keyCode === 81){//left
+    setLayer(0);
+  } else if (evt.keyCode ===38 || evt.keyCode === 87){//up
+    setLayer(-1);
+  } else if (evt.keyCode ===39 || evt.keyCode === 68){//right
+    setLayer(1);
+  }else if (evt.keyCode ===88){
+    clearPalette();
+  } else if (evt.keyCode ===80 ){
+    serializeToConsole();
+  } else if (evt.keyCode === 49){
+    setColor(3);
+  } else if (evt.keyCode === 50){
+    setColor(1);
+  } else if (evt.keyCode === 51){
+    setColor(2);
+  } else if (evt.keyCode === 52){
+    setColor(0);
+  } else if (evt.keyCode === 53){
+    setRadius(6);
+  } else if (evt.keyCode === 54){
+    setRadius(5);
+  } else if (evt.keyCode === 55){
+    setRadius(4);
+  } else if (evt.keyCode === 56){
+    setRadius(3);
+  } else if (evt.keyCode === 57){
+    setRadius(2);
+  } else if (evt.keyCode === 48){
+    setRadius(1);
+  } else if (evt.keyCode === 70){
+    setRadius(0);
+  }
+}
+
+  function squishCanvas(canvas){
+    var c4 = RLE_encode(canvas);
+    return c4;
+  }
+
+
+  function unsquishCanvas(c4){
+    var c3 = new Uint8Array(width*height);
+    var index=0;
+    for (var i=0;i<Object.keys(c4).length;i+=2){
+      var count=c4[i];
+      var ch=c4[i+1];
+      for (var j=0;j<count;j++){
+        c3[index]=ch;
+        index++;
+      }
+    }
+    return c3;
+  }
+
+  function serializeState(){
+    window.console.log("serializing");
+    var flattened = [linkInput.value];
+    gameLink=linkInput.value;
+    var keys = Object.keys(canvasses);
+    for (var i=0;i<keys.length;i++){
+      var key = keys[i];
+      var canvas = canvasses[key];
+      flattened.push(key);
+      var squished_canvas = squishCanvas(canvas);
+      flattened.push(squished_canvas);
+    }
+    var result = JSON.stringify(flattened);  
+    return result;  
+  }
+
+  function deserializeState(dat){
+    var struct = JSON.parse(dat);
+    gameLink=struct[0];
+    linkInput.value=gameLink;
+    canvasses = {};
+    for (var i=1;i<struct.length;i+=2){
+      var canvas_index = struct[i];
+      var canvas_squished = struct[i+1];
+      var canvas_unsquished = unsquishCanvas(canvas_squished);
+      canvasses[canvas_index] = canvas_unsquished;
+    }
+    canvasIndex="R";
+    setLayer("R");
+  }
+
+  function serializeToConsole(){
+    var result = serializeState();
+    deserializeState(result);
+    var result2 = serializeState();
+    if (result===result2){
+      window.console.log("STABLE");
+      window.console.log(result);
+    } else {
+      window.console.log(result);
+      window.console.log(result2);
+    }
+    setVisuals(true);
+  }
+
+  function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min)) + min;
+  }
+
+  var visibleCanvas;
+  var visibleContext;
+  var linkInput;
+  var pageCountSpan;
+  var id;
+  var id_d;
+
+  var lastX=-1;
+  var lastY=-1;
+
+  var bucketElem;
+
+  function linkChange(newLink){
+    gameLink=newLink;
+  }
+
+function clearPalette(){
+  var canvas=canvasses[canvasIndex];
+  if (canvas==null){
+    return;
+  }
+  preserveUndoState();
+  delete canvasses[canvasIndex];
+  checkEmpties();
+  setVisuals();
+}
+    function setRadius(newRadius) {
+        radius=newRadius;
+        bucketElem.setAttribute("class","radius");
+        for(var i=0;i<16;i++){
+          if (radiusElem[i]!==null){
+            radiusElem[i].setAttribute("class","radius");
+          }
+        }
+        if (newRadius>0){
+          radiusElem[newRadius-1].setAttribute("class","radius selected");
+        } else {
+          bucketElem.setAttribute("class","radius selected");
+        }
+    }
+
+
+    function setColor(newColorIndex) {
+      colorIndex=newColorIndex;
+        for(var i=0;i<4;i++){
+          if (colorElem[i]!==null){
+            colorElem[i].setAttribute("class","unselected");
+          }
+        }
+        colorElem[colorIndex].setAttribute("class","selected");
+    }
+
+    function memoryFull(){
+      return Object.keys(canvasses).length=== maxCanvasses;
+    }
+
+//string given index
+//-1 parent
+//0 son blue
+//1 son red
+    function setLayer(dir) {
+      var targetCanvas=canvasIndex;
+      if (typeof dir === "string") {
+        targetCanvas=dir;
+      } else if (dir===-1){
+        if (targetCanvas.length===1){
+          window.console.log("oops, already at root node!")
+          return;
+        } else {
+          targetCanvas = canvasIndex.substr(0,canvasIndex.length-1);
+        }
+      } else {
+        targetCanvas = canvasIndex+dir;
+      }
+
+      canvasIndex = targetCanvas;
+      setVisuals(true);
+    }
+
+    function init() {
+
+      
+      pageCountSpan = document.getElementById("pagecountspan"); 
+
+      linkInput=document.getElementById("linkInput");
+      //linkInput.value=gameLink;
+
+      
+      radii = new Array();
+      for (var i=0;i<16;i++){
+        elem = document.getElementById("radius_"+(i+1));                
+        radiusElem[i]=elem;
+        
+      }
+
+      for (var i=0;i<3;i++){
+        elem = document.getElementById("thumbnail"+(i));        
+        thumbnailCanvas[i]=elem;
+        thumbnailContext[i]=elem.getContext("2d");
+        thumbnailContext[i].imageSmoothingEnabled=false;
+      }
+
+      for (var i=0;i<4;i++){
+        elem = document.getElementById("color_"+(i));        
+        colorElem[i]=elem;
+      }
+
+      for (var i=0;i<3;i++){
+        elem = document.getElementById("layerItem"+(i));        
+        layerElem[i]=elem;
+      }
+
+      bucketElem=document.getElementById("bucket");
+
+
+
+
+      visibleCanvas = document.getElementById("mainCanvas");
+      visibleCanvas.addEventListener('mousedown', mouseDown,false);
+      visibleCanvas.addEventListener('mouseup', mouseUp,false);
+      visibleCanvas.addEventListener('mousemove', mouseMove,false);
+      visibleCanvas.addEventListener('mouseout', mouseOut,false);
+
+      var fileUploader = document.getElementById("my_file");
+      fileUploader.addEventListener('change', readFile, false);
+
+      window.addEventListener('mouseup', mouseUp,false);
+
+      visibleContext = visibleCanvas.getContext("2d");
+      visibleContext.imageSmoothingEnabled= false;
+      id = visibleContext.createImageData(1,1); // only do this once per page
+      id_d=id.data;
+      setVisuals(true);
+      setColor(colorIndex);
+
+
+      getData();
+      checkEmpties();
+    }
+
+  function readFile(evt) {
+    //Retrieve the first (and only!) File from the FileList object
+    var f = evt.target.files[0]; 
+
+    if (f) {
+      var r = new FileReader();
+      r.onload = function(e) { 
+        var contents = e.target.result;
+        var fromToken="<!--__EmbedBegin__-->";
+        var endToken="<!--__EmbedEnd__-->";
+        var fromIndex=contents.indexOf(fromToken);
+        var endIndex=contents.indexOf(endToken);
+        var ss1 = contents.substr(fromIndex+fromToken.length,endIndex-fromIndex-fromToken.length);
+        var ss2=ss1.substr(ss1.indexOf("=")+2);
+        var decoded = decodeURI(ss2);
+        var decoded2 = decoded.substr(0, decoded.length - 3);
+        stringToState(decoded2);
+        setVisuals(true);
+        setLayer(canvasIndex); 
+      }
+      r.readAsText(f);
+    } else { 
+      alert("Failed to load file");
+    }
+  }
+
+
+
+  function getParameterByName(name) {
+      name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+      var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+          results = regex.exec(location.search);
+      return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+  }
+
+
+  function strip_http(url) {
+     url = url.replace(/^https?:\/\//,'');
+     return url;
+  }
+
+  function getData(){ 
+    var id = getParameterByName("p").replace(/[\\\/]/,"");
+    if (id===null||id.length===0) {
+      
+      return;
+    }
+
+    var githubURL = 'https://api.github.com/gists/'+id;
+
+    var githubHTTPClient = new XMLHttpRequest();
+    githubHTTPClient.open('GET', githubURL);
+    githubHTTPClient.onreadystatechange = function() {
+      if(githubHTTPClient.readyState!=4) {
+        return;
+      }   
+      var result = JSON.parse(githubHTTPClient.responseText);
+      if (githubHTTPClient.status===403) {
+        alert(result.message);
+      } else if (githubHTTPClient.status!==200&&githubHTTPClient.status!==201) {
+        alert("HTTP Error "+ githubHTTPClient.status + ' - ' + githubHTTPClient.statusText);
+      }
+      var result = JSON.parse(githubHTTPClient.responseText);
+      var code=result["files"]["game.txt"]["content"];
+      
+      stringToState(code);
+      setVisuals(true);
+      setLayer(canvasIndex); 
+    }
+    githubHTTPClient.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+    githubHTTPClient.send();
+  }
+
+
+    function drawThumbnail(n){
+      var shouldShow=true;
+
+      if (n===-1&&canvasIndex=="R"){
+        shouldShow=false;
+      }
+
+      if(shouldShow==false){
+        document.getElementById('thumbnailcontainer'+(n+1)).style.visibility="hidden";
+        return;
+      } else {
+        document.getElementById('thumbnailcontainer'+(n+1)).style.visibility="";
+      }
+
+      thumbCtx=thumbnailContext[n+1];
+
+
+      thumbCtx.fillStyle="#000000";
+      thumbCtx.fillRect(0,0,80,50);
+
+
+      var thumbIndex=canvasIndex;
+      if (n==-1){
+        thumbIndex = thumbIndex.substr(0,thumbIndex.length-1);
+      } else  {
+        thumbIndex = thumbIndex+n;
+      }
+
+      var canvas=canvasses[thumbIndex];
+
+      if (canvas==null){
+        return;
+      }
+      for (var i=0;i<80;i++){
+        for (var j=0;j<50;j++){
+          var max=0;
+          var z=2;
+          for (var i2=0;i2<z;i2++){              
+            for (var j2=0;j2<z;j2++){
+                var sample = canvas[i*z+i2+width*(j*z+j2)];
+                if (sample>max){
+                  max=sample;
+                }
+            }
+          }
+          thumbCtx.fillStyle=colorPalette[max];
+          thumbCtx.fillRect(i,j,1,1);           
+        }
+      }
+
+//      var dataUrl = thumbnailCanvas[n].toDataURL();
+    }
+
+    function setVisuals(genAllThumbnails){
+      //visibleContext.drawImage(canvasses[canvasIndex], 0, 0); 
+      //visibleContext.drawImage(canvasses[canvasIndex], 0, 0,width*zoomFactor,height*zoomFactor);       
+      canvas=canvasses[canvasIndex];
+      if (canvas==null){
+        visibleContext.fillStyle="#000";
+        visibleContext.fillRect(0,0,width*zoomFactor,height*zoomFactor);        
+      } else {
+        for (var i=0;i<width;i++){
+          for (var j=0;j<height;j++){
+            var pixelIndex = canvas[i+width*j]; 
+            visibleContext.fillStyle=colorPalette[pixelIndex];
+            visibleContext.fillRect(i*zoomFactor,j*zoomFactor,zoomFactor,zoomFactor);        
+          }
+        }
+      }
+      if (genAllThumbnails===true){
+        for (var i=-1;i<2;i++){
+          drawThumbnail(i);          
+        }
+      } 
+      linkInput.value=gameLink;
+    }
+
+
+  var drawing=0;
+
+
+  function getCoords(e) {
+    var x,y; 
+    if(typeof e.offsetX !== "undefined") {
+        x = e.offsetX;
+        y = e.offsetY;
+    }
+    else {      
+      var target = e.target || e.srcElement;
+      var rect = target.getBoundingClientRect();
+      x = e.clientX - rect.left,
+      y = e.clientY - rect.top;
+    } 
+    return [x,y];
+  }
+
+
+
+  function uint8ar_copy(src)  {
+      var dst = new Uint8Array(width*height);
+      for (var i=0;i<src.length;i++){
+        dst[i]=src[i];
+      }
+      return dst;
+  }
+
+  var undoList=new Array();
+  function preserveUndoState() {
+    console.log("preserving undo state");
+    var undoItem = new Object();
+    undoItem.canvasIndex=canvasIndex;
+    undoItem.canvasDat=uint8ar_copy(canvasses[canvasIndex]);
+    undoList.push(undoItem);
+    if (undoList.length>30){
+      undoList.shift();
+    }
+
+    if (shareLinkInner!==null){
+      shareLinkInner.style.color="gray";
+    }
+  }
+
+  function mouseDown(e){
+    e = e || window.event;
+
+    drawing=1;
+    var coords = getCoords(e);
+    startTargetX=coords[0];
+    startTargetY=coords[1];
+    lastX=Math.floor(startTargetX/zoomFactor);
+    lastY=Math.floor(startTargetY/zoomFactor);
+    
+    preserveUndoState();
+    mouseMove(e);
+    if(radius===0){
+      drawing=0;
+    }
+  }
+
+  function mouseUp(e){
+    e = e || window.event;
+
+    drawing=0;
+    lastX=-1;
+    lastY=-1;
+  }
+
+  function mouseOut(e){
+    e = e || window.event;
+
+    mouseMove(e);
+    lastX=-1;
+    lastY=-1;
+  }
+
+
+  function line (x1, y1,x2,y2) {
+    var coordinatesArray = new Array();
+    // Translate coordinates
+    // Define differences and error check
+    var dx = Math.abs(x2 - x1);
+    var dy = Math.abs(y2 - y1);
+    var sx = (x1 < x2) ? 1 : -1;
+    var sy = (y1 < y2) ? 1 : -1;
+    var err = dx - dy;
+    // Set first coordinates
+    coordinatesArray.push([x1,y1]);
+    // Main loop
+    while (!((x1 == x2) && (y1 == y2))) {
+      var e2 = err << 1;
+      if (e2 > -dy) {
+        err -= dy;
+        x1 += sx;
+      }
+      if (e2 < dx) {
+        err += dx;
+        y1 += sy;
+      }
+      // Set coordinates
+      coordinatesArray.push([x1,y1]);
+    }
+    // Return the result
+    return coordinatesArray;
+  }
+
+
+  function mouseMove(e){
+    e = e || window.event;
+
+    if (drawing===0)
+      return;
+
+    var coords = getCoords(e);
+
+    var x = Math.floor(coords[0]/zoomFactor);
+    var y = Math.floor(coords[1]/zoomFactor);
+
+
+    var canvas=canvasses[canvasIndex];
+    if (canvas==null){      
+      if (memoryFull()){
+        return;
+      }
+        canvasses[canvasIndex]=new Uint8Array(width*height);
+        canvas = canvasses[canvasIndex];
+    }
+
+    var points;
+    if (lastX===-1) {
+      points=[[x,y]];
+    } else {
+      points=line(x,y,lastX,lastY);
+    }
+
+    for (var i=0;i<points.length;i++){
+      var p=points[i];
+
+      if (radius>0){
+        drawCircle(canvas,p[0],p[1],radius,colorIndex);
+      } else {
+        floodFill(canvas, p[0], p[1], colorIndex);
+      }
+      checkEmpties();
+    }
+  
+
+    /*context.beginPath();
+    context.arc(x, y, radius, 0, 2 * Math.PI, false);
+    context.lineWidth = 0;
+    context.fillStyle = 'green';
+    context.fill();*/
+    setVisuals();
+
+    var coords = getCoords(e);
+    lastX=Math.floor(coords[0]/zoomFactor);
+    lastY=Math.floor(coords[1]/zoomFactor);
+    
+  }
+
+
+  function checkEmpties() {
+    var canvas=canvasses[canvasIndex];
+    if (canvas==null){
+      var pc = Object.keys(canvasses).length;
+      if (pc===maxCanvasses){
+        pageCountSpan.innerHTML = "<span style='color:red;'>"+Object.keys(canvasses).length+"</span>";
+      } else {
+        pageCountSpan.innerHTML = Object.keys(canvasses).length;
+      }
+      return;
+    }
+
+    var shouldremove=true;
+    if (canvasIndex==="R"){
+      shouldremove=false;
+    }
+    for (var i=0;i<canvas.length;i++){
+      if (canvas[i]>0){
+        shouldremove=false;
+      }
+    }
+    if (shouldremove){
+      delete canvasses[canvasIndex];
+    }
+
+    var pc = Object.keys(canvasses).length;
+    if (pc===maxCanvasses){
+      pageCountSpan.innerHTML = "<span style='color:red;'>"+Object.keys(canvasses).length+"</span>";
+    } else {
+      pageCountSpan.innerHTML = Object.keys(canvasses).length;
+    }
+  }
+
+  function drawCircle(canvas,x,y,radius,colorIndex){  
+    if (radius==1){
+      if (x>=0&&x<width&&y>=0&&y<height){
+          canvas[x+width*y]=colorIndex;
+        }
+    } else if (radius==2){
+      var points = [[x,y],[x-1,y],[x,y-1],[x-1,y-1]];
+      for (var i=0;i<points.length;i++){
+        var px=points[i][0];
+        var py=points[i][1];
+        if (px>=0&&px<width&&py>=0&&py<height){
+          canvas[px+width*py]=colorIndex;
+        }
+      }
+      return;
+    } else if (radius==3){
+      var points = [[x,y],[x-1,y],[x,y+1],[x+1,y],[x,y-1]];
+      for (var i=0;i<points.length;i++){
+        var px=points[i][0];
+        var py=points[i][1];
+        if (px>=0&&px<width&&py>=0&&py<height){
+          canvas[px+width*py]=colorIndex;
+        }
+      }
+      return;    
+    }
+
+
+
+    if (radius==2){
+      var points = [
+                  [x-1,y+2],[x,y+2],[x+1,y+2],
+        [x-2,y+1],[x-1,y+1],[x,y+1],[x+1,y+1],[x+2,y+1],
+        [x-2,y  ],[x-1,y  ],[x,y  ],[x+1,y  ],[x+2,y  ],
+        [x-2,y-1],[x-1,y-1],[x,y-1],[x+1,y-1],[x+2,y-1],
+                  [x-1,y-2],[x,y-2],[x+1,y-2]
+        ];
+      for (var i=0;i<points.length;i++){
+        var px=points[i][0];
+        var py=points[i][1];
+        if (px>=0&&px<width&&py>=0&&py<height){
+          canvas[px+width*py]=colorIndex;
+        }
+      }
+      return;
+    }
+
+    radius-=2;
+
+    for (var i=Math.max(x-radius,0);i<=Math.min(x+radius,width-1);i++){
+      for (var j=Math.max(y-radius,0);j<=Math.min(y+radius,height-1);j++){
+        var dx = i-x;
+        var dy = j-y;
+        if ((dx*dx+dy*dy)<=radius*radius){
+          canvas[i+width*j]=colorIndex;          
+        }
+      }
+    }  
+  }
+
+  function floodFill(canvas,x,y,colorIndex){
+    var points = [[x,y]];
+    originColor = canvas[x+width*y];
+    if (originColor===colorIndex){
+      return;
+    }
+
+    for (var i=0;i<points.length;i++){
+      var p = points[i];
+      var pIndex = p[0]+width*p[1];
+      if (canvas[pIndex]===colorIndex) {
+        continue;
+      } else {
+        canvas[pIndex]=colorIndex;
+        borderPoints = [[p[0]+1,p[1]],[p[0]-1,p[1]],[p[0],p[1]+1],[p[0],p[1]-1]];
+        for (var j=0;j<borderPoints.length;j++){
+          var borderPoint=borderPoints[j]; 
+          var bpx=borderPoint[0];
+          var bpy=borderPoint[1];
+          var bpi=bpx+width*bpy;
+          if (
+            bpx>=0 &&
+            bpx<width &&
+            bpy>=0 &&
+            bpy<height &&
+            canvas[bpi]===originColor){
+            points.push([bpx,bpy]);
+          }
+        }
+      }
+    }
+  }
+</script>
+
+    <style type="text/css">
+    .tg  {border-collapse:collapse;border-spacing:0;}
+.tg td{font-family:Arial, sans-serif;font-size:14px;padding:0;border-style:solid;border-width:1px;overflow:hidden;word-break:normal;}
+.tg th{font-family:Arial, sans-serif;font-size:14px;font-weight:normal;padding:0;border-style:solid;border-width:0px;overflow:hidden;word-break:normal;}
+.tg .tg-yw4l{vertical-align:top}
+
+/*<![CDATA[*/
+#maincanvas {
+  cursor:crosshair;
+}
+body {
+    -webkit-user-select: none; /* webkit (safari, chrome) browsers */
+    -moz-user-select: none; /* mozilla browsers */
+    -khtml-user-select: none; /* webkit (konqueror) browsers */
+    -ms-user-select: none; /* IE10+ */ 
+}
+
+                 select {
+                  background-color:black;
+                  color:white;
+                  text-indent:5px;
+                 }
+                canvas {
+                  position:relative;
+                }
+                tr{
+                  padding: 0;
+                  margin: 0;
+                /*  border: 1px solid white;*/
+                }
+                td{
+                  padding: 0;
+                  margin: 0;
+                  /*border: 1px solid white;*/
+                }
+                 body {
+                 background-color:black;
+                 color: gray;
+                 margin-top: 0;
+                 padding-top: 0;
+                 border-top: 0;
+                 }
+                 ul {
+                 list-style-type: none;
+                 overflow:hidden; overflow-y:scroll;
+                 }
+                 input {
+                 background-color: black;
+                 color:white;
+                 font-size: 200%;
+                 text-align: center;
+                 margin-bottom: 5px;
+                 }
+                 input#linkInput {
+                 background-color: black;
+                 color:white;
+                 font-size: 100%;
+                 text-align: left;
+                 padding-left: 10px;
+                 margin-bottom: 5px;
+                 padding-bottom:3px;
+                 margin-right: 5px;
+                 margin-top: 10px;
+                 border:1px solid gray;
+                 }
+                 li {
+                 font-size: 150%;                 
+                  text-align: center;
+                  width:100%;
+                 }
+                 a {
+                  color:gray;
+                 }
+                 a.layerItem{
+                  color: white;
+                  background-color: black;
+                  text-decoration: none;
+                  width:100%;
+                  display:block;
+                 }
+                 a.layerItem.selectedItem{
+                  color: black;
+                  background-color: white;
+                 }
+                 img.selected {
+                  border: 2px dotted green;
+                 }
+                 li.selected  {
+                 cursor:auto;
+                 color:white;
+                 }
+                 a{
+                  white-space:nowrap;
+                }
+                 div.selected {
+                  margin:0;
+                  padding:0;
+                 height:18px; 
+                 width:28px;
+                 border: 2px dotted green;
+                 }
+                 div.unselected {
+                  margin:0;
+                  padding:0;
+                 height:18px; 
+                 width:28px;
+                 border: 2px solid black;
+                 }
+                 img.radius {
+                  border: 1px solid black;
+                  width:30px;
+                 }
+                 img.selected {
+                  border: 2px dotted green; 
+                  width:28px;
+                 }
+                 select {
+                 width:100%;
+                 -webkit-appearance: none;
+                 -moz-appearance: none;
+                 }
+                 select::-ms-expand {
+                 display: none;
+                 }
+                 canvas#dropdownthumb {
+                  border:2px solid gray; 
+                  background-color:black;
+                 }
+                 .downarrowred {
+                  color:red;
+                }
+                .downarrowblue {
+                  color:blue;
+                }
+
+                #parentarrow {
+                }
+    /*]]>*/
+    </style>
+    <title>
+      flickgame.org
+    </title>
+  </head>
+  <body onload="init();" ondragstart="return false;" ondrop="return false;">
+  <center>
+    
+        <input style="width:200px;" onkeydown="event.stopPropagation();" value=""  id="linkInput" maxlength="30" oninput="linkChange(this.value)" placeholder="your name"/>    
+&nbsp;&nbsp;&nbsp;
+
+                      (<span id="pagecountspan">0</span>/64 pages)
+                      &nbsp;&nbsp;
+    <a href="#" onclick="shareClick();return false;">&ocir; share</a>
+                      &nbsp;
+                      <span id="shareLink"></span>
+                      <a href="#" onclick="exportClick();return false;">&sdotb; export</a> &nbsp;
+                      <a href="#" onclick="document.getElementById('my_file').click();return false;">&sdotb; import</a>
+                      &nbsp;
+                      <input type="file" accept=".html" id="my_file" style="display: none;" />
+                      <a href="help.html" target="_blank" title="blah">? help</a>
+                      &nbsp;&nbsp;
+                   <br><br>
+    <table class="tg">
+  <tr>
+    <th class="tg-yw4l"></th>
+    <th class="tg-yw4l" colspan="2">
+                        <center>
+                        
+              <span id="thumbnailcontainer0">
+                           <a class="layerItem" id="layerItem0" href="#" onclick="setLayer(-1);return false;">
+              <canvas id="thumbnail0" width="80" height="50" style="border: 1px solid gray; background-color:black;"></canvas>
+              </a>
+              <b  id="parentarrowcharacter" class="downarrowred" style="font-size:20px;">&#11015;</b>          </span>  
+              </center> 
+    </th>
+  </tr>
+  <tr>
+    <td class="tg-yw4l" style="border:0px solid black;">
+<table style="margin:0;padding:0;border-spacing:4px 2px;">
+                      <tr><td style="background-color:white;">
+                           <a href="#" onclick="setColor(3);return false;">
+                              <div class=
+                              "unselected" id="color_3" style="background-color:white;"></div></a>
+                              </td></tr><tr><td style="background-color:red;">
+                           <a href="#" onclick="setColor(1);return false;">
+                              <div class=
+                              "selected" id="color_1" style="background-color:red;"></div></a>
+                              </td></tr><tr><td style="background-color:blue;">
+                           <a href="#" onclick="setColor(2);return false;">
+                              <div class=
+                              "unselected" id="color_2" style="background-color:blue;"></div></a>
+                              </td></tr><tr><td>
+                           <a href="#" onclick="setColor(0);return false;">
+                              <div class=
+                              "unselected" id="color_0" style="background-color:black;"></div></a>
+                              </td></tr>
+                        </table>
+
+    </td>
+    <td class="tg-yw4l" colspan="2" rowspan="2">
+                              <canvas id="mainCanvas" width="640" height="400" style="background-color:black;"></canvas>
+
+    </td>
+  </tr>
+  <tr>
+    <td class="tg-yw4l"  style="border:0px solid black;">
+<table style="margin-top:8px; border-spacing:4px 1px;padding-right:1px;" margin="0">
+                      <tr><td>
+                      <a href="#" onclick="setRadius(6);return false;"><img src="11.png" class="radius" id="radius_6" /></a>
+                              </td></tr><tr><td>
+                      <a href="#" onclick="setRadius(5);return false;"><img src="9.png" class="radius" id="radius_5" /></a>
+                              </td></tr><tr><td>
+                      <a href="#" onclick="setRadius(4);return false;"><img src="7.png" class="radius" id="radius_4" /></a>
+                              </td></tr><tr><td>
+                      <a href="#" onclick="setRadius(3);return false;"><img src="5.png" class="radius" id="radius_3" /></a>
+                              </td></tr><tr><td>
+                      <a href="#" onclick="setRadius(2);return false;"><img src="3.png" class="radius selected" id="radius_2" /></a>
+                              </td></tr><tr><td>
+                      <a href="#" onclick="setRadius(1);return false;"><img src="1.png" class="radius" id="radius_1" /></a>
+                              </td></tr><tr><td>
+                      <a href="#" onclick="setRadius(0);return false;"><img src="bucket.png" class="radius" id="bucket"/></a>
+                              </td></tr><tr><td>
+                      <a href="#" onclick="clearPalette();return false;"><img src="clear.png" class="radius" id="bucket"/></a>
+                      </td></tr></table>
+    </td>
+  </tr>
+  <tr">
+    <td class="tg-yw4l" style="border:0px solid black;"></td>
+    <td class="tg-yw4l" style="border:0px solid black;">
+<center>
+<span id="thumbnailcontainer1" >
+              <b class="downarrowblue"  style="font-size:20px;">&#11015;</b>  
+                           <a class="layerItem" id="layerItem1" href="#" onclick="setLayer(0);return false;">
+              <canvas id="thumbnail1" width="80" height="50" style="border:1px solid gray; background-color:black;"></canvas>
+              </a>   </span>       
+              </center>  
+    </td>
+    <td class="tg-yw4l" style="border:0px solid black;">
+<center><span id="thumbnailcontainer2">
+              <b  class="downarrowred" style="font-size:20px;">&#11015;</b>  
+                           <a class="layerItem" id="layerItem2" href="#" onclick="setLayer(1);return false;">
+              <canvas id="thumbnail2" width="80" height="50" style="border:1px solid gray; background-color:black;"></canvas>
+              </a>          
+              </span></center>  
+    </td>
+  </tr>
+</table>
+
+    </center>
+
+
+  </body>
+</html>

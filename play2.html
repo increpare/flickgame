@@ -6,6 +6,9 @@
 <title>flickgame.org</title>
 <style>
 
+body {
+  color:gray;
+}
 #header h1 {
   padding:0;
   margin:0;
@@ -18,7 +21,7 @@
   top:0px;
   height:40px;
   background-color: black;
-  color:white;
+  color:gray;
   text-align: center;
   padding: 0px;
   margin:0px;
@@ -26,7 +29,7 @@
 }
 
 a {
-  color:white;
+  color:gray  ;
 }
 
 #content {
@@ -68,7 +71,7 @@ a {
   margin:0;
   padding:0;
   background-color: black;
-  color:white;
+  color:gray;
   text-align: center;
   padding: 0;
   line-height: 30px;
@@ -81,7 +84,7 @@ var embeddedDat="__EMBED__";
 <!--__EmbedEnd__-->
 
 var zoom=1;
-var currentIndex=0;
+var currentIndex="R";
 function redraw(){
   console.log("resized "+window.innerWidth +"x"+window.innerHeight);  
   mainCanvas.width=mainCanvasContainer.clientWidth;
@@ -89,7 +92,7 @@ function redraw(){
   mainCanvasCtx.width=mainCanvasContainer.clientWidth;
   mainCanvasCtx.height=mainCanvasContainer.clientHeight;
 
-  if (images.length>0){
+  if (Object.keys(images).length>0){
 
     mainCanvasCtx.imageSmoothingEnabled = false;
     mainCanvasCtx.mozImageSmoothingEnabled = false;
@@ -116,13 +119,15 @@ function redraw(){
     mainCanvasCtx.fillRect(0,0,w,h);
     mainCanvasCtx.drawImage(images[currentIndex],0,0,160,100,dx,dy,160*zoom,100*zoom);
   } else {    
-    mainCanvasCtx.fillStyle="#ff0000";
+    mainCanvasCtx.fillStyle="#fff";
     mainCanvasCtx.fillRect(0,0,mainCanvas.width/2,mainCanvas.height/2);
-    mainCanvasCtx.fillStyle="#00ff00";
+
+
+    mainCanvasCtx.fillStyle="#f00";
     mainCanvasCtx.fillRect(mainCanvas.width/2,0,mainCanvas.width/2,mainCanvas.height/2);
-    mainCanvasCtx.fillStyle="#ff00ff";
+    mainCanvasCtx.fillStyle="#00f";
     mainCanvasCtx.fillRect(0,mainCanvas.height/2,mainCanvas.width/2,mainCanvas.height/2);
-    mainCanvasCtx.fillStyle="#00ffff";
+    mainCanvasCtx.fillStyle="#fff";
     mainCanvasCtx.fillRect(mainCanvas.width/2,mainCanvas.height/2,mainCanvas.width/2,mainCanvas.height/2);
   }
 }
@@ -144,16 +149,26 @@ function redraw(){
 
   var target=0;
 
+  function restartClick(){
+    currentIndex="R";
+    document.getElementById("restartLink").style.visibility="hidden";
+    redraw();
+  }
+
   function mouseDown(e){
     mouseMove(e);
-    if (target>0){
-      currentIndex=target-1;
+    if (target!=0){
+      currentIndex=target;
+      document.getElementById("restartLink").style.visibility="";
       redraw();
       mouseMove(e);
     } 
   }
   function mouseMove(e){
-
+    if (imageDats==null || !(currentIndex in imageDats)){
+      mainCanvas.style.cursor="default";        
+      return;
+    }
     var coords = getCoords(e);
 
     var w = mainCanvasCtx.width;
@@ -176,21 +191,19 @@ function redraw(){
     var y=Math.floor((coords[1]-dy)/zoom);
     target=0;
     if(x>=0&&x<160&&y>=0&&y<100) {
-      var ch = gameState.imageDats[currentIndex][x+160*y];
-      var colIndex = parseInt(ch,16);
-      target=gameState.hyperlinks[currentIndex][colIndex];
-
-      if (gameState.hyperlinks[currentIndex][colIndex]!=0) {
-        mainCanvas.style.cursor="pointer";        
+      var ch = imageDats[currentIndex][x+160*y];
+      if (ch==1||ch==2){
+        target=currentIndex+(2-ch);
+        
+        mainCanvas.style.cursor="pointer";                 
       } else {
-        mainCanvas.style.cursor="default";        
+          mainCanvas.style.cursor="default";        
       }
 
     } else {
       mainCanvas.style.cursor="default";
     }
-    console.log(x+","+y+","+ch);
-
+    
   }
 
 var mainCanvas;
@@ -219,9 +232,36 @@ function qualifyURL(url) {
  return aurl.href;
 }
 
-var gameState;
-function loadState(code){
-    gameState=JSON.parse(code);
+var gameLink;
+var canvasses;
+
+
+function unsquishCanvas(c4){
+  var c3 = new Uint8Array(width*height);
+  var index=0;
+  for (var i=0;i<Object.keys(c4).length;i+=2){
+    var count=c4[i];
+    var ch=c4[i+1];
+    for (var j=0;j<count;j++){
+      c3[index]=ch;
+      index++;
+    }
+  }
+  return c3;
+}
+
+
+function loadState(dat){
+  var struct = JSON.parse(dat);
+  gameLink=struct[0];
+  canvasses = {};
+  for (var i=1;i<struct.length;i+=2){
+    var canvas_index = struct[i];
+    var canvas_squished = struct[i+1];
+    var canvas_unsquished = unsquishCanvas(canvas_squished);
+    canvasses[canvas_index] = canvas_unsquished;
+  }
+  canvasIndex="R";
 }
 
 function getParameterByName(name) {
@@ -242,13 +282,9 @@ function getData(){
     embeddedDat=decodeURI(embeddedDat);
     loadState(embeddedDat);
 
-    var homepage=gameState.gameLink;
     var homepageLink = document.getElementById("homeLink");
-    homepageLink.innerHTML=strip_http(homepage);
-    if (!homepage.match(/^https?:\/\//)) {
-      homepage = "http://" + homepage;
-    }
-    homepageLink.href = homepage;
+    homepageLink.textContent=gameLink;
+
 
     renderImages();
     return;
@@ -275,17 +311,11 @@ function getData(){
     }
     var result = JSON.parse(githubHTTPClient.responseText);
     var code=result["files"]["game.txt"]["content"];
-    console.log(code);
     loadState(code);
 
-    var homepage=gameState.gameLink;
+    var homepage=gameLink;
     var homepageLink = document.getElementById("homeLink");
-    homepageLink.innerHTML=strip_http(homepage);
-    if (!homepage.match(/^https?:\/\//)) {
-      homepage = "http://" + homepage;
-    }
-    homepageLink.href = homepage;
-  
+    homepageLink.textContent=gameLink;  
     var hacklink = document.getElementById("hackLink");
 
     var url = "index.html?p="+id;
@@ -311,49 +341,44 @@ function RLE_decode(encoded) {
     return output;
 }
 
- var colorPalette = [
-            "#140c1c",
-            "#442434",
-            "#30346d",
-            "#4e4a4e",
-            "#854c30",
-            "#346524",
-            "#d04648",
-            "#757161",
-            "#597dce",
-            "#d27d2c",
-            "#8595a1",
-            "#6daa2c",
-            "#d2aa99",
-            "#6dc2ca",
-            "#dad45e",
-            "#deeed6"
+  var colorPalette = [
+            "#000",
+            "#f00",
+            "#00f",
+            "#fff"
             ];
+
+
+  var width=160;
+  var height=100;
 
 var images = new Array();
 var imageCtxts = new Array();
+var imageDats = null;
 function renderImages(){
-  gameState.imageDats = new Array();
+  imageDats = new Array();
 
-  for (var i=0;i<16;i++){
+  var keys = Object.keys(canvasses);
+
+  for (var i=0;i<keys.length;i++){
+    var key = keys[i];
     var canvas = document.createElement('canvas');
     canvas.width="160";
     canvas.height="100";
     var ctx=canvas.getContext("2d");
 
-    var descriptionArray = gameState.canvasses[i];
-    var descriptionString = RLE_decode(descriptionArray);
-    for (var j=0;j<descriptionString.length;j++){
+    var canvasDat = canvasses[key];
+    for (var j=0;j<canvasDat.length;j++){
       var x = j%160;
       var y = Math.floor(j/160);
-      var ch=descriptionString[j];
+      var ch=canvasDat[j];
       var colIndex = parseInt(ch,16);
       ctx.fillStyle=colorPalette[colIndex];
       ctx.fillRect(x,y,1,1);
     }
-    gameState.imageDats.push(descriptionString);
-    images.push(canvas);
-    imageCtxts.push(ctx);
+    imageDats[key]=canvasDat;
+    images[key]=canvas;
+    imageCtxts[key]=ctx;
   }
   redraw();
 }
@@ -375,6 +400,7 @@ function goFullscreen(evt){
 }
 document.addEventListener("keydown", goFullscreen);
 
+
 </script>
 </head>
 <body onload="init()" onkeydown="goFullscreen(event);">
@@ -386,7 +412,7 @@ document.addEventListener("keydown", goFullscreen);
 </div>
 <p>
 <div id="footer">
- <a href="http://www.flickgame.org" id="hackLink"></a> <a  id="homeLink" href="http://www.flickgame.org"></a> 
+ <a href="http://www.flickgame.org" id="hackLink"></a>  <span  id="homeLink" ></span>&nbsp; &nbsp;<span id="restartLink" style="visibility:hidden;">[ <a href="#"  onclick="restartClick();return false;" >restart</a> ] </span>
 </div>
 </body>
 </html>
