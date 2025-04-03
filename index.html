@@ -517,10 +517,7 @@ function rgbToLab(r,g,b) {
       colorPalette = palettes[name];
       // Update color swatches
       for (var i = 0; i < 16; i++) {
-        var colorElem = document.getElementById('color_' + i);
-        if (colorElem) {
-          colorElem.style.backgroundColor = colorPalette[i];
-        }
+        document.documentElement.style.setProperty('--col' + i, colorPalette[i]);
       }
       //need to set all the link-dropdowns to reflect the hyperlinks
       setDropdowns();
@@ -1079,7 +1076,7 @@ function rgbToLab(r,g,b) {
         var option = document.createElement('option');
         option.value = colorPalette[i];
         option.textContent = "";
-        option.style.backgroundColor = colorPalette[i];
+        option.style.backgroundColor = "var(--col" + i + ")";
         bgColorSelect.appendChild(option);
       }
       // Set initial background color
@@ -1108,7 +1105,7 @@ function rgbToLab(r,g,b) {
 
       for (var i = 0; i < 16; i++) {
         elem = document.getElementById("color_" + (i));
-        elem.style.backgroundColor = colorPalette[i];
+        elem.style.backgroundColor = "var(--col" + i + ")";
         colorElem[i] = elem;
       }
 
@@ -1641,13 +1638,32 @@ function rgbToLab(r,g,b) {
   </script>
 
   <style type="text/css">
-    /* foreground text color variable*/
-    :root {
-      --foreground-color: white;
-      --radius-filter: none;
-      --selected-border-color: #ff0000;
-    }
     /*<![CDATA[*/
+
+    /* foreground text color variable*/
+  :root {
+    --foreground-color: white;
+    --radius-filter: none;
+    --selected-border-color: #ff0000;
+
+    --col0:#140c1c;
+    --col1:#442434;
+    --col2:#30346d;
+    --col3:#4e4a4e;
+    --col4:#854c30;
+    --col5:#346524;
+    --col6:#d04648;
+    --col7:#757161;
+    --col8:#597dce;
+    --col9:#d27d2c;
+    --col10:#8595a1;
+    --col11:#6daa2c;
+    --col12:#d2aa99;
+    --col13:#6dc2ca;
+    --col14:#dad45e;
+    --col15:#deeed6;
+  }
+  
     #maincanvas {
       cursor: crosshair;
       image-rendering: optimizeSpeed;
@@ -1680,18 +1696,6 @@ function rgbToLab(r,g,b) {
       }
     }
 
-    /*overlay bgColorSelect with floating text "BG"*/
-    #bgColorSelect::before {
-      left: 0;
-      content: "Coming Soon";
-      background: rgba(255, 255, 255, 0.59);
-      color: #000;
-      width: 100%;
-      height: 100%;
-      line-height: 2.5;
-      font-weight: 600;
-    position: absolute; 
-    }
 
     select {
       background-color: black;
@@ -1841,6 +1845,22 @@ function rgbToLab(r,g,b) {
     }
 
     
+    #bgColorSelect{
+      height: 30px;
+      margin-left: 50px;
+    }
+    /*  overlay bgColorSelectContainer with floating text "BG", centered over the
+      preceeding span.
+    */
+    #bgColorSelectContainer::after {
+      content: "BG";
+      color: var(--foreground-color);
+      position: relative;      
+      left:-33px;
+      /*don't capture input!*/
+      pointer-events: none;
+    }
+
     /*]]>*/
   </style>
   <title>
@@ -1962,8 +1982,8 @@ function rgbToLab(r,g,b) {
                       <center>
                         <input width="640" style="border:2px solid gray;" onkeydown="event.stopPropagation();"
                           value="www.flickgame.org" id="linkInput" oninput="linkChange(this.value)" />
-                          <select id="bgColorSelect" class="toolbar"  style="border: 2px solid gray;" onchange="changeBackgroundColor(this.value,true);">
-                          </select>&nbsp;
+                          <span id="bgColorSelectContainer"><select id="bgColorSelect" class="toolbar"  style="border: 2px solid gray;" onchange="changeBackgroundColor(this.value,true);">
+                          </select></span>&nbsp;
                         <span id="toolbarcontainer">
 
                           <a href="#" onclick="toolbar_undo();return false;"><img src="SVG/undo.svg" title="undo (U)"
