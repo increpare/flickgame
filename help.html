@@ -1,66 +1,84 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-<link rel="icon" 
-      type="image/png" 
-      href="favicon.png">
-
-<link rel="stylesheet" href="help.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlickGame Help</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="help.css">
 </head>
 <body>
-<h1>FlickGame: how to</h1>
-<p>
-<img src="helpimage.png" style="border:2px gray dashed;">
-<p>
-<a href="http://www.flickgame.org/play.html?p=b595632967f638a1c0d3">example game</a>
-<p>
-<h2>editor</h2>
-<p>
-<b>C</b> : copy current image<br>
-<b>V</b> : paste current image<br>
-<b>Z</b> : undo<br>
-<b>+</b>/<b>-</b> : increase/decrease brush size<br>
-<b>Right-Click</b> or <b>Ctrl/Cmd</b>+<b>Click</b> : select current color (eyedropper tool)
-<p>
-<h2>player</h2>
-<b>F</b> : go fullscreen
-<p>
-<h2>play flickgame games!</h2>
-<p>
-<a href="http://flickgamegallery.tumblr.com/">flickgame gallery</a>
-<p>
-<h2>source code</h2>
-<p>
-<a href="https://github.com/increpare/flickgame">github</a>
-<p>
-<h2>how to do animations (top secret)</h2>
-<p>
-add "&a=1" to the url parameter - like this:
-<p>
-<a href="http://www.flickgame.org/play.html?p=3f5390b0b2aca7bce1eb4a4f483e2354&a=1">http://www.flickgame.org/play.html?p=3f5390b0b2aca7bce1eb4a4f483e2354<span style="color:red;">&a=1</span></a>
-<p>
-(or if it's an exported html file, you can either 1) load it as mygame.html?a=1, or 2) edit the exported html file with a text-editor, look for the line '<code>if(urlVars["a"]==="1"){</code>' and change it to just '<code>if (true){</code>').
-<p>
-<h2>Feedback/Bugs/Suggestions/etc.?</h2>
-<p>
-	Drop me a line at analytic@gmail.com, tweet to me at <a href="http://www.x.com/increpare">@increpare</a>, or post a bug report to <a href="https://github.com/increpare/flickgame/issues/new">github</a>.
-</p>
-<h2>source code</h2>
-<p>
-<a href="https://github.com/increpare/flickgame">github</a>
-<p>
-<h2>flickgame family:</h2>
-<p>
-<ul>
-<li><a href="index.html">flickgame</a> (the original!)
-<li><a href="index2.html">flickgame jr</a> (3-coloured branching flickgames)
-<li><a href="flickuboy.html">flickuboy</a> (2-colour flickgames with text, can export to <a href="https://www.arduboy.com/">arduboy</a>!)
-<li><a href="flickscript.html">FlickScript</a> (flickgame but with scripting)!
-</ul>
-</p>
-<hr>
-<p>
-made by <a href="http://www.increpare.com">increpare</a> [ support my work on <a href="https://www.patreon.com/increpare">patreon</a> | <a href="https://github.com/sponsors/increpare">github</a> | <a href="https://www.paypal.com/paypalme/increparegames">paypal</a> ]
-</p>
+  <h1>FlickGame: How To</h1>
+  
+  <p>
+    <img src="helpimage.png" alt="FlickGame interface">
+  </p>
+  
+  <p>
+    <a href="http://www.flickgame.org/play.html?p=b595632967f638a1c0d3">Try this example game →</a>
+  </p>
+
+  <h2>Editor Controls</h2>
+  <p>
+    <b>C</b> : Copy current image<br>
+    <b>V</b> : Paste current image<br>
+    <b>Z</b> : Undo<br>
+    <b>+</b>/<b>-</b> or <b>Scroll Wheel</b> : Increase/decrease brush size<br>
+    <b>Right-Click</b> or <b>Ctrl/Cmd</b>+<b>Click</b> : Select current color (eyedropper tool)
+  </p>
+
+  <h2>Player Controls</h2>
+  <p>
+    <b>F</b> : Go fullscreen
+  </p>
+
+  <h2>Discover FlickGames</h2>
+  <p>
+    <a href="http://flickgamegallery.tumblr.com/">Browse the FlickGame Gallery</a>
+  </p>
+
+  <h2>Animation Feature (Advanced)</h2>
+  <p>
+    Add "<code>&a=1</code>" to the URL parameter - like this:
+  </p>
+  <p>
+    <a href="http://www.flickgame.org/play.html?p=3f5390b0b2aca7bce1eb4a4f483e2354&a=1">http://www.flickgame.org/play.html?p=3f5390b0b2aca7bce1eb4a4f483e2354<span style="color:red;">&a=1</span></a>
+  </p>
+  <p>
+    For exported HTML files, you can either:
+  </p>
+  <ol>
+    <li>Load it as <code>mygame.html?a=1</code>, or</li>
+    <li>Edit the exported HTML file with a text editor, find <code>if(urlVars["a"]==="1"){</code> and change it to <code>if (true){</code></li>
+  </ol>
+
+  <h2>Feedback & Support</h2>
+  <p>
+    Drop me a line at <a href="mailto:analytic@gmail.com">analytic@gmail.com</a>, tweet to <a href="http://www.x.com/increpare">@increpare</a>, or post a <a href="https://github.com/increpare/flickgame/issues/new">bug report on GitHub</a>.
+  </p>
+
+  <h2>Source Code</h2>
+  <p>
+    <a href="https://github.com/increpare/flickgame">View on GitHub</a>
+  </p>
+
+  <div class="flickgame-family">
+    <h2>The FlickGame Family</h2>
+    <ul>
+      <li><a href="index.html">FlickGame</a> - the original!</li>
+      <li><a href="index2.html">FlickGame Jr</a> - 3-colored branching FlickGames</li>
+      <li><a href="flickuboy.html">FlickUBoy</a> - 2-color FlickGames with text, exportable to <a href="https://www.arduboy.com/">Arduboy</a></li>
+      <li><a href="flickscript.html">FlickScript</a> - FlickGame with scripting capabilities</li>
+    </ul>
+  </div>
+
+
+  <footer class="credits">
+    <p>
+      Made by <a href="http://www.increpare.com">increpare</a>. Support my work on 
+      <a href="https://www.patreon.com/increpare">Patreon</a> | 
+      <a href="https://github.com/sponsors/increpare">GitHub Sponsors</a> | 
+      <a href="https://www.paypal.com/paypalme/increparegames">PayPal</a>
+    </p>
+  </footer>
 </body>
 </html>
