@@ -539,7 +539,17 @@ function rgbToLab(r,g,b) {
       }
       apply_state_mapping(inverted_mapping);
       palette_name = p_name;
-      palette = palettes[p_name];
+      colorPalette = palettes[p_name];
+      
+      // Update color swatches
+      for (var i = 0; i < 16; i++) {
+        document.documentElement.style.setProperty('--col' + i, colorPalette[i]);
+      }
+      
+      // Set the background color properly
+      if (background_colors[p_name]) {
+        changeBackgroundColor(background_colors[p_name], false);
+      }
     }
 
     var modal = null;
@@ -969,7 +979,8 @@ function rgbToLab(r,g,b) {
         if (dat.palette_name!==palette_name){
           //then we need to change the color palette of ALL canvasses
           revert_color_palette_to(dat.palette_name); 
-          setVisuals(true);
+          setVisuals(true);    
+          setDropdowns();
           return;    
         }
         canvasses[dat.canvasIndex] = dat.canvasDat;        
@@ -1667,8 +1678,8 @@ function rgbToLab(r,g,b) {
       }
       //get bgColorSelect
       var bgColorSelect = document.getElementById('bgColorSelect');
-      bgColorSelect.style.backgroundColor = background_color;
-    }
+        bgColorSelect.style.backgroundColor = background_color;
+      }
   </script>
 
   <style type="text/css">
