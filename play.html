@@ -153,7 +153,7 @@ function redraw(){
     }
     var dx=(w-160*zoom)/2;
     var dy=(h-100*zoom)/2;
-    mainCanvasCtx.fillStyle="#000000";
+    mainCanvasCtx.fillStyle=gameState.background_color;
     mainCanvasCtx.fillRect(0,0,w,h);
     if (curCanvasToDraw===null){
       mainCanvasCtx.drawImage(images[currentIndex],0,0,160,100,dx,dy,160*zoom,100*zoom);
