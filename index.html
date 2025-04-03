@@ -497,6 +497,16 @@
     ];
 
     function set_color_palette(name){
+      // if there is something on the undo stack, let's check if the previous one 
+      // was a change of colour palette 
+      // so that information doesn't get lost if you're changing palette rapidly
+      if (undoList.length > 0){
+        var previous_action = undoList[undoList.length - 1];
+        if (previous_action.palette_name !== palette_name){
+          doUndo();
+        }
+      }
+      preserveUndoState();
       transform_state(colorPalette, palettes[name]);
       colorPalette = palettes[name];
       // Update color swatches
@@ -577,7 +587,6 @@
             if (name === palette_name){
               return;
             }
-            preserveUndoState();
             set_color_palette(name);            
             setVisuals(true);
           };
