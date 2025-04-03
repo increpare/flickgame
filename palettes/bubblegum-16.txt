@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: Bubblegum 16
+;Description: 
+;Colors: 16
+FF16171a
+FF7f0622
+FFd62411
+FFff8426
+FFffd100
+FFfafdff
+FFff80a4
+FFff2674
+FF94216a
+FF430067
+FF234975
+FF68aed4
+FFbfff3c
+FF10d275
+FF007899
+FF002859

@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: Nanner Jam
+;Description: 
+;Colors: 16
+FF352b40
+FF653d48
+FF933f45
+FFb25e46
+FFcc925e
+FFdacb80
+FFf0e9c9
+FF76c379
+FF508d76
+FF535c89
+FF7b99c8
+FF99d4e6
+FFbe7979
+FFd8b1a1
+FF7d6e6e
+FFc2b5a9

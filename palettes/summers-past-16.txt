@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: Summers Past-16
+;Description: A warm 16 color palette of evoking the nostalgia of the passing summers. (Created to be simple and user friendly)&nbsp;
+;Colors: 16
+FF320011
+FF5f3a60
+FF876672
+FFb7a39d
+FFece8c2
+FF6db7c3
+FF5e80b2
+FF627057
+FF8da24e
+FFd2cb3e
+FFf7d554
+FFe8bf92
+FFe78c5b
+FFc66f5e
+FFc33846
+FF933942

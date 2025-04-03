@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: SHIDO CYBERNEON
+;Description: 
+;Colors: 16
+FF00033c
+FF005260
+FF009d4a
+FF0aff52
+FF003884
+FF008ac5
+FF00f7ff
+FFff5cff
+FFac29ce
+FF600088
+FFb10585
+FFff004e
+FF2a2e79
+FF4e6ea8
+FFadd4fa
+FFffffff

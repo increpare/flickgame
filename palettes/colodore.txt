@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: Colodore
+;Description: Newly recalculated palette for the VIC II (Commodore 64) by <a href="http://www.pepto.de/projects/colorvic/" target="_blank">Pepto</a>. #c64
+;Colors: 16
+FF000000
+FF4a4a4a
+FF7b7b7b
+FFb2b2b2
+FFffffff
+FF813338
+FFc46c71
+FF553800
+FF8e5029
+FFedf171
+FFa9ff9f
+FF56ac4d
+FF75cec8
+FF706deb
+FF2e2c9b
+FF8e3c97

@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: Island Joy 16
+;Description: 
+;Colors: 16
+FFffffff
+FF6df7c1
+FF11adc1
+FF606c81
+FF393457
+FF1e8875
+FF5bb361
+FFa1e55a
+FFf7e476
+FFf99252
+FFcb4d68
+FF6a3771
+FFc92464
+FFf48cb6
+FFf7b69e
+FF9b9c82

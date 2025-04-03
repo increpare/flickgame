@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: Daylight 16
+;Description: Used in my game&nbsp;<a href="https://yousurname.itch.io/cosmic-colonizer" target="_blank">Cosmic Colonizer</a>.
+;Colors: 16
+FFf2d3ac
+FFe7a76c
+FFc28462
+FF905b54
+FF513a3d
+FF7a6977
+FF878c87
+FFb5c69a
+FF272223
+FF606b31
+FFb19e3f
+FFf8c65c
+FFd58b39
+FF996336
+FF6a422c
+FFb55b39

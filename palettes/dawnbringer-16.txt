@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: DawnBringer 16
+;Description: Created by <a href="http://pixeljoint.com/p/23821.htm">DawnBringer</a>. 
+;Colors: 16
+FF140c1c
+FF442434
+FF30346d
+FF4e4a4e
+FF854c30
+FF346524
+FFd04648
+FF757161
+FF597dce
+FFd27d2c
+FF8595a1
+FF6daa2c
+FFd2aa99
+FF6dc2ca
+FFdad45e
+FFdeeed6

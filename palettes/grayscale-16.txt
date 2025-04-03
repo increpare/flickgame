@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: GRAYSCALE 16
+;Description: Most distinctive 16 grays. For other number of colors, see the link in my comment.
+;Colors: 16
+FF000000
+FF181818
+FF282828
+FF383838
+FF474747
+FF565656
+FF646464
+FF717171
+FF7e7e7e
+FF8c8c8c
+FF9b9b9b
+FFababab
+FFbdbdbd
+FFd1d1d1
+FFe7e7e7
+FFffffff

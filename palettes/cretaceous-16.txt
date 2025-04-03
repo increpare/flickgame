@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: Cretaceous-16
+;Description: 
+;Colors: 16
+FF313432
+FF323e42
+FF454b4b
+FF3a5f3b
+FF7c4545
+FF675239
+FF625055
+FF516b43
+FF796c64
+FF718245
+FF9e805c
+FF998579
+FFac9086
+FFa6a296
+FFb4ab8f
+FFbcb7a5

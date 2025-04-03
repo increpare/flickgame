@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: Go-line
+;Description: 
+;Colors: 16
+FF430067
+FF94216a
+FFff004d
+FFff8426
+FFffdd34
+FF50e112
+FF3fa66f
+FF365987
+FF000000
+FF0033ff
+FF29adff
+FF00ffcc
+FFfff1e8
+FFc2c3c7
+FFab5236
+FF5f574f

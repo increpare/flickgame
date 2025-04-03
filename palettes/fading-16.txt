@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: Fading 16
+;Description: Reimagining of the&nbsp;<a href="https://lospec.com/palette-list/lost-century" target="_blank">Lost Century</a>&nbsp;palette.
+;Colors: 16
+FFddcf99
+FFcca87b
+FFb97a60
+FF9c524e
+FF774251
+FF4b3d44
+FF4e5463
+FF5b7d73
+FF8e9f7d
+FF645355
+FF8c7c79
+FFa99c8d
+FF7d7b62
+FFaaa25d
+FF846d59
+FFa88a5e

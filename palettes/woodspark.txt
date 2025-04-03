@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: WoodSpark
+;Description: WoodSpark is a general purpose palette with 16 vibrant, saturated colors that aims at providing just enough colors to make essentially anything come true. May it be from the main Red, Green and Blue colors, or others like Gray, Pink and Brown, it has all the basics covered to get you going.<br>
+;Colors: 16
+FFf5eeb0
+FFfabf61
+FFe08d51
+FF8a5865
+FF452b3f
+FF2c5e3b
+FF609c4f
+FFc6cc54
+FF78c2d6
+FF5479b0
+FF56546e
+FF839fa6
+FFe0d3c8
+FFf05b5b
+FF8f325f
+FFeb6c98

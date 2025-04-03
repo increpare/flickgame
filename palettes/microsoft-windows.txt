@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: Microsoft Windows
+;Description: Use by early versions of windows for UI and icons.
+;Colors: 16
+FF000000
+FF7e7e7e
+FFbebebe
+FFffffff
+FF7e0000
+FFfe0000
+FF047e00
+FF06ff04
+FF7e7e00
+FFffff04
+FF00007e
+FF0000ff
+FF7e007e
+FFfe00ff
+FF047e7e
+FF06ffff

@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: Eroge Copper
+;Description: "There was some activity over at the pixeljoint forums (I'm not registered though) to do a 16 color palette with character. I took this to mean that the palette should have a heavy focus on some colors, and less on others." -<a href="http://androidarts.com/palette/16pal.htm">Arne Niklas Jansson</a>
+;Colors: 16
+FF0d080d
+FF4f2b24
+FF825b31
+FFc59154
+FFf0bd77
+FFfbdf9b
+FFfff9e4
+FFbebbb2
+FF7bb24e
+FF74adbb
+FF4180a0
+FF32535f
+FF2a2349
+FF7d3840
+FFc16c5b
+FFe89973

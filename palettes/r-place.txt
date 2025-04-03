@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: /r/Place
+;Description: Palette used for Reddit's <a target="_blank" href="https://www.reddit.com/r/place/">/r/place</a> <a target="_blank" href="https://redditblog.com/2017/04/18/place-part-two/">expiriment</a>.
+;Colors: 16
+FFFFFFFF
+FFE4E4E4
+FF888888
+FF222222
+FFFFA7D1
+FFE50000
+FFE59500
+FFA06A42
+FFE5D900
+FF94E044
+FF02BE01
+FF00D3DD
+FF0083C7
+FF0000EA
+FFCF6EE4
+FF820080

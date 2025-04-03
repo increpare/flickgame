@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: Miyazaki 16
+;Description: Created for Pixelsnorf in exchange for 128 Pikzels. The specifications was a nonlinear 16-color palette inspired by the art of Hayou Miyazaki, specifically landscapes. <br>
+;Colors: 16
+FF232228
+FF284261
+FF5f5854
+FF878573
+FFb8b095
+FFc3d5c7
+FFebecdc
+FF2485a6
+FF54bad2
+FF754d45
+FFc65046
+FFe6928a
+FF1e7453
+FF55a058
+FFa1bf41
+FFe3c054

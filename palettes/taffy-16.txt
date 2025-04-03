@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: Taffy 16
+;Description: 
+;Colors: 16
+FF222533
+FF6275ba
+FFa3c0e6
+FFfafffc
+FFffab7b
+FFff6c7a
+FFdc435b
+FF3f48c2
+FF448de7
+FF2bdb72
+FFa7f547
+FFffeb33
+FFf58931
+FFdb4b3d
+FFa63d57
+FF36354d

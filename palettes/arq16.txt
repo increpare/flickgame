@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: ARQ16
+;Description: 
+;Colors: 16
+FFffffff
+FFffd19d
+FFaeb5bd
+FF4d80c9
+FFe93841
+FF100820
+FF511e43
+FF054494
+FFf1892d
+FF823e2c
+FFffa9a9
+FF5ae150
+FFffe947
+FF7d3ebf
+FFeb6c82
+FF1e8a4c

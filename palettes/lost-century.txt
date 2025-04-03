@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: Lost Century
+;Description: A palette inspired by the Bestiarium of Aloys Zötl (1835)
+;Colors: 16
+FFd1b187
+FFc77b58
+FFae5d40
+FF79444a
+FF4b3d44
+FFba9158
+FF927441
+FF4d4539
+FF77743b
+FFb3a555
+FFd2c9a5
+FF8caba1
+FF4b726e
+FF574852
+FF847875
+FFab9b8e

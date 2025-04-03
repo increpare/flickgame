@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: URBEX 16
+;Description: Colors that remind me of exploring futuristic, underground ruins.
+;Colors: 16
+FFcbd1be
+FF8f9389
+FF52534c
+FF26201d
+FFe0a46e
+FF91a47a
+FF5d7643
+FF4d533a
+FFa93130
+FF7a1338
+FF834664
+FF917692
+FF160712
+FF593084
+FF3870be
+FF579fb4

@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: antiquity16
+;Description: A celebration for getting to 2k followers on my Twitter! 🎉 Nostalgic palette based on old vintage ads. Includes a variety of skintones!
+;Colors: 16
+FF202020
+FF2d211e
+FF452923
+FF6d3d29
+FFb16b4a
+FFe89f6e
+FFe8be82
+FF5d7557
+FF8e9257
+FF707b88
+FF8aa7ac
+FFe55d4d
+FFf1866c
+FFd26730
+FFde9a28
+FFe8d8a5

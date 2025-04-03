@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: vanilla milkshake
+;Description: 
+;Colors: 16
+FF28282e
+FF6c5671
+FFd9c8bf
+FFf98284
+FFb0a9e4
+FFaccce4
+FFb3e3da
+FFfeaae4
+FF87a889
+FFb0eb93
+FFe9f59d
+FFffe6c6
+FFdea38b
+FFffc384
+FFfff7a0
+FFfff7e4

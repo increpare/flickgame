@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: Color Graphics Adapter
+;Description: <a href="https://en.wikipedia.org/wiki/Color_Graphics_Adapter">CGA</a> was a graphics card released in 1981 for the <a href="https://en.wikipedia.org/wiki/IBM_PC">IBM PC</a>. The standard mode uses one of two 4-color palettes (each with a low-intensity and high-intensity mode), but a hack allows use of all 16. #cga
+;Colors: 16
+FF000000
+FF555555
+FFaaaaaa
+FFffffff
+FF0000aa
+FF5555ff
+FF00aa00
+FF55ff55
+FF00aaaa
+FF55ffff
+FFaa0000
+FFff5555
+FFaa00aa
+FFff55ff
+FFaa5500
+FFffff55

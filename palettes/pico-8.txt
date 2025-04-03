@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: PICO-8
+;Description: The <a href="https://www.lexaloffle.com/pico-8.php">PICO-8</a> is a virtual video game console created by Lexaloffle Games.
+;Colors: 16
+FF000000
+FF1D2B53
+FF7E2553
+FF008751
+FFAB5236
+FF5F574F
+FFC2C3C7
+FFFFF1E8
+FFFF004D
+FFFFA300
+FFFFEC27
+FF00E436
+FF29ADFF
+FF83769C
+FFFF77A8
+FFFFCCAA

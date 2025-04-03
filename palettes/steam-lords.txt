@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: Steam Lords
+;Description: Created for <a target="_blank" href="https://www.patreon.com/slynyrd">Patreon</a>.
+;Colors: 16
+FF213b25
+FF3a604a
+FF4f7754
+FFa19f7c
+FF77744f
+FF775c4f
+FF603b3a
+FF3b2137
+FF170e19
+FF2f213b
+FF433a60
+FF4f5277
+FF65738c
+FF7c94a1
+FFa0b9ba
+FFc0d1cc

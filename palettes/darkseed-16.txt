@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: Darkseed 16
+;Description: This is a palette inspired by the Dark Seed game and Giger's Alien
+;Colors: 16
+FF000000
+FF001418
+FF002024
+FF002c38
+FF143444
+FF443444
+FF583c48
+FF6c4c44
+FF806058
+FF6c706c
+FF888078
+FFa49484
+FFc4ac9c
+FFd8b0a8
+FFecd4d0
+FFfcfcfc

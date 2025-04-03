@@ -1,0 +1,21 @@
+;paint.net Palette File
+;Downloaded from Lospec.com/palette-list
+;Palette Name: Galaxy Flame
+;Description: Made this for the "Let the Galaxy Burn" event (though I did not finish my wip in time). Warm tones for distant galactic gas clouds, flames and stars, and the cool tones for skies, spaceships, and other science-fictional constructs. Semi-saturated darks in red, blue, and green to keep some life in the deep places.
+;Colors: 16
+FF699fad
+FF3a708e
+FF2b454f
+FF111215
+FF151d1a
+FF1d3230
+FF314e3f
+FF4f5d42
+FF9a9f87
+FFede6cb
+FFf5d893
+FFe8b26f
+FFb6834c
+FF704d2b
+FF40231e
+FF151015
