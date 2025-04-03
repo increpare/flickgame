@@ -1596,17 +1596,18 @@
       max-height: 400px;
       overflow-y: auto;
       top: 20px;
-      right: 0;      
+      right:0;
       background-color: black;
       border: 2px solid gray;
       padding: 25px;
       z-index: 1000;
     }
 
-    @media (min-width: 1500px) {
+    @media (min-width: 1400px) {
       .palette-modal {
-        /*I want it to be transfrmed to be centered+20vh horizontall*/
-        transform: translate(calc(-50% + 30vw), 0);
+        right:unset;
+        left: 50%;
+        transform: translate(calc(50% + 300px), 0);
       }
     }
 
