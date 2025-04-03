@@ -12,6 +12,8 @@
     var gameLink = "www.flickgame.org"
     var canvasIndex = 0;
     var palette_name = "dawnbringer-16";
+    var background_color = "#000000";
+    var foreground_color = "#ffffff";
     var canvasses = new Array();
       var hyperlinks = new Array();
       //16 arrays of 16 elements, filled with 0s
@@ -345,43 +347,25 @@
 };
 
 
-  function rgbToLab(r, g, b) {
-    // Convert RGB to XYZ
-    r = r / 255;
-    g = g / 255;
-    b = b / 255;
-    
-    r = r > 0.04045 ? Math.pow((r + 0.055) / 1.055, 2.4) : r / 12.92;
-    g = g > 0.04045 ? Math.pow((g + 0.055) / 1.055, 2.4) : g / 12.92;
-    b = b > 0.04045 ? Math.pow((b + 0.055) / 1.055, 2.4) : b / 12.92;
-    
-    r = r * 100;
-    g = g * 100;
-    b = b * 100;
-    
-    const x = r * 0.4124 + g * 0.3576 + b * 0.1805;
-    const y = r * 0.2126 + g * 0.7152 + b * 0.0722;
-    const z = r * 0.0193 + g * 0.1192 + b * 0.9505;
-    
-    // Convert XYZ to LAB
-    const xn = 95.047;
-    const yn = 100.000;
-    const zn = 108.883;
-    
-    const x1 = x / xn;
-    const y1 = y / yn;
-    const z1 = z / zn;
-    
-    const fx = x1 > 0.008856 ? Math.pow(x1, 1/3) : (7.787 * x1) + 16/116;
-    const fy = y1 > 0.008856 ? Math.pow(y1, 1/3) : (7.787 * y1) + 16/116;
-    const fz = z1 > 0.008856 ? Math.pow(z1, 1/3) : (7.787 * z1) + 16/116;
-    
-    return {
-      L: (116 * fy) - 16,
-      a: 500 * (fx - fy),
-      b: 200 * (fy - fz)
-    };
-  }
+function rgbToLab(r,g,b) {
+  r /= 255;
+  g /= 255;
+  b /= 255;
+  r = (r > 0.04045) ? (((r + 0.055) / 1.055) ** 2.4) : r / 12.92;
+  g = (g > 0.04045) ? (((g + 0.055) / 1.055) ** 2.4) : g / 12.92;
+  b = (b > 0.04045) ? (((b + 0.055) / 1.055) ** 2.4) : b / 12.92;
+  var x = (r * 0.4124 + g * 0.3576 + b * 0.1805) / 0.95047;
+  var y = (r * 0.2126 + g * 0.7152 + b * 0.0722) / 1.00000;
+  var z = (r * 0.0193 + g * 0.1192 + b * 0.9505) / 1.08883;
+  x = (x > 0.008856) ? (x ** (1 / 3)) : (7.787 * x) + 16 / 116;
+  y = (y > 0.008856) ? (y ** (1 / 3)) : (7.787 * y) + 16 / 116;
+  z = (z > 0.008856) ? (z ** (1 / 3)) : (7.787 * z) + 16 / 116;
+  return {
+    L: (116 * y) - 16,
+    a: 500 * (x - y),
+    b: 200 * (y - z),
+  };
+}
 
   function color_distance(color1, color2) {
     // Convert hex colors to RGB
@@ -405,20 +389,34 @@
     return Math.sqrt(deltaL * deltaL + deltaA * deltaA + deltaB * deltaB);
   }
 
-    function darkest_color_in_palette(palette){
-      var black = "#000000";
-      var darkest_color = palette[0];
-      var darkest_distance = color_distance(black, palette[0]);
+
+
+    function nearest_color_in_palette(palette,target_color){
+      var nearest_color = palette[0];
+      var nearest_distance = color_distance(target_color, palette[0]);
       for (var i = 1; i < palette.length; i++){
-        var distance = color_distance(black, palette[i]);
-        if (distance < darkest_distance){
-          darkest_distance = distance;
-          darkest_color = palette[i];
+        var distance = color_distance(target_color, palette[i]);
+        if (distance < nearest_distance){
+          nearest_distance = distance;
+          nearest_color = palette[i];
         }
       }
-      return darkest_color;
+      return nearest_color;
     }
 
+    function furthest_color_in_palette(palette,target_color){
+      var furthest_color = palette[0];
+      var furthest_distance = color_distance(target_color, palette[0]);
+      for (var i = 1; i < palette.length; i++){
+        var distance = color_distance(target_color, palette[i]);
+        if (distance > furthest_distance){
+          furthest_distance = distance;
+          furthest_color = palette[i];
+        }
+      }
+      return furthest_color;
+    }
+          
     function find_palette_transformation(palettea,paletteb){
       //finds what colours in the second palette correspond most closely to those in the first palette - has to be a 1-1 mapping.
       var mapping = {};
@@ -464,6 +462,12 @@
         }
         hyperlinks[page_idx] = page_links;
       }
+
+      //transform background_color 
+     
+      var new_background_color = nearest_color_in_palette(palette_after, background_color);
+  
+      changeBackgroundColor(new_background_color);
       return;
     }
 
@@ -471,7 +475,7 @@
     //for each color-palette, find the darkest color and use it as the background color.
     for (var paletteName in palettes) {
       var palette = palettes[paletteName];
-      var darkest_color = darkest_color_in_palette(palette);
+      var darkest_color = nearest_color_in_palette(palette,"#000000");
       background_colors[paletteName] = darkest_color;
     }
 
@@ -496,7 +500,7 @@
       "#deeed6"
     ];
 
-    function set_color_palette(name){
+    function set_color_palette(name,preserver_undo_state = true){
       // if there is something on the undo stack, let's check if the previous one 
       // was a change of colour palette 
       // so that information doesn't get lost if you're changing palette rapidly
@@ -506,7 +510,9 @@
           doUndo();
         }
       }
-      preserveUndoState();
+      if (preserver_undo_state){
+        preserveUndoState();
+      }
       transform_state(colorPalette, palettes[name]);
       colorPalette = palettes[name];
       // Update color swatches
@@ -936,7 +942,10 @@
         canvasses[dat.canvasIndex] = dat.canvasDat;        
         palette_name = dat.palette_name;
         colorPalette = palettes[palette_name];
-        set_color_palette(palette_name);
+        if (background_color !== dat.background_color){
+          changeBackgroundColor(dat.background_color,false);
+        }
+        set_color_palette(palette_name,false);
         setLayer(dat.canvasIndex + 1,true);
 
         if (shareLinkInner !== null) {
@@ -1063,6 +1072,18 @@
 
     function init() {
       generateDropDowns();
+
+      // Populate background color dropdown
+      var bgColorSelect = document.getElementById('bgColorSelect');
+      for (var i = 0; i < colorPalette.length; i++) {
+        var option = document.createElement('option');
+        option.value = colorPalette[i];
+        option.textContent = "";
+        option.style.backgroundColor = colorPalette[i];
+        bgColorSelect.appendChild(option);
+      }
+      // Set initial background color
+      bgColorSelect.value = colorPalette[0];
 
       linkInput = document.getElementById("linkInput");
       linkInput.value = gameLink;
@@ -1304,6 +1325,7 @@
       undoItem.canvasIndex = canvasIndex;
       undoItem.canvasDat = uint8ar_copy(canvasses[canvasIndex]);
       undoItem.palette_name = palette_name;
+      undoItem.background_color = background_color;
       undoList.push(undoItem);
       if (undoList.length > 30) {
         undoList.shift();
@@ -1584,9 +1606,47 @@
     function toolbar_paste() {
       doPaste();
     }
+
+    function changeBackgroundColor(color,preserver_undo_state = false) {
+      if (color === undefined) {
+        console.log("color is undefined");
+        color = colorPalette[0];
+      }
+      if (background_color===color){
+        console.log("background_color is already set to same color");
+        return;
+      }
+      if (preserver_undo_state){
+        preserveUndoState();
+      }
+      background_color = color;
+      document.body.style.backgroundColor = color;
+      var distance_from_white = color_distance(color, "#ffffff");
+      var distance_from_black = color_distance(color, "#000000");
+      if (distance_from_white < distance_from_black){
+        foreground_color = "#000000";
+        document.documentElement.style.setProperty('--foreground-color', "#000000");
+        document.documentElement.style.setProperty('--radius-filter', 'invert(1)');
+        document.documentElement.style.setProperty('--selected-border-color', '#00ffff');
+      } else {
+        foreground_color = "#ffffff";
+        document.documentElement.style.setProperty('--foreground-color', "#ffffff");
+        document.documentElement.style.setProperty('--radius-filter', 'none');
+        document.documentElement.style.setProperty('--selected-border-color', '#ff0000');
+      }
+      //get bgColorSelect
+      var bgColorSelect = document.getElementById('bgColorSelect');
+      bgColorSelect.style.backgroundColor = background_color;
+    }
   </script>
 
   <style type="text/css">
+    /* foreground text color variable*/
+    :root {
+      --foreground-color: white;
+      --radius-filter: none;
+      --selected-border-color: #ff0000;
+    }
     /*<![CDATA[*/
     #maincanvas {
       cursor: crosshair;
@@ -1620,16 +1680,17 @@
       }
     }
 
-    body {
-      -webkit-user-select: none;
-      /* webkit (safari, chrome) browsers */
-      -moz-user-select: none;
-      /* mozilla browsers */
-      -khtml-user-select: none;
-      /* webkit (konqueror) browsers */
-      -ms-user-select: none;
-      /* IE10+ */
-      touch-action: none;
+    /*overlay bgColorSelect with floating text "BG"*/
+    #bgColorSelect::before {
+      left: 0;
+      content: "Coming Soon";
+      background: rgba(255, 255, 255, 0.59);
+      color: #000;
+      width: 100%;
+      height: 100%;
+      line-height: 2.5;
+      font-weight: 600;
+    position: absolute; 
     }
 
     select {
@@ -1671,8 +1732,13 @@
       text-align: center;
       margin-bottom: 5px;
       padding-bottom: 3px;
+      /*inlin*/
+      display: inline;
     }
-
+    #bgColorSelect {
+      display:inline;
+      width:50px;
+    }
     li {
       font-size: 150%;
       text-align: center;
@@ -1680,11 +1746,11 @@
     }
 
     a {
-      color: white;
+      color: var(--foreground-color);
     }
 
     a.layerItem {
-      color: white;
+      color: var(--foreground-color);
       background-color: transparent;
       text-decoration: none;
       width: 100%;
@@ -1702,7 +1768,7 @@
     }
 
     img.selected {
-      border: 2px solid red;
+      border: 2px solid var(--selected-border-color);
       touch-action: manipulation;
     }
 
@@ -1719,7 +1785,7 @@
     div.selected {
       height: 16px;
       width: 30px;
-      border: 2px solid red;
+      border: 2px solid var(--selected-border-color);
       touch-action: manipulation;
     }
 
@@ -1733,6 +1799,7 @@
     img.radius {
       border: 1px solid transparent;
       touch-action: manipulation;
+      filter: var(--radius-filter);
     }
 
     img.toolbar {
@@ -1754,7 +1821,7 @@
     }
 
     img.selected {
-      border: 1px solid red;
+      border: 1px solid var(--selected-border-color);
     }
 
     select {
@@ -1895,7 +1962,10 @@
                       <center>
                         <input width="640" style="border:2px solid gray;" onkeydown="event.stopPropagation();"
                           value="www.flickgame.org" id="linkInput" oninput="linkChange(this.value)" />
+                          <select id="bgColorSelect" class="toolbar"  style="border: 2px solid gray;" onchange="changeBackgroundColor(this.value,true);">
+                          </select>&nbsp;
                         <span id="toolbarcontainer">
+
                           <a href="#" onclick="toolbar_undo();return false;"><img src="SVG/undo.svg" title="undo (U)"
                               alt="undo" class="toolbar" id="toolbar_undo" /></a>
                           &nbsp;
