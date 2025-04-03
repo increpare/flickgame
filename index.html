@@ -895,6 +895,9 @@ function rgbToLab(r,g,b) {
     function stringToState(str) {
       var state = JSON.parse(str);
       gameLink = state.gameLink;
+      if (state.activeIndex === undefined){
+        state.activeIndex = 0;
+      }
       canvasIndex = state.activeIndex;
       
       //if palette_name not defined, set it to dawnbringer-16
