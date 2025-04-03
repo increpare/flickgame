@@ -923,6 +923,7 @@ function rgbToLab(r,g,b) {
 
     document.addEventListener("keydown", press);
     document.addEventListener("keyup", release);
+    document.addEventListener("wheel", wheel);
 
     var copyImage = null;
     var copyLinks = null;
@@ -944,42 +945,28 @@ function rgbToLab(r,g,b) {
         doCopy();
       } else if (evt.keyCode === 86) { //v
         doPaste();
-      } else if (evt.keyCode === 189 || evt.keyCode === 173) {//-
-        if (radius === 3) {
-          setRadius(1);
-        } else if (radius === 5) {
-          setRadius(3);
-        } else if (radius === 7) {
-          setRadius(5);
-        } else if (radius === 9) {
-          setRadius(7);
-        } else if (radius === 11) {
-          setRadius(9);
-        } else if (radius === 13) {
-          setRadius(11);
-        } else if (radius === 16) {
-          setRadius(13);
+      } else if (evt.keyCode === 189 || evt.keyCode === 173) {//- minus
+        if (radius>1){
+          setRadius(radius-2);
         }
-      } else if (evt.keyCode === 187 || evt.keyCode === 61) {//+
-        if (radius === 0) {
-          setRadius(1);
-        } else if (radius === 1) {
-          setRadius(3);
-        } else if (radius === 3) {
-          setRadius(5);
-        } else if (radius === 5) {
-          setRadius(7);
-        } else if (radius === 7) {
-          setRadius(9);
-        } else if (radius === 9) {
-          setRadius(11);
-        } else if (radius === 11) {
-          setRadius(13);
-        } else if (radius === 13) {
-          setRadius(16);
+      } else if (evt.keyCode === 187 || evt.keyCode === 61) {//+ plus
+        if (radius < 16){
+          setRadius(radius+2);
         }
       } else if (evt.keyCode === 90) {//z
         doUndo();
+      }
+    }
+
+    function wheel(evt) {
+      if (evt.deltaY < 0) {
+        if (radius < 16){
+          setRadius(radius+2);
+        }
+      } else if (evt.deltaY > 0) {
+        if (radius>1){
+          setRadius(radius-2);
+        }
       }
     }
 
@@ -1070,6 +1057,12 @@ function rgbToLab(r,g,b) {
       setVisuals();
     }
     function setRadius(newRadius) {
+      if (newRadius==15){
+        newRadius = 16;
+      } else if (newRadius==14){
+        newRadius = 13;
+      }
+
       radius = newRadius;
       bucketElem.setAttribute("class", "radius");
       for (var i = 0; i < 16; i++) {
@@ -1829,6 +1822,8 @@ function rgbToLab(r,g,b) {
     /*all images pixelated*/
     img {
       image-rendering: pixelated;
+      /*disable selection*/
+      user-select: none;
     }
 
     img.selected {
