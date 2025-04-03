@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang=en>
+<head>
+<meta charset=utf-8>
+<title>FlickScript</title>
+
+<link rel="stylesheet" href="help.css">
+</head>
+<body>
+<p>
+<h1>FlickScript: what is it?</h1>
+<p>
+	<a href="flickscript.html">FLICKSCRIPT</a> is a one of many flickgame variants.  It's much more complicated than the original flickgame, and I'm not fully sure it's worth the effort to learn yet.  But let's see.  <a href="https://www.flickgame.org/layers_beta.html?p=53ffe394276de8c4b0536f0f3397639a">here's a sample project</a>
+<p>	
+<h1>HELP HOW DO I USE THIS?</h1>
+<p>
+	<img src="flickscript_shot1.png">
+<p>
+	left click on the canvas to draw.  Right click, or ctrl/cmd/shift+click to erase.
+<p>
+<h1>Scripting Reference</h1>
+<p>
+<pre>show 3 4 5</pre>
+Shows layers 3, 4 and 5.
+<p>
+<pre>show +3</pre>
+Shows the layer 3 layers ahead of the current layer. (Also enables them, if they were previously disabled).
+<p>
+<pre>hide -3</pre>
+Hides the layer 3 layers behind the current layer.
+<p>
+<pre>hide 3 4 5</pre>
+Hides layers 3, 4 and 5.
+<p>
+<pre>hide this</pre>
+Hides the current layer
+<p>
+<pre>disable 3 4</pre>
+Disables layer 3 and 4 (that is, if they were visible before, they will still be, but you won't be able to interact with them anymore).
+<p>
+<pre>enable 3 4</pre>
+Enables layer 3 and 4. Doesn't set things to visible if they weren't visible already).
+<p>
+<pre>if 1, 2, not 3 then
+	hide 1 2 
+	show 4
+else
+	show 1 2
+	hide 3
+end
+</pre>
+If layers 1 and 2 are visible, but 3 isn't, then hide the first two layers and show the third, otherwise show layer 1 and 2, and hide layer 3.
+<p>
+Initialize state:
+<br>
+at the start of each game, only layer 1 is visible.  However, layer 1 is *special* - its script gets activated automatically when the game starts, so you can set other layers to be visible/invisible there.
+<h1>Keyboard Shortcuts</h1>
+<p>
+	<dl>
+<dt>C</dt> <dd>copy page</dd>
+<dt>X</dt> <dd>cut page (delete page and scripts on it, but save it to the clipboard so you can paste it later)</dd>
+<dt>V</dt> <dd>paste copied/cut page to the currently selected page</dd>
+<dt>Z</dt> <dd>undo</dd>
+<dt>+</dt> <dd>increase brush size if one is selected</dd>
+<dt>-</dt> <dd>decrease brush size if one is selected</dd>
+</dl>
+<p>
+<h2>Feedback/Bugs/Suggestions/etc.?</h2>
+<p>
+	Drop me a line at analytic@gmail.com, tweet to me at <a href="http://www.x.com/increpare">@increpare</a>, or post a bug report to <a href="https://github.com/increpare/flickgame/issues/new">github</a>.
+</p>
+<h2>source code</h2>
+<p>
+<a href="https://github.com/increpare/flickgame">github</a>
+<p>
+<h2>flickgame family:</h2>
+<p>
+<ul>
+<li><a href="index.html">flickgame</a> (the original!)
+<li><a href="index2.html">flickgame jr</a> (3-coloured branching flickgames)
+<li><a href="flickuboy.html">flickuboy</a> (2-colour flickgames with text, can export to <a href="https://www.arduboy.com/">arduboy</a>!)
+<li><a href="flickscript.html">FlickScript</a> (flickgame but with scripting)!
+</ul>
+</p>
+<hr>
+<p>
+made by <a href="http://www.increpare.com">increpare</a> [ support my work on <a href="https://www.patreon.com/increpare">patreon</a> | <a href="https://github.com/sponsors/increpare">github</a> | <a href="https://www.paypal.com/paypalme/increparegames">paypal</a> ]
+</p>
+</body>
+</html>
+	

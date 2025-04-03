@@ -1,0 +1,102 @@
+#maincanvas {
+    cursor:crosshair;
+  }
+  body {
+  
+  }
+   select {
+    background-color:black;
+    color:white;
+   }
+  
+  code {
+    color:lightblue;
+    font-weight:bold;
+  }
+  canvas {
+    position:relative;
+  }
+   body {
+   background-color:black;
+   color: white;
+   margin-top: 0;
+   padding-top: 0;
+   border-top: 0;
+   }
+   ul {
+    text-align: left;
+   overflow:hidden; overflow-y:scroll;
+   }
+   input {
+   background-color: black;
+   color:white;
+   font-size: 200%;
+   text-align: center;
+   margin-bottom: 5px;
+   }
+   input#linkInput {
+   background-color: black;
+   color:white;
+   font-size: 150%;
+   text-align: center;
+   margin-bottom: 5px;
+   padding-bottom:3px;
+   }
+   li {
+   font-size: 150%;         
+   text-align: left;
+    width:100%;
+   }
+
+   a {
+    color:white;
+   }
+   a.layerItem{
+    color: white;
+    background-color: black;
+    text-decoration: none;
+    width:100%;
+    display:block;
+   }
+   a.layerItem.selectedItem{
+    color: black;
+    background-color: white;
+   }
+   img.selected {
+    border: 2px solid red;
+   }
+   li.selected  {
+   cursor:auto;
+   color:white;
+   }
+   a{
+    white-space:nowrap;
+  }
+   div.selected {
+   height:16px; 
+   width:30px;
+   border: 2px solid red;
+   }
+   div.unselected {
+   height:16px; 
+   width:30px;
+   border: 2px solid black;
+   }
+   img.radius {
+    border: 1px solid black;
+   }
+   img.selected {
+    border: 1px solid red; 
+   }
+   select {
+   width:100%;
+   -webkit-appearance: none;
+   -moz-appearance: none;
+   }
+   select::-ms-expand {
+   display: none;
+   }
+   canvas#dropdownthumb {
+    border:2px solid gray; 
+    background-color:black;
+   }
