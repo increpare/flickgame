@@ -525,6 +525,7 @@ function rgbToLab(r,g,b) {
       }
       //need to set all the link-dropdowns to reflect the hyperlinks
       setDropdowns();
+      set_modal_panel_selected_item(palette_name,name);
       palette_name = name;
     }
 
@@ -538,6 +539,7 @@ function rgbToLab(r,g,b) {
         inverted_mapping[mapping[key]] = key;
       }
       apply_state_mapping(inverted_mapping);
+      set_modal_panel_selected_item(palette_name,p_name);
       palette_name = p_name;
       colorPalette = palettes[p_name];
       
@@ -550,6 +552,22 @@ function rgbToLab(r,g,b) {
       if (background_colors[p_name]) {
         changeBackgroundColor(background_colors[p_name], false);
       }
+    }
+
+    function set_modal_panel_selected_item(from_name, to_name){
+      if (modal===null){
+        return;
+      }
+      var old_palette_index = Object.keys(palettes).indexOf(from_name);
+      var new_palette_index = Object.keys(palettes).indexOf(to_name);
+      
+      let old_name_div = document.getElementById('palette_name_' + old_palette_index);
+      let new_name_div = document.getElementById('palette_name_' + new_palette_index);
+      old_name_div.textContent = from_name;
+      old_name_div.style.color = 'gray';
+      new_name_div.textContent = "[ "+to_name+" ]";
+      new_name_div.style.color = 'white';
+
     }
 
     var modal = null;
@@ -620,14 +638,7 @@ function rgbToLab(r,g,b) {
               return;
             }            
             //update nameDiv for previous and new item
-            let old_palette_index = Object.keys(palettes).indexOf(palette_name);
-            let new_palette_index = Object.keys(palettes).indexOf(name);
-            let old_name_div = document.getElementById('palette_name_' + old_palette_index);
-            let new_name_div = document.getElementById('palette_name_' + new_palette_index);
-            old_name_div.textContent = palette_name;
-            old_name_div.style.color = 'gray';
-            new_name_div.textContent = "[ "+name+" ]";
-            new_name_div.style.color = 'white';
+            set_modal_panel_selected_item(palette_name, name);
 
             set_color_palette(name);            
             setVisuals(true);
@@ -906,6 +917,7 @@ function rgbToLab(r,g,b) {
       if (state.palette_name === undefined){
         state.palette_name = "dawnbringer-16";
       }
+      set_modal_panel_selected_item(palette_name,state.palette_name);
       palette_name = state.palette_name;
     }
 
@@ -1193,7 +1205,13 @@ function rgbToLab(r,g,b) {
       setColor(colorIndex);
 
 
-      getData();
+      if (getData()===false){
+        //set random color palette for fun
+        var palette_names = Object.keys(palettes);
+        var random_palette_name = palette_names[Math.floor(Math.random() * palette_names.length)];
+        set_color_palette(random_palette_name,false);
+        setVisuals(true);
+      }
     }
 
     function readFile(evt) {
@@ -1231,17 +1249,11 @@ function rgbToLab(r,g,b) {
       return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
     }
 
-
-    function strip_http(url) {
-      url = url.replace(/^https?:\/\//, '');
-      return url;
-    }
-
     function getData() {
       var id = getParameterByName("p").replace(/[\\\/]/, "");
       if (id === null || id.length === 0) {
 
-        return;
+        return false;
       }
 
       var githubURL = 'https://api.github.com/gists/' + id;
@@ -1267,6 +1279,7 @@ function rgbToLab(r,g,b) {
       }
       githubHTTPClient.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
       githubHTTPClient.send();
+      return true;
     }
 
 
@@ -1427,7 +1440,7 @@ function rgbToLab(r,g,b) {
 
     function mouseOut(e) {
       e = e || window.event;
-      window.console.log(e);
+      // window.console.log(e);
       mouseMove(e);
       lastX = -1;
       lastY = -1;
