@@ -882,8 +882,12 @@ function clearPalette(){
     if (drawing===0)
       return;
 
-    if (e.pressure===0){
-      mouseUp(e);
+    var mousePressure=e.pressure;
+    if (e.pointerType!=="pen"){
+      mousePressure=1;
+    }
+    if (mousePressure===0){
+    //   mouseUp(e);
       return;
     }
     
@@ -919,7 +923,7 @@ function clearPalette(){
       var p=points[i];
 
       if (radius>0){
-        var r=radius*(e.pressure*2);
+        var r=radius*(mousePressure*2);
         drawCircle(canvas,p[0],p[1],r,colorIndex);
       } else {
         floodFill(canvas, p[0], p[1], colorIndex);
