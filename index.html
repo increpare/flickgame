@@ -340,6 +340,7 @@ var copyLinks = null;
 var savedString;
 function press(evt){
   evt = evt || window.event;
+  
   updateCursor(evt);
   /*
   if (evt.keyCode==83){//S(ave)
@@ -450,6 +451,7 @@ function doPaste(){
 
   var lastX=-1;
   var lastY=-1;
+  var lastButton=-1
 
   var bucketElem;
 
@@ -798,6 +800,7 @@ function clearPalette(){
     drawing=0;
     lastX=-1;
     lastY=-1;
+    lastButton=-1;
 
     e.preventDefault();
   }
@@ -844,8 +847,9 @@ function clearPalette(){
   }
 
   function updateCursor(e){
+    window.console.log("updateCursor: lastButton = " + lastButton);
   // Update cursor based on modifier keys
-    if (e.metaKey||e.altKey||e.shiftKey||e.ctrlKey||e.button>0){
+    if (e.metaKey||e.altKey||e.shiftKey||e.ctrlKey||lastButton>0){
         mainCanvas.style.cursor = "url('eyedropper.png') 2 16, crosshair";
         window.console.log("updateCursor: eyedropper");
       } else {
@@ -853,6 +857,12 @@ function clearPalette(){
         window.console.log("updateCursor: crosshair");
       }
 
+  }
+
+  function updateLastButton(e){
+    if (e.button!==-1){
+      lastButton=e.button;
+    }
   }
 
   function mouseMove(e){
@@ -865,6 +875,7 @@ function clearPalette(){
       e.preventDefault();
       return !1;
     }
+    updateLastButton(e);
 
     updateCursor(e);
 
@@ -879,7 +890,7 @@ function clearPalette(){
     var x = Math.floor(coords[0]/zoomFactor);
     var y = Math.floor(coords[1]/zoomFactor);
     //console.log(`button = ${e.button}`);
-    if (e.metaKey||e.altKey||e.shiftKey||e.ctrlKey||e.button>0){
+    if (e.metaKey||e.altKey||e.shiftKey||e.ctrlKey||lastButton>0){
       
       var pIndex = x+width*y;
       var canvas=canvasses[canvasIndex];
