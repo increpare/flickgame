@@ -514,22 +514,20 @@
     var modal = null;
     function openPaletteSelector(){
       if (modal!==null){
+        var palette_button = document.getElementById('palette_button');
+        palette_button.style.filter = '';
+        //webkit also
+        palette_button.style.webkitFilter = '';
+        
         document.body.removeChild(modal);
         modal=null;
         return;
       }
       // Create a modal dialog
       modal = document.createElement('div');
-      modal.style.position = 'fixed';
-      modal.style.top = '20px';
-      modal.style.left = '50%';
-      modal.style.transform = 'translate(-50%, 0)';
-      modal.style.backgroundColor = 'black';
-      modal.style.border = '2px solid gray';
-      modal.style.padding = '25px';
-      modal.style.zIndex = '1000';
-      modal.style.maxHeight = '50vh';
-      modal.style.overflowY = 'auto';
+      modal.className = 'palette-modal';
+      
+
       
       // Create grid container
       var grid = document.createElement('div');
@@ -539,6 +537,7 @@
       
       // Add all palette previews
       for (var paletteName in palettes) {
+        var currently_selected = paletteName === palette_name;
         var paletteDiv = document.createElement('div');
         paletteDiv.style.border = '1px solid gray';
         paletteDiv.style.padding = '5px';
@@ -546,8 +545,12 @@
         
         // Add palette name
         var nameDiv = document.createElement('div');
-        nameDiv.textContent = paletteName;
-        nameDiv.style.color = 'white';
+        if (currently_selected){
+          nameDiv.textContent = "[ "+paletteName+" ]";
+          nameDiv.style.color = 'white';
+        } else {          
+          nameDiv.textContent = paletteName;
+        }
         nameDiv.style.marginBottom = '5px';
         nameDiv.style.textAlign = 'center';
         paletteDiv.appendChild(nameDiv);
@@ -577,9 +580,6 @@
             preserveUndoState();
             set_color_palette(name);            
             setVisuals(true);
-            // Close modal
-            document.body.removeChild(modal);
-            modal=null;
           };
         })(paletteName);
         
@@ -591,6 +591,11 @@
       
       // Add modal to body
       document.body.appendChild(modal);
+      //invert color of #palette_button using a transform
+      var palette_button = document.getElementById('palette_button');
+      palette_button.style.filter = 'invert(1)';
+      //webkit also
+      palette_button.style.webkitFilter = 'invert(1)';
     }
     
     var colorElem = new Array();
@@ -1104,7 +1109,7 @@
       var fileUploader = document.getElementById("my_file");
       fileUploader.addEventListener('change', readFile, false);
 
-      window.addEventListener('mouseup', mouseUp, false);
+      window.addEventListener('mouseup', mouseUp, false);    
 
       visibleContext = visibleCanvas.getContext("2d");
       visibleContext.imageSmoothingEnabled = false;
@@ -1584,6 +1589,27 @@
       -ms-interpolation-mode: nearest-neighbor;
     }
 
+    /* Add new styles for palette modal */
+    .palette-modal {
+      position: fixed;
+      max-width: 220px;
+      max-height: 400px;
+      overflow-y: auto;
+      top: 20px;
+      right: 0;      
+      background-color: black;
+      border: 2px solid gray;
+      padding: 25px;
+      z-index: 1000;
+    }
+
+    @media (min-width: 1500px) {
+      .palette-modal {
+        /*I want it to be transfrmed to be centered+20vh horizontall*/
+        transform: translate(calc(-50% + 30vw), 0);
+      }
+    }
+
     body {
       -webkit-user-select: none;
       /* webkit (safari, chrome) browsers */
@@ -2003,7 +2029,7 @@
                     </td>
                     <!--must have border to left of this td-->
                     <td rowspan="2" style="border-left: 2px solid gray;">
-                      <a href="#" onclick="openPaletteSelector();return false;"><img id="pallete_button" src="palette.png"></a>
+                      <a href="#" onclick="openPaletteSelector();return false;"><img id="palette_button" src="palette.png"></a>
                     </td>
                   </tr>
                   <tr>
