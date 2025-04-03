@@ -5,6 +5,10 @@
       href="favicon.png">
 <title>flickgame.org</title>
 <style>
+:root {
+    --bg_color: #000000;
+    --fg_color: #ffffff;
+}
 
 #header h1 {
   padding:0;
@@ -17,8 +21,8 @@
   right:0px;
   top:0px;
   height:40px;
-  background-color: black;
-  color:white;
+  background-color: var(--bg_color);
+  color:var(--fg_color);
   text-align: center;
   padding: 0px;
   margin:0px;
@@ -26,7 +30,7 @@
 }
 
 a {
-  color:white;
+  color:var(--fg_color);
 }
 
 #content {
@@ -35,7 +39,7 @@ a {
   bottom:30px;
   left:0px;
   right:0px;
-  background-color: white;
+  background-color: var(--fg_color);
   text-align: center;
   padding:0;
   margin:0;
@@ -74,8 +78,8 @@ a {
   height:30px;
   margin:0;
   padding:0;
-  background-color: black;
-  color:white;
+  background-color: var(--bg_color);
+  color:var(--fg_color);
   text-align: center;
   padding: 0;
   line-height: 30px;
@@ -477,6 +481,14 @@ function loadState(code){
       console.log("palette_name not defined, setting to dawnbringer-16");
       gameState.palette_name = "dawnbringer-16";
     }
+    if (gameState.background_color === undefined){
+      console.log("background_color not defined, setting to #000000");
+      gameState.background_color = "#000000";
+    }
+    if (gameState.foreground_color === undefined){
+      console.log("foreground_color not defined, setting to #ffffff");
+      gameState.foreground_color = "#ffffff";
+    }
     colorPalette = palettes[gameState.palette_name];
 }
 
@@ -498,6 +510,10 @@ function getData(){
     embeddedDat=decodeURI(embeddedDat);
     loadState(embeddedDat);
 
+    //set background color
+    document.documentElement.style.setProperty('--bg_color', gameState.background_color);
+    document.documentElement.style.setProperty('--fg_color', gameState.foreground_color);
+    
     var homepage=gameState.gameLink;
     var homepageLink = document.getElementById("homeLink");
     homepageLink.innerHTML=strip_http(homepage);

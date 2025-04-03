@@ -865,6 +865,8 @@ function rgbToLab(r,g,b) {
       state.activeIndex = canvasIndex;
       state.canvasses = new Array();
       state.palette_name = palette_name;
+      state.background_color = background_color;
+      state.foreground_color = foreground_color;
       for (var i = 0; i < 16; i++) {
         var canvas = canvasses[i];
         var s = "";
@@ -1119,7 +1121,7 @@ function rgbToLab(r,g,b) {
       var bgColorSelect = document.getElementById('bgColorSelect');
       for (var i = 0; i < colorPalette.length; i++) {
         var option = document.createElement('option');
-        option.value = colorPalette[i];
+        option.value = i;
         option.textContent = "";
         option.style.backgroundColor = "var(--col" + i + ")";
         bgColorSelect.appendChild(option);
@@ -2027,7 +2029,7 @@ function rgbToLab(r,g,b) {
                       <center>
                         <input width="640" style="border:2px solid gray;" onkeydown="event.stopPropagation();"
                           value="www.flickgame.org" id="linkInput" oninput="linkChange(this.value)" />
-                          <span id="bgColorSelectContainer"><select id="bgColorSelect" class="toolbar"  style="border: 2px solid gray;" onchange="changeBackgroundColor(this.value,true);">
+                          <span id="bgColorSelectContainer"><select id="bgColorSelect" class="toolbar"  style="border: 2px solid gray;" onchange="changeBackgroundColor(colorPalette[this.value],true);">
                           </select></span>&nbsp;
                         <span id="toolbarcontainer">
 
