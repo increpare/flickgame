@@ -444,9 +444,7 @@ function rgbToLab(r,g,b) {
       return mapping;
     }
 
-    function transform_state(palette_before, palette_after){
-      //need to transform canvasses and hyperlinks to the new palette.
-      var mapping = find_palette_transformation(palette_before, palette_after);
+    function apply_state_mapping(mapping){
       for (var i = 0; i < canvasses.length; i++){
         for (var j = 0; j < canvasses[i].length; j++){
           canvasses[i][j] = mapping[canvasses[i][j]];
@@ -463,12 +461,16 @@ function rgbToLab(r,g,b) {
         hyperlinks[page_idx] = page_links;
       }
 
-      //transform background_color 
-     
-      var new_background_color = nearest_color_in_palette(palette_after, background_color);
-  
+    }
+
+    function transform_state(palette_before, palette_after){
+      //need to transform canvasses and hyperlinks to the new palette.
+      var mapping = find_palette_transformation(palette_before, palette_after);
+      apply_state_mapping(mapping);
+      
+      //transform background_color      
+      var new_background_color = nearest_color_in_palette(palette_after, background_color);  
       changeBackgroundColor(new_background_color);
-      return;
     }
 
     var background_colors = {};
@@ -507,7 +509,9 @@ function rgbToLab(r,g,b) {
       if (undoList.length > 0){
         var previous_action = undoList[undoList.length - 1];
         if (previous_action.palette_name !== palette_name){
-          doUndo();
+          var old_canvas_index = canvasIndex;
+          doUndo();        
+          setLayer(old_canvas_index+1,false)
         }
       }
       if (preserver_undo_state){
@@ -522,6 +526,20 @@ function rgbToLab(r,g,b) {
       //need to set all the link-dropdowns to reflect the hyperlinks
       setDropdowns();
       palette_name = name;
+    }
+
+    function revert_color_palette_to(p_name){
+      var old_palette = palettes[p_name];
+      var newer_palette = palettes[palette_name];   
+      var mapping = find_palette_transformation(old_palette, newer_palette);
+      //invert the mapping
+      var inverted_mapping = {};
+      for (var key in mapping) {
+        inverted_mapping[mapping[key]] = key;
+      }
+      apply_state_mapping(inverted_mapping);
+      palette_name = p_name;
+      palette = palettes[p_name];
     }
 
     var modal = null;
@@ -550,14 +568,14 @@ function rgbToLab(r,g,b) {
       
       // Add all palette previews
       for (var paletteName in palettes) {
-        var currently_selected = paletteName === palette_name;
-        var paletteDiv = document.createElement('div');
+        let currently_selected = paletteName === palette_name;
+        let paletteDiv = document.createElement('div');
         paletteDiv.style.border = '1px solid gray';
         paletteDiv.style.padding = '5px';
         paletteDiv.style.cursor = 'pointer';
         
         // Add palette name
-        var nameDiv = document.createElement('div');
+        let nameDiv = document.createElement('div');
         if (currently_selected){
           nameDiv.textContent = "[ "+paletteName+" ]";
           nameDiv.style.color = 'white';
@@ -566,16 +584,17 @@ function rgbToLab(r,g,b) {
         }
         nameDiv.style.marginBottom = '5px';
         nameDiv.style.textAlign = 'center';
+        nameDiv.id = 'palette_name_' + Object.keys(palettes).indexOf(paletteName);
         paletteDiv.appendChild(nameDiv);
         
         // Add color previews
-        var colorsDiv = document.createElement('div');
+        let colorsDiv = document.createElement('div');
         colorsDiv.style.display = 'grid';
         colorsDiv.style.gridTemplateColumns = 'repeat(8, 1fr)';
         colorsDiv.style.gap = '2px';
         
         palettes[paletteName].forEach(function(color) {
-          var colorDiv = document.createElement('div');
+          let colorDiv = document.createElement('div');
           colorDiv.style.width = '100%';
           colorDiv.style.paddingTop = '100%';
           colorDiv.style.backgroundColor = color;
@@ -589,7 +608,17 @@ function rgbToLab(r,g,b) {
           paletteDiv.onclick = function() {
             if (name === palette_name){
               return;
-            }
+            }            
+            //update nameDiv for previous and new item
+            let old_palette_index = Object.keys(palettes).indexOf(palette_name);
+            let new_palette_index = Object.keys(palettes).indexOf(name);
+            let old_name_div = document.getElementById('palette_name_' + old_palette_index);
+            let new_name_div = document.getElementById('palette_name_' + new_palette_index);
+            old_name_div.textContent = palette_name;
+            old_name_div.style.color = 'gray';
+            new_name_div.textContent = "[ "+name+" ]";
+            new_name_div.style.color = 'white';
+
             set_color_palette(name);            
             setVisuals(true);
           };
@@ -823,6 +852,7 @@ function rgbToLab(r,g,b) {
     function stateToString() {
       var state = new Object();
       state.gameLink = gameLink;
+      state.activeIndex = canvasIndex;
       state.canvasses = new Array();
       state.palette_name = palette_name;
       for (var i = 0; i < 16; i++) {
@@ -842,7 +872,7 @@ function rgbToLab(r,g,b) {
     function stringToState(str) {
       var state = JSON.parse(str);
       gameLink = state.gameLink;
-      canvasIndex = 0;
+      canvasIndex = state.activeIndex;
       canvasses = new Array();
       for (var k = 0; k < state.canvasses.length; k++) {
         var s = state.canvasses[k];
@@ -936,13 +966,17 @@ function rgbToLab(r,g,b) {
     function doUndo() {
       if (undoList.length > 0) {
         var dat = undoList.pop();
+        if (dat.palette_name!==palette_name){
+          //then we need to change the color palette of ALL canvasses
+          revert_color_palette_to(dat.palette_name); 
+          setVisuals(true);
+          return;    
+        }
         canvasses[dat.canvasIndex] = dat.canvasDat;        
-        palette_name = dat.palette_name;
         colorPalette = palettes[palette_name];
         if (background_color !== dat.background_color){
           changeBackgroundColor(dat.background_color,false);
         }
-        set_color_palette(palette_name,false);
         setLayer(dat.canvasIndex + 1,true);
 
         if (shareLinkInner !== null) {
@@ -1142,7 +1176,7 @@ function rgbToLab(r,g,b) {
       visibleContext.imageSmoothingEnabled = false;
       id = visibleContext.createImageData(1, 1); // only do this once per page
       id_d = id.data;
-      setVisuals();
+      setVisuals(true);
       setColor(colorIndex);
 
 
@@ -1324,7 +1358,7 @@ function rgbToLab(r,g,b) {
       undoItem.palette_name = palette_name;
       undoItem.background_color = background_color;
       undoList.push(undoItem);
-      if (undoList.length > 30) {
+      if (undoList.length > 100) {
         undoList.shift();
       }
 
