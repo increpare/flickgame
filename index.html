@@ -896,6 +896,16 @@ function rgbToLab(r,g,b) {
       var state = JSON.parse(str);
       gameLink = state.gameLink;
       canvasIndex = state.activeIndex;
+      
+      //if palette_name not defined, set it to dawnbringer-16
+      if (state.palette_name === undefined){
+        state.palette_name = "dawnbringer-16";
+      }
+      set_modal_panel_selected_item(palette_name,state.palette_name);
+      palette_name = state.palette_name;
+      colorPalette = palettes[palette_name];
+
+
       canvasses = new Array();
       for (var k = 0; k < state.canvasses.length; k++) {
         var s = state.canvasses[k];
@@ -913,12 +923,6 @@ function rgbToLab(r,g,b) {
       }
       hyperlinks = state.hyperlinks;
 
-      //if palette_name not defined, set it to dawnbringer-16
-      if (state.palette_name === undefined){
-        state.palette_name = "dawnbringer-16";
-      }
-      set_modal_panel_selected_item(palette_name,state.palette_name);
-      palette_name = state.palette_name;
     }
 
     document.addEventListener("keydown", press);
@@ -1222,7 +1226,7 @@ function rgbToLab(r,g,b) {
           var ss1 = contents.substr(fromIndex + fromToken.length, endIndex - fromIndex - fromToken.length);
           var ss2 = ss1.substr(ss1.indexOf("=") + 2);
           var decoded = decodeURI(ss2);
-          var decoded2 = decoded.substring(0, decoded.length - 3);
+          var decoded2 = decoded.substring(0, decoded.length - 4);
           stringToState(decoded2);
           setVisuals(true);
           setLayer(canvasIndex + 1);
