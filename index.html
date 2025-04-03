@@ -332,6 +332,7 @@ function stringToState(str){
 }
 
 document.addEventListener("keydown", press);
+document.addEventListener("keyup", release);
 
 var copyImage = null;
 var copyLinks = null;
@@ -339,6 +340,7 @@ var copyLinks = null;
 var savedString;
 function press(evt){
   evt = evt || window.event;
+  updateCursor(evt);
   /*
   if (evt.keyCode==83){//S(ave)
     savedString = stateToString();
@@ -389,6 +391,11 @@ function press(evt){
     doUndo();
   }
 }
+
+function release(evt){
+  updateCursor(evt);
+}
+
 function doUndo(){
   if (undoList.length>0){
       var dat = undoList.pop();
@@ -836,12 +843,20 @@ function clearPalette(){
     return coordinatesArray;
   }
 
+  function updateCursor(e){
+  // Update cursor based on modifier keys
+    if (e.metaKey||e.altKey||e.shiftKey||e.ctrlKey||e.button>0){
+        mainCanvas.style.cursor = "url('eyedropper.png') 2 16, crosshair";
+        window.console.log("updateCursor: eyedropper");
+      } else {
+        mainCanvas.style.cursor = "crosshair";
+        window.console.log("updateCursor: crosshair");
+      }
+
+  }
 
   function mouseMove(e){
     e = e || window.event;
-
-    if (drawing===0)
-      return;
 
     var coords = getCoords(e);
     if (coords===null){
@@ -850,6 +865,11 @@ function clearPalette(){
       e.preventDefault();
       return !1;
     }
+
+    updateCursor(e);
+
+    if (drawing===0)
+      return;
 
     if (e.pressure===0){
       mouseUp(e);
