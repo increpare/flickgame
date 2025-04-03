@@ -11,8 +11,13 @@
     var version = "0.1";
     var gameLink = "www.flickgame.org"
     var canvasIndex = 0;
+    var palette_name = "dawnbringer-16";
     var canvasses = new Array();
-    var hyperlinks = new Array();
+      var hyperlinks = new Array();
+      //16 arrays of 16 elements, filled with 0s
+      for (var i = 0; i < 16; i++){
+        hyperlinks[i] = new Array(16).fill(0);
+    }
 
     var shareLinkInner = null;
 
@@ -339,6 +344,137 @@
   ]
 };
 
+
+  function rgbToLab(r, g, b) {
+    // Convert RGB to XYZ
+    r = r / 255;
+    g = g / 255;
+    b = b / 255;
+    
+    r = r > 0.04045 ? Math.pow((r + 0.055) / 1.055, 2.4) : r / 12.92;
+    g = g > 0.04045 ? Math.pow((g + 0.055) / 1.055, 2.4) : g / 12.92;
+    b = b > 0.04045 ? Math.pow((b + 0.055) / 1.055, 2.4) : b / 12.92;
+    
+    r = r * 100;
+    g = g * 100;
+    b = b * 100;
+    
+    const x = r * 0.4124 + g * 0.3576 + b * 0.1805;
+    const y = r * 0.2126 + g * 0.7152 + b * 0.0722;
+    const z = r * 0.0193 + g * 0.1192 + b * 0.9505;
+    
+    // Convert XYZ to LAB
+    const xn = 95.047;
+    const yn = 100.000;
+    const zn = 108.883;
+    
+    const x1 = x / xn;
+    const y1 = y / yn;
+    const z1 = z / zn;
+    
+    const fx = x1 > 0.008856 ? Math.pow(x1, 1/3) : (7.787 * x1) + 16/116;
+    const fy = y1 > 0.008856 ? Math.pow(y1, 1/3) : (7.787 * y1) + 16/116;
+    const fz = z1 > 0.008856 ? Math.pow(z1, 1/3) : (7.787 * z1) + 16/116;
+    
+    return {
+      L: (116 * fy) - 16,
+      a: 500 * (fx - fy),
+      b: 200 * (fy - fz)
+    };
+  }
+
+  function color_distance(color1, color2) {
+    // Convert hex colors to RGB
+    const r1 = parseInt(color1.slice(1,3), 16);
+    const g1 = parseInt(color1.slice(3,5), 16);
+    const b1 = parseInt(color1.slice(5,7), 16);
+    
+    const r2 = parseInt(color2.slice(1,3), 16);
+    const g2 = parseInt(color2.slice(3,5), 16);
+    const b2 = parseInt(color2.slice(5,7), 16);
+    
+    // Convert to LAB
+    const lab1 = rgbToLab(r1, g1, b1);
+    const lab2 = rgbToLab(r2, g2, b2);
+    
+    // Calculate Delta E using the CIE76 formula
+    const deltaL = lab1.L - lab2.L;
+    const deltaA = lab1.a - lab2.a;
+    const deltaB = lab1.b - lab2.b;
+    
+    return Math.sqrt(deltaL * deltaL + deltaA * deltaA + deltaB * deltaB);
+  }
+
+    function darkest_color_in_palette(palette){
+      var black = "#000000";
+      var darkest_color = palette[0];
+      var darkest_distance = color_distance(black, palette[0]);
+      for (var i = 1; i < palette.length; i++){
+        var distance = color_distance(black, palette[i]);
+        if (distance < darkest_distance){
+          darkest_distance = distance;
+          darkest_color = palette[i];
+        }
+      }
+      return darkest_color;
+    }
+
+    function find_palette_transformation(palettea,paletteb){
+      //finds what colours in the second palette correspond most closely to those in the first palette - has to be a 1-1 mapping.
+      var mapping = {};
+      
+      var colors_to_allocate = palettea.concat([]);
+      var colors_to_target = paletteb.concat([]);
+      while (colors_to_allocate.length > 0){
+       //from all the pairs of colors colors_to_allocate,paletteb, find the pair with the least distance.
+       var best_distance = Infinity;
+       var best_pair = null;
+       for (var i = 0; i < colors_to_allocate.length; i++){
+        for (var j = 0; j < colors_to_target.length; j++){
+          var distance = color_distance(colors_to_allocate[i], colors_to_target[j]);
+          if (distance < best_distance){
+            best_distance = distance;
+            best_pair = [colors_to_allocate[i], colors_to_target[j]];
+          }
+        }
+       }
+       //remove best_match from colors_to_allocate
+       colors_to_allocate.splice(colors_to_allocate.indexOf(best_pair[0]), 1);   
+       colors_to_target.splice(colors_to_target.indexOf(best_pair[1]), 1);
+       mapping[palettea.indexOf(best_pair[0])] = paletteb.indexOf(best_pair[1]);
+      }
+      return mapping;
+    }
+
+    function transform_state(palette_before, palette_after){
+      //need to transform canvasses and hyperlinks to the new palette.
+      var mapping = find_palette_transformation(palette_before, palette_after);
+      for (var i = 0; i < canvasses.length; i++){
+        for (var j = 0; j < canvasses[i].length; j++){
+          canvasses[i][j] = mapping[canvasses[i][j]];
+        }
+      }
+      var old_hyperlinks = hyperlinks;
+      hyperlinks = new Array(16).fill([]);
+      for (var page_idx = 0; page_idx < old_hyperlinks.length; page_idx++){
+        var page_links = new Array(16).fill(0);
+        var page_links_old = old_hyperlinks[page_idx];
+        for (var color_idx = 0; color_idx < page_links_old.length; color_idx++){
+          page_links[mapping[color_idx]] = page_links_old[color_idx];
+        }
+        hyperlinks[page_idx] = page_links;
+      }
+      return;
+    }
+
+    var background_colors = {};
+    //for each color-palette, find the darkest color and use it as the background color.
+    for (var paletteName in palettes) {
+      var palette = palettes[paletteName];
+      var darkest_color = darkest_color_in_palette(palette);
+      background_colors[paletteName] = darkest_color;
+    }
+
     //dawnbringer
     //http://www.pixeljoint.com/forum/forum_posts.asp?TID=12795
     var colorPalette = [
@@ -359,6 +495,21 @@
       "#dad45e",
       "#deeed6"
     ];
+
+    function set_color_palette(name){
+      transform_state(colorPalette, palettes[name]);
+      colorPalette = palettes[name];
+      // Update color swatches
+      for (var i = 0; i < 16; i++) {
+        var colorElem = document.getElementById('color_' + i);
+        if (colorElem) {
+          colorElem.style.backgroundColor = colorPalette[i];
+        }
+      }
+      //need to set all the link-dropdowns to reflect the hyperlinks
+      setDropdowns();
+      palette_name = name;
+    }
 
     var modal = null;
     function openPaletteSelector(){
@@ -420,14 +571,11 @@
         // Add click handler with proper closure
         (function(name) {
           paletteDiv.onclick = function() {
-            colorPalette = palettes[name];
-            // Update color swatches
-            for (var i = 0; i < 16; i++) {
-              var colorElem = document.getElementById('color_' + i);
-              if (colorElem) {
-                colorElem.style.backgroundColor = colorPalette[i];
-              }
+            if (name === palette_name){
+              return;
             }
+            preserveUndoState();
+            set_color_palette(name);            
             setVisuals(true);
             // Close modal
             document.body.removeChild(modal);
@@ -479,6 +627,7 @@
     var get_blob = function () {
       return self.Blob;
     }
+
 
     function buildStandalone(sourceCode) {
       if (standalone_HTML_String.length === 0) {
@@ -658,6 +807,7 @@
       var state = new Object();
       state.gameLink = gameLink;
       state.canvasses = new Array();
+      state.palette_name = palette_name;
       for (var i = 0; i < 16; i++) {
         var canvas = canvasses[i];
         var s = "";
@@ -691,8 +841,13 @@
         }
         canvasses.push(ar);
       }
-
       hyperlinks = state.hyperlinks;
+
+      //if palette_name not defined, set it to dawnbringer-16
+      if (state.palette_name === undefined){
+        state.palette_name = "dawnbringer-16";
+      }
+      palette_name = state.palette_name;
     }
 
     document.addEventListener("keydown", press);
@@ -764,8 +919,11 @@
     function doUndo() {
       if (undoList.length > 0) {
         var dat = undoList.pop();
-        canvasses[dat.canvasIndex] = dat.canvasDat;
-        setLayer(dat.canvasIndex + 1);
+        canvasses[dat.canvasIndex] = dat.canvasDat;        
+        palette_name = dat.palette_name;
+        colorPalette = palettes[palette_name];
+        set_color_palette(palette_name);
+        setLayer(dat.canvasIndex + 1,true);
 
         if (shareLinkInner !== null) {
           shareLinkInner.style.color = "gray";
@@ -849,7 +1007,7 @@
 
 
     function dropDownSelect(dropdown, val) {
-      hyperlinks[canvasIndex][dropdown - 1] = val;
+      hyperlinks[canvasIndex][dropdown - 1] = parseInt(val);
     }
 
     function setColor(newColorIndex) {
@@ -862,7 +1020,7 @@
       colorElem[colorIndex].setAttribute("class", "selected");
     }
 
-    function setLayer(newCanvasIndex) {
+    function setLayer(newCanvasIndex,force_gen_thumbnails=false) {
       canvasIndex = newCanvasIndex - 1;
       for (var i = 0; i < 16; i++) {
         if (layerElem[i] !== null) {
@@ -870,7 +1028,7 @@
         }
       }
       layerElem[canvasIndex].setAttribute("class", "layerItem selectedItem");
-      setVisuals();
+      setVisuals(force_gen_thumbnails);
       setDropdowns();
     }
 
@@ -1058,7 +1216,7 @@
       //      "dropdownOption"[0][0].style.backgroundImage="url("+dataUrl+")";
     }
 
-    function setVisuals(genAllThumbnails) {
+    function setVisuals(genAllThumbnails=false) {
       //visibleContext.drawImage(canvasses[canvasIndex], 0, 0); 
       //visibleContext.drawImage(canvasses[canvasIndex], 0, 0,width*zoomFactor,height*zoomFactor); 
       canvas = canvasses[canvasIndex];
@@ -1077,6 +1235,8 @@
         drawThumbnail(canvasIndex);
       }
       linkInput.value = gameLink;
+      //set body background
+      // document.body.style.backgroundColor = background_colors[palette_name];
     }
 
 
@@ -1126,10 +1286,10 @@
 
     var undoList = new Array();
     function preserveUndoState() {
-      console.log("preserving undo state");
       var undoItem = new Object();
       undoItem.canvasIndex = canvasIndex;
       undoItem.canvasDat = uint8ar_copy(canvasses[canvasIndex]);
+      undoItem.palette_name = palette_name;
       undoList.push(undoItem);
       if (undoList.length > 30) {
         undoList.shift();
@@ -1187,7 +1347,6 @@
 
     function mouseOut(e) {
       e = e || window.event;
-      window.console.log("mouseOut");
       window.console.log(e);
       mouseMove(e);
       lastX = -1;
@@ -1227,14 +1386,11 @@
     }
 
     function updateCursor(e) {
-      window.console.log("updateCursor: lastButton = " + lastButton);
       // Update cursor based on modifier keys
       if (e.metaKey || e.altKey || e.shiftKey || e.ctrlKey || lastButton > 0) {
         mainCanvas.style.cursor = "url('eyedropper.png') 2 16, crosshair";
-        window.console.log("updateCursor: eyedropper");
       } else {
         mainCanvas.style.cursor = "crosshair";
-        window.console.log("updateCursor: crosshair");
       }
 
     }
@@ -1273,7 +1429,7 @@
 
       var x = Math.floor(coords[0] / zoomFactor);
       var y = Math.floor(coords[1] / zoomFactor);
-      //console.log(`button = ${e.button}`);
+
       if (e.metaKey || e.altKey || e.shiftKey || e.ctrlKey || lastButton > 0) {
 
         var pIndex = x + width * y;
@@ -1493,7 +1649,7 @@
 
     a.layerItem {
       color: white;
-      background-color: black;
+      background-color: transparent;
       text-decoration: none;
       width: 100%;
       display: block;
@@ -1539,14 +1695,14 @@
     }
 
     img.radius {
-      border: 1px solid black;
+      border: 1px solid transparent;
       touch-action: manipulation;
     }
 
     img.toolbar {
       width: 30px;
       height: 30px;
-      background-color: black;
+      background-color: transparent;
       color: white;
       font-size: 200%;
       text-align: center;
@@ -1598,97 +1754,97 @@
             <li>
               <a class="layerItem selectedItem" id="layerItem1" href="#" onclick="setLayer(1);return false;">
                 <canvas id="thumbnail1" width="16" height="10"
-                  style="border:2px solid gray; background-color:black;"></canvas>
+                  style="border:2px solid gray; background-color:transparent;"></canvas>
                 1</a>
             </li>
             <li>
               <a class="layerItem" id="layerItem2" href="#" onclick="setLayer(2);return false;">
                 <canvas id="thumbnail2" width="16" height="10"
-                  style="border:2px solid gray; background-color:black;"></canvas>
+                  style="border:2px solid gray; background-color:transparent;"></canvas>
                 2</a>
             </li>
             <li>
               <a class="layerItem" id="layerItem3" href="#" onclick="setLayer(3);return false;">
                 <canvas id="thumbnail3" width="16" height="10"
-                  style="border:2px solid gray; background-color:black;"></canvas>
+                  style="border:2px solid gray; background-color:transparent;"></canvas>
                 3</a>
             </li>
             <li>
               <a class="layerItem" id="layerItem4" href="#" onclick="setLayer(4);return false;">
                 <canvas id="thumbnail4" width="16" height="10"
-                  style="border:2px solid gray; background-color:black;"></canvas>
+                  style="border:2px solid gray; background-color:transparent;"></canvas>
                 4</a>
             </li>
             <li>
               <a class="layerItem" id="layerItem5" href="#" onclick="setLayer(5);return false;">
                 <canvas id="thumbnail5" width="16" height="10"
-                  style="border:2px solid gray; background-color:black;"></canvas>
+                  style="border:2px solid gray; background-color:transparent;"></canvas>
                 5</a>
             </li>
             <li>
               <a class="layerItem" id="layerItem6" href="#" onclick="setLayer(6);return false;">
                 <canvas id="thumbnail6" width="16" height="10"
-                  style="border:2px solid gray; background-color:black;"></canvas>
+                  style="border:2px solid gray; background-color:transparent;"></canvas>
                 6</a>
             </li>
             <li>
               <a class="layerItem" id="layerItem7" href="#" onclick="setLayer(7);return false;">
                 <canvas id="thumbnail7" width="16" height="10"
-                  style="border:2px solid gray; background-color:black;"></canvas>
+                  style="border:2px solid gray; background-color:transparent;"></canvas>
                 7</a>
             </li>
             <li>
               <a class="layerItem" id="layerItem8" href="#" onclick="setLayer(8);return false;">
                 <canvas id="thumbnail8" width="16" height="10"
-                  style="border:2px solid gray; background-color:black;"></canvas>
+                  style="border:2px solid gray; background-color:transparent;"></canvas>
                 8</a>
             </li>
             <li>
               <a class="layerItem" id="layerItem9" href="#" onclick="setLayer(9);return false;">
                 <canvas id="thumbnail9" width="16" height="10"
-                  style="border:2px solid gray; background-color:black;"></canvas>
+                  style="border:2px solid gray; background-color:transparent;"></canvas>
                 9</a>
             </li>
             <li>
               <a class="layerItem" id="layerItem10" href="#" onclick="setLayer(10);return false;">
                 <canvas id="thumbnail10" width="16" height="10"
-                  style="border:2px solid gray; background-color:black;"></canvas>
+                  style="border:2px solid gray; background-color:transparent;"></canvas>
                 10</a>
             </li>
             <li>
               <a class="layerItem" id="layerItem11" href="#" onclick="setLayer(11);return false;">
                 <canvas id="thumbnail11" width="16" height="10"
-                  style="border:2px solid gray; background-color:black;"></canvas>
+                  style="border:2px solid gray; background-color:transparent;"></canvas>
                 11</a>
             </li>
             <li>
               <a class="layerItem" id="layerItem12" href="#" onclick="setLayer(12);return false;">
                 <canvas id="thumbnail12" width="16" height="10"
-                  style="border:2px solid gray; background-color:black;"></canvas>
+                  style="border:2px solid gray; background-color:transparent;"></canvas>
                 12</a>
             </li>
             <li>
               <a class="layerItem" id="layerItem13" href="#" onclick="setLayer(13);return false;">
                 <canvas id="thumbnail13" width="16" height="10"
-                  style="border:2px solid gray; background-color:black;"></canvas>
+                  style="border:2px solid gray; background-color:transparent;"></canvas>
                 13</a>
             </li>
             <li>
               <a class="layerItem" id="layerItem14" href="#" onclick="setLayer(14);return false;">
                 <canvas id="thumbnail14" width="16" height="10"
-                  style="border:2px solid gray; background-color:black;"></canvas>
+                  style="border:2px solid gray; background-color:transparent;"></canvas>
                 14</a>
             </li>
             <li>
               <a class="layerItem" id="layerItem15" href="#" onclick="setLayer(15);return false;">
                 <canvas id="thumbnail15" width="16" height="10"
-                  style="border:2px solid gray; background-color:black;"></canvas>
+                  style="border:2px solid gray; background-color:transparent;"></canvas>
                 15</a>
             </li>
             <li>
               <a class="layerItem" id="layerItem16" href="#" onclick="setLayer(16);return false;">
                 <canvas id="thumbnail16" width="16" height="10"
-                  style="border:2px solid gray; background-color:black;"></canvas>
+                  style="border:2px solid gray; background-color:transparent;"></canvas>
                 16</a>
             </li>
           </ul>
@@ -1847,7 +2003,7 @@
                     </td>
                     <!--must have border to left of this td-->
                     <td rowspan="2" style="border-left: 2px solid gray;">
-                      <a href="#" onclick="openPaletteSelector();return false;"><img src="palette.png"></a>
+                      <a href="#" onclick="openPaletteSelector();return false;"><img id="pallete_button" src="palette.png"></a>
                     </td>
                   </tr>
                   <tr>
