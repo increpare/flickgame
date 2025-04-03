@@ -1180,7 +1180,7 @@ function rgbToLab(r,g,b) {
 
       visibleCanvas = document.getElementById("mainCanvas");
       visibleCanvas.addEventListener('pointerdown', mouseDown, false);
-      visibleCanvas.addEventListener('pointerup', mouseUp, false);
+      document.addEventListener('pointerup', mouseUp, false);
       visibleCanvas.addEventListener('pointermove', mouseMove, false);
       visibleCanvas.addEventListener('pointerout', mouseOut, false);
       visibleCanvas.addEventListener('pointerleave', mouseOut, false);
