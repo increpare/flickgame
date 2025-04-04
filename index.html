@@ -857,7 +857,12 @@ function rgbToLab(r,g,b) {
       colorPalette = palettes[name];
       // Update color swatches
       for (var i = 0; i < 16; i++) {
-        document.documentElement.style.setProperty('--col' + i, colorPalette[i]);
+        document.documentElement.style.setProperty('--col' + i, colorPalette[i]);          
+        var distance_from_white = color_distance(colorPalette[i], "#ffffff");
+        var distance_from_black = color_distance(colorPalette[i], "#000000");
+        var text_color = distance_from_white > distance_from_black ? "#ffffff" : "#000000";
+        bgColorSelectOptions[i].style.setProperty('--col' + i + '_fg', text_color);
+        
       }
 
 
@@ -1478,6 +1483,7 @@ function rgbToLab(r,g,b) {
         option.value = i;
         option.textContent = colorNames[palette_name][i];
         option.style.backgroundColor = "var(--col" + i + ")";
+        option.style.color = "var(--col" + i + "_fg)";
         bgColorSelect.appendChild(option);
         bgColorSelectOptions.push(option);
       }
@@ -2068,6 +2074,24 @@ function rgbToLab(r,g,b) {
     --col13:#6dc2ca;
     --col14:#dad45e;
     --col15:#deeed6;
+
+    --col0_fg: #ffffff;
+    --col1_fg: #ffffff;
+    --col2_fg: #ffffff;
+    --col3_fg: #ffffff;
+    --col4_fg: #ffffff;
+    --col5_fg: #ffffff;
+    --col6_fg: #ffffff;
+    --col7_fg: #ffffff;
+    --col8_fg: #000000;
+    --col9_fg: #000000;
+    --col10_fg: #000000;
+    --col11_fg: #000000;
+    --col12_fg: #000000;
+    --col13_fg: #000000;
+    --col14_fg: #000000;
+    --col15_fg: #000000;
+    
   }
   
     #maincanvas {
@@ -2150,9 +2174,12 @@ function rgbToLab(r,g,b) {
       display: inline;
       width: 100px;
       padding: 2px 0px;
+      text-align: left;
     }
 
-    
+    option {
+      text-align: center;
+    }
     #bgColorSelectContainer::before {
       content: "background : ";
       color: var(--foreground-color);
