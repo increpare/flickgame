@@ -1227,10 +1227,13 @@ function rgbToLab(r,g,b) {
           var fromIndex = contents.indexOf(fromToken);
           var endIndex = contents.indexOf(endToken);
           var ss1 = contents.substr(fromIndex + fromToken.length, endIndex - fromIndex - fromToken.length);
-          var ss2 = ss1.substr(ss1.indexOf("=") + 2);
-          var decoded = decodeURI(ss2);
-          var decoded2 = decoded.substring(0, decoded.length - 4);
-          stringToState(decoded2);
+          var ss2 = ss1.substr(ss1.indexOf("\"") + 1);
+          var left_removed = decodeURI(ss2);
+          // we want to find the location of the *final* double-quote, and to remove
+          // everything after that.
+          var final_quote_index = left_removed.lastIndexOf("\"");
+          var left_right_removed = left_removed.substring(0, final_quote_index);
+          stringToState(left_right_removed);
           setVisuals(true);
           setLayer(canvasIndex + 1);
         }
