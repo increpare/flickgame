@@ -2033,6 +2033,7 @@ function rgbToLab(r,g,b) {
         preserveUndoState();
       }
       background_color = color;
+      document.documentElement.style.setProperty('--background-color', color);
       document.body.style.backgroundColor = color;
       var distance_from_white = color_distance(color, "#ffffff");
       var distance_from_black = color_distance(color, "#000000");
@@ -2047,9 +2048,6 @@ function rgbToLab(r,g,b) {
         document.documentElement.style.setProperty('--radius-filter', 'none');
         document.documentElement.style.setProperty('--selected-border-color', '#ff0000');
       }
-      //get bgColorSelect
-      var bgColorSelect = document.getElementById('bgColorSelect');
-      bgColorSelect.style.backgroundColor = background_color;
     }
   </script>
 
@@ -2058,6 +2056,7 @@ function rgbToLab(r,g,b) {
 
     /* foreground text color variable*/
   :root {
+    --background-color: black;
     --foreground-color: white;
     --radius-filter: none;
     --selected-border-color: #ff0000;
@@ -2153,7 +2152,7 @@ body{
     }
 
     body {
-      background-color: black;
+      background-color: var(--background-color);
       color: gray;
       margin-top: 0;
       padding-top: 0;
@@ -2185,6 +2184,7 @@ body{
       display: inline;
     }
     #bgColorSelect {
+      background-color: var(--background-color);
       color: var(--foreground-color);
       display: inline;
       width: 100px;

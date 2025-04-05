@@ -6,8 +6,8 @@
 <title>flickgame.org</title>
 <style>
 :root {
-    --bg_color: #000000;
-    --fg_color: #ffffff;
+    --background-color: #000000;
+    --foreground-color: #ffffff;
 }
 
 #header h1 {
@@ -21,8 +21,8 @@
   right:0px;
   top:0px;
   height:40px;
-  background-color: var(--bg_color);
-  color:var(--fg_color);
+  background-color: var(--background-color);
+  color:var(--foreground-color);
   text-align: center;
   padding: 0px;
   margin:0px;
@@ -30,7 +30,7 @@
 }
 
 a {
-  color:var(--fg_color);
+  color:var(--foreground-color);
 }
 
 #content {
@@ -39,7 +39,7 @@ a {
   bottom:30px;
   left:0px;
   right:0px;
-  background-color: var(--bg_color);
+  background-color: var(--background-color);
   text-align: center;
   padding:0;
   margin:0;
@@ -78,8 +78,8 @@ a {
   height:30px;
   margin:0;
   padding:0;
-  background-color: var(--bg_color);
-  color:var(--fg_color);
+  background-color: var(--background-color);
+  color:var(--foreground-color);
   text-align: center;
   padding: 0;
   line-height: 30px;
@@ -490,6 +490,19 @@ function loadState(code){
       gameState.foreground_color = "#ffffff";
     }
     colorPalette = palettes[gameState.palette_name];
+
+    //set background color
+    document.documentElement.style.setProperty('--background-color', gameState.background_color);
+    document.documentElement.style.setProperty('--foreground-color', gameState.foreground_color);
+
+
+    var homepage=gameState.gameLink;
+    var homepageLink = document.getElementById("homeLink");
+    homepageLink.innerHTML=strip_http(homepage);
+    if (!homepage.match(/^https?:\/\//)) {
+      homepage = "http://" + homepage;
+    }
+    homepageLink.href = homepage;
 }
 
 function getParameterByName(name) {
@@ -510,17 +523,7 @@ function getData(){
     embeddedDat=decodeURI(embeddedDat);
     loadState(embeddedDat);
 
-    //set background color
-    document.documentElement.style.setProperty('--bg_color', gameState.background_color);
-    document.documentElement.style.setProperty('--fg_color', gameState.foreground_color);
     
-    var homepage=gameState.gameLink;
-    var homepageLink = document.getElementById("homeLink");
-    homepageLink.innerHTML=strip_http(homepage);
-    if (!homepage.match(/^https?:\/\//)) {
-      homepage = "http://" + homepage;
-    }
-    homepageLink.href = homepage;
 
     renderImages();
     return;
@@ -549,14 +552,6 @@ function getData(){
     var code=result["files"]["game.txt"]["content"];
     console.log(code);
     loadState(code);
-
-    var homepage=gameState.gameLink;
-    var homepageLink = document.getElementById("homeLink");
-    homepageLink.innerHTML=strip_http(homepage);
-    if (!homepage.match(/^https?:\/\//)) {
-      homepage = "http://" + homepage;
-    }
-    homepageLink.href = homepage;
   
     var hacklink = document.getElementById("hackLink");
 
