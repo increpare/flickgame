@@ -1848,12 +1848,13 @@ function rgbToLab(r,g,b) {
 
     function mouseMove(e) {
       e = e || window.event;
+      console.log(e.type);
 
+      e.preventDefault();
       var coords = getCoords(e);
       if (coords === null) {
         lastX = -1;
         lastY = -1;
-        e.preventDefault();
         return !1;
       }
       updateLastButton(e);
@@ -1883,10 +1884,12 @@ function rgbToLab(r,g,b) {
 
         // console.log(` x = ${x}; y = ${y}; pIndex = ${pIndex}; newColorIndex = ${newColorIndex}`);
         setColor(newColorIndex);
-        e.preventDefault();
         return false;
       }
 
+      // Prevent default behavior for touch events to stop scrolling
+
+      
       var canvas = canvasses[canvasIndex];
 
       var points;
@@ -1894,8 +1897,9 @@ function rgbToLab(r,g,b) {
         points = [[x, y]];
       } else {
         if (x < 0 || y < 0) {
-          console.log("NEGATIVE TIME");
+          console.log("NEGATIVE COORDINATES");
           console.log(e);
+          return;
         }
         points = line(x, y, lastX, lastY);
       }
@@ -2091,9 +2095,16 @@ function rgbToLab(r,g,b) {
     --col13_fg: #000000;
     --col14_fg: #000000;
     --col15_fg: #000000;
+  
     
   }
   
+  :root {
+  overscroll-behavior: none;
+}
+body{
+  overscroll-behavior: none;
+}
     #maincanvas {
       cursor: crosshair;
       image-rendering: optimizeSpeed;
@@ -2102,6 +2113,10 @@ function rgbToLab(r,g,b) {
       image-rendering: -o-crisp-edges;
       image-rendering: pixelated;
       -ms-interpolation-mode: nearest-neighbor;
+
+      touch-action: none; /* Disable browser handling of all panning and zooming gestures */
+      -webkit-user-select: none; /* Prevent selection */
+      user-select: none;
     }
 
     /* Add new styles for palette modal */
