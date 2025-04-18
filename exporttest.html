@@ -9,6 +9,11 @@
     --foreground-color: #ffffff;
 }
 
+body {
+  overflow: hidden;
+  touch-action: none;;
+}
+
 #header h1 {
   padding:0;
   margin:0;
@@ -60,7 +65,10 @@ a {
  -ms-interpolation-mode: nearest-neighbor;
   touch-action: manipulation;
   cursor:none;
+  /*disable selection*/
+  user-select: none;
 }
+
 #hackLink {
   position: absolute;
   right:10px;
@@ -211,7 +219,7 @@ function redraw(){
     } else {
       mainCanvasCtx.drawImage(curCanvasToDraw,0,0,160,100,dx,dy,160*zoom,100*zoom);
     }
-    
+  
     //draw the cursor
     if (showhand){
       draw_cursor(cursor_link_array,mouse_x-3,mouse_y-1,zoom,dx,dy,mainCanvasCtx,colorPalette[hovercolor]);
@@ -451,29 +459,27 @@ function redraw(){
     drawNextFrame();
   }
 
-  function mouseDown(e){
-    mouseMove(e);
-    if (target>0){
-      if (showAnimation){
-        transition(currentIndex,target-1);
-        currentIndex=target-1;
-        doAnimation();
-      } else {
-        currentIndex=target-1;
-        redraw();        
-      }
-      mouseMove(e);
-    } 
-  }
-  var mouse_x=-100;
-  var mouse_y=-100;
+  var mouse_x=160/2;
+  var mouse_y=80/2;
   var showhand=false;
-  var hovercolor=null;
-  function mouseMove(e){
+  var hovercolor=false;
+  
+  // Variables to track dragging
+  var isDragging = false;
+  var dragStartX = 0;
+  var dragStartY = 0;
+  var lastMouseX = -100;
+  var lastMouseY = -100;
+  
+  var mouse_movement = true;
 
+  function mouseMove(e){
     if (gameState==null){
       return;
     }
+
+    mouse_movement= e.pointerType==="mouse" ? true : false;
+
     var coords = getCoords(e);
 
     var w = mainCanvasCtx.width;
@@ -494,9 +500,35 @@ function redraw(){
 
     var x=Math.floor((coords[0]-dx)/zoom);
     var y=Math.floor((coords[1]-dy)/zoom);
+    
+    // Update drag-based mouse position
+    if (mouse_movement){
+      mouse_x = x;
+      mouse_y = y;
+    }
+    else if (isDragging) {
+      // Calculate the movement delta
+      var deltaX = x - lastMouseX;
+      var deltaY = y - lastMouseY;
+      
+      // Update mouse_x and mouse_y based on drag movement
+      mouse_x += deltaX;
+      mouse_y += deltaY;
+      
+      // Keep mouse position within bounds
+      if (mouse_x < 0) mouse_x = 0;
+      if (mouse_x >= 160) mouse_x = 159;
+      if (mouse_y < 0) mouse_y = 0;
+      if (mouse_y >= 100) mouse_y = 99;
+    }
+    
+    // Store the current position for next movement calculation
+    lastMouseX = x;
+    lastMouseY = y;
+    
     target=0;
-    if(x>=0&&x<160&&y>=0&&y<100) {
-      var ch = gameState.imageDats[currentIndex][x+160*y];
+    if(mouse_x>=0&&mouse_x<160&&mouse_y>=0&&mouse_y<100) {
+      var ch = gameState.imageDats[currentIndex][mouse_x+160*mouse_y];
       var colIndex = parseInt(ch,16);
       target=gameState.hyperlinks[currentIndex][colIndex];
 
@@ -513,8 +545,7 @@ function redraw(){
       // mainCanvas.style.cursor="default";
       showhand=false;
     }
-    mouse_x=x;
-    mouse_y=y;
+    
     redraw();
   }
 
@@ -533,6 +564,10 @@ function init(){
 
   mainCanvas.addEventListener('pointermove', mouseMove,false);
   mainCanvas.addEventListener('pointerdown', mouseDown,false);
+  mainCanvas.addEventListener('click', mouseClick,false);
+  mainCanvas.addEventListener('pointerup', mouseUp,false);
+  mainCanvas.addEventListener('pointerleave', mouseUp,false);
+  mainCanvas.addEventListener('contextmenu', function(e){e.preventDefault();},false);
   
   redraw();
 
@@ -1027,6 +1062,39 @@ function goFullscreen(evt){
   }
 }
 document.addEventListener("keydown", goFullscreen);
+
+function mouseDown(e){
+  mouseMove(e);
+  
+  // Start dragging
+  isDragging = true;
+  var coords = getCoords(e);
+  dragStartX = coords[0];
+  dragStartY = coords[1];
+  
+}
+
+
+function mouseClick(e){
+  mouseMove(e);
+
+  if (target>0){
+    if (showAnimation){
+      transition(currentIndex,target-1);
+      currentIndex=target-1;
+      doAnimation();
+    } else {
+      currentIndex=target-1;
+      redraw();        
+    }
+    mouseMove(e);
+  } 
+}
+
+// Add mouseUp function to stop dragging
+function mouseUp(e) {
+  isDragging = false;
+}
 
 </script>
 </head>

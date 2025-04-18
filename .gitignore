@@ -1,2 +1,3 @@
 compressed
 *.gz
+.DS_Store
