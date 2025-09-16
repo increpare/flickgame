@@ -449,6 +449,41 @@ function redraw(){
     
   }
 
+
+// Legacy getData function for backward compatibility (play.html behavior)
+function get_page_data() {
+    return getData({
+        onSuccess: function(code) {
+            loadState(code);
+            
+            var homepage = gameState.gameLink;
+            var homepageLink = document.getElementById("homeLink");
+            if (homepageLink) {
+                homepageLink.innerHTML = strip_http(homepage);
+                if (!homepage.match(/^https?:\/\//)) {
+                    homepage = "http://" + homepage;
+                }
+                homepageLink.href = homepage;
+            }
+      
+            var hacklink = document.getElementById("hackLink");
+            if (hacklink) {
+                var id = getParameterByName("p").replace(/[\\\/]/, "");
+                var url = "index.html?p=" + id;
+                url = qualifyURL(url);
+                hacklink.href = url;
+                hacklink.innerHTML = "&sdotb; edit";
+            }
+            
+            // Call renderImages if it exists
+            if (typeof renderImages === 'function') {
+                renderImages();
+            }
+        }
+    });
+}
+
+
 var mainCanvas;
 var mainCanvasCtx;
 var mainCanvasContainer;
@@ -465,7 +500,7 @@ function init(){
 
   redraw();
 
-  getData();
+  get_page_data();
 
 }
 
