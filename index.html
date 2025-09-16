@@ -1571,8 +1571,8 @@ function rgbToLab(r,g,b) {
         var r = new FileReader();
         r.onload = function (e) {
           var contents = e.target.result;
-          var fromToken = "<!--__EmbedBegin__-->";
-          var endToken = "<!--__EmbedEnd__-->";
+          var fromToken = "/*EMBED_BEGIN*/";
+          var endToken = "/*EMBED_END*/";
           var fromIndex = contents.indexOf(fromToken);
           var endIndex = contents.indexOf(endToken);
           var ss1 = contents.substr(fromIndex + fromToken.length, endIndex - fromIndex - fromToken.length);
