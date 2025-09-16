@@ -11,6 +11,7 @@
   <script src="lib/codemirror.js"></script>
   <script src="addon/mode/simple.js"></script>
   <script src="addon/lint/lint.js"></script>
+  <script src="flickgame_base.js"></script>
 
   <style type="text/css">
     .CodeMirror {
@@ -437,12 +438,6 @@
     var layerNameElem = new Array();
     var visibilityElem = new Array();
 
-    var aurl = document.createElement('a');
-
-    function qualifyURL(url) {
-      aurl.href = url;
-      return aurl.href;
-    }
 
 
     var radiusElem = new Array();
@@ -1200,7 +1195,7 @@
       setLayerVisible(0);
       setColor(colorIndex);
 
-      getData();
+      getDataFlickscript();
 
       setVisuals(true);
       nosave = false;
@@ -1234,19 +1229,7 @@
     }
 
 
-
-    function getParameterByName(name) {
-      name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
-      var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-        results = regex.exec(location.search);
-      return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-    }
-
-
-    function strip_http(url) {
-      url = url.replace(/^https?:\/\//, '');
-      return url;
-    }
+    
 
     function getFromLocalStorage() {
 
@@ -1258,37 +1241,23 @@
       }
     }
 
-    function getData() {
-      var id = getParameterByName("p").replace(/[\\\/]/, "");
-      if (id === null || id.length === 0) {
-
-        getFromLocalStorage();
-        return;
-      }
-
-      var githubURL = 'https://api.github.com/gists/' + id;
-
-      var githubHTTPClient = new XMLHttpRequest();
-      githubHTTPClient.open('GET', githubURL);
-      githubHTTPClient.onreadystatechange = function () {
-        if (githubHTTPClient.readyState != 4) {
-          return;
+    function getDataFlickscript() {
+        var id = getParameterByName("p").replace(/[\\\/]/, "");
+        if (id === null || id.length === 0) {
+            getFromLocalStorage();
+            return;
         }
-        var result = JSON.parse(githubHTTPClient.responseText);
-        if (githubHTTPClient.status === 403) {
-          alert(result.message);
-        } else if (githubHTTPClient.status !== 200 && githubHTTPClient.status !== 201) {
-          alert("HTTP Error " + githubHTTPClient.status + ' - ' + githubHTTPClient.statusText);
-        }
-        var result = JSON.parse(githubHTTPClient.responseText);
-        var code = result["files"]["game.txt"]["content"];
 
-        stringToState(code);
-        setVisuals(true);
-        setLayer(canvasIndex + 1);
-      }
-      githubHTTPClient.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-      githubHTTPClient.send();
+        return getData({
+            onSuccess: function(code) {
+                stringToState(code);
+                setVisuals(true);
+                setLayer(canvasIndex + 1);
+            },
+            onError: function(message) {
+                alert(message);
+            }
+        });
     }
 
     function drawThumbnail(n) {

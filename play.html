@@ -85,7 +85,8 @@ a {
   line-height: 30px;
 }
 </style>
-<script src="flickgame.js"></script>
+<script src="flickgame_base.js"></script>
+<script src="flickgame_vanilla.js"></script>
 <script>
 
 /*EMBED_BEGIN*/
@@ -450,7 +451,6 @@ function redraw(){
   }
 
 
-// Legacy getData function for backward compatibility (play.html behavior)
 function get_page_data() {
     return getData({
         onSuccess: function(code) {

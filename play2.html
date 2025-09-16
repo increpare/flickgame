@@ -83,11 +83,12 @@ a {
   line-height: 30px;
 }
 </style>
+<script src="flickgame_base.js"></script>
 <script>
 
-<!--__EmbedBegin__-->
+//<!--__EmbedBegin__-->
 var embeddedDat="__EMBED__";
-<!--__EmbedEnd__-->
+//<!--__EmbedEnd__-->
 
 var zoom=1;
 var currentIndex="R";
@@ -228,15 +229,10 @@ function init(){
 
   redraw();
 
-  getData();
+  get_page_data();
 
 }
 
-var aurl = document.createElement('a');
-function qualifyURL(url) {
- aurl.href = url;
- return aurl.href;
-}
 
 var gameLink;
 var canvasses;
@@ -270,82 +266,42 @@ function loadState(dat){
   canvasIndex="R";
 }
 
-function getParameterByName(name) {
-    name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
-    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-        results = regex.exec(location.search);
-    return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+
+function get_page_data() {
+    return getData({
+        onSuccess: function(code) {
+            loadState(code);
+            
+            var homepageLink = document.getElementById("homeLink");
+            if (homepageLink) {
+                homepageLink.textContent = gameLink;
+            }
+      
+            var hacklink = document.getElementById("hackLink");
+            if (hacklink) {
+                var id = getParameterByName("p").replace(/[\\\/]/, "");
+                var url = "index2.html?p=" + id;
+                url = qualifyURL(url);
+                hacklink.href = url;
+                hacklink.innerHTML = "&sdotb; edit";
+            }
+            
+            renderImages();
+        },
+        onEmbedded: function(code) {
+            loadState(code);
+            
+            var homepageLink = document.getElementById("homeLink");
+            if (homepageLink) {
+                homepageLink.textContent = gameLink;
+            }
+            
+            renderImages();
+        }
+    });
 }
 
 
-function strip_http(url) {
-   url = url.replace(/^https?:\/\//,'');
-   return url;
-}
-
-function getData(){ 
-  if (embeddedDat[0]!=='_'){
-    embeddedDat=decodeURI(embeddedDat);
-    loadState(embeddedDat);
-
-    var homepageLink = document.getElementById("homeLink");
-    homepageLink.textContent=gameLink;
-
-
-    renderImages();
-    return;
-  }
-  var id = getParameterByName("p").replace(/[\\\/]/,"");
-  if (id===null||id.length===0) {
-    console.log("No ID specified in URL.")
-    return;
-  }
-
-  var githubURL = 'https://api.github.com/gists/'+id;
-
-  var githubHTTPClient = new XMLHttpRequest();
-  githubHTTPClient.open('GET', githubURL);
-  githubHTTPClient.onreadystatechange = function() {
-    if(githubHTTPClient.readyState!=4) {
-      return;
-    }   
-    var result = JSON.parse(githubHTTPClient.responseText);
-    if (githubHTTPClient.status===403) {
-      console.log(result.message);
-    } else if (githubHTTPClient.status!==200&&githubHTTPClient.status!==201) {
-      console.log("HTTP Error "+ githubHTTPClient.status + ' - ' + githubHTTPClient.statusText);
-    }
-    var result = JSON.parse(githubHTTPClient.responseText);
-    var code=result["files"]["game.txt"]["content"];
-    loadState(code);
-
-    var homepage=gameLink;
-    var homepageLink = document.getElementById("homeLink");
-    homepageLink.textContent=gameLink;  
-    var hacklink = document.getElementById("hackLink");
-
-    var url = "index2.html?p="+id;
-    url=qualifyURL(url);
-    hacklink.href=url;
-    hacklink.innerHTML="&sdotb; edit";
-    renderImages();
-  }
-  githubHTTPClient.setRequestHeader("Content-type","application/x-www-form-urlencoded");
-  githubHTTPClient.send();
-}
-
-
-function RLE_decode(encoded) {
-    var output = "";
-    for (var i=0;i<encoded.length;i+=2) {
-      var count = encoded[i];
-      var ch = encoded[i+1];
-      for (var j=0;j<count;j++){
-        output+=ch;
-      }
-    }
-    return output;
-}
 
   var colorPalette = [
             "#000",
