@@ -403,18 +403,22 @@ function rgbToLab(r,g,b) {
   }
 
 
-
-    function nearest_color_in_palette(palette,target_color){
-      var nearest_color = palette[0];
+  function nearest_color_index_in_palette(palette,target_color){
+      var nearest_color_idx = 0;
       var nearest_distance = color_distance(target_color, palette[0]);
       for (var i = 1; i < palette.length; i++){
         var distance = color_distance(target_color, palette[i]);
         if (distance < nearest_distance){
           nearest_distance = distance;
-          nearest_color = palette[i];
+          nearest_color_idx = i;
         }
       }
-      return nearest_color;
+      return nearest_color_idx;
+    }  
+
+    function nearest_color_in_palette(palette,target_color){
+      var nearest_color_idx = nearest_color_index_in_palette(palette,target_color);
+      return palette[nearest_color_idx];
     }
 
     function furthest_color_in_palette(palette,target_color){
@@ -959,6 +963,9 @@ function rgbToLab(r,g,b) {
       palette_name = state.palette_name;
       colorPalette = palettes[palette_name];
 
+      foreground_color = state.foreground_color;
+      changeBackgroundColor(state.background_color);
+
       if (state.canvasses.length < FRAME_COUNT){
         //then we need to pad the canvasses with empty canvasses
         for (var i = state.canvasses.length; i < FRAME_COUNT; i++){
@@ -1114,8 +1121,10 @@ function rgbToLab(r,g,b) {
     function clearPalette() {
       preserveUndoState();
       var canvas = canvasses[canvasIndex];
+      var bg_color_idx = nearest_color_index_in_palette(colorPalette, background_color);
+      
       for (var i = 0; i < width * height; i++) {
-        canvas[i] = 0;
+        canvas[i] = bg_color_idx;
       }
 
       setVisuals();
