@@ -955,7 +955,7 @@ function rgbToLab(r,g,b) {
 
       set_modal_panel_selected_item(palette_name,state.palette_name);
       palette_name = state.palette_name;
-      colorPalette = palettes[palette_name];
+      set_color_palette(palette_name);
 
       foreground_color = state.foreground_color;
       changeBackgroundColor(state.background_color);
@@ -1082,6 +1082,10 @@ function rgbToLab(r,g,b) {
       for (var i = 0; i < 16; i++) {
         dropdownOption[i].value = hyperlinks[canvasIndex][i];
       }
+
+      //set background dropdown
+      var bg_color_idx = nearest_color_index_in_palette(colorPalette, background_color);
+      bgColorSelect.value = bg_color_idx;
     }
 
     function getRandomInt(min, max) {
@@ -1294,7 +1298,8 @@ function rgbToLab(r,g,b) {
           var left_right_removed = left_removed.substring(0, final_quote_index);
           stringToState(left_right_removed);
           setVisuals(true);
-          setLayer(canvasIndex + 1);
+          setLayer(canvasIndex + 1);          
+          setDropdowns();
         }
         r.readAsText(f);
       } else {
