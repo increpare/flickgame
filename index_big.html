@@ -966,18 +966,6 @@ function rgbToLab(r,g,b) {
       foreground_color = state.foreground_color;
       changeBackgroundColor(state.background_color);
 
-      if (state.canvasses.length < FRAME_COUNT){
-        var bg_color_idx = nearest_color_index_in_palette(colorPalette, background_color);
-
-        //then we need to pad the canvasses with empty canvasses
-        for (var i = state.canvasses.length; i < FRAME_COUNT; i++){
-          state.canvasses.push(new Uint8Array(width * height));
-          for (var j = 0; j < width * height; j++){
-            state.canvasses[i][j] = bg_color_idx;
-          }
-        }
-      }
-
       canvasses = new Array();
       for (var k = 0; k < state.canvasses.length; k++) {
         var s = state.canvasses[k];
@@ -993,6 +981,20 @@ function rgbToLab(r,g,b) {
         }
         canvasses.push(ar);
       }
+
+      if (canvasses.length < FRAME_COUNT){
+        var bg_color_idx = nearest_color_index_in_palette(colorPalette, background_color);
+
+        //then we need to pad the canvasses with empty canvasses
+        for (var i = canvasses.length; i < FRAME_COUNT; i++){
+          var canvas = new Uint8Array(width * height);
+          for (var j = 0; j < width * height; j++){
+            canvas[j] = bg_color_idx;
+          }
+          canvasses.push(canvas);          
+        }
+      }
+
       hyperlinks = state.hyperlinks;
 
     }
