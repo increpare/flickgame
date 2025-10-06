@@ -13,7 +13,7 @@
     const FRAME_COUNT = 128;
     const COLOUR_COUNT = 16;
     var contexts = new Array();
-    var version = "0.1";
+    var version = "2";
     var gameLink = "www.flickgame.org"
     var canvasIndex = 0;
     var palette_name = "dawnbringer-16";
@@ -896,6 +896,7 @@ function rgbToLab(r,g,b) {
       state.palette_name = palette_name;
       state.background_color = background_color;
       state.foreground_color = foreground_color;
+      state.version = version;
       for (var i = 0; i < FRAME_COUNT; i++) {
         var canvas = canvasses[i];
         var s = "";
@@ -910,6 +911,31 @@ function rgbToLab(r,g,b) {
       return result;
     }
 
+    function upgrade_v1_to_v2(state){
+      //https://github.com/increpare/flickgame/issues/82
+      //if version not defined, then I need to do the pallette_fix
+
+      //imperfect fix, but what am i gonna do...
+      var assignments = {
+        "grayscale-16": ["go-line", "galaxy-flame", "fading-16"],
+        "dawnbringer-16": ["na16", "nanner-jam", "steam-lords", "summers-past-16", "taffy-16", "urbex-16", "vanilla-milkshake", "woodspark"],
+        "sweetie-16": ["miyazaki-16", "daylight-16"],
+      };
+
+      for (var paletteName in assignments){
+         aliases = assignments[paletteName];
+         for (var alias_index in aliases){
+          var alias = aliases[alias_index];
+          if (state.palette_name === alias){
+            state.palette_name = paletteName;
+          }
+         }
+      }
+
+      state.version = "2";
+      return state;      
+    }
+
     function stringToState(str) {
       var state = JSON.parse(str);
       gameLink = state.gameLink;
@@ -922,6 +948,13 @@ function rgbToLab(r,g,b) {
       if (state.palette_name === undefined){
         state.palette_name = "dawnbringer-16";
       }
+
+      
+      //if version not defined, then I need to do the pallette_fix
+      if (state.version === undefined){//only introduced version numbers in v2
+        upgrade_v1_to_v2(state);
+      }
+
       set_modal_panel_selected_item(palette_name,state.palette_name);
       palette_name = state.palette_name;
       colorPalette = palettes[palette_name];
