@@ -1,0 +1,2262 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8">
+  
+  <meta name="Description" CONTENT="Draw and share simple games with your mouse or fingers!">
+
+  <link rel="icon" type="image/png" href="favicon.png">
+  <script src="FileSaver.js"></script>
+  <script src="flickgame_base.js"></script>
+  <script src="flickgame_vanilla.js"></script>
+  <script type="text/javascript">
+
+    const FRAME_COUNT = 128;
+    const COLOUR_COUNT = 16;
+    var contexts = new Array();
+    var version = "0.1";
+    var gameLink = "www.flickgame.org"
+    var canvasIndex = 0;
+    var palette_name = "dawnbringer-16";
+    var background_color = "#000000";
+    var foreground_color = "#ffffff";
+    var canvasses = new Array();
+      var hyperlinks = new Array();
+      //for each page, we have a linked page for each colour
+      for (var i = 0; i < FRAME_COUNT; i++){
+        hyperlinks[i] = new Array(COLOUR_COUNT).fill(0);
+    }
+
+    var shareLinkInner = null;
+
+
+var colorNames = {
+  antiquity16: [
+    'Mine Shaft',         'Cocoa Brown',
+    'Crater Brown',       'Pickled Bean',
+    'Santa Fe',           'Apricot',
+    'Gold Sand',          'Cactus',
+    'Clay Creek',         'Raven',
+    'Cascade',            'Burnt Sienna',
+    'Juicy Passionfruit', 'Flame Pea',
+    'Golden Grass',       'Zombie'
+  ],
+  arq16: [
+    'White',            'Peach Orange',
+    'Aluminium',        'Indigo',
+    'Cinnabar',         'Haiti',
+    'Wine Berry',       'Congress Blue',
+    'Carrot Orange',    'Nutmeg',
+    'Cornflower Lilac', 'Pastel Green',
+    'Gorse',            'Fuchsia Blue',
+    'Deep Blush',       'Eucalyptus'
+  ],
+  'bubblegum-16': [
+    'Woodsmoke',      'Monarch',
+    'Thunderbird',    'Crusta',
+    'Gold',           'Alice Blue',
+    'Tickle Me Pink', 'Radical Red',
+    'Disco',          'Ripe Plum',
+    'Astronaut',      'Danube',
+    'Green Yellow',   'Malachite',
+    'Allports',       'Prussian Blue'
+  ],
+  colodore: [
+    'Black',        'Tundora',
+    'Boulder',      'Silver Chalice',
+    'White',        'Solid Pink',
+    'Contessa',     'Saddle Brown',
+    'Mule Fawn',    'Manz',
+    'Mint Green',   'Fruit Salad',
+    'Downy',        'Cornflower Blue',
+    'Governor Bay', 'Vivid Violet'
+  ],
+  'color-graphics-adapter': [
+    'Black',           'Emperor',
+    'Silver Chalice',  'White',
+    'Dark Blue',       'Dodger Blue',
+    'Japanese Laurel', "Screamin' Green",
+    'Persian Green',   'Aquamarine',
+    'Bright Red',      'Persimmon',
+    'Flirt',           'Pink Flamingo',
+    'Chelsea Gem',     'Gorse'
+  ],
+  commodore64: [
+    'Black',              'Dove Gray',
+    'Gray',               'Silver Chalice',
+    'White',              'Sepia Skin',
+    'Contessa',           'Raw Umber',
+    'Earth',              'Deco',
+    'Granny Smith Apple', 'Fruit Salad',
+    'Fountain Blue',      'Moody Blue',
+    'Victoria',           'Trendy Pink'
+  ],
+  'cretaceous-16': [
+    'Cape Cod',       'Outer Space',
+    'Moonless Sky',   'Tom Thumb',
+    'Spicy Mix',      'Millbrook',
+    'Don Juan',       'Chalet Green',
+    'Sandstone',      'Dingley',
+    'Barley Corn',    'Stonewall',
+    'Sandrift',       'Dawn',
+    'Heathered Gray', 'Nomad'
+  ],
+  'darkseed-16': [
+    'Black',            'Swamp',
+    'Stellar Explorer', 'Daintree',
+    'Elephant',         'Thunder',
+    'Eggplant',         'Kabul',
+    'Russett',          'Corduroy',
+    'Schooner',         'Donkey Brown',
+    'Rodeo Dust',       'Eunry',
+    'Oyster Pink',      'Alabaster'
+  ],
+  'dawnbringer-16': [
+    'Ebony',          'Livid Brown',
+    'Rhino',          'Emperor',
+    'Mule Fawn',      'Green Pea',
+    'Flush Mahogany', 'Pablo',
+    'Danube',         'Brandy Punch',
+    'Regent Gray',    'Olive Drab',
+    'Eunry',          'Downy',
+    'Tacha',          'Zanah'
+  ],
+  'daylight-16': [
+    'Wheat',         'Porsche',
+    'Antique Brass', 'Au Chico',
+    'Matterhorn',    'Old Lavender',
+    'Stack',         'Swamp Green',
+    'Thunder',       'Costa Del Sol',
+    'Tussock',       'Saffron Mango',
+    'Brandy Punch',  'Potters Clay',
+    'Spice',         'Brown Rust'
+  ],
+  'endesga-16': [
+    'Harvest Gold',     'Santa Fe',
+    'Lotus',            'Woody Brown',
+    'Mexican Red',      'Cinnabar',
+    'Sea Buckthorn',    'Mustard',
+    'Mantis',           'Goblin',
+    'Gable Green',      'Blue Bayoux',
+    'Casper',           'White',
+    'Bright Turquoise', 'Lochmara'
+  ],
+  'eroge-copper': [
+    'Gondola',          'Saddle',
+    'Potters Clay',     'Tussock',
+    'Tacao',            'Cherokee',
+    'Gin Fizz',         'Cotton Seed',
+    'Chelsea Cucumber', 'Neptune',
+    'Steel Blue',       'Spectra',
+    'Port Gore',        'Lotus',
+    'Contessa',         'Apricot'
+  ],
+  'fading-16': [
+    'Sapling',      'Tan',
+    'Muddy Waters', 'Copper Rust',
+    'Cosmic',       'Matterhorn',
+    'Trout',        'Cutty Sark',
+    'Sage',         'Zambezi',
+    'Hurricane',    'Zorba',
+    'Flax Smoke',   'Teak',
+    'Domino',       'Barley Corn'
+  ],
+  'galaxy-flame': [
+    'Hippie Blue',      'Calypso',
+    'Pickled Bluewood', 'Woodsmoke',
+    'Outer Space',      'Timber Green',
+    'Mineral Green',    'Axolotl',
+    'Sage',             'Parchment',
+    'Maize',            'Porsche',
+    'Driftwood',        'Old Copper',
+    'Cork',             'Thunder'
+  ],
+  'go-line': [
+    'Ripe Plum',   'Disco',
+    'Torch Red',   'Crusta',
+    'Bright Sun',  'Lima',
+    'Ocean Green', 'Chambray',
+    'Black',       'Blue',
+    'Dodger Blue', 'Bright Turquoise',
+    'Serenade',    'French Gray',
+    'Brown Rust',  'Soya Bean'
+  ],
+  'grayscale-16': [
+    'Black',      'Cod Gray',
+    'Mine Shaft', 'Lacquered Liquorice',
+    'Tundora',    'Scorpion',
+    'Dove Gray',  'Dull',
+    'Gray',       'More Than A Week',
+    'Dusty Gray', 'Silver Chalice',
+    'Silver',     'Alto',
+    'Mercury',    'White'
+  ],
+  'island-joy-16': [
+    'White',           'Aquamarine',
+    'Java',            'Shuttle Gray',
+    'Martinique',      'Elm',
+    'Fern',            'Conifer',
+    'Marigold Yellow', 'Tan Hide',
+    'Chestnut Rose',   'Eminence',
+    'Maroon Flush',    'Persian Pink',
+    'Manhattan',       'Sage'
+  ],
+  'lost-century': [
+    'Tan',           'Antique Brass',
+    'Brown Rust',    'Spicy Mix',
+    'Matterhorn',    'Muddy Waters',
+    'Cape Palliser', 'Taupe',
+    'Yellow Metal',  'Husk',
+    'Akaroa',        'Cascade',
+    'Cutty Sark',    'Don Juan',
+    'Hurricane',     'Bronco'
+  ],
+  'microsoft-windows': [
+    'Black',           'Gray',
+    'Silver',          'White',
+    'Maroon',          'Red',
+    'Japanese Laurel', 'Green',
+    'Olive',           'Yellow',
+    'Navy Blue',       'Blue',
+    'Fresh Eggplant',  'Electric Violet',
+    'Blue Lagoon',     'Cyan / Aqua'
+  ],
+  'miyazaki-16': [
+    'Baltic Sea',        'Rhino',
+    'Dorado',            'Bandicoot',
+    'Heathered Gray',    'Sea Mist',
+    'Satin Linen',       'Jelly Bean',
+    'Shakespeare',       'Roman Coffee',
+    'Fuzzy Wuzzy Brown', 'Tonys Pink',
+    'Green Pea',         'Fruit Salad',
+    'Sushi',             'Anzac'
+  ],
+  'na16': [
+    'Manatee',       'Mulled Wine',
+    'Livid Brown',   'Cape Palliser',
+    'Burning Sand',  'Sidecar',
+    'Lime',          'Pesto',
+    'Fire Bush',     'Stiletto',
+    'Chestnut Rose', 'Eminence',
+    'Half Baked',    'Astral',
+    'Nile Blue',     'Gondola'
+  ],
+  'nanner-jam': [
+    'Blackcurrant',  'Eggplant',
+    'Tosca',         'Brown Rust',
+    'Antique Brass', 'Calico',
+    'Tahuna Sands',  'De York',
+    'Como',          'Waikawa Gray',
+    'Polo Blue',     'Cornflower',
+    'Old Rose',      'Cameo',
+    'Spicy Pink',    'Bison Hide'
+  ],
+  'pico-8': [
+    'Black',
+    'Cloud Burst',
+    'Tawny Port',
+    'Tropical Rain Forest',
+    'Brown Rust',
+    'Soya Bean',
+    'French Gray',
+    'Serenade',
+    'Torch Red',
+    'Web Orange',
+    'Broom',
+    'Malachite',
+    'Dodger Blue',
+    'Kimberly',
+    'Tickle Me Pink',
+    'Flesh'
+  ],
+  'r-place': [
+    'White',          'Mercury',
+    'Gray',           'Mine Shaft',
+    'Carnation Pink', 'Red',
+    'Tangerine',      'Cape Palliser',
+    'Turbo',          'Conifer',
+    'Green',          "Robin's Egg Blue",
+    'Lochmara',       'Blue',
+    'Lavender',       'Fresh Eggplant'
+  ],
+  'shido-cyberneon': [
+    'Stratos',       'Blue Stone',
+    'Green Haze',    'Spring Green',
+    'Congress Blue', 'Lochmara',
+    'Cyan / Aqua',   'Pink Flamingo',
+    'Purple Heart',  'Purple',
+    'Lipstick',      'Torch Red',
+    'Astronaut',     'San Marino',
+    'Sail',          'White'
+  ],
+  'steam-lords': [
+    'Green Kelp',    'Killarney',
+    'Spring Leaves', 'Gurkha',
+    'Go Ben',        'Roman Coffee',
+    'Congo Brown',   'Livid Brown',
+    'Cinder',        'Bleached Cedar',
+    'Martinique',    'Comet',
+    'Slate Gray',    'Regent Gray',
+    'Tower Gray',    'Tiara'
+  ],
+  'summers-past-16': [
+    'Temptress',        'Voodoo',
+    'Falcon',           'Thatch',
+    'Fall Green',       'Glacier',
+    'Hippie Blue',      'Willow Grove',
+    'Chelsea Cucumber', 'Old Gold',
+    'Energy Yellow',    'Gold Sand',
+    'Burnt Sienna',     'Contessa',
+    'Flush Mahogany',   'Solid Pink'
+  ],
+  'sweetie-16': [
+    'Mirage',              'Finn',
+    'Night Shadz',         'Burnt Sienna',
+    'Macaroni and Cheese', 'Sulu',
+    'Chateau Green',       'Lochinvar',
+    'Astronaut',           'Indigo',
+    'Picton Blue',         'Malibu',
+    'Wild Sand',           'Nepal',
+    'Blue Bayoux',         'Pickled Bluewood'
+  ],
+  'taffy-16': [
+    'Ebony Clay',     'Blue Violet',
+    'Regent St Blue', 'Hint of Green',
+    'Hit Pink',       'Wild Watermelon',
+    'Cabaret',        'Indigo',
+    'Picton Blue',    'Shamrock',
+    'Green Yellow',   'Golden Fizz',
+    'Jaffa',          'Valencia',
+    'Night Shadz',    'Martinique'
+  ],
+  'urbex-16': [
+    'Foggy Gray',   'Lemon Grass',
+    'Fuscous Gray', 'Cocoa Brown',
+    'Harvest Gold', 'Sage',
+    'Dingley',      'Kelp',
+    'Well Read',    'Claret',
+    'Cannon Pink',  'Mamba',
+    'Asphalt',      'Eminence',
+    'Indigo',       'Hippie Blue'
+  ],
+  'vanilla-milkshake': [
+    'Shark',         'Salt Box',
+    'Wafer',         'Geraldine',
+    'Dull Lavender', 'Regent St Blue',
+    'Jagged Ice',    'Lavender Rose',
+    'Envy',          'Sulu',
+    'Sandwisp',      'Tequila',
+    'Tumbleweed',    'Chardonnay',
+    'Picasso',       'Early Dawn'
+  ],
+  'woodspark': [
+    'Sandwisp',    'Saffron Mango',
+    'Di Serria',   'Au Chico',
+    'Matterhorn',  'Killarney',
+    'Fruit Salad', 'Lime',
+    'Downy',       'Wedgewood',
+    'Smoky',       'Gumbo',
+    'Wafer',       'Carnation',
+    'Camelot',     'Deep Blush'
+  ]
+};
+
+function rgbToLab(r,g,b) {
+  r /= 255;
+  g /= 255;
+  b /= 255;
+  r = (r > 0.04045) ? (((r + 0.055) / 1.055) ** 2.4) : r / 12.92;
+  g = (g > 0.04045) ? (((g + 0.055) / 1.055) ** 2.4) : g / 12.92;
+  b = (b > 0.04045) ? (((b + 0.055) / 1.055) ** 2.4) : b / 12.92;
+  var x = (r * 0.4124 + g * 0.3576 + b * 0.1805) / 0.95047;
+  var y = (r * 0.2126 + g * 0.7152 + b * 0.0722) / 1.00000;
+  var z = (r * 0.0193 + g * 0.1192 + b * 0.9505) / 1.08883;
+  x = (x > 0.008856) ? (x ** (1 / 3)) : (7.787 * x) + 16 / 116;
+  y = (y > 0.008856) ? (y ** (1 / 3)) : (7.787 * y) + 16 / 116;
+  z = (z > 0.008856) ? (z ** (1 / 3)) : (7.787 * z) + 16 / 116;
+  return {
+    L: (116 * y) - 16,
+    a: 500 * (x - y),
+    b: 200 * (y - z),
+  };
+}
+
+  function color_distance(color1, color2) {
+    // Convert hex colors to RGB
+    const r1 = parseInt(color1.slice(1,3), 16);
+    const g1 = parseInt(color1.slice(3,5), 16);
+    const b1 = parseInt(color1.slice(5,7), 16);
+    
+    const r2 = parseInt(color2.slice(1,3), 16);
+    const g2 = parseInt(color2.slice(3,5), 16);
+    const b2 = parseInt(color2.slice(5,7), 16);
+    
+    // Convert to LAB
+    const lab1 = rgbToLab(r1, g1, b1);
+    const lab2 = rgbToLab(r2, g2, b2);
+    
+    // Calculate Delta E using the CIE76 formula
+    const deltaL = lab1.L - lab2.L;
+    const deltaA = lab1.a - lab2.a;
+    const deltaB = lab1.b - lab2.b;
+    
+    return Math.sqrt(deltaL * deltaL + deltaA * deltaA + deltaB * deltaB);
+  }
+
+
+
+    function nearest_color_in_palette(palette,target_color){
+      var nearest_color = palette[0];
+      var nearest_distance = color_distance(target_color, palette[0]);
+      for (var i = 1; i < palette.length; i++){
+        var distance = color_distance(target_color, palette[i]);
+        if (distance < nearest_distance){
+          nearest_distance = distance;
+          nearest_color = palette[i];
+        }
+      }
+      return nearest_color;
+    }
+
+    function furthest_color_in_palette(palette,target_color){
+      var furthest_color = palette[0];
+      var furthest_distance = color_distance(target_color, palette[0]);
+      for (var i = 1; i < palette.length; i++){
+        var distance = color_distance(target_color, palette[i]);
+        if (distance > furthest_distance){
+          furthest_distance = distance;
+          furthest_color = palette[i];
+        }
+      }
+      return furthest_color;
+    }
+          
+    function find_palette_transformation(palettea,paletteb){
+      //finds what colours in the second palette correspond most closely to those in the first palette - has to be a 1-1 mapping.
+      var mapping = {};
+      
+      var colors_to_allocate = palettea.concat([]);
+      var colors_to_target = paletteb.concat([]);
+      while (colors_to_allocate.length > 0){
+       //from all the pairs of colors colors_to_allocate,paletteb, find the pair with the least distance.
+       var best_distance = Infinity;
+       var best_pair = null;
+       for (var i = 0; i < colors_to_allocate.length; i++){
+        for (var j = 0; j < colors_to_target.length; j++){
+          var distance = color_distance(colors_to_allocate[i], colors_to_target[j]);
+          if (distance < best_distance){
+            best_distance = distance;
+            best_pair = [colors_to_allocate[i], colors_to_target[j]];
+          }
+        }
+       }
+       //remove best_match from colors_to_allocate
+       colors_to_allocate.splice(colors_to_allocate.indexOf(best_pair[0]), 1);   
+       colors_to_target.splice(colors_to_target.indexOf(best_pair[1]), 1);
+       mapping[palettea.indexOf(best_pair[0])] = paletteb.indexOf(best_pair[1]);
+      }
+      return mapping;
+    }
+
+    function apply_state_mapping(mapping){
+      for (var i = 0; i < canvasses.length; i++){
+        for (var j = 0; j < canvasses[i].length; j++){
+          canvasses[i][j] = mapping[canvasses[i][j]];
+        }
+      }
+      var old_hyperlinks = hyperlinks;
+      hyperlinks = new Array(FRAME_COUNT).fill([]);
+      for (var page_idx = 0; page_idx < old_hyperlinks.length; page_idx++){
+        var page_links = new Array(COLOUR_COUNT).fill(0);
+        var page_links_old = old_hyperlinks[page_idx];
+        for (var color_idx = 0; color_idx < page_links_old.length; color_idx++){
+          page_links[mapping[color_idx]] = page_links_old[color_idx];
+        }
+        hyperlinks[page_idx] = page_links;
+      }
+
+    }
+
+    function transform_state(palette_before, palette_after){
+      //need to transform canvasses and hyperlinks to the new palette.
+      var mapping = find_palette_transformation(palette_before, palette_after);
+      apply_state_mapping(mapping);
+      
+      //transform background_color      
+      var new_background_color = nearest_color_in_palette(palette_after, background_color);  
+      changeBackgroundColor(new_background_color);
+    }
+
+    var background_colors = {};
+    //for each color-palette, find the darkest color and use it as the background color.
+    for (var paletteName in palettes) {
+      var palette = palettes[paletteName];
+      var darkest_color = nearest_color_in_palette(palette,"#000000");
+      background_colors[paletteName] = darkest_color;
+    }
+
+    //dawnbringer
+    //http://www.pixeljoint.com/forum/forum_posts.asp?TID=12795
+    var colorPalette = [
+      "#140c1c",
+      "#442434",
+      "#30346d",
+      "#4e4a4e",
+      "#854c30",
+      "#346524",
+      "#d04648",
+      "#757161",
+      "#597dce",
+      "#d27d2c",
+      "#8595a1",
+      "#6daa2c",
+      "#d2aa99",
+      "#6dc2ca",
+      "#dad45e",
+      "#deeed6"
+    ];
+
+    function set_color_palette(name,preserver_undo_state = true){
+      // if there is something on the undo stack, let's check if the previous one 
+      // was a change of colour palette 
+      // so that information doesn't get lost if you're changing palette rapidly
+      if (undoList.length > 0){
+        var previous_action = undoList[undoList.length - 1];
+        if (previous_action.palette_name !== palette_name){
+          var old_canvas_index = canvasIndex;
+          doUndo();        
+          setLayer(old_canvas_index+1,false)
+        }
+      }
+      for (let i=0;i<bgColorSelectOptions.length;i++){
+        bgColorSelectOptions[i].textContent = colorNames[name][i];
+      }
+
+      
+      if (preserver_undo_state){
+        preserveUndoState();
+      }
+      transform_state(colorPalette, palettes[name]);
+      colorPalette = palettes[name];
+      // Update color swatches
+      for (var i = 0; i < COLOUR_COUNT; i++) {
+        document.documentElement.style.setProperty('--col' + i, colorPalette[i]);          
+        var distance_from_white = color_distance(colorPalette[i], "#ffffff");
+        var distance_from_black = color_distance(colorPalette[i], "#000000");
+        var text_color = distance_from_white > distance_from_black ? "#ffffff" : "#000000";
+        bgColorSelectOptions[i].style.setProperty('--col' + i + '_fg', text_color);
+        
+      }
+
+
+      var bgColorSelect = document.getElementById('bgColorSelect');
+      bgColorSelect.value = colorPalette.indexOf(background_color);
+
+      //need to set all the link-dropdowns to reflect the hyperlinks
+      setDropdowns();
+      set_modal_panel_selected_item(palette_name,name);
+      palette_name = name;
+    }
+
+    function revert_color_palette_to(p_name){
+      var old_palette = palettes[p_name];
+      var newer_palette = palettes[palette_name];   
+      var mapping = find_palette_transformation(old_palette, newer_palette);
+      //invert the mapping
+      var inverted_mapping = {};
+      for (var key in mapping) {
+        inverted_mapping[mapping[key]] = key;
+      }
+      apply_state_mapping(inverted_mapping);
+      set_modal_panel_selected_item(palette_name,p_name);
+      palette_name = p_name;
+      colorPalette = palettes[p_name];
+      
+      // Update color swatches
+      for (var i = 0; i < COLOUR_COUNT; i++) {
+        document.documentElement.style.setProperty('--col' + i, colorPalette[i]);
+      }
+      
+      // Set the background color properly
+      if (background_colors[p_name]) {
+        changeBackgroundColor(background_colors[p_name], false);
+      }
+    }
+
+    function set_modal_panel_selected_item(from_name, to_name){
+      if (modal===null){
+        return;
+      }
+      var old_palette_index = Object.keys(palettes).indexOf(from_name);
+      var new_palette_index = Object.keys(palettes).indexOf(to_name);
+      
+      let old_name_div = document.getElementById('palette_name_' + old_palette_index);
+      let new_name_div = document.getElementById('palette_name_' + new_palette_index);
+      old_name_div.textContent = from_name;
+      old_name_div.style.color = 'gray';
+      new_name_div.textContent = "[ "+to_name+" ]";
+      new_name_div.style.color = 'white';
+
+    }
+
+    var modal = null;
+    function openPaletteSelector(){
+      if (modal!==null){
+        var palette_button = document.getElementById('palette_button');
+        palette_button.style.filter = '';
+        //webkit also
+        palette_button.style.webkitFilter = '';
+        
+        document.body.removeChild(modal);
+        modal=null;
+        return;
+      }
+      // Create a modal dialog
+      modal = document.createElement('div');
+      modal.className = 'palette-modal';
+      
+
+      
+      // Create grid container
+      var grid = document.createElement('div');
+      grid.style.display = 'grid';
+      grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(200px, 1fr))';
+      grid.style.gap = '10px';
+      
+      // Add all palette previews
+      for (var paletteName in palettes) {
+        let currently_selected = paletteName === palette_name;
+        let paletteDiv = document.createElement('div');
+        paletteDiv.style.border = '1px solid gray';
+        paletteDiv.style.padding = '5px';
+        paletteDiv.style.cursor = 'pointer';
+        
+        // Add palette name
+        let nameDiv = document.createElement('div');
+        if (currently_selected){
+          nameDiv.textContent = "[ "+paletteName+" ]";
+          nameDiv.style.color = 'white';
+        } else {          
+          nameDiv.textContent = paletteName;
+        }
+        nameDiv.style.marginBottom = '5px';
+        nameDiv.style.textAlign = 'center';
+        nameDiv.id = 'palette_name_' + Object.keys(palettes).indexOf(paletteName);
+        paletteDiv.appendChild(nameDiv);
+        
+        // Add color previews
+        let colorsDiv = document.createElement('div');
+        colorsDiv.style.display = 'grid';
+        colorsDiv.style.gridTemplateColumns = 'repeat(8, 1fr)';
+        colorsDiv.style.gap = '2px';
+        
+        palettes[paletteName].forEach(function(color) {
+          let colorDiv = document.createElement('div');
+          colorDiv.style.width = '100%';
+          colorDiv.style.paddingTop = '100%';
+          colorDiv.style.backgroundColor = color;
+          colorsDiv.appendChild(colorDiv);
+        });
+        
+        paletteDiv.appendChild(colorsDiv);
+        
+        // Add click handler with proper closure
+        (function(name) {
+          paletteDiv.onclick = function() {
+            if (name === palette_name){
+              return;
+            }            
+            //update nameDiv for previous and new item
+            set_modal_panel_selected_item(palette_name, name);
+
+            set_color_palette(name);            
+            setVisuals(true);
+          };
+        })(paletteName);
+        
+        grid.appendChild(paletteDiv);
+      }
+      
+      // Add elements to modal
+      modal.appendChild(grid);
+      
+      // Add modal to body
+      document.body.appendChild(modal);
+      //invert color of #palette_button using a transform
+      var palette_button = document.getElementById('palette_button');
+      palette_button.style.filter = 'invert(1)';
+      //webkit also
+      palette_button.style.webkitFilter = 'invert(1)';
+    }
+    
+    var colorElem = new Array();
+    var layerElem = new Array();
+    var colorIndex = getRandomInt(7, COLOUR_COUNT);//aah a bit hard-coded, the index of the break between light and dark colours
+
+
+
+    var radiusElem = new Array();
+    var thumbnailCanvas = new Array();
+    var thumbnailContext = new Array();
+    var dropdownOption = new Array();
+
+    var standalone_HTML_String = "";
+
+    var clientStandaloneRequest = new XMLHttpRequest();
+
+    clientStandaloneRequest.open('GET', 'play_big.html');
+    clientStandaloneRequest.onreadystatechange = function () {
+
+      if (clientStandaloneRequest.readyState != 4) {
+        return;
+      }
+      standalone_HTML_String = clientStandaloneRequest.responseText;
+    }
+    clientStandaloneRequest.send();
+
+
+    var get_blob = function () {
+      return self.Blob;
+    }
+
+
+    function buildStandalone(sourceCode) {
+      if (standalone_HTML_String.length === 0) {
+        alert("Can't export yet - still downloading html template.", true);
+        return;
+      }
+      sourceCode = encodeURI(sourceCode);
+      var htmlString = standalone_HTML_String.concat("");
+
+
+      htmlString = "<!--Save as html file-->\n " +htmlString;
+      htmlString = htmlString.replace(/__EMBED__/g, sourceCode);
+
+      var BB = get_blob();
+      var blob = new BB([htmlString], { type: "text/html;charset=utf-8" });
+      saveAs(blob, "flickgame_big.html");
+    }
+
+    function exportClick() {
+      var embedDat = stateToString();
+      buildStandalone(embedDat);
+    }
+
+    function importClick() {
+      var reader = new FileReader();
+
+      reader.onload = function (e) {
+        var text = reader.result;
+      }
+
+      reader.readAsText(file, encoding);
+    }
+
+    OAUTH_CLIENT_ID = "eb2aad12c63aec0136b1";
+
+
+    function getAuthURL() {
+      var randomState = window.btoa(Array.prototype.map.call(
+        window.crypto.getRandomValues(new Uint8Array(24)),
+        function (x) { return String.fromCharCode(x); }).join(""));
+
+      var authUrl = "https://github.com/login/oauth/authorize"
+        + "?client_id=" + OAUTH_CLIENT_ID
+        + "&scope=gist"
+        + "&state=" + randomState
+        + "&allow_signup=true";
+
+      return authUrl;
+    }
+
+    function printUnauthorized() {
+
+      var authUrl = getAuthURL();
+      var toPrint = "<a target=\"_blank\" href=\"" + authUrl + "\">Log in with Github to share</a><br>";
+
+      var shareLink = document.getElementById("shareLink");
+      shareLink.innerHTML = toPrint;
+      shareLinkInner = null;
+    }
+
+
+
+    function githubLogOut() {
+      window.localStorage.removeItem("oauth_access_token");
+      var authUrl = getAuthURL();
+      var toPrint = "Logged out of Github.<br>";
+      var shareLink = document.getElementById("shareLink");
+      shareLink.innerHTML = toPrint;
+      shareLinkInner = null;
+    }
+
+
+    function shareClick() {
+      var oauthAccessToken = window.localStorage.getItem("oauth_access_token");
+      if (typeof oauthAccessToken !== "string") {
+        // Generates 32 letters of random data, like "liVsr/e+luK9tC02fUob75zEKaL4VpQn".
+        printUnauthorized();
+        return;
+      }
+
+
+      var str = stateToString();
+
+      var gistToCreate = {
+        "description": "flickgame",
+        "public": true,
+        "files": {
+          "readme.txt": {
+            "content": "A game made with www.flickgame.org.  You can import game.txt there to play the game.  Uh, too lazy to describe - HMU at analytic@gmail.com if you want to know how (basically just use the gist ID in the url like other flickgames do...) "
+          },
+          "game.txt": {
+            "content": str
+          }
+        }
+      };
+
+      var githubURL = 'https://api.github.com/gists';
+      var githubHTTPClient = new XMLHttpRequest();
+      githubHTTPClient.open('POST', githubURL);
+      githubHTTPClient.onreadystatechange = function () {
+        var errorCount = 0;
+        if (githubHTTPClient.readyState != 4) {
+          return;
+        }
+        var result = JSON.parse(githubHTTPClient.responseText);
+        if (githubHTTPClient.status === 403) {
+          errorCount++;
+          alert(result.message);
+        } else if (githubHTTPClient.status !== 200 && githubHTTPClient.status !== 201) {
+
+          if (githubHTTPClient.statusText === "Unauthorized") {
+            alert("Authorization check failed.  You have to log back into GitHub (or give it permission again or something).");
+            window.localStorage.removeItem("oauth_access_token");
+          } else {
+            alert("HTTP Error " + githubHTTPClient.status + ' - ' + githubHTTPClient.statusText);
+          }
+
+          printUnauthorized();
+        } else if (githubHTTPClient.status !== 200 && githubHTTPClient.status !== 201) {
+          errorCount++;
+          alert("HTTP Error " + githubHTTPClient.status + ' - ' + githubHTTPClient.statusText);
+        } else {
+          var id = result.id;
+          var url = "play_big.html?p=" + id;
+          url = qualifyURL(url);
+
+          var editurl = "editor_big.html?hack=" + id;
+          editurl = qualifyURL(editurl);
+          var sourceCodeLink = "link to source code:<br><a href=\"" + editurl + "\">" + editurl + "</a>";
+
+          var shareLink = document.getElementById("shareLink");
+          shareLink.innerHTML = "<a target=\"_blank\" href=\"" + url + "\">&#8627;" + id + "</a><br>" +
+            '(<a onclick="githubLogOut();"  href="javascript:void(0);">log out of GitHub</a>)<br>';
+          shareLinkInner = shareLink.childNodes[0];
+
+          if (errorCount > 0) {
+            alert("Cannot link directly to playable game, because there are errors.", true);
+          } else {
+
+          }
+
+
+        }
+      }
+      githubHTTPClient.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+      githubHTTPClient.setRequestHeader("Authorization", "token " + oauthAccessToken);
+      var stringifiedGist = JSON.stringify(gistToCreate);
+      githubHTTPClient.send(stringifiedGist);
+      lastDownTarget = canvas;
+    }
+
+    function RLE_encode(input) {
+      var encoding = [];
+      var prev, count, i;
+      for (count = 1, prev = input[0], i = 1; i < input.length; i++) {
+        if (input[i] != prev) {
+          encoding.push(count);
+          encoding.push(prev);
+          count = 1;
+          prev = input[i];
+        }
+        else
+          count++;
+      }
+      encoding.push(count);
+      encoding.push(prev);
+      return encoding;
+    }
+
+
+    function stateToString() {
+      var state = new Object();
+      state.gameLink = gameLink;
+      state.activeIndex = canvasIndex;
+      state.canvasses = new Array();
+      state.palette_name = palette_name;
+      state.background_color = background_color;
+      state.foreground_color = foreground_color;
+      for (var i = 0; i < FRAME_COUNT; i++) {
+        var canvas = canvasses[i];
+        var s = "";
+        for (var j = 0; j < width * height; j++) {
+          s += canvas[j].toString(16);
+        }
+        var pairs = RLE_encode(s);
+        state.canvasses.push(pairs);
+      }
+      state.hyperlinks = hyperlinks;
+      var result = JSON.stringify(state);
+      return result;
+    }
+
+    function stringToState(str) {
+      var state = JSON.parse(str);
+      gameLink = state.gameLink;
+      if (state.activeIndex === undefined){
+        state.activeIndex = 0;
+      }
+      canvasIndex = state.activeIndex;
+      
+      //if palette_name not defined, set it to dawnbringer-16
+      if (state.palette_name === undefined){
+        state.palette_name = "dawnbringer-16";
+      }
+      set_modal_panel_selected_item(palette_name,state.palette_name);
+      palette_name = state.palette_name;
+      colorPalette = palettes[palette_name];
+
+
+      canvasses = new Array();
+      for (var k = 0; k < state.canvasses.length; k++) {
+        var s = state.canvasses[k];
+        var ar = new Uint8Array(width * height);
+        var index = 0;
+        for (var i = 0; i < s.length; i += 2) {
+          var count = s[i];
+          var ch = s[i + 1];
+          for (var j = 0; j < count; j++) {
+            ar[index] = parseInt(ch, 16);
+            index++;
+          }
+        }
+        canvasses.push(ar);
+      }
+      hyperlinks = state.hyperlinks;
+
+    }
+
+    document.addEventListener("keydown", press);
+    document.addEventListener("keyup", release);
+    document.addEventListener("wheel", wheel);
+
+    var copyImage = null;
+    var copyLinks = null;
+
+    var savedString;
+    function press(evt) {
+      evt = evt || window.event;
+
+      updateCursor(evt);
+      /*
+      if (evt.keyCode==83){//S(ave)
+        savedString = stateToString();
+      } else if (evt.keyCode==76){//L(oad)
+        stringToState(savedString);
+        setVisuals();
+        setLayer(canvasIndex+1); 
+      } */
+      if (evt.keyCode === 67) { //c
+        doCopy();
+      } else if (evt.keyCode === 86) { //v
+        doPaste();
+      } else if (evt.keyCode === 189 || evt.keyCode === 173) {//- minus
+        if (radius>1){
+          setRadius(radius-2);
+        }
+      } else if (evt.keyCode === 187 || evt.keyCode === 61) {//+ plus
+        if (radius < 16){
+          setRadius(radius+2);
+        }
+      } else if (evt.keyCode === 90) {//z
+        doUndo();
+      }
+    }
+
+    function wheel(evt) {
+      if (evt.deltaY < 0) {
+        if (radius < 16){
+          setRadius(radius+2);
+        }
+      } else if (evt.deltaY > 0) {
+        if (radius>1){
+          setRadius(radius-2);
+        }
+      }
+    }
+
+    function release(evt) {
+      updateCursor(evt);
+    }
+
+    function doUndo() {
+      if (undoList.length > 0) {
+        var dat = undoList.pop();
+        if (dat.palette_name!==palette_name){
+          //then we need to change the color palette of ALL canvasses
+          revert_color_palette_to(dat.palette_name); 
+          setVisuals(true);    
+          setDropdowns();
+          return;    
+        }
+        canvasses[dat.canvasIndex] = dat.canvasDat;        
+        colorPalette = palettes[palette_name];
+        if (background_color !== dat.background_color){
+          changeBackgroundColor(dat.background_color,false);
+        }
+        setLayer(dat.canvasIndex + 1,true);
+
+        if (shareLinkInner !== null) {
+          shareLinkInner.style.color = "gray";
+        }
+      }
+    }
+
+    function doCopy() {
+      copyImage = JSON.stringify(canvasses[canvasIndex])
+      copyLinks = JSON.stringify(hyperlinks[canvasIndex])
+    }
+
+    function doPaste() {
+      if (copyImage !== null) {
+        preserveUndoState();
+        var ar = JSON.parse(copyImage);
+        var arui8 = new Uint8Array(width * height);
+        for (var i = 0; i < width * height; i++) {
+          arui8[i] = ar[i];
+        }
+        canvasses[canvasIndex] = arui8;
+        hyperlinks[canvasIndex] = JSON.parse(copyLinks);
+        setVisuals();
+        setDropdowns();
+      }
+    }
+
+    function setDropdowns() {
+      for (var i = 0; i < COLOUR_COUNT; i++) {
+        dropdownOption[i].value = hyperlinks[canvasIndex][i];
+      }
+    }
+
+    function getRandomInt(min, max) {
+      return Math.floor(Math.random() * (max - min)) + min;
+    }
+    var width = 160;
+    var height = 100;
+    var zoomFactor = 4;
+    var radius = 5;
+
+    var visibleCanvas;
+    var visibleContext;
+    var linkInput;
+    var id;
+    var id_d;
+
+    var lastX = -1;
+    var lastY = -1;
+    var lastButton = -1
+
+    var bucketElem;
+
+    function linkChange(newLink) {
+      gameLink = newLink;
+    }
+
+    function clearPalette() {
+      preserveUndoState();
+      var canvas = canvasses[canvasIndex];
+      for (var i = 0; i < width * height; i++) {
+        canvas[i] = 0;
+      }
+
+      setVisuals();
+    }
+    function setRadius(newRadius) {
+      if (newRadius==15){
+        newRadius = 16;
+      } else if (newRadius==14){
+        newRadius = 13;
+      }
+
+      radius = newRadius;
+      bucketElem.setAttribute("class", "radius");
+      for (var i = 0; i < 16; i++) {
+        if (radiusElem[i] !== null) {
+          radiusElem[i].setAttribute("class", "radius");
+        }
+      }
+      if (newRadius > 0) {
+        radiusElem[newRadius - 1].setAttribute("class", "radius selected");
+      } else {
+        bucketElem.setAttribute("class", "radius selected");
+      }
+    }
+
+
+    function dropDownSelect(dropdown, val) {
+      hyperlinks[canvasIndex][dropdown - 1] = parseInt(val);
+    }
+
+    function setColor(newColorIndex) {
+      colorIndex = newColorIndex;
+      for (var i = 0; i < COLOUR_COUNT; i++) {
+        if (colorElem[i] !== null) {
+          colorElem[i].setAttribute("class", "unselected");
+        }
+      }
+      colorElem[colorIndex].setAttribute("class", "selected");
+    }
+
+    function setLayer(newCanvasIndex,force_gen_thumbnails=false) {
+      canvasIndex = newCanvasIndex - 1;
+      for (var i = 0; i < FRAME_COUNT; i++) {
+        if (layerElem[i] !== null) {
+          layerElem[i].setAttribute("class", "layerItem");
+        }
+      }
+      layerElem[canvasIndex].setAttribute("class", "layerItem selectedItem");
+      setVisuals(force_gen_thumbnails);
+      setDropdowns();
+    }
+
+    function generateDropDowns(){
+       // Add this at the start of the init function
+      // Generate dropdown options
+      for (let i = 1; i <= COLOUR_COUNT; i++) {
+        const select = document.getElementById(`col${i}`);
+        for (let j = 1; j <= FRAME_COUNT; j++) {
+          const option = document.createElement('option');
+          option.value = j;
+          option.id = `col${i}-${j}`;
+          option.textContent = j;
+          select.appendChild(option);
+        }
+      }
+    }
+
+    function generateLayerItems() {
+      var layerList = document.getElementById("layerList");
+      /* want to add FRAME_COUNT layer items like these
+        <li>
+              <a class="layerItem selectedItem" id="layerItem1" href="#" onclick="setLayer(1);return false;">
+                <canvas id="thumbnail1" width="16" height="10"
+                  style="border:2px solid gray; background-color:transparent;"></canvas>
+                1</a>
+            </li>
+        */
+      for (var i = 1; i <= FRAME_COUNT; i++) {
+        var li = document.createElement("li");
+        var if_selected = i === canvasIndex + 1 ? " selectedItem" : "";
+        li.innerHTML = `<a class="layerItem${if_selected}" id="layerItem${i}" href="#" onclick="setLayer(${i});return false;">
+                <canvas id="thumbnail${i}" width="16" height="10"
+                  style="border:2px solid gray; background-color:transparent;"></canvas>
+                ${i}</a>`;
+        layerList.appendChild(li);
+      }
+    }
+
+    var bgColorSelectOptions=[];
+    function init() {
+      generateLayerItems();
+      generateDropDowns();
+
+      // Populate background color dropdown
+      var bgColorSelect = document.getElementById('bgColorSelect');
+      for (var i = 0; i < colorPalette.length; i++) {
+        var option = document.createElement('option');
+        option.value = i;
+        option.textContent = colorNames[palette_name][i];
+        option.style.backgroundColor = "var(--col" + i + ")";
+        option.style.color = "var(--col" + i + "_fg)";
+        bgColorSelect.appendChild(option);
+        bgColorSelectOptions.push(option);
+      }
+      // Set initial background color
+      bgColorSelect.value = "0";
+
+      linkInput = document.getElementById("linkInput");
+      linkInput.value = gameLink;
+
+
+      radii = new Array();
+      for (var i = 0; i < 16; i++) {
+        elem = document.getElementById("radius_" + (i + 1));
+        radiusElem[i] = elem;
+
+      }
+
+      for (var i = 0; i < FRAME_COUNT; i++) {
+        elem = document.getElementById("thumbnail" + (i + 1));
+        thumbnailCanvas[i] = elem;
+        thumbnailContext[i] = elem.getContext("2d");
+      }
+      for (var i = 0; i < COLOUR_COUNT; i++) {
+        elem = document.getElementById("col" + (i + 1));
+        dropdownOption[i] = elem;
+      }
+
+      for (var i = 0; i < COLOUR_COUNT; i++) {
+        elem = document.getElementById("color_" + (i));
+        elem.style.backgroundColor = "var(--col" + i + ")";
+        colorElem[i] = elem;
+      }
+
+      for (var i = 0; i < FRAME_COUNT; i++) {
+        elem = document.getElementById("layerItem" + (i + 1));
+        layerElem[i] = elem;
+      }
+
+
+      bucketElem = document.getElementById("bucket");
+
+
+      for (var i = 0; i < FRAME_COUNT; i++) {
+        canvasses[i] = new Uint8Array(width * height);
+      }
+
+      for (var i = 0; i < FRAME_COUNT; i++) {
+        hyperlinks[i] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+      }
+
+      visibleCanvas = document.getElementById("mainCanvas");
+      visibleCanvas.addEventListener('pointerdown', mouseDown, false);
+      document.addEventListener('pointerup', mouseUp, false);
+      visibleCanvas.addEventListener('pointermove', mouseMove, false);
+      visibleCanvas.addEventListener('pointerout', mouseOut, false);
+      visibleCanvas.addEventListener('pointerleave', mouseOut, false);
+
+      var fileUploader = document.getElementById("my_file");
+      fileUploader.addEventListener('change', readFile, false);
+
+      window.addEventListener('mouseup', mouseUp, false);    
+
+      visibleContext = visibleCanvas.getContext("2d");
+      visibleContext.imageSmoothingEnabled = false;
+      id = visibleContext.createImageData(1, 1); // only do this once per page
+      id_d = id.data;
+      setVisuals(true);
+      setColor(colorIndex);
+
+
+      if (getDataIndex()===false){
+        //set random color palette for fun
+        var palette_names = Object.keys(palettes);
+        var random_palette_name = palette_names[Math.floor(Math.random() * palette_names.length)];
+        set_color_palette(random_palette_name,false);
+        setVisuals(true);
+      }
+    }
+
+    function readFile(evt) {
+      //Retrieve the first (and only!) File from the FileList object
+      var f = evt.target.files[0];
+
+      if (f) {
+        var r = new FileReader();
+        r.onload = function (e) {
+          var contents = e.target.result;
+          var fromToken = "<!--__EmbedBegin__-->";
+          var endToken = "<!--__EmbedEnd__-->";
+          var fromIndex = contents.indexOf(fromToken);
+          var endIndex = contents.indexOf(endToken);
+          var ss1 = contents.substr(fromIndex + fromToken.length, endIndex - fromIndex - fromToken.length);
+          var ss2 = ss1.substr(ss1.indexOf("\"") + 1);
+          var left_removed = decodeURI(ss2);
+          // we want to find the location of the *final* double-quote, and to remove
+          // everything after that.
+          var final_quote_index = left_removed.lastIndexOf("\"");
+          var left_right_removed = left_removed.substring(0, final_quote_index);
+          stringToState(left_right_removed);
+          setVisuals(true);
+          setLayer(canvasIndex + 1);
+        }
+        r.readAsText(f);
+      } else {
+        alert("Failed to load file");
+      }
+    }
+
+
+
+
+    function getDataIndex() {
+      return getData({
+        onSuccess: function(code) {
+          stringToState(code);
+          setVisuals(true);
+          setLayer(canvasIndex + 1);
+        },
+        onError: function(message) {
+          alert(message);
+        },
+        onEmbedded: function(code) {
+          // Index.html doesn't typically handle embedded data, but we can support it
+          stringToState(code);
+          setVisuals(true);
+          setLayer(canvasIndex + 1);
+        }
+      });
+    }
+
+
+    function drawThumbnail(n) {
+      thumbCtx = thumbnailContext[n];
+      thumbCtx.fillStyle = "#FF0000";
+      thumbCtx.fillRect(0, 0, 16, 10);
+      var canvas = canvasses[n];
+      for (var i = 0; i < 16; i++) {
+        for (var j = 0; j < 10; j++) {
+          var max = 0;
+          for (var i2 = 0; i2 < 10; i2++) {
+            for (var j2 = 0; j2 < 10; j2++) {
+              var sample = canvas[i * 10 + i2 + width * (j * 10 + j2)];
+              if (sample > max) {
+                max = sample;
+              }
+            }
+          }
+          thumbCtx.fillStyle = colorPalette[max];
+          thumbCtx.fillRect(i, j, 1, 1);
+        }
+      }
+
+      //      var dataUrl = thumbnailCanvas[n].toDataURL();
+      //      "dropdownOption"[0][0].style.backgroundImage="url("+dataUrl+")";
+    }
+
+    function setVisuals(genAllThumbnails=false) {
+      //visibleContext.drawImage(canvasses[canvasIndex], 0, 0); 
+      //visibleContext.drawImage(canvasses[canvasIndex], 0, 0,width*zoomFactor,height*zoomFactor); 
+      canvas = canvasses[canvasIndex];
+      for (var i = 0; i < width; i++) {
+        for (var j = 0; j < height; j++) {
+          var pixelIndex = canvas[i + width * j];
+          visibleContext.fillStyle = colorPalette[pixelIndex];
+          visibleContext.fillRect(i * zoomFactor, j * zoomFactor, zoomFactor, zoomFactor);
+        }
+      }
+      if (genAllThumbnails === true) {
+        for (var i = 0; i < 16; i++) {
+          drawThumbnail(i);
+        }
+      } else {
+        drawThumbnail(canvasIndex);
+      }
+      linkInput.value = gameLink;
+      //set body background
+      // document.body.style.backgroundColor = background_colors[palette_name];
+    }
+
+
+    var drawing = 0;
+
+
+    function getCoords(e) {
+      var x, y;
+      if (typeof e.offsetX !== "undefined") {
+        x = e.offsetX;
+        y = e.offsetY;
+      }
+      else if (e.touches !== null) {
+        if (e.touches.length === 0) {
+          return null;
+        }
+        var target = e.target || e.srcElement;
+        var rect = target.getBoundingClientRect();
+
+        x = 0;
+        y = 0;
+        for (var i = 0; i < e.touches.length; i++) {
+          x += e.touches[i].clientX - rect.left;
+          y += e.touches[i].clientY - rect.top;
+        }
+        x /= e.touches.length;
+        y /= e.touches.length;
+
+      } else {
+        var target = e.target || e.srcElement;
+        var rect = target.getBoundingClientRect();
+        x = e.clientX - rect.left,
+          y = e.clientY - rect.top;
+      }
+      return [x, y];
+    }
+
+
+
+    function uint8ar_copy(src) {
+      var dst = new Uint8Array(width * height);
+      for (var i = 0; i < src.length; i++) {
+        dst[i] = src[i];
+      }
+      return dst;
+    }
+
+    var undoList = new Array();
+    function preserveUndoState() {
+      var undoItem = new Object();
+      undoItem.canvasIndex = canvasIndex;
+      undoItem.canvasDat = uint8ar_copy(canvasses[canvasIndex]);
+      undoItem.palette_name = palette_name;
+      undoItem.background_color = background_color;
+      undoList.push(undoItem);
+      if (undoList.length > 100) {
+        undoList.shift();
+      }
+
+      if (shareLinkInner !== null) {
+        shareLinkInner.style.color = "gray";
+      }
+    }
+
+    function mouseDown(e) {
+      e = e || window.event;
+
+      drawing = 1;
+      var coords = getCoords(e);
+      if (coords === null) {
+        lastX = -1;
+        lastY = -1;
+        e.preventDefault();
+        return !1;
+      }
+      startTargetX = coords[0];
+      startTargetY = coords[1];
+      lastX = Math.floor(startTargetX / zoomFactor);
+      lastY = Math.floor(startTargetY / zoomFactor);
+
+      preserveUndoState();
+
+
+      if (window.onbeforeunload === null) {
+        window.onbeforeunload = function () {
+          return true;
+        };
+      }
+
+      mouseMove(e);
+      if (radius === 0) {
+        drawing = 0;
+      }
+
+      e.preventDefault();
+      return !1;
+    }
+
+    function mouseUp(e) {
+      e = e || window.event;
+
+      drawing = 0;
+      lastX = -1;
+      lastY = -1;
+      lastButton = -1;
+
+      e.preventDefault();
+    }
+
+    function mouseOut(e) {
+      e = e || window.event;
+      // window.console.log(e);
+      mouseMove(e);
+      lastX = -1;
+      lastY = -1;
+
+      e.preventDefault();
+    }
+
+
+    function line(x1, y1, x2, y2) {
+      var coordinatesArray = new Array();
+      // Translate coordinates
+      // Define differences and error check
+      var dx = Math.abs(x2 - x1);
+      var dy = Math.abs(y2 - y1);
+      var sx = (x1 < x2) ? 1 : -1;
+      var sy = (y1 < y2) ? 1 : -1;
+      var err = dx - dy;
+      // Set first coordinates
+      coordinatesArray.push([x1, y1]);
+      // Main loop
+      while (!((x1 == x2) && (y1 == y2))) {
+        var e2 = err << 1;
+        if (e2 > -dy) {
+          err -= dy;
+          x1 += sx;
+        }
+        if (e2 < dx) {
+          err += dx;
+          y1 += sy;
+        }
+        // Set coordinates
+        coordinatesArray.push([x1, y1]);
+      }
+      // Return the result
+      return coordinatesArray;
+    }
+
+    function updateCursor(e) {
+      // Update cursor based on modifier keys
+      if (e.metaKey || e.altKey || e.shiftKey || e.ctrlKey || lastButton > 0) {
+        mainCanvas.style.cursor = "url('eyedropper.png') 2 16, crosshair";
+      } else {
+        mainCanvas.style.cursor = "crosshair";
+      }
+
+    }
+
+    function updateLastButton(e) {
+      if (e.button !== -1) {
+        lastButton = e.button;
+      }
+    }
+
+    function mouseMove(e) {
+      e = e || window.event;
+      // console.log(e.type);
+
+      e.preventDefault();
+      var coords = getCoords(e);
+      if (coords === null) {
+        lastX = -1;
+        lastY = -1;
+        return !1;
+      }
+      updateLastButton(e);
+
+      updateCursor(e);
+
+      if (drawing === 0)
+        return;
+
+      var mousePressure = e.pressure;
+      if (e.pointerType !== "pen") {
+        mousePressure = 0.5;
+      }
+      if (mousePressure === 0) {
+        //   mouseUp(e);
+        return;
+      }
+
+      var x = Math.floor(coords[0] / zoomFactor);
+      var y = Math.floor(coords[1] / zoomFactor);
+
+      if (e.metaKey || e.altKey || e.shiftKey || e.ctrlKey || lastButton > 0) {
+
+        var pIndex = x + width * y;
+        var canvas = canvasses[canvasIndex];
+        var newColorIndex = canvas[pIndex];
+
+        // console.log(` x = ${x}; y = ${y}; pIndex = ${pIndex}; newColorIndex = ${newColorIndex}`);
+        setColor(newColorIndex);
+        return false;
+      }
+
+      // Prevent default behavior for touch events to stop scrolling
+
+      
+      var canvas = canvasses[canvasIndex];
+
+      var points;
+      if (lastX === -1) {
+        points = [[x, y]];
+      } else {
+        if (x < 0 || y < 0) {
+          console.log("NEGATIVE COORDINATES");
+          console.log(e);
+          return;
+        }
+        points = line(x, y, lastX, lastY);
+      }
+
+      for (var i = 0; i < points.length; i++) {
+        var p = points[i];
+
+        if (radius > 0) {
+          var r = radius * (mousePressure * 2);
+          drawCircle(canvas, p[0], p[1], r, colorIndex);
+        } else {
+          floodFill(canvas, p[0], p[1], colorIndex);
+        }
+      }
+
+
+      /*context.beginPath();
+      context.arc(x, y, radius, 0, 2 * Math.PI, false);
+      context.lineWidth = 0;
+      context.fillStyle = 'green';
+      context.fill();*/
+      setVisuals();
+
+      var coords = getCoords(e);
+      if (coords === null) {
+        lastX = -1;
+        lastY = -1;
+        e.preventDefault();
+        return !1;
+      }
+      lastX = Math.floor(coords[0] / zoomFactor);
+      lastY = Math.floor(coords[1] / zoomFactor);
+
+    }
+
+    function drawCircle(canvas, x, y, radius, colorIndex) {
+      radius = Math.floor(radius / 2) + 1;
+      if (radius == 2) {
+        var points = [[x, y], [x - 1, y], [x, y + 1], [x + 1, y], [x, y - 1]];
+        for (var i = 0; i < points.length; i++) {
+          var px = points[i][0];
+          var py = points[i][1];
+          if (px >= 0 && px < 160 && py >= 0 && py < 100) {
+            canvas[px + width * py] = colorIndex;
+          }
+        }
+        return;
+      } else if (radius == 3) {
+        var points = [
+          [x - 1, y + 2], [x, y + 2], [x + 1, y + 2],
+          [x - 2, y + 1], [x - 1, y + 1], [x, y + 1], [x + 1, y + 1], [x + 2, y + 1],
+          [x - 2, y], [x - 1, y], [x, y], [x + 1, y], [x + 2, y],
+          [x - 2, y - 1], [x - 1, y - 1], [x, y - 1], [x + 1, y - 1], [x + 2, y - 1],
+          [x - 1, y - 2], [x, y - 2], [x + 1, y - 2]
+        ];
+        for (var i = 0; i < points.length; i++) {
+          var px = points[i][0];
+          var py = points[i][1];
+          if (px >= 0 && px < 160 && py >= 0 && py < 100) {
+            canvas[px + width * py] = colorIndex;
+          }
+        }
+        return;
+
+      }
+
+      for (var i = Math.max(x - radius, 0); i <= Math.min(x + radius, width - 1); i++) {
+        for (var j = Math.max(y - radius, 0); j <= Math.min(y + radius, height - 1); j++) {
+          var dx = i - x;
+          var dy = j - y;
+          if ((dx * dx + dy * dy) < radius * radius) {
+            canvas[i + width * j] = colorIndex;
+          }
+        }
+      }
+    }
+
+    function floodFill(canvas, x, y, colorIndex) {
+      var points = [[x, y]];
+      originColor = canvas[x + width * y];
+      if (originColor === colorIndex) {
+        return;
+      }
+
+      for (var i = 0; i < points.length; i++) {
+        var p = points[i];
+        var pIndex = p[0] + width * p[1];
+        if (canvas[pIndex] === colorIndex) {
+          continue;
+        } else {
+          canvas[pIndex] = colorIndex;
+          borderPoints = [[p[0] + 1, p[1]], [p[0] - 1, p[1]], [p[0], p[1] + 1], [p[0], p[1] - 1]];
+          for (var j = 0; j < borderPoints.length; j++) {
+            var borderPoint = borderPoints[j];
+            var bpx = borderPoint[0];
+            var bpy = borderPoint[1];
+            var bpi = bpx + width * bpy;
+            if (
+              bpx >= 0 &&
+              bpx < width &&
+              bpy >= 0 &&
+              bpy < height &&
+              canvas[bpi] === originColor) {
+              points.push([bpx, bpy]);
+            }
+          }
+        }
+      }
+    }
+
+    function toolbar_undo() {
+      doUndo();
+    }
+    function toolbar_copy() {
+      doCopy();
+    }
+    function toolbar_paste() {
+      doPaste();
+    }
+
+    function changeBackgroundColor(color,preserver_undo_state = false) {
+      if (color === undefined) {
+        console.log("color is undefined");
+        color = colorPalette[0];
+      }
+      if (background_color===color){
+        console.log("background_color is already set to same color");
+        return;
+      }
+      if (preserver_undo_state){
+        preserveUndoState();
+      }
+      background_color = color;
+      document.documentElement.style.setProperty('--background-color', color);
+      document.body.style.backgroundColor = color;
+      var distance_from_white = color_distance(color, "#ffffff");
+      var distance_from_black = color_distance(color, "#000000");
+      if (distance_from_white < distance_from_black){
+        foreground_color = "#000000";
+        document.documentElement.style.setProperty('--foreground-color', "#000000");
+        document.documentElement.style.setProperty('--radius-filter', 'invert(1)');
+        document.documentElement.style.setProperty('--selected-border-color', '#00ffff');
+      } else {
+        foreground_color = "#ffffff";
+        document.documentElement.style.setProperty('--foreground-color', "#ffffff");
+        document.documentElement.style.setProperty('--radius-filter', 'none');
+        document.documentElement.style.setProperty('--selected-border-color', '#ff0000');
+      }
+    }
+  </script>
+
+  <style type="text/css">
+    /*<![CDATA[*/
+
+    /* foreground text color variable*/
+  :root {
+    --background-color: black;
+    --foreground-color: white;
+    --radius-filter: none;
+    --selected-border-color: #ff0000;
+
+    --col0:#140c1c;
+    --col1:#442434;
+    --col2:#30346d;
+    --col3:#4e4a4e;
+    --col4:#854c30;
+    --col5:#346524;
+    --col6:#d04648;
+    --col7:#757161;
+    --col8:#597dce;
+    --col9:#d27d2c;
+    --col10:#8595a1;
+    --col11:#6daa2c;
+    --col12:#d2aa99;
+    --col13:#6dc2ca;
+    --col14:#dad45e;
+    --col15:#deeed6;
+
+    --col0_fg: #ffffff;
+    --col1_fg: #ffffff;
+    --col2_fg: #ffffff;
+    --col3_fg: #ffffff;
+    --col4_fg: #ffffff;
+    --col5_fg: #ffffff;
+    --col6_fg: #ffffff;
+    --col7_fg: #ffffff;
+    --col8_fg: #000000;
+    --col9_fg: #000000;
+    --col10_fg: #000000;
+    --col11_fg: #000000;
+    --col12_fg: #000000;
+    --col13_fg: #000000;
+    --col14_fg: #000000;
+    --col15_fg: #000000;
+  
+    
+  }
+  
+  :root {
+  overscroll-behavior: none;
+}
+body{
+  overscroll-behavior: none;
+}
+    #maincanvas {
+      cursor: crosshair;
+      image-rendering: optimizeSpeed;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: -o-crisp-edges;
+      image-rendering: pixelated;
+      -ms-interpolation-mode: nearest-neighbor;
+
+      touch-action: none; /* Disable browser handling of all panning and zooming gestures */
+      -webkit-user-select: none; /* Prevent selection */
+      user-select: none;
+    }
+
+    /* Add new styles for palette modal */
+    .palette-modal {
+      position: fixed;
+      max-width: 220px;
+      max-height: 400px;
+      overflow-y: auto;
+      top: 20px;
+      right:0;
+      background-color: black;
+      border: 2px solid gray;
+      padding: 25px;
+      z-index: 1000;
+    }
+
+    @media (min-width: 1400px) {
+      .palette-modal {
+        right:unset;
+        left: 50%;
+        transform: translate(calc(50% + 300px), 0);
+      }
+    }
+
+
+    select {
+      background-color: black;
+      color: white;
+      text-indent: 5px;
+    }
+
+    canvas {
+      position: relative;
+    }
+
+    body {
+      background-color: var(--background-color);
+      color: gray;
+      margin-top: 0;
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    ul {
+      list-style-type: none;
+      overflow: hidden;
+      overflow-y: auto;
+    }
+
+    input {
+      background-color: black;
+      color: white;
+      font-size: 200%;
+      text-align: center;
+      margin-bottom: 5px;
+    }
+
+    input#linkInput {
+      background-color: black;
+      color: white;
+      font-size: 150%;
+      text-align: center;
+      margin-bottom: 5px;
+      padding-bottom: 3px;
+      /*inlin*/
+      display: inline;
+    }
+    #bgColorSelect {
+      background-color: var(--background-color);
+      color: var(--foreground-color);
+      display: inline;
+      width: 100px;
+      padding: 2px 0px;
+      text-align: left;
+    }
+
+    option {
+      text-align: center;
+    }
+    #bgColorSelectContainer::before {
+      content: "background : ";
+      color: var(--foreground-color);
+      text-align: right;
+      /*don't capture input!*/
+      pointer-events: none;
+      width:20px;    
+      margin-left:10px;
+    }
+    
+    li {
+      font-size: 150%;
+      text-align: center;
+      width: 100%;
+    }
+
+    a {
+      color: var(--foreground-color);
+    }
+
+    a.layerItem {
+      color: var(--foreground-color);
+      background-color: transparent;
+      text-decoration: none;
+      width: 100%;
+      display: block;
+    }
+
+    a.layerItem.selectedItem {
+      color: black;
+      background-color: white;
+    }
+
+    /*all images pixelated*/
+    img {
+      image-rendering: pixelated;
+      /*disable selection*/
+      user-select: none;
+    }
+
+    img.selected {
+      border: 2px solid var(--selected-border-color);
+      touch-action: manipulation;
+    }
+
+    li.selected {
+      cursor: auto;
+      color: white;
+    }
+
+    a {
+      white-space: nowrap;
+      touch-action: manipulation;
+    }
+
+    div.selected {
+      height: 16px;
+      width: 30px;
+      border: 2px solid var(--selected-border-color);
+      touch-action: manipulation;
+    }
+
+    div.unselected {
+      height: 16px;
+      width: 30px;
+      border: 2px solid black;
+      touch-action: manipulation;
+    }
+
+    img.radius {
+      border: 1px solid transparent;
+      touch-action: manipulation;
+      filter: var(--radius-filter);
+    }
+
+    img.toolbar {
+      width: 30px;
+      height: 30px;
+      background-color: transparent;
+      color: white;
+      font-size: 200%;
+      text-align: center;
+      margin-bottom: 5px;
+      touch-action: manipulation;
+    }
+
+    #toolbarcontainer {
+      float: right;
+      margin-right: 20px;
+      margin-top: 5px;
+      touch-action: manipulation;
+    }
+
+    img.selected {
+      border: 1px solid var(--selected-border-color);
+    }
+
+    select {
+      width: 100%;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+    }
+
+    select::-ms-expand {
+      display: none;
+    }
+
+    canvas#dropdownthumb {
+      border: 2px solid gray;
+      background-color: black;
+      touch-action: manipulation;
+    }
+
+    #layerList {
+      height:500px;
+      width:100px;
+    }
+
+
+    /*]]>*/
+  </style>
+  <title>
+    flickgame.org
+  </title>
+</head>
+
+<body onload="init();" ondragstart="return false;" ondrop="return false;">
+  <center>
+    <table cellpadding="10">
+      <tr>
+        <td>
+          <ul id = "layerList">
+          </ul>
+        </td>
+        <td valign="top">
+          <table>
+            <tr>
+              <td>
+                <table>
+                  <tr>
+                    <td>
+                      <center>
+                        <input width="640" style="border:2px solid gray;" onkeydown="event.stopPropagation();"
+                          value="www.flickgame.org" id="linkInput" oninput="linkChange(this.value)" />
+                          <span id="bgColorSelectContainer"><select id="bgColorSelect" class="toolbar"  style="border: 2px solid gray;" onchange="changeBackgroundColor(colorPalette[this.value],true);">
+                          </select></span>&nbsp;
+                        <span id="toolbarcontainer">
+
+                          <a href="#" onclick="toolbar_undo();return false;"><img src="SVG/undo.svg" title="undo (U)"
+                              alt="undo" class="toolbar" id="toolbar_undo" /></a>
+                          &nbsp;
+                          <a href="#" onclick="toolbar_copy();return false;"><img src="SVG/copy.svg"
+                              title="copy to clipboard (C)" alt="copy to clipboard" class="toolbar"
+                              id="toolbar_copy" /></a>
+                          &nbsp;
+                          <a href="#" onclick="toolbar_paste();return false;"><img src="SVG/paste.svg"
+                              title="paste from clipboard (V)" alt="paste from clipboard" class="toolbar"
+                              id="toolbar_paste" /></a>
+                        </span>
+                        <br />
+                      </center>
+                        <canvas id="mainCanvas" oncontextmenu="return false;" width="640" height="400"
+                          style="border:2px solid gray; background-color:black;"></canvas>
+                        <br />
+                    </td>
+                    <td valign="top">
+                      <a href="#" onclick="shareClick();return false;">&ocir; share</a><br />
+                      <div id="shareLink"></div>
+                      <a href="#" onclick="exportClick();return false;">&sdotb; export</a><br />
+                      <a href="#" onclick="document.getElementById('my_file').click();return false;">&sdotb;
+                        import</a><br />
+                      <input type="file" accept=".html" id="my_file" style="display: none;" />
+                      <a href="help.html" target="_blank" title="blah">? help</a>
+                      <br />
+                      <br />
+                      <a href="#" onclick="setRadius(16);return false;"><img src="16.png" class="radius"
+                          id="radius_16" /></a>
+                      <br />
+                      <a href="#" onclick="setRadius(13);return false;"><img src="13.png" class="radius"
+                          id="radius_13" /></a>
+                      <br />
+                      <a href="#" onclick="setRadius(11);return false;"><img src="11.png" class="radius"
+                          id="radius_11" /></a>
+                      <br />
+                      <a href="#" onclick="setRadius(9);return false;"><img src="9.png" class="radius"
+                          id="radius_9" /></a>
+                      <br />
+                      <a href="#" onclick="setRadius(7);return false;"><img src="7.png" class="radius"
+                          id="radius_7" /></a>
+                      <br />
+                      <a href="#" onclick="setRadius(5);return false;"><img src="5.png" class="radius selected"
+                          id="radius_5" /></a>
+                      <br />
+                      <a href="#" onclick="setRadius(3);return false;"><img src="3.png" class="radius"
+                          id="radius_3" /></a>
+                      <br />
+                      <a href="#" onclick="setRadius(1);return false;"><img src="1.png" class="radius"
+                          id="radius_1" /></a>
+                      <br />
+                      <a href="#" onclick="setRadius(0);return false;"><img src="bucket.png" class="radius"
+                          id="bucket" /></a>
+                      <br />
+                      <a href="#" onclick="clearPalette();return false;"><img src="clear.png" class="radius"
+                          id="bucket" /></a>
+                    </td>
+                  </tr>
+                </table>
+                <table style="border:2px solid gray; margin-top:2px; margin-left:3px;" margin="0">
+                  <tr height="16">
+                    <td>
+                      <a href="#" onclick="setColor(0);return false;">
+                        <div class="unselected" id="color_0"></div>
+                      </a>
+                    </td>
+                    <td>
+                      <a href="#" onclick="setColor(1);return false;">
+                        <div class="unselected" id="color_1"></div>
+                      </a>
+                    </td>
+                    <td>
+                      <a href="#" onclick="setColor(2);return false;">
+                        <div class="selected" id="color_2"></div>
+                      </a>
+                    </td>
+                    <td>
+                      <a href="#" onclick="setColor(3);return false;">
+                        <div class="unselected" id="color_3"></div>
+                      </a>
+                    </td>
+                    <td>
+                      <a href="#" onclick="setColor(4);return false;">
+                        <div class="unselected" id="color_4"></div>
+                      </a>
+                    </td>
+                    <td>
+                      <a href="#" onclick="setColor(5);return false;">
+                        <div class="unselected" id="color_5"></div>
+                      </a>
+                    </td>
+                    <td>
+                      <a href="#" onclick="setColor(6);return false;">
+                        <div class="unselected" id="color_6"></div>
+                      </a>
+                    </td>
+                    <td>
+                      <a href="#" onclick="setColor(7);return false;">
+                        <div class="unselected" id="color_7"></div>
+                      </a>
+                    </td>
+                    <td>
+                      <a href="#" onclick="setColor(8);return false;">
+                        <div class="unselected" id="color_8"></div>
+                      </a>
+                    </td>
+                    <td>
+                      <a href="#" onclick="setColor(9);return false;">
+                        <div class="unselected" id="color_9"></div>
+                      </a>
+                    </td>
+                    <td>
+                      <a href="#" onclick="setColor(10);return false;">
+                        <div class="unselected" id="color_10"></div>
+                      </a>
+                    </td>
+                    <td>
+                      <a href="#" onclick="setColor(11);return false;">
+                        <div class="unselected" id="color_11"></div>
+                      </a>
+                    </td>
+                    <td>
+                      <a href="#" onclick="setColor(12);return false;">
+                        <div class="unselected" id="color_12"></div>
+                      </a>
+                    </td>
+                    <td>
+                      <a href="#" onclick="setColor(13);return false;">
+                        <div class="unselected" id="color_13"></div>
+                      </a>
+                    </td>
+                    <td>
+                      <a href="#" onclick="setColor(14);return false;">
+                        <div class="unselected" id="color_14"></div>
+                      </a>
+                    </td>
+                    <td>
+                      <a href="#" onclick="setColor(15);return false;">
+                        <div class="unselected" id="color_15"></div>
+                      </a>
+                    </td>
+                    <!--must have border to left of this td-->
+                    <td rowspan="2" style="border-left: 2px solid gray;">
+                      <a href="#" onclick="openPaletteSelector();return false;"><img id="palette_button" src="palette.png"></a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <select id="col1" onchange="dropDownSelect(1,this.value)">
+                        <option value="0"></option>
+                      </select>
+                    </td>
+                    <td>
+                      <select id="col2" onchange="dropDownSelect(2,this.value)">
+                        <option value="0"></option>
+                      </select>
+                    </td>
+                    <td>
+                      <select id="col3" onchange="dropDownSelect(3,this.value)">
+                        <option value="0"></option>
+                      </select>
+                    </td>
+                    <td>
+                      <select id="col4" onchange="dropDownSelect(4,this.value)">
+                        <option value="0"></option>
+                      </select>
+                    </td>
+                    <td>
+                      <select id="col5" onchange="dropDownSelect(5,this.value)">
+                        <option value="0"></option>
+                      </select>
+                    </td>
+                    <td>
+                      <select id="col6" onchange="dropDownSelect(6,this.value)">
+                        <option value="0"></option>
+                      </select>
+                    </td>
+                    <td>
+                      <select id="col7" onchange="dropDownSelect(7,this.value)">
+                        <option value="0"></option>
+                      </select>
+                    </td>
+                    <td>
+                      <select id="col8" onchange="dropDownSelect(8,this.value)">
+                        <option value="0"></option>
+                      </select>
+                    </td>
+                    <td>
+                      <select id="col9" onchange="dropDownSelect(9,this.value)">
+                        <option value="0"></option>
+                      </select>
+                    </td>
+                    <td>
+                      <select id="col10" onchange="dropDownSelect(10,this.value)">
+                        <option value="0"></option>
+                      </select>
+                    </td>
+                    <td>
+                      <select id="col11" onchange="dropDownSelect(11,this.value)">
+                        <option value="0"></option>
+                      </select>
+                    </td>
+                    <td>
+                      <select id="col12" onchange="dropDownSelect(12,this.value)">
+                        <option value="0"></option>
+                      </select>
+                    </td>
+                    <td>
+                      <select id="col13" onchange="dropDownSelect(13,this.value)">
+                        <option value="0"></option>
+                      </select>
+                    </td>
+                    <td>
+                      <select id="col14" onchange="dropDownSelect(14,this.value)">
+                        <option value="0"></option>
+                      </select>
+                    </td>
+                    <td>
+                      <select id="col15" onchange="dropDownSelect(15,this.value)">
+                        <option value="0"></option>
+                      </select>
+                    </td>
+                    <td>
+                      <select id="col16" onchange="dropDownSelect(16,this.value)">
+                        <option value="0"></option>
+                      </select>
+                    </td>
+                    <!--color-picker is in the next td, which should resize to fit remaining space-->
+
+
+                  </tr>
+                </table>
+                <br />
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </center>
+</body>
+
+</html>
