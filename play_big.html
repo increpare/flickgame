@@ -1346,7 +1346,7 @@ function printCanvas(descriptionString){
 function renderImages(){
   gameState.imageDats = new Array();
 
-  for (var i=0;i<16;i++){
+  for (var i=0;i<gameState.canvasses.length;i++){
     var descriptionArray = gameState.canvasses[i];
     var descriptionString = RLE_decode(descriptionArray);
 

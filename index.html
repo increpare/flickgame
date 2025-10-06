@@ -879,7 +879,7 @@ function rgbToLab(r,g,b) {
     function stateToString() {
       var state = new Object();
       state.gameLink = gameLink;
-      state.activeIndex = canvasIndex;
+      state.activeIndex = canvasIndex;      
       state.canvasses = new Array();
       state.palette_name = palette_name;
       state.background_color = background_color;
@@ -930,6 +930,10 @@ function rgbToLab(r,g,b) {
       if (state.activeIndex === undefined){
         state.activeIndex = 0;
       }
+      if (state.activeIndex >= 16){
+        state.activeIndex = 0;
+      }
+      
       canvasIndex = state.activeIndex;
 
       
@@ -950,6 +954,9 @@ function rgbToLab(r,g,b) {
 
 
       canvasses = new Array();
+      //trim state.canvasses to 16
+      state.canvasses = state.canvasses.slice(0, 16);
+      
       for (var k = 0; k < state.canvasses.length; k++) {
         var s = state.canvasses[k];
         var ar = new Uint8Array(width * height);
