@@ -468,12 +468,14 @@ function rgbToLab(r,g,b) {
         }
       }
       var old_hyperlinks = hyperlinks;
-      hyperlinks = new Array(FRAME_COUNT).fill([]);
-      for (var page_idx = 0; page_idx < old_hyperlinks.length; page_idx++){
+      hyperlinks = new Array(FRAME_COUNT);
+      for (var page_idx = 0; page_idx < FRAME_COUNT; page_idx++){
         var page_links = new Array(COLOUR_COUNT).fill(0);
         var page_links_old = old_hyperlinks[page_idx];
-        for (var color_idx = 0; color_idx < page_links_old.length; color_idx++){
-          page_links[mapping[color_idx]] = page_links_old[color_idx];
+        if (page_links_old && Array.isArray(page_links_old)) {
+          for (var color_idx = 0; color_idx < page_links_old.length; color_idx++){
+            page_links[mapping[color_idx]] = page_links_old[color_idx];
+          }
         }
         hyperlinks[page_idx] = page_links;
       }
@@ -996,6 +998,13 @@ function rgbToLab(r,g,b) {
       }
 
       hyperlinks = state.hyperlinks;
+      
+      // Fix corrupted files (null entries) and pad short files (16 vs 128 pages)
+      for (var i = 0; i < FRAME_COUNT; i++){
+        if (!hyperlinks[i] || !Array.isArray(hyperlinks[i])) {
+          hyperlinks[i] = new Array(COLOUR_COUNT).fill(0);
+        }
+      }
 
     }
 

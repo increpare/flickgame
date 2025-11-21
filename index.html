@@ -467,12 +467,14 @@ function rgbToLab(r,g,b) {
         }
       }
       var old_hyperlinks = hyperlinks;
-      hyperlinks = new Array(16).fill([]);
-      for (var page_idx = 0; page_idx < old_hyperlinks.length; page_idx++){
+      hyperlinks = new Array(16);
+      for (var page_idx = 0; page_idx < 16; page_idx++){
         var page_links = new Array(16).fill(0);
         var page_links_old = old_hyperlinks[page_idx];
-        for (var color_idx = 0; color_idx < page_links_old.length; color_idx++){
-          page_links[mapping[color_idx]] = page_links_old[color_idx];
+        if (page_links_old && Array.isArray(page_links_old)) {
+          for (var color_idx = 0; color_idx < page_links_old.length; color_idx++){
+            page_links[mapping[color_idx]] = page_links_old[color_idx];
+          }
         }
         hyperlinks[page_idx] = page_links;
       }

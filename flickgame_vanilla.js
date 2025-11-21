@@ -343,6 +343,18 @@ function loadState(code) {
   document.documentElement.style.setProperty('--background-color', gameState.background_color);
   document.documentElement.style.setProperty('--foreground-color', gameState.foreground_color);
 
+  // Pad hyperlinks array if it's shorter than canvasses array
+  // This handles the case where a regular flickgame (16 pages) is imported into flickgame_big (128 pages)
+  // Also fixes corrupted files where some entries might be null
+  if (gameState.hyperlinks && gameState.canvasses) {
+    var expectedLength = gameState.canvasses.length;
+    for (var i = 0; i < expectedLength; i++) {
+      if (!gameState.hyperlinks[i] || !Array.isArray(gameState.hyperlinks[i])) {
+        gameState.hyperlinks[i] = new Array(16).fill(0);
+      }
+    }
+  }
+
   var homepage = gameState.gameLink;
   var homepageLink = document.getElementById("homeLink");
   if (homepageLink) {
