@@ -917,31 +917,6 @@ function rgbToLab(r,g,b) {
       return result;
     }
 
-    function upgrade_v1_to_v2(state){
-      //https://github.com/increpare/flickgame/issues/82
-      //if version not defined, then I need to do the pallette_fix
-
-      //imperfect fix, but what am i gonna do...
-      var assignments = {
-        "grayscale-16": ["go-line", "galaxy-flame", "fading-16"],
-        "dawnbringer-16": ["na16", "nanner-jam", "steam-lords", "summers-past-16", "taffy-16", "urbex-16", "vanilla-milkshake", "woodspark"],
-        "sweetie-16": ["miyazaki-16", "daylight-16"],
-      };
-
-      for (var paletteName in assignments){
-         aliases = assignments[paletteName];
-         for (var alias_index in aliases){
-          var alias = aliases[alias_index];
-          if (state.palette_name === alias){
-            state.palette_name = paletteName;
-          }
-         }
-      }
-
-      state.version = "2";
-      return state;      
-    }
-
     function stringToState(str) {
       var state = JSON.parse(str);
       gameLink = state.gameLink;

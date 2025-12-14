@@ -844,10 +844,7 @@ function getData(options) {
     ]
 };
 
-function upgrade_v1_to_v2(gameState){
-  palettes = palettes_compatibility_v1;
-  gameState.version = "2";
-}
+  
 // Load state function
 function loadState(code) {
   gameState = JSON.parse(code);

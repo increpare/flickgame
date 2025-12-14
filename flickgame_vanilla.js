@@ -365,3 +365,83 @@ function loadState(code) {
       homepageLink.href = homepage;
   }
 }
+
+
+    
+function upgrade_v1_to_v2(state){
+    //OK THERE'S NO GOOD SOLUTION TO THIS, I'M GOING TO DO NUFINK
+
+    //https://github.com/increpare/flickgame/issues/82
+    //if version not defined, then I need to do the pallette_fix
+
+    //imperfect fix, but what am i gonna do...
+    //go through all the old palettes and find what new palletes they're assigned to (i.e. 
+    //every colour in the old palette should have a new colour in the new palette)
+    // var assignments = {};
+    // for (var paletteName in palettes_old){
+    //     var old_palette = palettes_old[paletteName];
+    //     var all_colors_found = true;
+    //     for (var i = 0; i < old_palette.length; i++){
+    //         var color = old_palette[i];
+    //         assignments[color] = paletteName;
+    //         var found_match = false;
+    //         for (var j = 0; j < palettes[paletteName].length; j++){
+    //             var new_color = palettes[paletteName][j];
+    //             if (color_distance(color, new_color) < 10){
+    //                 found_match = true;
+    //                 break;
+    //             }
+    //         }
+    //         if (!found_match){
+    //             console.error("No matching color found for " + color + " in " + paletteName);
+    //             all_colors_found = false;
+    //         }
+    //     }
+    //     if (all_colors_found){
+    //         assignments[paletteName] = paletteName;
+    //     } else {
+    //         console.error("Not all colors found for " + paletteName);
+    //     }
+    // }
+
+    // var old_palette_name = state.palette_name;
+    // state.palette_name = assignments[old_palette_name];
+
+    // //now we need to fix the colours by converting the old palettes (palettes_old) to the new palettes (palettes)
+    // var new_palette_name = state.palette_name;
+
+    // var conversion_map = {};//conversion_map[old_color_index] = new_color_index;
+
+
+    // var old_palette = palettes_old[old_palette_name];
+    // var new_palette = palettes[new_palette_name];
+    // for (var i = 0; i < old_palette.length; i++){
+    //     var color = old_palette[i];
+    //     var matching_color_idx=-1
+    //     for (var j = 0; j < new_palette.length; j++){
+    //     var new_color = new_palette[j];
+    //     if (color_distance(color, new_color) < 10){
+    //         matching_color_idx = j;
+    //         break;
+    //     }
+    //     }
+    //     conversion_map[i] = matching_color_idx;
+    //     if (matching_color_idx === -1){
+    //     console.error("No matching color found for " + color + " in " + new_palette_name);
+    //     }
+    // }
+
+    // //now we need to go through each frame and convert the colours using the conversion_map
+    // for (var i = 0; i < state.canvasses.length; i++){
+    //     var frame = state.canvasses[i];
+    //     for (var j = 0; j < frame.length; j++){
+    //     var color = frame[j];
+    //     frame[j] = conversion_map[color];
+    //     }
+    // }
+
+
+
+    state.version = "2";
+    return state;      
+}
