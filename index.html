@@ -683,6 +683,8 @@ function rgbToLab(r,g,b) {
     var radiusElem = new Array();
     var thumbnailCanvas = new Array();
     var thumbnailContext = new Array();
+    var pagePickerEl = null;
+    var pagePickerColorIdx = -1;
 
     var standalone_HTML_String = "";
 
@@ -1019,6 +1021,101 @@ function rgbToLab(r,g,b) {
       bgColorSelect.value = bg_color_idx;
     }
 
+    function createPagePicker() {
+      var picker = document.createElement('div');
+      picker.className = 'page-picker';
+
+      for (var i = 0; i < 16; i++) {
+        var item = document.createElement('div');
+        item.className = 'page-picker-item';
+        item.setAttribute('data-page', i + 1);
+
+        var thumb = document.createElement('canvas');
+        thumb.width = 16;
+        thumb.height = 10;
+        thumb.className = 'page-picker-thumb';
+        item.appendChild(thumb);
+
+        var label = document.createElement('span');
+        label.className = 'page-picker-label';
+        label.textContent = i + 1;
+        item.appendChild(label);
+
+        (function(pageNum) {
+          item.addEventListener('click', function(e) {
+            e.stopPropagation();
+            hyperlinks[canvasIndex][pagePickerColorIdx] = pageNum;
+            hidePagePicker();
+            updateSwatchLabels();
+          });
+        })(i + 1);
+
+        picker.appendChild(item);
+      }
+
+      var clearBtn = document.createElement('div');
+      clearBtn.className = 'page-picker-clear';
+      clearBtn.textContent = '\u2715 clear link';
+      clearBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        hyperlinks[canvasIndex][pagePickerColorIdx] = 0;
+        hidePagePicker();
+        updateSwatchLabels();
+      });
+      picker.appendChild(clearBtn);
+
+      document.body.appendChild(picker);
+      return picker;
+    }
+
+    function showPagePicker(colorIdx) {
+      if (!pagePickerEl) return;
+      pagePickerColorIdx = colorIdx;
+
+      // Update thumbnails in the picker
+      var thumbs = pagePickerEl.querySelectorAll('.page-picker-thumb');
+      for (var i = 0; i < 16; i++) {
+        var ctx = thumbs[i].getContext('2d');
+        ctx.drawImage(thumbnailCanvas[i], 0, 0);
+      }
+
+      // Highlight current target
+      var items = pagePickerEl.querySelectorAll('.page-picker-item');
+      var currentTarget = hyperlinks[canvasIndex][colorIdx];
+      for (var i = 0; i < 16; i++) {
+        if (currentTarget > 0 && i === currentTarget - 1) {
+          items[i].classList.add('current-target');
+        } else {
+          items[i].classList.remove('current-target');
+        }
+      }
+
+      // Position below the swatch
+      var swatchRect = colorElem[colorIdx].getBoundingClientRect();
+      pagePickerEl.classList.add('visible');
+
+      var pickerWidth = pagePickerEl.offsetWidth;
+      var left = swatchRect.left + (swatchRect.width / 2) - (pickerWidth / 2);
+
+      // Keep on screen
+      if (left + pickerWidth > window.innerWidth - 8) {
+        left = window.innerWidth - pickerWidth - 8;
+      }
+      if (left < 8) {
+        left = 8;
+      }
+
+      pagePickerEl.style.left = left + 'px';
+      pagePickerEl.style.top = (swatchRect.bottom + 4) + 'px';
+    }
+
+    function hidePagePicker() {
+      if (pagePickerEl) {
+        pagePickerEl.classList.remove('visible');
+      }
+      pagePickerColorIdx = -1;
+    }
+
     function getRandomInt(min, max) {
       return Math.floor(Math.random() * (max - min)) + min;
     }
@@ -1134,6 +1231,17 @@ function rgbToLab(r,g,b) {
         elem.style.backgroundColor = "var(--col" + i + ")";
         colorElem[i] = elem;
       }
+
+      pagePickerEl = createPagePicker();
+
+      // Click outside to dismiss page picker
+      document.addEventListener('click', function(e) {
+        if (pagePickerEl && pagePickerColorIdx >= 0) {
+          if (!pagePickerEl.contains(e.target)) {
+            hidePagePicker();
+          }
+        }
+      });
 
       for (var i = 0; i < 16; i++) {
         elem = document.getElementById("layerItem" + (i + 1));
