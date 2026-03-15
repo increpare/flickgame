@@ -1133,6 +1133,44 @@ function rgbToLab(r,g,b) {
     var zoomFactor = 4;
     var radius = 5;
 
+    // Pointer mode state
+    var pointerMode = false;
+    var pointerModeBtn = null;
+    var prevRadius = 5; // remember brush size when entering pointer mode
+
+    // Touch cursor state for pointer mode
+    var ptrTouchMode = false;
+    var ptrCursorX = 80.0;
+    var ptrCursorY = 50.0;
+    var ptrCursorVisible = false;
+    var ptrHoveredIsLink = false;
+    var ptrHoveredColorIndex = -1;
+    var ptrLastTouchTime = 0;
+    var ptrActiveTouchId = null;
+    var ptrTouchStartX = 0;
+    var ptrTouchStartY = 0;
+    var ptrTouchStartTime = 0;
+    var ptrLastTouchX = 0;
+    var ptrLastTouchY = 0;
+
+    // Pointer cursor sprite data (same as play.html)
+    var POINTER_SPEED = 1.0;
+    var TAP_THRESHOLD = 10;
+    var TAP_TIME_THRESHOLD = 300;
+    var DARK_LUMINANCE = 0.3;
+    var POINTER_ARROW_W = 5, POINTER_ARROW_H = 8;
+    var POINTER_HAND_W = 8, POINTER_HAND_H = 10;
+    var pointerArrowSprite = [
+      [2,0,0,0,0],[2,2,0,0,0],[2,1,2,0,0],[2,1,1,2,0],
+      [2,1,1,1,2],[2,1,2,2,2],[2,2,0,0,0],[2,0,0,0,0]
+    ];
+    var pointerHandSprite = [
+      [0,0,0,2,0,0,0,0],[0,0,2,1,2,0,0,0],[0,0,2,1,2,0,0,0],
+      [0,0,2,1,2,2,0,0],[0,2,2,1,2,1,2,0],[2,1,2,1,1,1,1,2],
+      [2,1,1,1,1,1,1,2],[0,2,1,1,1,1,1,2],[0,0,2,1,1,1,2,0],
+      [0,0,2,2,2,2,0,0]
+    ];
+
     var visibleCanvas;
     var visibleContext;
     var linkInput;
@@ -1176,6 +1214,124 @@ function rgbToLab(r,g,b) {
         radiusElem[newRadius - 1].setAttribute("class", "radius selected");
       } else {
         bucketElem.setAttribute("class", "radius selected");
+      }
+
+      // Exit pointer mode when selecting a brush/bucket tool
+      if (pointerMode) {
+        pointerMode = false;
+        ptrCursorVisible = false;
+        ptrTouchMode = false;
+        if (pointerModeBtn) pointerModeBtn.setAttribute("class", "radius");
+        visibleCanvas.style.cursor = "crosshair";
+        setVisuals(); // redraw without cursor
+      }
+    }
+
+    function togglePointerMode() {
+      pointerMode = !pointerMode;
+      if (pointerMode) {
+        prevRadius = radius;
+        if (pointerModeBtn) pointerModeBtn.setAttribute("class", "radius selected");
+        // Deselect brush/bucket buttons
+        bucketElem.setAttribute("class", "radius");
+        for (var i = 0; i < 16; i++) {
+          if (radiusElem[i] !== null) {
+            radiusElem[i].setAttribute("class", "radius");
+          }
+        }
+        visibleCanvas.style.cursor = "default";
+      } else {
+        if (pointerModeBtn) pointerModeBtn.setAttribute("class", "radius");
+        ptrCursorVisible = false;
+        ptrTouchMode = false;
+        setRadius(prevRadius);
+        visibleCanvas.style.cursor = "crosshair";
+        setVisuals(); // redraw without cursor
+      }
+    }
+
+    function hexToRgbEditor(hex) {
+      var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : {r: 0, g: 0, b: 0};
+    }
+
+    function ptrUpdateHover() {
+      var px = Math.floor(ptrCursorX);
+      var py = Math.floor(ptrCursorY);
+      if (px >= 0 && px < width && py >= 0 && py < height) {
+        var canvas = canvasses[canvasIndex];
+        var ci = canvas[px + width * py];
+        ptrHoveredColorIndex = ci;
+        ptrHoveredIsLink = hyperlinks[canvasIndex][ci] !== 0;
+      } else {
+        ptrHoveredColorIndex = -1;
+        ptrHoveredIsLink = false;
+      }
+    }
+
+    function ptrFollowLink() {
+      if (ptrHoveredIsLink) {
+        var target = hyperlinks[canvasIndex][ptrHoveredColorIndex];
+        if (target > 0) {
+          ptrCursorX = 80.0;
+          ptrCursorY = 50.0;
+          setLayer(target); // setLayer expects 1-based page number
+          ptrUpdateHover();
+          setVisuals();
+        }
+      }
+    }
+
+    function drawPointerCursor() {
+      if (!pointerMode || !ptrTouchMode || !ptrCursorVisible) return;
+
+      var sprite, spriteW, spriteH, hotspotX;
+      if (ptrHoveredIsLink && pointerHandSprite) {
+        sprite = pointerHandSprite;
+        spriteW = POINTER_HAND_W;
+        spriteH = POINTER_HAND_H;
+        hotspotX = 3;
+      } else if (pointerArrowSprite) {
+        sprite = pointerArrowSprite;
+        spriteW = POINTER_ARROW_W;
+        spriteH = POINTER_ARROW_H;
+        hotspotX = 0;
+      } else {
+        return;
+      }
+
+      var px = Math.floor(ptrCursorX);
+      var py = Math.floor(ptrCursorY);
+      var screenX = (px - hotspotX) * zoomFactor;
+      var screenY = py * zoomFactor;
+
+      var fillColor = '#ffffff';
+      var outlineColor = '#000000';
+
+      if (ptrHoveredIsLink && ptrHoveredColorIndex >= 0 && ptrHoveredColorIndex < 16) {
+        fillColor = colorPalette[ptrHoveredColorIndex];
+        var rgb = hexToRgbEditor(fillColor);
+        var luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
+        if (luminance < DARK_LUMINANCE) {
+          outlineColor = '#ffffff';
+        }
+      }
+
+      for (var y = 0; y < spriteH; y++) {
+        for (var x = 0; x < spriteW; x++) {
+          var pixelType = sprite[y][x];
+          if (pixelType === 0) continue;
+          visibleContext.fillStyle = (pixelType === 1) ? fillColor : outlineColor;
+          var rx = Math.floor(screenX + x * zoomFactor);
+          var ry = Math.floor(screenY + y * zoomFactor);
+          var rw = Math.floor(screenX + (x + 1) * zoomFactor) - rx;
+          var rh = Math.floor(screenY + (y + 1) * zoomFactor) - ry;
+          visibleContext.fillRect(rx, ry, rw, rh);
+        }
       }
     }
 
@@ -1293,7 +1449,19 @@ function rgbToLab(r,g,b) {
       var fileUploader = document.getElementById("my_file");
       fileUploader.addEventListener('change', readFile, false);
 
-      window.addEventListener('mouseup', mouseUp, false);    
+      window.addEventListener('mouseup', mouseUp, false);
+
+      // Pointer mode touch events
+      visibleCanvas.addEventListener('touchstart', ptrTouchStart, {passive: false});
+      visibleCanvas.addEventListener('touchmove', ptrTouchMove, {passive: false});
+      visibleCanvas.addEventListener('touchend', ptrTouchEnd, {passive: false});
+      visibleCanvas.addEventListener('touchcancel', function(e) {
+        ptrActiveTouchId = null;
+        ptrLastTouchTime = Date.now();
+      }, false);
+
+      // Init pointer mode button
+      pointerModeBtn = document.getElementById("pointer_mode_btn");
 
       visibleContext = visibleCanvas.getContext("2d");
       visibleContext.imageSmoothingEnabled = false;
@@ -1409,6 +1577,7 @@ function rgbToLab(r,g,b) {
       linkInput.value = gameLink;
       //set body background
       // document.body.style.backgroundColor = background_colors[palette_name];
+      drawPointerCursor();
     }
 
 
@@ -1469,8 +1638,101 @@ function rgbToLab(r,g,b) {
       }
     }
 
+    // --- Pointer mode touch handlers ---
+    function ptrTouchStart(e) {
+      if (!pointerMode) return;
+      e.preventDefault();
+      if (ptrActiveTouchId !== null) return;
+      var touch = e.changedTouches[0];
+      ptrActiveTouchId = touch.identifier;
+
+      if (!ptrTouchMode) {
+        ptrTouchMode = true;
+        visibleCanvas.style.cursor = 'none';
+      }
+      if (!ptrCursorVisible) {
+        ptrCursorX = 80.0;
+        ptrCursorY = 50.0;
+        ptrCursorVisible = true;
+        ptrUpdateHover();
+        setVisuals();
+      }
+      ptrTouchStartX = touch.clientX;
+      ptrTouchStartY = touch.clientY;
+      ptrTouchStartTime = Date.now();
+      ptrLastTouchX = touch.clientX;
+      ptrLastTouchY = touch.clientY;
+    }
+
+    function ptrTouchMove(e) {
+      if (!pointerMode) return;
+      e.preventDefault();
+      var touch = null;
+      for (var i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === ptrActiveTouchId) {
+          touch = e.changedTouches[i];
+          break;
+        }
+      }
+      if (!touch) return;
+
+      var deltaX = touch.clientX - ptrLastTouchX;
+      var deltaY = touch.clientY - ptrLastTouchY;
+      ptrLastTouchX = touch.clientX;
+      ptrLastTouchY = touch.clientY;
+
+      var gameDeltaX = (deltaX / zoomFactor) * POINTER_SPEED;
+      var gameDeltaY = (deltaY / zoomFactor) * POINTER_SPEED;
+
+      ptrCursorX = Math.max(0, Math.min(width - 1, ptrCursorX + gameDeltaX));
+      ptrCursorY = Math.max(0, Math.min(height - 1, ptrCursorY + gameDeltaY));
+
+      ptrUpdateHover();
+      setVisuals();
+    }
+
+    function ptrTouchEnd(e) {
+      if (!pointerMode) return;
+      e.preventDefault();
+      var touch = null;
+      for (var i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === ptrActiveTouchId) {
+          touch = e.changedTouches[i];
+          break;
+        }
+      }
+      if (!touch) return;
+
+      ptrActiveTouchId = null;
+      ptrLastTouchTime = Date.now();
+
+      var totalMove = Math.abs(touch.clientX - ptrTouchStartX) + Math.abs(touch.clientY - ptrTouchStartY);
+      var elapsed = Date.now() - ptrTouchStartTime;
+
+      if (totalMove < TAP_THRESHOLD && elapsed < TAP_TIME_THRESHOLD) {
+        ptrFollowLink();
+      }
+    }
+
     function mouseDown(e) {
       e = e || window.event;
+
+      // Pointer mode: click follows links
+      if (pointerMode && !ptrTouchMode) {
+        e.preventDefault();
+        var coords = getCoords(e);
+        if (coords === null) return !1;
+        var x = Math.floor(coords[0] / zoomFactor);
+        var y = Math.floor(coords[1] / zoomFactor);
+        if (x >= 0 && x < width && y >= 0 && y < height) {
+          var ci = canvasses[canvasIndex][x + width * y];
+          var target = hyperlinks[canvasIndex][ci];
+          if (target > 0) {
+            setLayer(target);
+          }
+        }
+        return !1;
+      }
 
       drawing = 1;
       var coords = getCoords(e);
@@ -1555,6 +1817,35 @@ function rgbToLab(r,g,b) {
     }
 
     function updateCursor(e) {
+      if (pointerMode) {
+        // Switch back from touch mode on real mouse movement
+        if (ptrTouchMode && (e.movementX !== 0 || e.movementY !== 0)) {
+          if (Date.now() - ptrLastTouchTime > 500) {
+            ptrTouchMode = false;
+            ptrCursorVisible = false;
+            setVisuals();
+          }
+        }
+        if (ptrTouchMode) {
+          mainCanvas.style.cursor = "none";
+          return;
+        }
+        // In pointer mode with mouse: show pointer over links
+        var coords = getCoords(e);
+        if (coords !== null) {
+          var x = Math.floor(coords[0] / zoomFactor);
+          var y = Math.floor(coords[1] / zoomFactor);
+          if (x >= 0 && x < width && y >= 0 && y < height) {
+            var ci = canvasses[canvasIndex][x + width * y];
+            if (hyperlinks[canvasIndex][ci] !== 0) {
+              mainCanvas.style.cursor = "pointer";
+              return;
+            }
+          }
+        }
+        mainCanvas.style.cursor = "default";
+        return;
+      }
       // Update cursor based on modifier keys
       if (e.metaKey || e.altKey || e.shiftKey || e.ctrlKey || lastButton > 0) {
         mainCanvas.style.cursor = "url('eyedropper.png') 2 16, crosshair";
@@ -2366,6 +2657,9 @@ body{
                     <!--must have border to left of this td-->
                     <td style="border-left: 2px solid gray;">
                       <a href="#" onclick="openPaletteSelector();return false;"><img id="palette_button" src="palette.png"></a>
+                    </td>
+                    <td style="border-left: 2px solid gray;">
+                      <a href="#" onclick="togglePointerMode();return false;"><img id="pointer_mode_btn" src="pointer_hand.png" class="radius" title="pointer mode (test links)" style="image-rendering: pixelated; width: 20px; height: 20px;"></a>
                     </td>
                   </tr>
                 </table>
