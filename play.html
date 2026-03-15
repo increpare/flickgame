@@ -920,6 +920,37 @@ var showAnimation = frameCount>1;
 var animating=false;
 var zoom=1;
 var currentIndex=0;
+
+// Touch cursor constants
+var POINTER_SPEED = 1.0;
+var TAP_THRESHOLD = 10;
+var TAP_TIME_THRESHOLD = 300;
+var DARK_LUMINANCE = 0.3;
+
+// Touch cursor state
+var touchMode = false;
+var cursorX = 80.0;
+var cursorY = 50.0;
+var cursorVisible = false;
+var hoveredIsLink = false;
+var hoveredColorIndex = -1;
+var lastTouchTime = 0;
+var activeTouchId = null;
+var touchStartX = 0;
+var touchStartY = 0;
+var touchStartTime = 0;
+var lastTouchX = 0;
+var lastTouchY = 0;
+
+// Letterbox offsets (promoted from local vars in redraw/mouseMove)
+var dx = 0;
+var dy = 0;
+
+// Sprite data (populated by loadPointerSprites)
+var pointerArrow = null;   // 2D array: pointerArrow[y][x] = 0|1|2
+var pointerHand = null;    // 2D array: pointerHand[y][x] = 0|1|2
+var POINTER_ARROW_W = 5, POINTER_ARROW_H = 8;
+var POINTER_HAND_W = 8, POINTER_HAND_H = 10;
 function redraw(){
   console.log("resized "+window.innerWidth +"x"+window.innerHeight);  
   mainCanvas.width=mainCanvasContainer.clientWidth;
@@ -948,8 +979,8 @@ function redraw(){
     if(zoom<1){
       zoom=1;
     }
-    var dx=(w-160*zoom)/2;
-    var dy=(h-100*zoom)/2;
+    dx=(w-160*zoom)/2;
+    dy=(h-100*zoom)/2;
     mainCanvasCtx.fillStyle=gameState.background_color;
     mainCanvasCtx.fillRect(0,0,w,h);
     if (curCanvasToDraw===null){
@@ -1222,8 +1253,8 @@ function redraw(){
     if(zoom<1){
       zoom=1;
     }
-    var dx=(w-160*zoom)/2;
-    var dy=(h-100*zoom)/2;
+    dx=(w-160*zoom)/2;
+    dy=(h-100*zoom)/2;
 
     var x=Math.floor((coords[0]-dx)/zoom);
     var y=Math.floor((coords[1]-dy)/zoom);
