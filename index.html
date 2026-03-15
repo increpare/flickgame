@@ -1157,6 +1157,24 @@ function rgbToLab(r,g,b) {
       }
     }
 
+    function updateUsedOnFrameIndicators() {
+      if (!canvasses[canvasIndex] || !colorElem.length) return;
+      var used = new Set();
+      var canvas = canvasses[canvasIndex];
+      for (var k = 0; k < canvas.length; k++) {
+        used.add(canvas[k]);
+      }
+      for (var i = 0; i < 16; i++) {
+        if (colorElem[i]) {
+          if (used.has(i)) {
+            colorElem[i].classList.add("used-on-frame");
+          } else {
+            colorElem[i].classList.remove("used-on-frame");
+          }
+        }
+      }
+    }
+
     function setDropdowns() {
       updateSwatchLabels();
       //set background dropdown
@@ -1692,10 +1710,12 @@ function rgbToLab(r,g,b) {
       colorIndex = newColorIndex;
       for (var i = 0; i < 16; i++) {
         if (colorElem[i] !== null) {
-          colorElem[i].setAttribute("class", "unselected");
+          colorElem[i].classList.remove("selected");
+          colorElem[i].classList.add("unselected");
         }
       }
-      colorElem[colorIndex].setAttribute("class", "selected");
+      colorElem[colorIndex].classList.remove("unselected");
+      colorElem[colorIndex].classList.add("selected");
     }
 
     function setLayer(newCanvasIndex,force_gen_thumbnails=false) {
@@ -2092,6 +2112,7 @@ function rgbToLab(r,g,b) {
       linkInput.value = gameLink;
       //set body background
       // document.body.style.backgroundColor = background_colors[palette_name];
+      updateUsedOnFrameIndicators();
       drawPointerCursor();
     }
 
@@ -2792,6 +2813,20 @@ body{
       border: 2px solid black;
       touch-action: manipulation;
       position: relative;
+    }
+
+    /* Dot in top-right when this colour appears on the current frame */
+    #swatch-container [id^="color_"].used-on-frame::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #fff;
+      border: 1px solid #333;
+      box-sizing: border-box;
     }
 
     .link-label {
