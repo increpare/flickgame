@@ -1090,14 +1090,15 @@ function rgbToLab(r,g,b) {
         }
       }
 
-      // Position below the swatch
+      // Position relative to the swatch
       var swatchRect = colorElem[colorIdx].getBoundingClientRect();
       pagePickerEl.classList.add('visible');
 
       var pickerWidth = pagePickerEl.offsetWidth;
+      var pickerHeight = pagePickerEl.offsetHeight;
       var left = swatchRect.left + (swatchRect.width / 2) - (pickerWidth / 2);
 
-      // Keep on screen
+      // Keep on screen horizontally
       if (left + pickerWidth > window.innerWidth - 8) {
         left = window.innerWidth - pickerWidth - 8;
       }
@@ -1105,8 +1106,16 @@ function rgbToLab(r,g,b) {
         left = 8;
       }
 
+      // Prefer below, flip above if it would go off screen
+      var top;
+      if (swatchRect.bottom + 4 + pickerHeight <= window.innerHeight - 8) {
+        top = swatchRect.bottom + 4;
+      } else {
+        top = swatchRect.top - 4 - pickerHeight;
+      }
+
       pagePickerEl.style.left = left + 'px';
-      pagePickerEl.style.top = (swatchRect.bottom + 4) + 'px';
+      pagePickerEl.style.top = top + 'px';
     }
 
     function hidePagePicker() {
