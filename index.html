@@ -1136,6 +1136,7 @@ function rgbToLab(r,g,b) {
         hyperlinks[canvasIndex] = JSON.parse(copyLinks);
         setVisuals();
         setDropdowns();
+        refreshPointerModeCursor();
         saveFlickgameState();
       }
     }
@@ -1189,6 +1190,7 @@ function rgbToLab(r,g,b) {
             hyperlinks[canvasIndex][pagePickerColorIdx] = pageNum;
             hidePagePicker();
             updateSwatchLabels();
+            refreshPointerModeCursor();
           });
         })(i + 1);
 
@@ -1203,6 +1205,7 @@ function rgbToLab(r,g,b) {
         hyperlinks[canvasIndex][pagePickerColorIdx] = 0;
         hidePagePicker();
         updateSwatchLabels();
+        refreshPointerModeCursor();
       });
       picker.appendChild(clearBtn);
 
@@ -1269,10 +1272,36 @@ function rgbToLab(r,g,b) {
         framePickerEl.style.top = (rect.bottom + 4) + 'px';
       }
       framePickerEl.classList.add('visible');
+      updateGridIconHighlight();
     }
 
     function hideFramePicker() {
       if (framePickerEl) framePickerEl.classList.remove('visible');
+    }
+
+    function isCanvasEmpty(idx) {
+      var c = canvasses[idx];
+      if (!c || !c.length) return true;
+      for (var i = 0; i < c.length; i++) if (c[i] !== 0) return false;
+      return true;
+    }
+
+    function updateGridIconHighlight() {
+      var svg = document.getElementById('mobile-grid-icon');
+      if (!svg) return;
+      for (var i = 0; i < 16; i++) {
+        var cell = document.getElementById('grid-cell-' + i);
+        if (cell) {
+          if (i === canvasIndex) {
+            cell.classList.add('grid-cell-active');
+            cell.classList.remove('grid-cell-empty');
+          } else {
+            cell.classList.remove('grid-cell-active');
+            if (isCanvasEmpty(i)) cell.classList.add('grid-cell-empty');
+            else cell.classList.remove('grid-cell-empty');
+          }
+        }
+      }
     }
 
     function showPagePicker(colorIdx) {
@@ -1362,6 +1391,7 @@ function rgbToLab(r,g,b) {
     var ptrTouchStartTime = 0;
     var ptrLastTouchX = 0;
     var ptrLastTouchY = 0;
+    var lastPointerEvent = null; // for refreshing cursor after link changes in pointer mode
 
     // Pointer cursor sprite data (same as play.html)
     var POINTER_SPEED = 1.0;
@@ -1427,6 +1457,8 @@ function rgbToLab(r,g,b) {
     var BRUSH_SLIDER_MARGIN_BOTTOM = 10;
     var BRUSH_SLIDER_MAX_RADIUS = 16;
     var BRUSH_SLIDER_MIN_RADIUS = 2;
+    /** Right-side inner margin for horizontal slider so thumb does not overlap the selected border */
+    var BRUSH_SLIDER_MARGIN_RIGHT_H = BRUSH_SLIDER_MAX_RADIUS + 2;
 
     function snapBrushToDiscrete(value) {
       var best = BRUSH_SLIDER_DISCRETE[0], bestDist = Math.abs(value - best);
@@ -1458,7 +1490,7 @@ function rgbToLab(r,g,b) {
       } else {
         var fractionH = discreteIndex / (BRUSH_SLIDER_DISCRETE.length - 1);
         var leftCenter = BRUSH_SLIDER_MARGIN + BRUSH_SLIDER_MAX_RADIUS;
-        var rightCenter = rect.width - BRUSH_SLIDER_MARGIN_BOTTOM - BRUSH_SLIDER_MIN_RADIUS;
+        var rightCenter = rect.width - BRUSH_SLIDER_MARGIN_RIGHT_H - BRUSH_SLIDER_MIN_RADIUS;
         var centerX = leftCenter + fractionH * (rightCenter - leftCenter);
         brushSizeThumbElem.style.top = "50%";
         brushSizeThumbElem.style.left = centerX + "px";
@@ -1480,7 +1512,7 @@ function rgbToLab(r,g,b) {
         fraction = (clickY - topCenter) / (bottomCenter - topCenter);
       } else {
         var leftCenter = BRUSH_SLIDER_MARGIN + BRUSH_SLIDER_MAX_RADIUS;
-        var rightCenter = rect.width - BRUSH_SLIDER_MARGIN_BOTTOM - BRUSH_SLIDER_MIN_RADIUS;
+        var rightCenter = rect.width - BRUSH_SLIDER_MARGIN_RIGHT_H - BRUSH_SLIDER_MIN_RADIUS;
         var clickX = evt.clientX - rect.left;
         fraction = (clickX - leftCenter) / (rightCenter - leftCenter);
       }
@@ -1667,6 +1699,7 @@ function rgbToLab(r,g,b) {
       layerElem[canvasIndex].setAttribute("class", "layerItem selectedItem");
       setVisuals(force_gen_thumbnails);
       setDropdowns();
+      updateGridIconHighlight();
     }
 
     var bgColorSelectOptions=[];
@@ -1747,6 +1780,7 @@ function rgbToLab(r,g,b) {
 
       pagePickerEl = createPagePicker();
       framePickerEl = createFramePicker();
+      updateGridIconHighlight();
 
       // Click outside to dismiss page picker, frame picker, and palette selector
       document.addEventListener('click', function(e) {
@@ -2294,8 +2328,19 @@ function rgbToLab(r,g,b) {
       return coordinatesArray;
     }
 
+    function refreshPointerModeCursor() {
+      if (!pointerMode) return;
+      if (ptrTouchMode) {
+        ptrUpdateHover();
+        setVisuals();
+      } else if (lastPointerEvent) {
+        updateCursor(lastPointerEvent);
+      }
+    }
+
     function updateCursor(e) {
       if (pointerMode) {
+        lastPointerEvent = e;
         // Switch back from touch mode only on real mouse/pen movement (not touch)
         var isMouseOrPen = e.pointerType === 'mouse' || e.pointerType === 'pen';
         if (ptrTouchMode && isMouseOrPen && (e.movementX !== 0 || e.movementY !== 0)) {
@@ -2885,7 +2930,8 @@ body{
       background: #555;
     }
 
-    img.toolbar {
+    img.toolbar,
+    svg.toolbar {
       width: 30px;
       height: 30px;
       background-color: transparent;
@@ -2894,6 +2940,15 @@ body{
       text-align: center;
       margin-bottom: 5px;
       touch-action: manipulation;
+    }
+    .grid-icon-svg .grid-cell {
+      fill: rgba(255,255,255,0.45);
+    }
+    .grid-icon-svg .grid-cell.grid-cell-empty {
+      fill: rgba(255,255,255,0.2);
+    }
+    .grid-icon-svg .grid-cell.grid-cell-active {
+      fill: white;
     }
 
     #toolbarcontainer {
@@ -2960,7 +3015,13 @@ body{
       flex-shrink: 0;
     }
     .mobile-toolbar-btn {
-      padding: 8px 12px;
+      width: 52px;
+      height: 52px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
       background: #2a2a3e;
       color: var(--foreground-color);
       border: 2px solid gray;
@@ -2969,9 +3030,27 @@ body{
       cursor: pointer;
       touch-action: manipulation;
     }
+    .mobile-toolbar-icon {
+      display: flex;
+      align-items: center;
+      padding: 6px;
+      border-radius: 4px;
+      touch-action: manipulation;
+    }
+    .mobile-toolbar-top img,
+    .mobile-toolbar-top svg {
+      width: 32px;
+      height: 32px;
+      margin: 0;
+      flex-shrink: 0;
+    }
     .mobile-toolbar-bottom img {
       width: 30px;
       height: 30px;
+    }
+    #mobile-grid-icon {
+      width: 100%;
+      height: 100%;
     }
     #mobile-pointer-btn.selected img,
     #mobile-pointer-btn img.selected {
@@ -3031,6 +3110,23 @@ body{
     .burger-dialog-content a {
       display: block;
       padding: 6px 0;
+    }
+    .burger-dialog-content .burger-dialog-btn {
+      display: block;
+      width: 100%;
+      margin-bottom: 6px;
+      padding: 6px 10px;
+      background: #2a2a3e;
+      color: var(--foreground-color);
+      border: 2px solid gray;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      text-align: left;
+      touch-action: manipulation;
+    }
+    .burger-dialog-content .burger-dialog-btn:last-child {
+      margin-bottom: 0;
     }
     .burger-dialog-content .burger-link-input {
       width: 100%;
@@ -3376,16 +3472,37 @@ body{
   </div>
   <div id="mobile-editor-wrapper">
     <div class="mobile-toolbar-top">
-      <button type="button" id="mobile-frame-btn" class="mobile-toolbar-btn">FRAME</button>
-      <button type="button" id="mobile-download-btn" class="mobile-toolbar-btn">DOWNLOAD</button>
-      <button type="button" id="mobile-burger-btn" class="mobile-toolbar-btn" aria-label="Menu">&#9776;</button>
+      <button type="button" id="mobile-frame-btn" class="mobile-toolbar-btn" aria-label="Pages">
+        <svg id="mobile-grid-icon" class="toolbar grid-icon-svg" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" alt="frame">
+          <rect class="grid-cell" id="grid-cell-0"  x="0.25" y="0.25" width="3.5" height="3.5" />
+          <rect class="grid-cell" id="grid-cell-1"  x="4.25" y="0.25" width="3.5" height="3.5" />
+          <rect class="grid-cell" id="grid-cell-2"  x="8.25" y="0.25" width="3.5" height="3.5" />
+          <rect class="grid-cell" id="grid-cell-3"  x="12.25" y="0.25" width="3.5" height="3.5" />
+          <rect class="grid-cell" id="grid-cell-4"  x="0.25" y="4.25" width="3.5" height="3.5" />
+          <rect class="grid-cell" id="grid-cell-5"  x="4.25" y="4.25" width="3.5" height="3.5" />
+          <rect class="grid-cell" id="grid-cell-6"  x="8.25" y="4.25" width="3.5" height="3.5" />
+          <rect class="grid-cell" id="grid-cell-7"  x="12.25" y="4.25" width="3.5" height="3.5" />
+          <rect class="grid-cell" id="grid-cell-8"  x="0.25" y="8.25" width="3.5" height="3.5" />
+          <rect class="grid-cell" id="grid-cell-9"  x="4.25" y="8.25" width="3.5" height="3.5" />
+          <rect class="grid-cell" id="grid-cell-10" x="8.25" y="8.25" width="3.5" height="3.5" />
+          <rect class="grid-cell" id="grid-cell-11" x="12.25" y="8.25" width="3.5" height="3.5" />
+          <rect class="grid-cell" id="grid-cell-12" x="0.25" y="12.25" width="3.5" height="3.5" />
+          <rect class="grid-cell" id="grid-cell-13" x="4.25" y="12.25" width="3.5" height="3.5" />
+          <rect class="grid-cell" id="grid-cell-14" x="8.25" y="12.25" width="3.5" height="3.5" />
+          <rect class="grid-cell" id="grid-cell-15" x="12.25" y="12.25" width="3.5" height="3.5" />
+        </svg>
+      </button>
+      <button type="button" id="mobile-copy-btn" class="mobile-toolbar-btn" title="Copy (current layer)" aria-label="Copy" onclick="doCopy();"><img src="clipboard_copy.svg" alt="copy" class="toolbar" /></button>
+      <button type="button" id="mobile-paste-btn" class="mobile-toolbar-btn" title="Paste (current layer)" aria-label="Paste" onclick="doPaste();"><img src="clipboard_paste.svg" alt="paste" class="toolbar" /></button>
+      <button type="button" id="mobile-download-btn" class="mobile-toolbar-btn"><img src="download.svg" alt="download" class="toolbar" /></button>
+      <button type="button" id="mobile-burger-btn" class="mobile-toolbar-btn" aria-label="Menu"><img src="list.svg" alt="menu" class="toolbar" /></button>
     </div>
     <div id="mobile-canvas-container"></div>
     <div class="mobile-toolbar-bottom">
       <div id="mobile-brush-slider-container"></div>
-      <a href="#" id="mobile-bucket-btn" onclick="setRadius(0);return false;"><img src="bucket.png" class="radius" alt="bucket" /></a>
-      <a href="#" id="mobile-undo-btn" onclick="doUndo();return false;"><img src="SVG/undo.svg" class="toolbar" alt="undo" /></a>
-      <a href="#" id="mobile-pointer-btn" onclick="togglePointerMode();return false;"><img src="pointer_hand.png" class="radius" alt="pointer" /></a>
+      <a href="#" id="mobile-bucket-btn" onclick="setRadius(0);return false;"><img src="bucket.svg" class="radius" alt="bucket" /></a>
+      <a href="#" id="mobile-undo-btn" onclick="doUndo();return false;"><img src="undo.svg" class="toolbar" alt="undo" /></a>
+      <a href="#" id="mobile-pointer-btn" onclick="togglePointerMode();return false;"><img src="hand.svg" class="radius" alt="pointer" /></a>
     </div>
     <div id="mobile-swatch-grid" class="mobile-swatch-grid"></div>
   </div>
@@ -3393,18 +3510,18 @@ body{
     <div class="burger-dialog-content">
       <button type="button" class="burger-dialog-close" id="burger-dialog-close" aria-label="Close">&times;</button>
       <label for="burger-link-input">URL link</label><br />
-      <input type="text" id="burger-link-input" class="burger-link-input" placeholder="www.flickgame.org" oninput="linkChange(this.value); var li=document.getElementById('linkInput'); if(li) li.value=this.value;" /><br />
-      <a href="#" onclick="shareClick();return false;">Share</a><br />
-      <a href="#" onclick="exportClick();return false;">Export</a><br />
-      <a href="#" onclick="document.getElementById('my_file').click();return false;">Import</a><br />
-      <a href="#" onclick="newFlickgame();return false;">New flickgame</a><br />
-      <a href="help.html" target="_blank">Help</a><br />
-      <a href="#" onclick="openPaletteSelector();return false;">Select colour palette</a><br />
-      <a href="#" onclick="doCopy();return false;">Copy (current layer)</a><br />
-      <a href="#" onclick="doPaste();return false;">Paste (current layer)</a><br />
-      <a href="#" onclick="clearPalette();return false;">Clear page</a><br />
+      <input type="text" id="burger-link-input" class="burger-link-input" placeholder="www.flickgame.org" oninput="linkChange(this.value); var li=document.getElementById('linkInput'); if(li) li.value=this.value;" />
       <span id="burger-bg-label">Background:</span>
       <select id="burger-bg-select" class="toolbar" style="border: 2px solid gray;" onchange="changeBackgroundColor(colorPalette[this.value],true); var b=document.getElementById('bgColorSelect'); if(b) b.value=this.value;"></select>
+      <p>
+      <button type="button" class="burger-dialog-btn" onclick="openPaletteSelector();">🎨 Select colour palette</button>
+      <hr>
+      <button type="button" class="burger-dialog-btn" onclick="newFlickgame();">🆕 New Flickgame</button>
+      <button type="button" class="burger-dialog-btn" onclick="shareClick();">📤 Share</button>
+      <button type="button" class="burger-dialog-btn" onclick="document.getElementById('my_file').click();">📥 Import</button>
+      <button type="button" class="burger-dialog-btn" onclick="exportClick();">💾 Export</button>
+      <button type="button" class="burger-dialog-btn" onclick="window.open('help.html','_blank');">📖 Help</button>
+      <button type="button" class="burger-dialog-btn" onclick="clearPalette();">🗑️ Clear page</button>
     </div>
   </div>
 </body>

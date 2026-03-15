@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+  <!-- 4x4 grid: 16 cells, each can be styled via class or id. Index 0-15 row-major (top-left to bottom-right). -->
+  <rect id="grid-cell-0"  x="0.25" y="0.25" width="3.5" height="3.5" />
+  <rect id="grid-cell-1"  x="4.25" y="0.25" width="3.5" height="3.5" />
+  <rect id="grid-cell-2"  x="8.25" y="0.25" width="3.5" height="3.5" />
+  <rect id="grid-cell-3"  x="12.25" y="0.25" width="3.5" height="3.5" />
+  <rect id="grid-cell-4"  x="0.25" y="4.25" width="3.5" height="3.5" />
+  <rect id="grid-cell-5"  x="4.25" y="4.25" width="3.5" height="3.5" />
+  <rect id="grid-cell-6"  x="8.25" y="4.25" width="3.5" height="3.5" />
+  <rect id="grid-cell-7"  x="12.25" y="4.25" width="3.5" height="3.5" />
+  <rect id="grid-cell-8"  x="0.25" y="8.25" width="3.5" height="3.5" />
+  <rect id="grid-cell-9"  x="4.25" y="8.25" width="3.5" height="3.5" />
+  <rect id="grid-cell-10" x="8.25" y="8.25" width="3.5" height="3.5" />
+  <rect id="grid-cell-11" x="12.25" y="8.25" width="3.5" height="3.5" />
+  <rect id="grid-cell-12" x="0.25" y="12.25" width="3.5" height="3.5" />
+  <rect id="grid-cell-13" x="4.25" y="12.25" width="3.5" height="3.5" />
+  <rect id="grid-cell-14" x="8.25" y="12.25" width="3.5" height="3.5" />
+  <rect id="grid-cell-15" x="12.25" y="12.25" width="3.5" height="3.5" />
+</svg>
