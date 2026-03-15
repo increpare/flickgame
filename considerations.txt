@@ -1,0 +1,86 @@
+Jordan Magnuson
+12.03.2026, 15:54 (vor 3 Tagen)
+an mich
+
+Hey Stephen, it's been a while--though as always I've been admiring your games and tools from afar. 
+
+To get straight to the point, I've become very fond of Flickgame lately, and I'm wondering about the possibility of making the tool more mobile friendly.
+
+To give some background, I've been doing workshops and teaching around using accessible tools to make small games as a form of personal expression, and of course things like Bitsy and PuzzleScript are great for that.
+
+But lately I've had numerous situations where I've found myself with just an hour or two in which to conduct a workshop for people who have never made a game before... and while I used to rely on Bitsy in situations like this, I tried rotating onto Flickgame a while back, and found that I prefer it for these super tight time frames. (Particularly when I am simultaneously attempting to introduce the idea of making games as a form of poetic expression.)
+
+You can see some examples of games that have come out of these kinds of short workshops here and here.
+
+I'm hoping to fill Itch.io up with Flickgames soon. :-)
+
+The only significant issue I've run into is that Flickgame isn't great to use on small mobile devices like smartphones--which is sometimes the only devices people have with them. 
+
+tldr: would you be open to optimizing Flickgame for mobile and/or accepting pull requests to this end?
+
+Cheers,
+
+Jordan
+
+=====================
+
+Stephen Lavelle
+12.03.2026, 16:11 (vor 3 Tagen)
+an Jordan
+
+Jordan, hey, long time no see! That's a lot of games! I wonder if I should do the #flickgame16 jam this year (the challenge - to make 16 flickgames over 16 hours)
+
+100% up for working on flickgame / I had some changes I've been meaning to put to make the player more fun to use but I got sidetracked before i could push them live.
+
+Cf.
+https://x.com/increpare/status/1911930109830877423?s=46
+
+I've just released a game so it's a good time to play around with some other projects (just getting some puzzlescript) stuff out of the way as we speak. I'd say, given how simple puzzlescript is and how opinionated I can be, best to just make suggestions before diving into anything (either in email or here https://github.com/increpare/flickgame/issues ).  
+
+If I think of issues:
+1) flickgame games don't work well on touch (See tweet linked above for a partial fix)
+2) yeah tricky to test out games in mobile - not sure how I'd handle that 
+3) layout not ideal for mobile - might need a different set-up/aspect ratio? hmm...
+4) upload to share - ah it would be nice if you didn't need a github account, but...dealing with content moderation/hackers isn't my idea of fun 😄
+
+what would your thoughts be? be as detailed/opinionated as you like :)
+
+S
+
+=====================
+
+Jordan Magnuson
+Fr., 13. März, 18:05 (vor 2 Tagen)
+an mich
+
+Hey Stephen,
+
+Thanks for the quick reply, and good to hear from you! Will you be at A MAZE this year? Would be fun to meet up in person.
+
+I think you've identified the main priorities, as I see them. The main things that stick out to me:
+
+1. Highest priority for me is: improve the experience of actually making a game using Flickgame on a mobile phone. It sort of works in portrait mode--but is too small. And in landscape on a phone, the aspect ratio is not right. A quick and easy fix here would be--when in landscape--to just clamp height to fit, then scale width as required. Fancier fix would be rearranging some of the tools since there is more horizontal real estate available on phones in landscape, and less vertical real estate. Also increasing the size of some of the buttons/links would be nice (right now share/export/import/help are tiny and hard to click correctly on mobile).
+
+2. Ability to play games better on mobile would be really great. I think the cursor idea is nifty, but I"m not sure if it really solves the problem, since the pixel cursor (I tried the bunny game) is still quite small compared to a finger on a mobile device. A couple of things that I could imagine working:
+A) Let the player drag their finger across the screen, and give some sort of feedback if/when they are over an area that can be interacted with--Maybe indicating a possible jump by changing the color of the black letterbox bars or something? Then the player releases their finger to make the jump.
+B) Implementing a typical mobile joystick/thumbstick on mobile as a way to move the cursor around (so you can actually see it, instead of having it hiding under your too-big finger).
+
+2B. Being able to test out games quickly and easily as you are making them would be great. I don't know if there's anything that can be learned from Bitsy's implementation, here? Downloading a file and then opening it on mobile (Android) is not the worst--but I could imagine it causing confusion for some people, and honestly I know nothing about if/how this works on iPhone. 
+
+3. Easy way to share would be fantastic, but more of a bonus I think. Being able to very easily add a game to a Itch.io jam would be the nicest thing--but I think that's more on Itch.io than anything you could implement.
+
+If it's possible to get things even a little bit improved within the next month or so, I would love to use Flickgame for a quick-fire jam as part of the London Games Festival on April 16 where people will likely mostly just have phones.
+
+I'm very happy and available to test things rapid fire if that's helpful. Feel free to spam me.
+
+Cheers,
+
+Jordan
+
+=====================
+
+I also think this could work:
+
+what I probably need to do is detect if you're touching, and if so you steer the cursor rather than having it sitting on your fingertip, right?
+
+=====================

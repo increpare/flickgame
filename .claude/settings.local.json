@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Anwender/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.2/**)",
+      "Bash(bash scripts/start-server.sh --project-dir \"C:\\\\Users\\\\Anwender\\\\Documents\\\\GitHub\\\\flickgame\")",
+      "Bash(python3 -c \":*)",
+      "Bash(node -e \":*)",
+      "Bash(python -c \":*)"
+    ]
+  }
+}
