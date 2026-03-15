@@ -861,10 +861,6 @@ function loadState(code) {
       gameState.foreground_color = "#ffffff";
   }
 
-  if (gameState.version === undefined){//only introduced version numbers in v2
-    upgrade_v1_to_v2(gameState);
-  }
-
   colorPalette = palettes[gameState.palette_name];
 
   // Set background color

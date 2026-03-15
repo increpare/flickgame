@@ -925,12 +925,6 @@ function rgbToLab(r,g,b) {
         state.palette_name = "dawnbringer-16";
       }
 
-      
-      //if version not defined, then I need to do the pallette_fix
-      if (state.version === undefined){//only introduced version numbers in v2
-        upgrade_v1_to_v2(state);
-      }
-
       set_modal_panel_selected_item(palette_name,state.palette_name);
       palette_name = state.palette_name;
       set_color_palette(palette_name);
