@@ -996,6 +996,71 @@ function loadPointerSprites() {
   handImg.src = 'pointer_hand.png';
 }
 
+function hexToRgb(hex) {
+  var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : {r: 0, g: 0, b: 0};
+}
+
+function drawCursor() {
+  if (!touchMode || !cursorVisible) return;
+
+  var sprite, spriteW, spriteH, hotspotX;
+
+  if (hoveredIsLink && pointerHand) {
+    sprite = pointerHand;
+    spriteW = POINTER_HAND_W;
+    spriteH = POINTER_HAND_H;
+    hotspotX = 4;
+  } else if (pointerArrow) {
+    sprite = pointerArrow;
+    spriteW = POINTER_ARROW_W;
+    spriteH = POINTER_ARROW_H;
+    hotspotX = 0;
+  } else {
+    return; // sprites not loaded yet
+  }
+
+  var px = Math.floor(cursorX);
+  var py = Math.floor(cursorY);
+  var screenX = (px - hotspotX) * zoom + dx;
+  var screenY = py * zoom + dy;
+
+  // Determine fill and outline colors
+  var fillColor = '#ffffff';
+  var outlineColor = '#000000';
+
+  if (hoveredIsLink && hoveredColorIndex >= 0 && hoveredColorIndex < 16) {
+    fillColor = colorPalette[hoveredColorIndex];
+    var rgb = hexToRgb(fillColor);
+    var luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
+    if (luminance < DARK_LUMINANCE) {
+      outlineColor = '#ffffff';
+    }
+  }
+
+  for (var y = 0; y < spriteH; y++) {
+    for (var x = 0; x < spriteW; x++) {
+      var pixelType = sprite[y][x];
+      if (pixelType === 0) continue; // transparent
+
+      if (pixelType === 1) {
+        mainCanvasCtx.fillStyle = fillColor;
+      } else {
+        mainCanvasCtx.fillStyle = outlineColor;
+      }
+      mainCanvasCtx.fillRect(
+        screenX + x * zoom,
+        screenY + y * zoom,
+        zoom, zoom
+      );
+    }
+  }
+}
+
 function redraw(){
   console.log("resized "+window.innerWidth +"x"+window.innerHeight);  
   mainCanvas.width=mainCanvasContainer.clientWidth;
@@ -1033,6 +1098,7 @@ function redraw(){
     } else {
       mainCanvasCtx.drawImage(curCanvasToDraw,0,0,160,100,dx,dy,160*zoom,100*zoom);
     }
+    drawCursor();
   } else {    
     mainCanvasCtx.fillStyle="#ff0000";
     mainCanvasCtx.fillRect(0,0,mainCanvas.width/2,mainCanvas.height/2);
