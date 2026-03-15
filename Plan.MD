@@ -16,7 +16,7 @@ Better would be to unify both of these - instead of a list of palette colour swa
 
 DONE 1.b : implement a 'pointer' mode for the editor. When you click on this button, you're not longer editing the game, but testing out links. This ideally should share javascript code with play.html - be careful that on touchscreens that we have the 'drag cursor' mode enabled.
 
-1.C : brush-size selection - change from a series of buttons to a slider (vertical by default, but I want the option to have a horizontal slider also, because when we get to mobile it will be horizontal).  This is a 'size indication' slider.  The dot that you're dragging along the slider should have the same size as your brush size! (give it a black border if it's too small) .The background, instead of a single horizontal line, should be narrow at the bottom(/left respectively) where the brush size is small, and big on the top side(/right)
+DONE 1.C : brush-size selection - change from a series of buttons to a slider (vertical by default, but I want the option to have a horizontal slider also, because when we get to mobile it will be horizontal).  This is a 'size indication' slider.  The dot that you're dragging along the slider should have the same size as your brush size! (give it a black border if it's too small) .The background, instead of a single horizontal line, should be narrow at the bottom(/left respectively) where the brush size is small, and big on the top side(/right)
 
 DONE 1.D  IDEA: in the dropdown for selecting links for colours, show a thunbmail for the image you're linking to to the left of its index. Is this even possible? IIRC dropdowns are very restricted in terms of how you can style them.
 
@@ -42,4 +42,4 @@ then: the dropdown menu for colour swatch link targets, but instead of being 16 
 ===the burger menu brings up a modal dialogue box with the following options:===
 url link (text input), share, export, import, help, select colour palette (another dropdown), copy (current layer), paste (current layer), clear page
 
-2.e So, normally we have 160x120 canvas size. IN mobile we have 160 width and we pick the height so that it takes up as much screen space as possible.  HOWEVER if we're loading an existing file (or randomly change device while editing) we do *not* resize the canvas to the new size, but scale the on-screen canvas proportionally to fit as well as we can.
+DONE 2.e So, normally we have 160x120 canvas size. IN mobile we have 160 width and we pick the height so that it takes up as much screen space as possible.  HOWEVER if we're loading an existing file (or randomly change device while editing) we do *not* resize the canvas to the new size, but scale the on-screen canvas proportionally to fit as well as we can.

@@ -846,10 +846,13 @@ function getData(options) {
 
   
 // Load state function
+function getGameWidth() { return gameState ? (gameState.width || 160) : 160; }
+function getGameHeight() { return gameState ? (gameState.height || 100) : 100; }
+
 function loadState(code) {
   gameState = JSON.parse(code);
   if (gameState.width === undefined) gameState.width = 160;
-  if (gameState.height === undefined) gameState.height = 120;
+  if (gameState.height === undefined) gameState.height = 100;
   if (typeof cursorX !== 'undefined') { cursorX = gameState.width / 2; cursorY = gameState.height / 2; }
   if (gameState.palette_name === undefined) {
       console.log("palette_name not defined, setting to dawnbringer-16");
@@ -1045,8 +1048,8 @@ function drawCursor() {
 function updateCursorHover() {
   var px = Math.floor(cursorX);
   var py = Math.floor(cursorY);
-  var gw = gameState ? (gameState.width || 160) : 160;
-  var gh = gameState ? (gameState.height || 120) : 120;
+  var gw = getGameWidth();
+  var gh = getGameHeight();
   if (gameState && gameState.imageDats && px >= 0 && px < gw && py >= 0 && py < gh) {
     var ch = gameState.imageDats[currentIndex][px + gw * py];
     hoveredColorIndex = parseInt(ch, 16);
@@ -1074,8 +1077,10 @@ function touchStart(e) {
 
   // Show cursor at center if not yet visible
   if (!cursorVisible) {
-    cursorX = 80.0;
-    cursorY = 50.0;
+    var gw = getGameWidth();
+    var gh = getGameHeight();
+    cursorX = gw / 2;
+    cursorY = gh / 2;
     cursorVisible = true;
     updateCursorHover();
     redraw();
@@ -1114,8 +1119,10 @@ function touchMove(e) {
   var gameDeltaY = (deltaY / zoom) * POINTER_SPEED;
 
   // Update cursor position (float)
-  cursorX = Math.max(0, Math.min(159, cursorX + gameDeltaX));
-  cursorY = Math.max(0, Math.min(99, cursorY + gameDeltaY));
+  var gw = getGameWidth();
+  var gh = getGameHeight();
+  cursorX = Math.max(0, Math.min(gw - 1, cursorX + gameDeltaX));
+  cursorY = Math.max(0, Math.min(gh - 1, cursorY + gameDeltaY));
 
   updateCursorHover();
   redraw();
@@ -1145,8 +1152,8 @@ function touchEnd(e) {
   if (totalMove < TAP_THRESHOLD && elapsed < TAP_TIME_THRESHOLD) {
     // It's a tap — activate hovered link
     if (hoveredIsLink && !animating) {
-      var gw = gameState.width || 160;
-      var gh = gameState.height || 120;
+      var gw = getGameWidth();
+      var gh = getGameHeight();
       var px = Math.floor(cursorX);
       var py = Math.floor(cursorY);
       var ch = gameState.imageDats[currentIndex][px + gw * py];
@@ -1188,8 +1195,8 @@ function redraw(){
     mainCanvasCtx.webkitImageSmoothingEnabled = false;
     mainCanvasCtx.msImageSmoothingEnabled = false;
 
-    var gw = gameState.width || 160;
-    var gh = gameState.height || 120;
+    var gw = getGameWidth();
+    var gh = getGameHeight();
     var w = mainCanvasCtx.width;
     var h = mainCanvasCtx.height;
     var wd = w / gw;
@@ -1243,8 +1250,8 @@ function redraw(){
   var target=0;
 
   function printNonZeros(a,stack){
-    var gw = gameState.width || 160;
-    var gh = gameState.height || 120;
+    var gw = getGameWidth();
+    var gh = getGameHeight();
     var count=0;
     for (var i=0;i<gw;i++){
       for (var j=0;j<gh;j++){
@@ -1259,8 +1266,8 @@ function redraw(){
   var hex=['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f']
 
   function calcHeatmap(cal,col,fromCal){
-    var gw = gameState.width || 160;
-    var gh = gameState.height || 120;
+    var gw = getGameWidth();
+    var gh = getGameHeight();
     var map = []
     var stack = []
     var c = hex[col]
@@ -1333,8 +1340,8 @@ function redraw(){
   }
 
   function generateParticleMotions(sourceCanvas,targetHeatMap,colIndex,particles,reverse){
-    var gw = gameState.width || 160;
-    var gh = gameState.height || 120;
+    var gw = getGameWidth();
+    var gh = getGameHeight();
     if (reverse){
       var c = hex[colIndex];
       for (var i=0;i<gw;i++){
@@ -1368,8 +1375,8 @@ function redraw(){
   }
 
   function generateFrame(sourceImage,particleMap,progress){
-    var gw = gameState.width || 160;
-    var gh = gameState.height || 120;
+    var gw = getGameWidth();
+    var gh = getGameHeight();
     var frame = [];
     for (var j=0;j<gh;j++){
       for (var i=0;i<gw;i++){
@@ -1436,7 +1443,10 @@ function redraw(){
   }
 
   function drawNextFrame(){
-      curCanvasToDraw=printCanvas(curAnimationFrames[animationIndex])[0];
+      var result = printCanvas(curAnimationFrames[animationIndex], _animScratchCanvas);
+      _animScratchCanvas = result[0];
+      _animScratchCtx = result[1];
+      curCanvasToDraw = _animScratchCanvas;
       redraw();
       animationIndex++;
       if (animationIndex<curAnimationFrames.length){
@@ -1486,8 +1496,8 @@ function redraw(){
 
     var coords = getCoords(e);
 
-    var gw = gameState.width || 160;
-    var gh = gameState.height || 120;
+    var gw = getGameWidth();
+    var gh = getGameHeight();
     var w = mainCanvasCtx.width;
     var h = mainCanvasCtx.height;
     var wd = w / gw;
@@ -1607,14 +1617,22 @@ function init(){
 
 var images = new Array();
 var imageCtxts = new Array();
+var _animScratchCanvas = null;
+var _animScratchCtx = null;
 
-function printCanvas(descriptionString){
-    var gw = gameState.width || 160;
-    var gh = gameState.height || 120;
-    var canvas = document.createElement('canvas');
-    canvas.width = gw;
-    canvas.height = gh;
-    var ctx=canvas.getContext("2d");
+function printCanvas(descriptionString, reuseCanvas){
+    var gw = getGameWidth();
+    var gh = getGameHeight();
+    var canvas, ctx;
+    if (reuseCanvas && reuseCanvas.width === gw && reuseCanvas.height === gh) {
+      canvas = reuseCanvas;
+      ctx = canvas.getContext("2d");
+    } else {
+      canvas = document.createElement('canvas');
+      canvas.width = gw;
+      canvas.height = gh;
+      ctx = canvas.getContext("2d");
+    }
     for (var j=0;j<descriptionString.length;j++){
       var x = j % gw;
       var y = Math.floor(j / gw);

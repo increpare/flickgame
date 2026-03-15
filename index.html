@@ -517,6 +517,9 @@ function rgbToLab(r,g,b) {
       for (let i=0;i<bgColorSelectOptions.length;i++){
         bgColorSelectOptions[i].textContent = colorNames[name][i];
       }
+      for (let i=0;i<burgerBgSelectOptions.length;i++){
+        burgerBgSelectOptions[i].textContent = colorNames[name][i];
+      }
 
       
       if (preserver_undo_state){
@@ -586,15 +589,19 @@ function rgbToLab(r,g,b) {
     }
 
     var modal = null;
-    function openPaletteSelector(){
-      if (modal!==null){
-        var palette_button = document.getElementById('palette_button');
+    function closePaletteSelector(){
+      if (modal === null) return;
+      var palette_button = document.getElementById('palette_button');
+      if (palette_button) {
         palette_button.style.filter = '';
-        //webkit also
         palette_button.style.webkitFilter = '';
-        
-        document.body.removeChild(modal);
-        modal=null;
+      }
+      if (modal.parentNode) modal.parentNode.removeChild(modal);
+      modal = null;
+    }
+    function openPaletteSelector(){
+      if (modal !== null) {
+        closePaletteSelector();
         return;
       }
       // Create a modal dialog
@@ -933,7 +940,7 @@ function rgbToLab(r,g,b) {
     function stringToState(str) {
       var state = JSON.parse(str);
       var stateWidth = state.width !== undefined ? state.width : 160;
-      var stateHeight = state.height !== undefined ? state.height : 120;
+      var stateHeight = state.height !== undefined ? state.height : 100;
       width = stateWidth;
       height = stateHeight;
 
@@ -1009,9 +1016,15 @@ function rgbToLab(r,g,b) {
     }
 
     function newFlickgame() {
-      if (isMobilePortraitTouch) mobileFillCanvasSize();
-      var w = width;
-      var h = height;
+      var w, h;
+      if (isMobilePortraitTouch) {
+        mobileFillCanvasSize();
+        w = width;
+        h = height;
+      } else {
+        w = 160;
+        h = 100;
+      }
       var emptyCanvasRle = [w * h, "0"];
       var emptyState = {
         gameLink: gameLink,
@@ -1033,6 +1046,9 @@ function rgbToLab(r,g,b) {
       setLayer(1);
       setDropdowns();
       saveFlickgameState();
+      if (isMobilePortraitTouch) {
+        requestAnimationFrame(function() { updateMobileCanvasSize(); });
+      }
     }
 
     document.addEventListener("keydown", press);
@@ -1320,7 +1336,7 @@ function rgbToLab(r,g,b) {
       return Math.floor(Math.random() * (max - min)) + min;
     }
     var width = 160;
-    var height = 120;
+    var height = 100;
     var zoomFactor = 4;
     var radius = 5;
 
@@ -1340,6 +1356,7 @@ function rgbToLab(r,g,b) {
     var ptrHoveredColorIndex = -1;
     var ptrLastTouchTime = 0;
     var ptrActiveTouchId = null;
+    var ptrRedrawScheduled = false;
     var ptrTouchStartX = 0;
     var ptrTouchStartY = 0;
     var ptrTouchStartTime = 0;
@@ -1386,6 +1403,7 @@ function rgbToLab(r,g,b) {
     var lastButton = -1
 
     var bucketElem;
+    var mobileBucketImg;
 
     function linkChange(newLink) {
       gameLink = newLink;
@@ -1402,13 +1420,13 @@ function rgbToLab(r,g,b) {
 
       setVisuals();
     }
-    var BRUSH_SLIDER_MIN = 1;
-    var BRUSH_SLIDER_MAX = 16;
+    var BRUSH_SLIDER_DISCRETE = [1, 3, 5, 7, 9, 11, 13, 16];
+    var BRUSH_SLIDER_MIN = BRUSH_SLIDER_DISCRETE[0];
+    var BRUSH_SLIDER_MAX = BRUSH_SLIDER_DISCRETE[BRUSH_SLIDER_DISCRETE.length - 1];
     var BRUSH_SLIDER_MARGIN = 2;
     var BRUSH_SLIDER_MARGIN_BOTTOM = 10;
     var BRUSH_SLIDER_MAX_RADIUS = 16;
     var BRUSH_SLIDER_MIN_RADIUS = 2;
-    var BRUSH_SLIDER_DISCRETE = [1, 3, 5, 7, 9, 11, 13, 16];
 
     function snapBrushToDiscrete(value) {
       var best = BRUSH_SLIDER_DISCRETE[0], bestDist = Math.abs(value - best);
@@ -1485,6 +1503,7 @@ function rgbToLab(r,g,b) {
 
       radius = newRadius;
       bucketElem.setAttribute("class", "radius");
+      if (mobileBucketImg) mobileBucketImg.setAttribute("class", "radius");
       if (brushSizeSliderElem) {
         brushSizeSliderElem.classList.remove("selected");
       }
@@ -1494,6 +1513,7 @@ function rgbToLab(r,g,b) {
         updateBrushSliderUI(newRadius);
       } else {
         bucketElem.setAttribute("class", "radius selected");
+        if (mobileBucketImg) mobileBucketImg.setAttribute("class", "radius selected");
         updateBrushSliderUI(lastBrushSize); // keep thumb at last brush size when bucket selected
       }
 
@@ -1514,6 +1534,7 @@ function rgbToLab(r,g,b) {
         prevRadius = radius;
         if (pointerModeBtn) pointerModeBtn.setAttribute("class", "radius selected");
         bucketElem.setAttribute("class", "radius");
+        if (mobileBucketImg) mobileBucketImg.setAttribute("class", "radius");
         if (brushSizeSliderElem) brushSizeSliderElem.classList.remove("selected");
         visibleCanvas.style.cursor = "default";
       } else {
@@ -1649,6 +1670,7 @@ function rgbToLab(r,g,b) {
     }
 
     var bgColorSelectOptions=[];
+    var burgerBgSelectOptions=[];
     function init() {
       updateLayoutMode();
       window.addEventListener('resize', updateLayoutMode);
@@ -1726,7 +1748,7 @@ function rgbToLab(r,g,b) {
       pagePickerEl = createPagePicker();
       framePickerEl = createFramePicker();
 
-      // Click outside to dismiss page picker
+      // Click outside to dismiss page picker, frame picker, and palette selector
       document.addEventListener('click', function(e) {
         if (pagePickerEl && pagePickerColorIdx >= 0) {
           if (!pagePickerEl.contains(e.target)) {
@@ -1737,6 +1759,9 @@ function rgbToLab(r,g,b) {
           if (!framePickerEl.contains(e.target) && !(e.target && e.target.id === 'mobile-frame-btn')) {
             hideFramePicker();
           }
+        }
+        if (modal && !modal.contains(e.target) && e.target.id !== 'palette_button' && !e.target.closest('a[onclick*="openPaletteSelector"]')) {
+          closePaletteSelector();
         }
       });
 
@@ -1750,6 +1775,7 @@ function rgbToLab(r,g,b) {
           opt.style.backgroundColor = "var(--col" + i + ")";
           opt.style.color = "var(--col" + i + "_fg)";
           burgerBgSelect.appendChild(opt);
+          burgerBgSelectOptions.push(opt);
         }
       }
 
@@ -1779,6 +1805,7 @@ function rgbToLab(r,g,b) {
         burgerClose.addEventListener('click', function() {
           burgerDialog.classList.remove('visible');
           burgerDialog.setAttribute('aria-hidden', 'true');
+          closePaletteSelector();
         });
       }
       if (burgerDialog) {
@@ -1786,6 +1813,7 @@ function rgbToLab(r,g,b) {
           if (e.target === burgerDialog) {
             burgerDialog.classList.remove('visible');
             burgerDialog.setAttribute('aria-hidden', 'true');
+            closePaletteSelector();
           }
         });
       }
@@ -1797,6 +1825,8 @@ function rgbToLab(r,g,b) {
 
 
       bucketElem = document.getElementById("bucket");
+      var mobileBucketBtn = document.getElementById("mobile-bucket-btn");
+      mobileBucketImg = mobileBucketBtn ? mobileBucketBtn.querySelector("img") : null;
 
 
       for (var i = 0; i < 16; i++) {
@@ -2126,7 +2156,13 @@ function rgbToLab(r,g,b) {
       ptrCursorY = Math.max(0, Math.min(height - 1, ptrCursorY + gameDeltaY));
 
       ptrUpdateHover();
-      setVisuals();
+      if (!ptrRedrawScheduled) {
+        ptrRedrawScheduled = true;
+        requestAnimationFrame(function() {
+          ptrRedrawScheduled = false;
+          setVisuals();
+        });
+      }
     }
 
     function ptrTouchEnd(e) {
@@ -2270,7 +2306,7 @@ function rgbToLab(r,g,b) {
           }
         }
         if (ptrTouchMode) {
-          mainCanvas.style.cursor = "none";
+          visibleCanvas.style.cursor = "none";
           return;
         }
         // In pointer mode with mouse: show pointer over links
@@ -2281,19 +2317,19 @@ function rgbToLab(r,g,b) {
           if (x >= 0 && x < width && y >= 0 && y < height) {
             var ci = canvasses[canvasIndex][x + width * y];
             if (hyperlinks[canvasIndex][ci] !== 0) {
-              mainCanvas.style.cursor = "pointer";
+              visibleCanvas.style.cursor = "pointer";
               return;
             }
           }
         }
-        mainCanvas.style.cursor = "default";
+        visibleCanvas.style.cursor = "default";
         return;
       }
       // Update cursor based on modifier keys
       if (e.metaKey || e.altKey || e.shiftKey || e.ctrlKey || lastButton > 0) {
-        mainCanvas.style.cursor = "url('eyedropper.png') 2 16, crosshair";
+        visibleCanvas.style.cursor = "url('eyedropper.png') 2 16, crosshair";
       } else {
-        mainCanvas.style.cursor = "crosshair";
+        visibleCanvas.style.cursor = "crosshair";
       }
 
     }
@@ -3361,6 +3397,7 @@ body{
       <a href="#" onclick="shareClick();return false;">Share</a><br />
       <a href="#" onclick="exportClick();return false;">Export</a><br />
       <a href="#" onclick="document.getElementById('my_file').click();return false;">Import</a><br />
+      <a href="#" onclick="newFlickgame();return false;">New flickgame</a><br />
       <a href="help.html" target="_blank">Help</a><br />
       <a href="#" onclick="openPaletteSelector();return false;">Select colour palette</a><br />
       <a href="#" onclick="doCopy();return false;">Copy (current layer)</a><br />
