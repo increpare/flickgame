@@ -499,26 +499,7 @@ function rgbToLab(r,g,b) {
       background_colors[paletteName] = darkest_color;
     }
 
-    //dawnbringer
-    //http://www.pixeljoint.com/forum/forum_posts.asp?TID=12795
-    var colorPalette = [
-      "#140c1c",
-      "#442434",
-      "#30346d",
-      "#4e4a4e",
-      "#854c30",
-      "#346524",
-      "#d04648",
-      "#757161",
-      "#597dce",
-      "#d27d2c",
-      "#8595a1",
-      "#6daa2c",
-      "#d2aa99",
-      "#6dc2ca",
-      "#dad45e",
-      "#deeed6"
-    ];
+    var colorPalette = palettes[palette_name];
 
     function set_color_palette(name,preserver_undo_state = true){
       // if there is something on the undo stack, let's check if the previous one 
@@ -719,25 +700,15 @@ function rgbToLab(r,g,b) {
     clientStandaloneRequest.send();
 
 
-    var get_blob = function () {
-      return self.Blob;
-    }
-
-
     function buildStandalone(sourceCode) {
       if (standalone_HTML_String.length === 0) {
         alert("Can't export yet - still downloading html template.", true);
         return;
       }
       sourceCode = encodeURI(sourceCode);
-      var htmlString = standalone_HTML_String.concat("");
-
-
-      htmlString = "<!--Save as html file-->\n " +htmlString;
+      var htmlString = "<!--Save as html file-->\n " + standalone_HTML_String;
       htmlString = htmlString.replace(/__EMBED__/g, sourceCode);
-
-      var BB = get_blob();
-      var blob = new BB([htmlString], { type: "text/html;charset=utf-8" });
+      var blob = new Blob([htmlString], { type: "text/html;charset=utf-8" });
       saveAs(blob, "flickgame.html");
     }
 
@@ -813,48 +784,27 @@ function rgbToLab(r,g,b) {
       var githubHTTPClient = new XMLHttpRequest();
       githubHTTPClient.open('POST', githubURL);
       githubHTTPClient.onreadystatechange = function () {
-        var errorCount = 0;
         if (githubHTTPClient.readyState != 4) {
           return;
         }
         var result = JSON.parse(githubHTTPClient.responseText);
         if (githubHTTPClient.status === 403) {
-          errorCount++;
           alert(result.message);
         } else if (githubHTTPClient.status !== 200 && githubHTTPClient.status !== 201) {
-
           if (githubHTTPClient.statusText === "Unauthorized") {
             alert("Authorization check failed.  You have to log back into GitHub (or give it permission again or something).");
             window.localStorage.removeItem("oauth_access_token");
           } else {
             alert("HTTP Error " + githubHTTPClient.status + ' - ' + githubHTTPClient.statusText);
           }
-
           printUnauthorized();
-        } else if (githubHTTPClient.status !== 200 && githubHTTPClient.status !== 201) {
-          errorCount++;
-          alert("HTTP Error " + githubHTTPClient.status + ' - ' + githubHTTPClient.statusText);
         } else {
           var id = result.id;
-          var url = "play.html?p=" + id;
-          url = qualifyURL(url);
-
-          var editurl = "editor.html?hack=" + id;
-          editurl = qualifyURL(editurl);
-          var sourceCodeLink = "link to source code:<br><a href=\"" + editurl + "\">" + editurl + "</a>";
-
+          var url = qualifyURL("play.html?p=" + id);
           var shareLink = document.getElementById("shareLink");
           shareLink.innerHTML = "<a target=\"_blank\" href=\"" + url + "\">&#8627;" + id + "</a><br>" +
             '(<a onclick="githubLogOut();"  href="javascript:void(0);">log out of GitHub</a>)<br>';
           shareLinkInner = shareLink.childNodes[0];
-
-          if (errorCount > 0) {
-            alert("Cannot link directly to playable game, because there are errors.", true);
-          } else {
-
-          }
-
-
         }
       }
       githubHTTPClient.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -967,19 +917,10 @@ function rgbToLab(r,g,b) {
     var copyImage = null;
     var copyLinks = null;
 
-    var savedString;
     function press(evt) {
       evt = evt || window.event;
 
       updateCursor(evt);
-      /*
-      if (evt.keyCode==83){//S(ave)
-        savedString = stateToString();
-      } else if (evt.keyCode==76){//L(oad)
-        stringToState(savedString);
-        setVisuals();
-        setLayer(canvasIndex+1); 
-      } */
       if (evt.keyCode === 67) { //c
         doCopy();
       } else if (evt.keyCode === 86) { //v
@@ -1077,8 +1018,6 @@ function rgbToLab(r,g,b) {
     var visibleCanvas;
     var visibleContext;
     var linkInput;
-    var id;
-    var id_d;
 
     var lastX = -1;
     var lastY = -1;
@@ -1240,8 +1179,6 @@ function rgbToLab(r,g,b) {
 
       visibleContext = visibleCanvas.getContext("2d");
       visibleContext.imageSmoothingEnabled = false;
-      id = visibleContext.createImageData(1, 1); // only do this once per page
-      id_d = id.data;
       setVisuals(true);
       setColor(colorIndex);
 
@@ -1394,11 +1331,7 @@ function rgbToLab(r,g,b) {
 
 
     function uint8ar_copy(src) {
-      var dst = new Uint8Array(width * height);
-      for (var i = 0; i < src.length; i++) {
-        dst[i] = src[i];
-      }
-      return dst;
+      return src.slice();
     }
 
     var undoList = new Array();
@@ -1589,22 +1522,10 @@ function rgbToLab(r,g,b) {
       }
 
 
-      /*context.beginPath();
-      context.arc(x, y, radius, 0, 2 * Math.PI, false);
-      context.lineWidth = 0;
-      context.fillStyle = 'green';
-      context.fill();*/
       setVisuals();
 
-      var coords = getCoords(e);
-      if (coords === null) {
-        lastX = -1;
-        lastY = -1;
-        e.preventDefault();
-        return !1;
-      }
-      lastX = Math.floor(coords[0] / zoomFactor);
-      lastY = Math.floor(coords[1] / zoomFactor);
+      lastX = x;
+      lastY = y;
 
     }
 
@@ -1681,16 +1602,6 @@ function rgbToLab(r,g,b) {
           }
         }
       }
-    }
-
-    function toolbar_undo() {
-      doUndo();
-    }
-    function toolbar_copy() {
-      doCopy();
-    }
-    function toolbar_paste() {
-      doPaste();
     }
 
     function changeBackgroundColor(color,preserver_undo_state = false) {
@@ -2109,14 +2020,14 @@ body{
                           </select></span>&nbsp;
                         <span id="toolbarcontainer">
 
-                          <a href="#" onclick="toolbar_undo();return false;"><img src="SVG/undo.svg" title="undo (U)"
+                          <a href="#" onclick="doUndo();return false;"><img src="SVG/undo.svg" title="undo (U)"
                               alt="undo" class="toolbar" id="toolbar_undo" /></a>
                           &nbsp;
-                          <a href="#" onclick="toolbar_copy();return false;"><img src="SVG/copy.svg"
+                          <a href="#" onclick="doCopy();return false;"><img src="SVG/copy.svg"
                               title="copy to clipboard (C)" alt="copy to clipboard" class="toolbar"
                               id="toolbar_copy" /></a>
                           &nbsp;
-                          <a href="#" onclick="toolbar_paste();return false;"><img src="SVG/paste.svg"
+                          <a href="#" onclick="doPaste();return false;"><img src="SVG/paste.svg"
                               title="paste from clipboard (V)" alt="paste from clipboard" class="toolbar"
                               id="toolbar_paste" /></a>
                         </span>
