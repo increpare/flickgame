@@ -683,7 +683,6 @@ function rgbToLab(r,g,b) {
     var radiusElem = new Array();
     var thumbnailCanvas = new Array();
     var thumbnailContext = new Array();
-    var dropdownOption = new Array();
 
     var standalone_HTML_String = "";
 
@@ -997,11 +996,24 @@ function rgbToLab(r,g,b) {
       }
     }
 
-    function setDropdowns() {
+    function updateSwatchLabels() {
       for (var i = 0; i < 16; i++) {
-        dropdownOption[i].value = hyperlinks[canvasIndex][i];
+        var label = colorElem[i].querySelector('.link-label');
+        if (!label) continue;
+        var linkVal = hyperlinks[canvasIndex][i];
+        if (linkVal > 0) {
+          label.textContent = linkVal;
+          var dist_white = color_distance(colorPalette[i], "#ffffff");
+          var dist_black = color_distance(colorPalette[i], "#000000");
+          label.style.color = dist_white > dist_black ? "#ffffff" : "#000000";
+        } else {
+          label.textContent = '';
+        }
       }
+    }
 
+    function setDropdowns() {
+      updateSwatchLabels();
       //set background dropdown
       var bg_color_idx = nearest_color_index_in_palette(colorPalette, background_color);
       bgColorSelect.value = bg_color_idx;
@@ -1062,10 +1074,6 @@ function rgbToLab(r,g,b) {
     }
 
 
-    function dropDownSelect(dropdown, val) {
-      hyperlinks[canvasIndex][dropdown - 1] = parseInt(val);
-    }
-
     function setColor(newColorIndex) {
       colorIndex = newColorIndex;
       for (var i = 0; i < 16; i++) {
@@ -1088,24 +1096,8 @@ function rgbToLab(r,g,b) {
       setDropdowns();
     }
 
-    function generateDropDowns(){
-       // Add this at the start of the init function
-      // Generate dropdown options
-      for (let i = 1; i <= 16; i++) {
-        const select = document.getElementById(`col${i}`);
-        for (let j = 1; j <= 16; j++) {
-          const option = document.createElement('option');
-          option.value = j;
-          option.id = `col${i}-${j}`;
-          option.textContent = j;
-          select.appendChild(option);
-        }
-      }
-    }
-
     var bgColorSelectOptions=[];
     function init() {
-      generateDropDowns();
 
       // Populate background color dropdown
       var bgColorSelect = document.getElementById('bgColorSelect');
@@ -1137,11 +1129,6 @@ function rgbToLab(r,g,b) {
         thumbnailCanvas[i] = elem;
         thumbnailContext[i] = elem.getContext("2d");
       }
-      for (var i = 0; i < 16; i++) {
-        elem = document.getElementById("col" + (i + 1));
-        dropdownOption[i] = elem;
-      }
-
       for (var i = 0; i < 16; i++) {
         elem = document.getElementById("color_" + (i));
         elem.style.backgroundColor = "var(--col" + i + ")";
