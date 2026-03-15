@@ -682,6 +682,10 @@ function rgbToLab(r,g,b) {
 
 
     var radiusElem = new Array();
+    var brushSizeSliderElem = null;
+    var brushSizeThumbElem = null;
+    var brushSliderDragging = false;
+    var lastBrushSize = 5;
     var thumbnailCanvas = new Array();
     var thumbnailContext = new Array();
     var pagePickerEl = null;
@@ -1240,24 +1244,97 @@ function rgbToLab(r,g,b) {
 
       setVisuals();
     }
+    var BRUSH_SLIDER_MIN = 1;
+    var BRUSH_SLIDER_MAX = 16;
+    var BRUSH_SLIDER_MARGIN = 2;
+    var BRUSH_SLIDER_MARGIN_BOTTOM = 10;
+    var BRUSH_SLIDER_MAX_RADIUS = 16;
+    var BRUSH_SLIDER_MIN_RADIUS = 2;
+    var BRUSH_SLIDER_DISCRETE = [1, 3, 5, 7, 9, 11, 13, 16];
+
+    function snapBrushToDiscrete(value) {
+      var best = BRUSH_SLIDER_DISCRETE[0], bestDist = Math.abs(value - best);
+      for (var i = 1; i < BRUSH_SLIDER_DISCRETE.length; i++) {
+        var d = Math.abs(value - BRUSH_SLIDER_DISCRETE[i]);
+        if (d < bestDist) { bestDist = d; best = BRUSH_SLIDER_DISCRETE[i]; }
+      }
+      return best;
+    }
+
+    function updateBrushSliderUI(brushValue) {
+      if (!brushSizeSliderElem || !brushSizeThumbElem) return;
+      brushValue = snapBrushToDiscrete(Math.max(BRUSH_SLIDER_MIN, Math.min(BRUSH_SLIDER_MAX, brushValue)));
+      var isVertical = brushSizeSliderElem.classList.contains("vertical");
+      var rect = brushSizeSliderElem.getBoundingClientRect();
+      brushSizeThumbElem.src = brushValue + ".png";
+      var discreteIndex = BRUSH_SLIDER_DISCRETE.indexOf(brushValue);
+      if (discreteIndex < 0) discreteIndex = 0;
+      var fraction = (BRUSH_SLIDER_DISCRETE.length - 1 - discreteIndex) / (BRUSH_SLIDER_DISCRETE.length - 1);
+      if (isVertical) {
+        var topCenter = BRUSH_SLIDER_MARGIN + BRUSH_SLIDER_MAX_RADIUS;
+        var bottomCenter = rect.height - BRUSH_SLIDER_MARGIN_BOTTOM - BRUSH_SLIDER_MIN_RADIUS;
+        var centerY = topCenter + fraction * (bottomCenter - topCenter);
+        brushSizeThumbElem.style.left = "50%";
+        brushSizeThumbElem.style.top = centerY + "px";
+        brushSizeThumbElem.style.transform = "translate(-50%, -50%)";
+        brushSizeThumbElem.style.right = "";
+        brushSizeThumbElem.style.bottom = "";
+      } else {
+        var fractionH = discreteIndex / (BRUSH_SLIDER_DISCRETE.length - 1);
+        var leftCenter = BRUSH_SLIDER_MARGIN + BRUSH_SLIDER_MAX_RADIUS;
+        var rightCenter = rect.width - BRUSH_SLIDER_MARGIN_BOTTOM - BRUSH_SLIDER_MIN_RADIUS;
+        var centerX = leftCenter + fractionH * (rightCenter - leftCenter);
+        brushSizeThumbElem.style.top = "50%";
+        brushSizeThumbElem.style.left = centerX + "px";
+        brushSizeThumbElem.style.transform = "translate(-50%, -50%)";
+        brushSizeThumbElem.style.right = "";
+        brushSizeThumbElem.style.bottom = "";
+      }
+    }
+
+    function brushSliderValueFromEvent(evt) {
+      if (!brushSizeSliderElem) return 5;
+      var rect = brushSizeSliderElem.getBoundingClientRect();
+      var isVertical = brushSizeSliderElem.classList.contains("vertical");
+      var fraction;
+      if (isVertical) {
+        var topCenter = BRUSH_SLIDER_MARGIN + BRUSH_SLIDER_MAX_RADIUS;
+        var bottomCenter = rect.height - BRUSH_SLIDER_MARGIN_BOTTOM - BRUSH_SLIDER_MIN_RADIUS;
+        var clickY = evt.clientY - rect.top;
+        fraction = (clickY - topCenter) / (bottomCenter - topCenter);
+      } else {
+        var leftCenter = BRUSH_SLIDER_MARGIN + BRUSH_SLIDER_MAX_RADIUS;
+        var rightCenter = rect.width - BRUSH_SLIDER_MARGIN_BOTTOM - BRUSH_SLIDER_MIN_RADIUS;
+        var clickX = evt.clientX - rect.left;
+        fraction = (clickX - leftCenter) / (rightCenter - leftCenter);
+      }
+      fraction = Math.max(0, Math.min(1, fraction));
+      var raw = BRUSH_SLIDER_MAX - fraction * (BRUSH_SLIDER_MAX - BRUSH_SLIDER_MIN);
+      return snapBrushToDiscrete(Math.round(raw));
+    }
+
     function setRadius(newRadius) {
       if (newRadius==15){
         newRadius = 16;
       } else if (newRadius==14){
         newRadius = 13;
       }
+      if (newRadius > 0) {
+        newRadius = snapBrushToDiscrete(newRadius);
+      }
 
       radius = newRadius;
       bucketElem.setAttribute("class", "radius");
-      for (var i = 0; i < 16; i++) {
-        if (radiusElem[i] !== null) {
-          radiusElem[i].setAttribute("class", "radius");
-        }
+      if (brushSizeSliderElem) {
+        brushSizeSliderElem.classList.remove("selected");
       }
       if (newRadius > 0) {
-        radiusElem[newRadius - 1].setAttribute("class", "radius selected");
+        lastBrushSize = newRadius;
+        if (brushSizeSliderElem) brushSizeSliderElem.classList.add("selected");
+        updateBrushSliderUI(newRadius);
       } else {
         bucketElem.setAttribute("class", "radius selected");
+        updateBrushSliderUI(lastBrushSize); // keep thumb at last brush size when bucket selected
       }
 
       // Exit pointer mode when selecting a brush/bucket tool
@@ -1276,13 +1353,8 @@ function rgbToLab(r,g,b) {
       if (pointerMode) {
         prevRadius = radius;
         if (pointerModeBtn) pointerModeBtn.setAttribute("class", "radius selected");
-        // Deselect brush/bucket buttons
         bucketElem.setAttribute("class", "radius");
-        for (var i = 0; i < 16; i++) {
-          if (radiusElem[i] !== null) {
-            radiusElem[i].setAttribute("class", "radius");
-          }
-        }
+        if (brushSizeSliderElem) brushSizeSliderElem.classList.remove("selected");
         visibleCanvas.style.cursor = "default";
       } else {
         if (pointerModeBtn) pointerModeBtn.setAttribute("class", "radius");
@@ -1437,12 +1509,35 @@ function rgbToLab(r,g,b) {
       linkInput.value = gameLink;
 
 
-      radii = new Array();
-      for (var i = 0; i < 16; i++) {
-        elem = document.getElementById("radius_" + (i + 1));
-        radiusElem[i] = elem;
-
+      brushSizeSliderElem = document.getElementById("brush-size-slider");
+      brushSizeThumbElem = document.getElementById("brush-size-thumb");
+      if (brushSizeSliderElem && brushSizeThumbElem) {
+        brushSizeThumbElem.style.pointerEvents = "auto";
+        function brushSliderPointerDown(evt) {
+          evt.preventDefault();
+          brushSliderDragging = true;
+          var v = brushSliderValueFromEvent(evt);
+          setRadius(v);
+          brushSizeSliderElem.setPointerCapture(evt.pointerId);
+        }
+        function brushSliderPointerMove(evt) {
+          if (!brushSliderDragging) return;
+          var v = brushSliderValueFromEvent(evt);
+          setRadius(v);
+        }
+        function brushSliderPointerUp(evt) {
+          if (evt.pointerId !== undefined && brushSizeSliderElem.hasPointerCapture(evt.pointerId)) {
+            brushSizeSliderElem.releasePointerCapture(evt.pointerId);
+          }
+          brushSliderDragging = false;
+        }
+        brushSizeSliderElem.addEventListener("pointerdown", brushSliderPointerDown, false);
+        brushSizeSliderElem.addEventListener("pointermove", brushSliderPointerMove, false);
+        brushSizeSliderElem.addEventListener("pointerup", brushSliderPointerUp, false);
+        brushSizeSliderElem.addEventListener("pointercancel", brushSliderPointerUp, false);
       }
+      updateBrushSliderUI(radius > 0 ? radius : lastBrushSize);
+      if (radius > 0 && brushSizeSliderElem) brushSizeSliderElem.classList.add("selected");
 
       for (var i = 0; i < 16; i++) {
         elem = document.getElementById("thumbnail" + (i + 1));
@@ -2412,6 +2507,52 @@ body{
       filter: var(--radius-filter);
     }
 
+    /* Brush size slider: tapered track, thumb size = brush size */
+    .brush-size-slider {
+      position: relative;
+      touch-action: none;
+      flex-shrink: 0;
+      overflow: visible;
+      border: 1px solid transparent;
+      box-sizing: border-box;
+    }
+    .brush-size-slider.vertical {
+      width: 32px;
+      height: 200px;
+      margin: 4px 0;
+    }
+    .brush-size-slider.horizontal {
+      width: 200px;
+      height: 32px;
+      margin: 0 4px;
+    }
+    .brush-size-track {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #444;
+      border-radius: 4px;
+      clip-path: polygon(25% 8%, 75% 8%, 53% 96%, 47% 96%);
+    }
+    .brush-size-slider.horizontal .brush-size-track {
+      clip-path: polygon(0% 45%, 0% 55%, 100% 62.5%, 100% 37.5%);
+    }
+    .brush-size-thumb {
+      position: absolute;
+      box-sizing: border-box;
+      pointer-events: none;
+      object-fit: contain;
+    }
+    
+    .brush-size-slider.selected {
+      border: 1px solid var(--selected-border-color);
+    }
+    .brush-size-slider.selected .brush-size-track {
+      background: #555;
+    }
+
     img.toolbar {
       width: 30px;
       height: 30px;
@@ -2575,20 +2716,21 @@ body{
                         <input width="640" style="border:2px solid gray;" onkeydown="event.stopPropagation();"
                           value="www.flickgame.org" id="linkInput" oninput="linkChange(this.value)" />
                           <span id="bgColorSelectContainer"><select id="bgColorSelect" class="toolbar"  style="border: 2px solid gray;" onchange="changeBackgroundColor(colorPalette[this.value],true);">
-                          </select></span>&nbsp;
+                          </select></span>
+                          &nbsp;
                         <span id="toolbarcontainer">
 
                           <a href="#" onclick="doUndo();return false;"><img src="SVG/undo.svg" title="undo (U)"
                               alt="undo" class="toolbar" id="toolbar_undo" /></a>
-                          &nbsp;
+                           
                           <a href="#" onclick="doCopy();return false;"><img src="SVG/copy.svg"
                               title="copy to clipboard (C)" alt="copy to clipboard" class="toolbar"
                               id="toolbar_copy" /></a>
-                          &nbsp;
+                           
                           <a href="#" onclick="doPaste();return false;"><img src="SVG/paste.svg"
                               title="paste from clipboard (V)" alt="paste from clipboard" class="toolbar"
                               id="toolbar_paste" /></a>
-                          &nbsp;
+                           
                           <a href="#" onclick="newFlickgame();return false;"><img src="new_flickgame.png"
                               title="new flickgame" alt="new flickgame" class="toolbar"
                               id="toolbar_new" /></a>
@@ -2609,29 +2751,10 @@ body{
                       <a href="help.html" target="_blank" title="blah">? help</a>
                       <br />
                       <br />
-                      <a href="#" onclick="setRadius(16);return false;"><img src="16.png" class="radius"
-                          id="radius_16" /></a>
-                      <br />
-                      <a href="#" onclick="setRadius(13);return false;"><img src="13.png" class="radius"
-                          id="radius_13" /></a>
-                      <br />
-                      <a href="#" onclick="setRadius(11);return false;"><img src="11.png" class="radius"
-                          id="radius_11" /></a>
-                      <br />
-                      <a href="#" onclick="setRadius(9);return false;"><img src="9.png" class="radius"
-                          id="radius_9" /></a>
-                      <br />
-                      <a href="#" onclick="setRadius(7);return false;"><img src="7.png" class="radius"
-                          id="radius_7" /></a>
-                      <br />
-                      <a href="#" onclick="setRadius(5);return false;"><img src="5.png" class="radius selected"
-                          id="radius_5" /></a>
-                      <br />
-                      <a href="#" onclick="setRadius(3);return false;"><img src="3.png" class="radius"
-                          id="radius_3" /></a>
-                      <br />
-                      <a href="#" onclick="setRadius(1);return false;"><img src="1.png" class="radius"
-                          id="radius_1" /></a>
+                      <div id="brush-size-slider" class="brush-size-slider vertical" title="Brush size (drag or click)">
+                        <div class="brush-size-track"></div>
+                        <img class="brush-size-thumb" id="brush-size-thumb" alt="" />
+                      </div>
                       <br />
                       <a href="#" onclick="setRadius(0);return false;"><img src="bucket.png" class="radius"
                           id="bucket" /></a>
@@ -2639,7 +2762,7 @@ body{
                         <a href="#" onclick="togglePointerMode();return false;"><img id="pointer_mode_btn" src="pointer_hand.png" class="radius" title="pointer mode (test links)" /></a>
                       <br />
                       <a href="#" onclick="clearPalette();return false;"><img src="clear.png" class="radius"
-                          id="bucket" /></a>
+                          title="clear frame" /></a>
                     </td>
                   </tr>
                 </table>

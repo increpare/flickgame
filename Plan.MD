@@ -8,19 +8,19 @@ Better would be to unify both of these - instead of a list of palette colour swa
 STEPS: 1 adjust existing interface to be more compatible with the intended mobile usage
 
 
-1.a : unify colour picker and link selection dropdown
+DONE 1.a : unify colour picker and link selection dropdown
 
 Right now we have a split interface - you can select what colour you're going to draw with by clicking on that colours buttons. Underneath each colour is a dropdown where you can say what it should hyperlink to.  
 
 Better would be to unify both of these - instead of a list of palette colour swatches over a list of dropdowns, we have a single list of palette colour swatches, where you can see overlaid what the linked target page is (if any). Tap on an unselected colour swatch to select that colour for painting. If you tap on an already-selected colour, it brings up the dropdown to assign/clear a link to that colour for your page.
 
-1.b : implement a 'pointer' mode for the editor. When you click on this button, you're not longer editing the game, but testing out links. This ideally should share javascript code with play.html - be careful that on touchscreens that we have the 'drag cursor' mode enabled.
+DONE 1.b : implement a 'pointer' mode for the editor. When you click on this button, you're not longer editing the game, but testing out links. This ideally should share javascript code with play.html - be careful that on touchscreens that we have the 'drag cursor' mode enabled.
 
-1.C : brush-size selection - change from a series of buttons to a slider (vertical by default, but I want the option to have a horizontal slider also).  This is a 'size indication' slider.  The dot that you're dragging along the slider should have the same size as your brush size! (give it a black border if it's too small) .The background, instead of a single horizontal line, should be narrow at the bottom(/left respectively) where the brush size is small, and big on the top side(/right)
+1.C : brush-size selection - change from a series of buttons to a slider (vertical by default, but I want the option to have a horizontal slider also, because when we get to mobile it will be horizontal).  This is a 'size indication' slider.  The dot that you're dragging along the slider should have the same size as your brush size! (give it a black border if it's too small) .The background, instead of a single horizontal line, should be narrow at the bottom(/left respectively) where the brush size is small, and big on the top side(/right)
 
-1.D  IDEA: in the dropdown for selecting links for colours, show a thunbmail for the image you're linking to to the left of its index. Is this even possible? IIRC dropdowns are very restricted in terms of how you can style them.
+DONE 1.D  IDEA: in the dropdown for selecting links for colours, show a thunbmail for the image you're linking to to the left of its index. Is this even possible? IIRC dropdowns are very restricted in terms of how you can style them.
 
-1.E save state to localstorage and automatically load it if it exists when you load a page. Add a 'new flickgame' button to the right of the paste button (use 'new_flickgame.png' as the icon)
+DONE 1.E save state to localstorage and automatically load it if it exists when you load a page. Add a 'new flickgame' button to the right of the paste button (use 'new_flickgame.png' as the icon)
 
 STEP 2: figure out a good structure for having two parallel interfaces depending on whether on mobile(touchscreen/portrait) or desktop.
 
