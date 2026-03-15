@@ -59,7 +59,7 @@ a {
  image-rendering: -o-crisp-edges;
  image-rendering: pixelated;
  -ms-interpolation-mode: nearest-neighbor;
-  touch-action: manipulation;
+  touch-action: none;
 }
 #hackLink {
   position: absolute;
@@ -1476,6 +1476,19 @@ function redraw(){
     if (gameState==null){
       return;
     }
+
+    // Switch back from touch mode if real mouse detected
+    if (touchMode && (e.movementX !== 0 || e.movementY !== 0)) {
+      if (Date.now() - lastTouchTime > 500) {
+        touchMode = false;
+        cursorVisible = false;
+        mainCanvas.style.cursor = 'default';
+      }
+    }
+
+    // Skip mouse cursor style changes while in touch mode
+    if (touchMode) return;
+
     var coords = getCoords(e);
 
     var w = mainCanvasCtx.width;
