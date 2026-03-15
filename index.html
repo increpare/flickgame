@@ -1729,6 +1729,8 @@ function rgbToLab(r,g,b) {
           var target = hyperlinks[canvasIndex][ci];
           if (target > 0) {
             setLayer(target);
+            // Update cursor for the new page's content under the mouse
+            updateCursor(e);
           }
         }
         return !1;
@@ -2569,6 +2571,8 @@ body{
                       <br />
                       <a href="#" onclick="clearPalette();return false;"><img src="clear.png" class="radius"
                           id="bucket" /></a>
+                      <br />
+                      <a href="#" onclick="togglePointerMode();return false;"><img id="pointer_mode_btn" src="pointer_hand.png" class="radius" title="pointer mode (test links)" style="image-rendering: pixelated; width: 24px; height: 24px;" /></a>
                     </td>
                   </tr>
                 </table>
@@ -2657,9 +2661,6 @@ body{
                     <!--must have border to left of this td-->
                     <td style="border-left: 2px solid gray;">
                       <a href="#" onclick="openPaletteSelector();return false;"><img id="palette_button" src="palette.png"></a>
-                    </td>
-                    <td style="border-left: 2px solid gray;">
-                      <a href="#" onclick="togglePointerMode();return false;"><img id="pointer_mode_btn" src="pointer_hand.png" class="radius" title="pointer mode (test links)" style="image-rendering: pixelated; width: 20px; height: 20px;"></a>
                     </td>
                   </tr>
                 </table>
