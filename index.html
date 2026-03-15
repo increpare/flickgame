@@ -1569,6 +1569,15 @@ function rgbToLab(r,g,b) {
         if (mobileBucketImg) mobileBucketImg.setAttribute("class", "radius");
         if (brushSizeSliderElem) brushSizeSliderElem.classList.remove("selected");
         visibleCanvas.style.cursor = "default";
+        if (isMobilePortraitTouch) {
+          ptrTouchMode = true;
+          ptrCursorX = width / 2;
+          ptrCursorY = height / 2;
+          ptrCursorVisible = true;
+          visibleCanvas.style.cursor = "none";
+          ptrUpdateHover();
+          setVisuals();
+        }
       } else {
         if (pointerModeBtn) pointerModeBtn.setAttribute("class", "radius");
         ptrCursorVisible = false;
@@ -2577,6 +2586,7 @@ function rgbToLab(r,g,b) {
     --foreground-color: white;
     --radius-filter: none;
     --selected-border-color: #ff0000;
+    --burger-menu-font-size: 16px;
 
     --col0:#140c1c;
     --col1:#442434;
@@ -2858,7 +2868,7 @@ body{
     }
 
     .page-picker-label {
-      font-size: 10px;
+      font-size: 20px;
       color: #aaa;
     }
 
@@ -2914,7 +2924,7 @@ body{
       clip-path: polygon(25% 8%, 75% 8%, 53% 96%, 47% 96%);
     }
     .brush-size-slider.horizontal .brush-size-track {
-      clip-path: polygon(0% 45%, 0% 55%, 100% 62.5%, 100% 37.5%);
+      clip-path: polygon(10% 45%, 10% 55%, 96% 62.5%, 96% 37.5%);
     }
     .brush-size-thumb {
       position: absolute;
@@ -2941,6 +2951,8 @@ body{
       margin-bottom: 5px;
       touch-action: manipulation;
     }
+
+    
     .grid-icon-svg .grid-cell {
       fill: rgba(255,255,255,0.45);
     }
@@ -3004,15 +3016,32 @@ body{
       padding-right: env(safe-area-inset-right, 0);
     }
 
-    .mobile-toolbar-top, .mobile-toolbar-bottom {
+    .mobile-toolbar-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px;
+      flex-shrink: 0;
+    }
+    .mobile-toolbar-top-inner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      background: #1a1a2e;
+      padding: 8px;
+      border-radius: 8px;
+    }
+    .mobile-toolbar-bottom {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
       padding: 8px;
       background: #1a1a2e;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       flex-shrink: 0;
+      border-radius: 8px;
     }
     .mobile-toolbar-btn {
       width: 52px;
@@ -3044,17 +3073,64 @@ body{
       margin: 0;
       flex-shrink: 0;
     }
+    .mobile-toolbar-bottom-icons {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .mobile-toolbar-bottom a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+    }
     .mobile-toolbar-bottom img {
       width: 30px;
       height: 30px;
+      box-sizing: border-box;
+      border: 2px solid transparent;
     }
     #mobile-grid-icon {
       width: 100%;
       height: 100%;
     }
+    #mobile-bucket-btn.selected img,
+    #mobile-bucket-btn img.selected,
     #mobile-pointer-btn.selected img,
     #mobile-pointer-btn img.selected {
-      border: 2px solid var(--selected-border-color);
+      border-color: var(--selected-border-color);
+    }
+    .mobile-canvas-wrapper {
+      flex: 1 1 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .mobile-grid-tab {
+      width: 65px;
+      height: 65px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      background: #2a2a3e;
+      color: var(--foreground-color);
+      border: 6px solid #2a2a3e;
+      border-radius: 6px;
+      cursor: pointer;
+      touch-action: manipulation;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    .mobile-grid-tab #mobile-grid-icon {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      flex-shrink: 0;
     }
     #mobile-canvas-container {
       display: flex;
@@ -3063,6 +3139,7 @@ body{
       padding: 8px;
       min-height: 80px;
       flex: 1 1 0;
+      min-width: 0;
       overflow: hidden;
       touch-action: none;
     }
@@ -3096,6 +3173,7 @@ body{
       max-height: 80vh;
       overflow-y: auto;
       position: relative;
+      font-size: var(--burger-menu-font-size);
     }
     .burger-dialog-close {
       position: absolute;
@@ -3120,7 +3198,7 @@ body{
       color: var(--foreground-color);
       border: 2px solid gray;
       border-radius: 4px;
-      font-size: 14px;
+      font-size: var(--burger-menu-font-size);
       cursor: pointer;
       text-align: left;
       touch-action: manipulation;
@@ -3130,14 +3208,13 @@ body{
     }
     .burger-dialog-content .burger-link-input {
       width: 100%;
-      max-width: 240px;
       box-sizing: border-box;
       margin: 4px 0 8px 0;
       padding: 6px;
       background: #2a2a3e;
       color: var(--foreground-color);
       border: 2px solid gray;
-      font-size: 14px;
+      font-size: var(--burger-menu-font-size);
     }
     .frame-picker {
       display: none;
@@ -3176,7 +3253,7 @@ body{
       border-radius: 2px;
     }
     .frame-picker-label {
-      font-size: 10px;
+      font-size: 20px;
       color: #aaa;
     }
     .mobile-swatch-grid {
@@ -3224,7 +3301,9 @@ body{
       height: 100%;
       box-sizing: border-box;
     }
-
+    #burger-bg-select {
+      height: 30px;
+    }
     /*]]>*/
   </style>
   <title>
@@ -3472,7 +3551,7 @@ body{
   </div>
   <div id="mobile-editor-wrapper">
     <div class="mobile-toolbar-top">
-      <button type="button" id="mobile-frame-btn" class="mobile-toolbar-btn" aria-label="Pages">
+      <button type="button" id="mobile-frame-btn" class="mobile-grid-tab" aria-label="Pages">
         <svg id="mobile-grid-icon" class="toolbar grid-icon-svg" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" alt="frame">
           <rect class="grid-cell" id="grid-cell-0"  x="0.25" y="0.25" width="3.5" height="3.5" />
           <rect class="grid-cell" id="grid-cell-1"  x="4.25" y="0.25" width="3.5" height="3.5" />
@@ -3492,24 +3571,30 @@ body{
           <rect class="grid-cell" id="grid-cell-15" x="12.25" y="12.25" width="3.5" height="3.5" />
         </svg>
       </button>
-      <button type="button" id="mobile-copy-btn" class="mobile-toolbar-btn" title="Copy (current layer)" aria-label="Copy" onclick="doCopy();"><img src="clipboard_copy.svg" alt="copy" class="toolbar" /></button>
-      <button type="button" id="mobile-paste-btn" class="mobile-toolbar-btn" title="Paste (current layer)" aria-label="Paste" onclick="doPaste();"><img src="clipboard_paste.svg" alt="paste" class="toolbar" /></button>
-      <button type="button" id="mobile-download-btn" class="mobile-toolbar-btn"><img src="download.svg" alt="download" class="toolbar" /></button>
-      <button type="button" id="mobile-burger-btn" class="mobile-toolbar-btn" aria-label="Menu"><img src="list.svg" alt="menu" class="toolbar" /></button>
+      <div class="mobile-toolbar-top-inner">
+        <button type="button" id="mobile-copy-btn" class="mobile-toolbar-btn" title="Copy (current layer)" aria-label="Copy" onclick="doCopy();"><img src="clipboard_copy.svg" alt="copy" class="toolbar" /></button>
+        <button type="button" id="mobile-paste-btn" class="mobile-toolbar-btn" title="Paste (current layer)" aria-label="Paste" onclick="doPaste();"><img src="clipboard_paste.svg" alt="paste" class="toolbar" /></button>
+        <button type="button" id="mobile-download-btn" class="mobile-toolbar-btn"><img src="download.svg" alt="download" class="toolbar" /></button>
+        <button type="button" id="mobile-burger-btn" class="mobile-toolbar-btn" aria-label="Menu"><img src="list.svg" alt="menu" class="toolbar" /></button>
+      </div>
     </div>
-    <div id="mobile-canvas-container"></div>
+    <div id="mobile-canvas-wrapper" class="mobile-canvas-wrapper">
+      <div id="mobile-canvas-container"></div>
+    </div>
     <div class="mobile-toolbar-bottom">
       <div id="mobile-brush-slider-container"></div>
-      <a href="#" id="mobile-bucket-btn" onclick="setRadius(0);return false;"><img src="bucket.svg" class="radius" alt="bucket" /></a>
-      <a href="#" id="mobile-undo-btn" onclick="doUndo();return false;"><img src="undo.svg" class="toolbar" alt="undo" /></a>
-      <a href="#" id="mobile-pointer-btn" onclick="togglePointerMode();return false;"><img src="hand.svg" class="radius" alt="pointer" /></a>
+      <div class="mobile-toolbar-bottom-icons">
+        <a href="#" id="mobile-bucket-btn" onclick="setRadius(0);return false;"><img src="bucket.svg" class="radius" alt="bucket" /></a>
+        <a href="#" id="mobile-undo-btn" onclick="doUndo();return false;"><img src="undo.svg" class="radius" alt="undo" /></a>
+        <a href="#" id="mobile-pointer-btn" onclick="togglePointerMode();return false;"><img src="hand.svg" class="radius" alt="pointer" /></a>
+      </div>
     </div>
     <div id="mobile-swatch-grid" class="mobile-swatch-grid"></div>
   </div>
   <div id="burger-dialog" class="burger-dialog" aria-hidden="true">
     <div class="burger-dialog-content">
       <button type="button" class="burger-dialog-close" id="burger-dialog-close" aria-label="Close">&times;</button>
-      <label for="burger-link-input">URL link</label><br />
+      <label for="burger-link-input">URL Link</label><br />
       <input type="text" id="burger-link-input" class="burger-link-input" placeholder="www.flickgame.org" oninput="linkChange(this.value); var li=document.getElementById('linkInput'); if(li) li.value=this.value;" />
       <span id="burger-bg-label">Background:</span>
       <select id="burger-bg-select" class="toolbar" style="border: 2px solid gray;" onchange="changeBackgroundColor(colorPalette[this.value],true); var b=document.getElementById('bgColorSelect'); if(b) b.value=this.value;"></select>
@@ -3517,11 +3602,11 @@ body{
       <button type="button" class="burger-dialog-btn" onclick="openPaletteSelector();">🎨 Select colour palette</button>
       <hr>
       <button type="button" class="burger-dialog-btn" onclick="newFlickgame();">🆕 New Flickgame</button>
+      <button type="button" class="burger-dialog-btn" onclick="clearPalette();">🗑️ Clear page</button>
       <button type="button" class="burger-dialog-btn" onclick="shareClick();">📤 Share</button>
       <button type="button" class="burger-dialog-btn" onclick="document.getElementById('my_file').click();">📥 Import</button>
       <button type="button" class="burger-dialog-btn" onclick="exportClick();">💾 Export</button>
       <button type="button" class="burger-dialog-btn" onclick="window.open('help.html','_blank');">📖 Help</button>
-      <button type="button" class="burger-dialog-btn" onclick="clearPalette();">🗑️ Clear page</button>
     </div>
   </div>
 </body>
