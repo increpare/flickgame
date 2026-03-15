@@ -951,6 +951,51 @@ var pointerArrow = null;   // 2D array: pointerArrow[y][x] = 0|1|2
 var pointerHand = null;    // 2D array: pointerHand[y][x] = 0|1|2
 var POINTER_ARROW_W = 5, POINTER_ARROW_H = 8;
 var POINTER_HAND_W = 8, POINTER_HAND_H = 10;
+
+function loadPointerSprites() {
+  function parseSprite(img, w, h) {
+    var c = document.createElement('canvas');
+    c.width = w;
+    c.height = h;
+    var ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    var data = ctx.getImageData(0, 0, w, h).data;
+    var result = [];
+    for (var y = 0; y < h; y++) {
+      var row = [];
+      for (var x = 0; x < w; x++) {
+        var i = (y * w + x) * 4;
+        var a = data[i + 3];
+        if (a < 128) {
+          row.push(0); // transparent
+        } else {
+          var r = data[i], g = data[i+1], b = data[i+2];
+          // white if brightness > 128, black otherwise
+          if (r + g + b > 384) {
+            row.push(1); // white (fill)
+          } else {
+            row.push(2); // black (outline)
+          }
+        }
+      }
+      result.push(row);
+    }
+    return result;
+  }
+
+  var arrowImg = new Image();
+  arrowImg.onload = function() {
+    pointerArrow = parseSprite(arrowImg, POINTER_ARROW_W, POINTER_ARROW_H);
+  };
+  arrowImg.src = 'pointer.png';
+
+  var handImg = new Image();
+  handImg.onload = function() {
+    pointerHand = parseSprite(handImg, POINTER_HAND_W, POINTER_HAND_H);
+  };
+  handImg.src = 'pointer_hand.png';
+}
+
 function redraw(){
   console.log("resized "+window.innerWidth +"x"+window.innerHeight);  
   mainCanvas.width=mainCanvasContainer.clientWidth;
@@ -1336,6 +1381,7 @@ function init(){
 
   redraw();
 
+  loadPointerSprites();
   get_page_data();
 
 }
