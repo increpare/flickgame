@@ -848,6 +848,9 @@ function getData(options) {
 // Load state function
 function loadState(code) {
   gameState = JSON.parse(code);
+  if (gameState.width === undefined) gameState.width = 160;
+  if (gameState.height === undefined) gameState.height = 100;
+  if (typeof cursorX !== 'undefined') { cursorX = gameState.width / 2; cursorY = gameState.height / 2; }
   if (gameState.palette_name === undefined) {
       console.log("palette_name not defined, setting to dawnbringer-16");
       gameState.palette_name = "dawnbringer-16";
@@ -1042,8 +1045,10 @@ function drawCursor() {
 function updateCursorHover() {
   var px = Math.floor(cursorX);
   var py = Math.floor(cursorY);
-  if (gameState && gameState.imageDats && px >= 0 && px < 160 && py >= 0 && py < 100) {
-    var ch = gameState.imageDats[currentIndex][px + 160 * py];
+  var gw = gameState ? (gameState.width || 160) : 160;
+  var gh = gameState ? (gameState.height || 100) : 100;
+  if (gameState && gameState.imageDats && px >= 0 && px < gw && py >= 0 && py < gh) {
+    var ch = gameState.imageDats[currentIndex][px + gw * py];
     hoveredColorIndex = parseInt(ch, 16);
     hoveredIsLink = gameState.hyperlinks[currentIndex][hoveredColorIndex] !== 0;
   } else {
@@ -1140,16 +1145,18 @@ function touchEnd(e) {
   if (totalMove < TAP_THRESHOLD && elapsed < TAP_TIME_THRESHOLD) {
     // It's a tap — activate hovered link
     if (hoveredIsLink && !animating) {
+      var gw = gameState.width || 160;
+      var gh = gameState.height || 100;
       var px = Math.floor(cursorX);
       var py = Math.floor(cursorY);
-      var ch = gameState.imageDats[currentIndex][px + 160 * py];
+      var ch = gameState.imageDats[currentIndex][px + gw * py];
       var colIndex = parseInt(ch, 16);
       var linkTarget = gameState.hyperlinks[currentIndex][colIndex];
 
       if (linkTarget > 0) {
         // Reset cursor to center for new page
-        cursorX = 80.0;
-        cursorY = 50.0;
+        cursorX = gw / 2;
+        cursorY = gh / 2;
 
         if (showAnimation) {
           transition(currentIndex, linkTarget - 1);
@@ -1181,10 +1188,12 @@ function redraw(){
     mainCanvasCtx.webkitImageSmoothingEnabled = false;
     mainCanvasCtx.msImageSmoothingEnabled = false;
 
+    var gw = gameState.width || 160;
+    var gh = gameState.height || 100;
     var w = mainCanvasCtx.width;
     var h = mainCanvasCtx.height;
-    var wd = w/160.0;
-    var hd = h/100.0;
+    var wd = w / gw;
+    var hd = h / gh;
     zoom=1;
     if (wd<hd){
       zoom=wd;//Math.floor(wd);
@@ -1194,14 +1203,14 @@ function redraw(){
     if(zoom<1){
       zoom=1;
     }
-    dx=(w-160*zoom)/2;
-    dy=(h-100*zoom)/2;
+    dx=(w - gw * zoom) / 2;
+    dy=(h - gh * zoom) / 2;
     mainCanvasCtx.fillStyle=gameState.background_color;
     mainCanvasCtx.fillRect(0,0,w,h);
     if (curCanvasToDraw===null){
-      mainCanvasCtx.drawImage(images[currentIndex],0,0,160,100,dx,dy,160*zoom,100*zoom);
+      mainCanvasCtx.drawImage(images[currentIndex],0,0,gw,gh,dx,dy,gw*zoom,gh*zoom);
     } else {
-      mainCanvasCtx.drawImage(curCanvasToDraw,0,0,160,100,dx,dy,160*zoom,100*zoom);
+      mainCanvasCtx.drawImage(curCanvasToDraw,0,0,gw,gh,dx,dy,gw*zoom,gh*zoom);
     }
     drawCursor();
   } else {    
@@ -1234,9 +1243,11 @@ function redraw(){
   var target=0;
 
   function printNonZeros(a,stack){
+    var gw = gameState.width || 160;
+    var gh = gameState.height || 100;
     var count=0;
-    for (var i=0;i<160;i++){
-      for (var j=0;j<100;j++){
+    for (var i=0;i<gw;i++){
+      for (var j=0;j<gh;j++){
         if (a[j][i]!==null)
           count++;
       }
@@ -1248,14 +1259,16 @@ function redraw(){
   var hex=['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f']
 
   function calcHeatmap(cal,col,fromCal){
+    var gw = gameState.width || 160;
+    var gh = gameState.height || 100;
     var map = []
     var stack = []
     var c = hex[col]
 
     //initialize
-    for (var j=0;j<100;j++){
-      for (var i=0;i<160;i++){
-        if (cal[i+160*j]===c){
+    for (var j=0;j<gh;j++){
+      for (var i=0;i<gw;i++){
+        if (cal[i+gw*j]===c){
           var entry = [0,i,j]
           map.push([0,i,j])
           stack.push([i,j,0,i,j])
@@ -1270,9 +1283,9 @@ function redraw(){
       var cx=0;
       var cy=0;
       var count=0;
-      for (var i=0;i<160;i++){
-        for (var j=0;j<100;j++){
-          if (fromCal[i+160*j]===c){
+      for (var i=0;i<gw;i++){
+        for (var j=0;j<gh;j++){
+          if (fromCal[i+gw*j]===c){
             cx+=i;
             cy+=j;
             count++;
@@ -1282,9 +1295,9 @@ function redraw(){
       if (count>0){
         cx=Math.round(cx/count);
         cy=Math.round(cy/count);
-        for (var j=0;j<100;j++){
-          for (var i=0;i<160;i++){
-            map[i+160*j]=[0,cx,cy];
+        for (var j=0;j<gh;j++){
+          for (var i=0;i<gw;i++){
+            map[i+gw*j]=[0,cx,cy];
           }
         }
       }
@@ -1305,12 +1318,12 @@ function redraw(){
         var n = neighbours[i];
         var nx=n[0];
         var ny=n[1];
-        if (nx<0||ny<0||nx>=160||ny>=100){
+        if (nx<0||ny<0||nx>=gw||ny>=gh){
           continue;
         }
-        var existing = map[nx+160*ny];
+        var existing = map[nx+gw*ny];
         if (existing===null||d1<existing[0]){
-          map[nx+160*ny]=[d1,xtarget,ytarget]
+          map[nx+gw*ny]=[d1,xtarget,ytarget]
           stack.push([nx,ny,d1,xtarget,ytarget])
         }
       }
@@ -1320,14 +1333,16 @@ function redraw(){
   }
 
   function generateParticleMotions(sourceCanvas,targetHeatMap,colIndex,particles,reverse){
+    var gw = gameState.width || 160;
+    var gh = gameState.height || 100;
     if (reverse){
       var c = hex[colIndex];
-      for (var i=0;i<160;i++){
-        for (var j=0;j<100;j++){
-          var pixel = sourceCanvas[i+160*j];
+      for (var i=0;i<gw;i++){
+        for (var j=0;j<gh;j++){
+          var pixel = sourceCanvas[i+gw*j];
           if (pixel===c){
             //[d,tx,ty]
-            var target = targetHeatMap[i+160*j];
+            var target = targetHeatMap[i+gw*j];
             var tx = target[1];
             var ty = target[2];
             if (i!==tx||j!==ty)
@@ -1337,12 +1352,12 @@ function redraw(){
       }
     } else {
       var c = hex[colIndex];
-      for (var i=0;i<160;i++){
-        for (var j=0;j<100;j++){
-          var pixel = sourceCanvas[i+160*j];
+      for (var i=0;i<gw;i++){
+        for (var j=0;j<gh;j++){
+          var pixel = sourceCanvas[i+gw*j];
           if (pixel===c){
             //[d,tx,ty]
-            var target = targetHeatMap[i+160*j];
+            var target = targetHeatMap[i+gw*j];
             var tx = target[1];
             var ty = target[2];
             particles.push([i,j,tx,ty])
@@ -1353,10 +1368,12 @@ function redraw(){
   }
 
   function generateFrame(sourceImage,particleMap,progress){
+    var gw = gameState.width || 160;
+    var gh = gameState.height || 100;
     var frame = [];
-    for (var j=0;j<100;j++){
-      for (var i=0;i<160;i++){
-        frame.push(sourceImage[i+160*j]);
+    for (var j=0;j<gh;j++){
+      for (var i=0;i<gw;i++){
+        frame.push(sourceImage[i+gw*j]);
       }
     }
 
@@ -1376,7 +1393,7 @@ function redraw(){
 //          var yt = Math.round(y0+progress*dy+Math.random()*0.5-0.25)
           var xt = Math.round(x0+progress*dx)
           var yt = Math.round(y0+progress*dy)
-          frame[xt+160*yt]=c;
+          frame[xt+gw*yt]=c;
         }
       }
     }
@@ -1469,10 +1486,12 @@ function redraw(){
 
     var coords = getCoords(e);
 
+    var gw = gameState.width || 160;
+    var gh = gameState.height || 100;
     var w = mainCanvasCtx.width;
     var h = mainCanvasCtx.height;
-    var wd = w/160.0;
-    var hd = h/100.0;
+    var wd = w / gw;
+    var hd = h / gh;
     zoom=1;
     if (wd<hd){
       zoom=wd;//Math.floor(wd);
@@ -1482,14 +1501,14 @@ function redraw(){
     if(zoom<1){
       zoom=1;
     }
-    dx=(w-160*zoom)/2;
-    dy=(h-100*zoom)/2;
+    dx=(w - gw * zoom) / 2;
+    dy=(h - gh * zoom) / 2;
 
     var x=Math.floor((coords[0]-dx)/zoom);
     var y=Math.floor((coords[1]-dy)/zoom);
     target=0;
-    if(x>=0&&x<160&&y>=0&&y<100) {
-      var ch = gameState.imageDats[currentIndex][x+160*y];
+    if(x>=0&&x<gw&&y>=0&&y<gh) {
+      var ch = gameState.imageDats[currentIndex][x+gw*y];
       var colIndex = parseInt(ch,16);
       target=gameState.hyperlinks[currentIndex][colIndex];
 
@@ -1590,13 +1609,15 @@ var images = new Array();
 var imageCtxts = new Array();
 
 function printCanvas(descriptionString){
+    var gw = gameState.width || 160;
+    var gh = gameState.height || 100;
     var canvas = document.createElement('canvas');
-    canvas.width="160";
-    canvas.height="100";
+    canvas.width = gw;
+    canvas.height = gh;
     var ctx=canvas.getContext("2d");
     for (var j=0;j<descriptionString.length;j++){
-      var x = j%160;
-      var y = Math.floor(j/160);
+      var x = j % gw;
+      var y = Math.floor(j / gw);
       var ch=descriptionString[j];
       var colIndex = parseInt(ch,16);
       ctx.fillStyle=colorPalette[colIndex];

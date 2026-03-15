@@ -26,6 +26,20 @@ STEP 2: figure out a good structure for having two parallel interfaces depending
 
 2.a we need to figure out an elegant way to have two different interface setups.  The two layouts are *very* different. Some tools from the desktop version need to be reorganised and put into a burger menu dialog thing, because we don't have space.
 
-2.b The desktop version has a very elegant and simple list of frames that you use to browse frames, that displays thumbnails.  For mobile I don't know what to do. We don't have the space to show 16 numbered thumbnails.  The best approach might be a pop-out radial menu, or just  [left arrow button ] [current page number] [right arrow button], but a downside to that is you can't easiyl see what page you are linking to. 
+2.b The desktop version has a very elegant and simple list of frames that you use to browse frames, that displays thumbnails.  For mobile I don't know what to do. Let's try the following for when we are on mobile with a portrait layout. We do not show the user the <ul> of layers. Instead we have a dropdown menu called 'FRAME' that opens up a frame selection menu (Can share lots of code with the dropdown menu for colour swatch link targets!).
 
-2.c I think mobile just needs a square aspect-ratio. So instead of 160x100,we want 128x128 for mobile. I think this means we need to decide what happens when we import games with different resolutions.  The most flexible approach would be to secretly support both resolutions for both platforms. But on mobile you're defaulting to 128x128, and in desktop you're defaulting to 160x100. However, if you import/edit a file made with the other aspect ratio, it just scales to fit the bounding box of what's usually allocated to the canvas. (Hopefully without terribly increasing the complexity of everything lol).
+2.d So, to decribe the new interface in detail: 
+
+top row, toolbar: [FRAME (opens frame selection dropdown) ] [ DOWNLOAD (downloads html files )] [ burger menu (opens dialog with rarer options]
+
+then: [canvas]
+
+then toolbar: [horizontal brush size slide] [ bucket tool ] [ undo button ] [ pointer mode button]
+
+then: the dropdown menu for colour swatch link targets, but instead of being 16 dropdowns in a row, it's a 4x4 grid.
+
+
+===the burger menu brings up a modal dialogue box with the following options:===
+url link (text input), share, export, import, help, select colour palette (another dropdown), copy (current layer), paste (current layer), clear page
+
+2.e I think mobile just needs a square aspect-ratio. So instead of 160x100,we want 128x128 for mobile. I think this means we need to decide what happens when we import games with different resolutions.  The most flexible approach would be to secretly support both resolutions for both platforms. But on mobile you're defaulting to 128x128, and in desktop you're defaulting to 160x100. However, if you import/edit a file made with the other aspect ratio, it just scales to fit the bounding box of what's usually allocated to the canvas. (Hopefully without terribly increasing the complexity of everything lol).

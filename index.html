@@ -1,7 +1,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="UTF-8">
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="Description" CONTENT="Draw and share simple games with your mouse or fingers!">
 
   <link rel="icon" type="image/png" href="favicon.png">
@@ -685,6 +685,7 @@ function rgbToLab(r,g,b) {
     var brushSizeSliderElem = null;
     var brushSizeThumbElem = null;
     var brushSliderDragging = false;
+    var brushSliderPointerId = null;
     var lastBrushSize = 5;
     var thumbnailCanvas = new Array();
     var thumbnailContext = new Array();
@@ -848,6 +849,8 @@ function rgbToLab(r,g,b) {
       state.background_color = background_color;
       state.foreground_color = foreground_color;
       state.version = version;
+      state.width = width;
+      state.height = height;
       for (var i = 0; i < 16; i++) {
         var canvas = canvasses[i];
         var s = "";
@@ -863,8 +866,65 @@ function rgbToLab(r,g,b) {
     }
 
 
+    function applyEditorDimensions() {
+      if (visibleCanvas) {
+        visibleCanvas.width = width * zoomFactor;
+        visibleCanvas.height = height * zoomFactor;
+      }
+      for (var i = 0; i < 16; i++) {
+        if (thumbnailCanvas[i]) {
+          thumbnailCanvas[i].width = getThumbCols();
+          thumbnailCanvas[i].height = getThumbRows();
+        }
+      }
+    }
+
+    function resizeCanvassesTo(newWidth, newHeight) {
+      var oldWidth = width;
+      var oldHeight = height;
+      if (newWidth === oldWidth && newHeight === oldHeight) return;
+      var bgIdx = nearest_color_index_in_palette(colorPalette, background_color);
+      var copyW = Math.min(oldWidth, newWidth);
+      var copyH = Math.min(oldHeight, newHeight);
+      for (var i = 0; i < 16; i++) {
+        var oldCanvas = canvasses[i];
+        var newCanvas = new Uint8Array(newWidth * newHeight);
+        for (var j = 0; j < newWidth * newHeight; j++) newCanvas[j] = bgIdx;
+        for (var r = 0; r < copyH; r++) {
+          for (var c = 0; c < copyW; c++) {
+            newCanvas[c + newWidth * r] = oldCanvas[c + oldWidth * r];
+          }
+        }
+        canvasses[i] = newCanvas;
+      }
+      width = newWidth;
+      height = newHeight;
+    }
+
+    function updateMobileCanvasSize() {
+      if (!isMobilePortraitTouch) return;
+      var container = document.getElementById('mobile-canvas-container');
+      if (!container || !visibleCanvas) return;
+      var rect = container.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+      var mobileWidth = 160;
+      var newZoom = rect.width / mobileWidth;
+      var newHeight = Math.max(50, Math.min(300, Math.floor(rect.height / newZoom)));
+      if (width !== mobileWidth || newHeight !== height || newZoom !== zoomFactor) {
+        zoomFactor = newZoom;
+        resizeCanvassesTo(mobileWidth, newHeight);
+        applyEditorDimensions();
+        setVisuals(true);
+      }
+    }
+
     function stringToState(str) {
       var state = JSON.parse(str);
+      var stateWidth = state.width !== undefined ? state.width : 160;
+      var stateHeight = state.height !== undefined ? state.height : 100;
+      width = stateWidth;
+      height = stateHeight;
+
       gameLink = state.gameLink;
       if (state.activeIndex === undefined){
         state.activeIndex = 0;
@@ -900,7 +960,7 @@ function rgbToLab(r,g,b) {
 
       for (var k = 0; k < state.canvasses.length; k++) {
         var s = state.canvasses[k];
-        var ar = new Uint8Array(width * height);
+        var ar = new Uint8Array(stateWidth * stateHeight);
         var index = 0;
         for (var i = 0; i < s.length; i += 2) {
           var count = s[i];
@@ -916,6 +976,7 @@ function rgbToLab(r,g,b) {
 
       // Clear undo so we don't restore pre-load state (e.g. empty init) when undoing
       undoList.length = 0;
+      if (visibleCanvas) applyEditorDimensions();
     }
 
     function saveFlickgameState() {
@@ -936,10 +997,14 @@ function rgbToLab(r,g,b) {
     }
 
     function newFlickgame() {
-      var emptyCanvasRle = [width * height, "0"];
+      var w = width;
+      var h = height;
+      var emptyCanvasRle = [w * h, "0"];
       var emptyState = {
         gameLink: gameLink,
         activeIndex: 0,
+        width: w,
+        height: h,
         canvasses: [emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle],
         palette_name: "dawnbringer-16",
         background_color: "#000000",
@@ -1079,8 +1144,8 @@ function rgbToLab(r,g,b) {
         item.setAttribute('data-page', i + 1);
 
         var thumb = document.createElement('canvas');
-        thumb.width = 16;
-        thumb.height = 10;
+        thumb.width = getThumbCols();
+        thumb.height = getThumbRows();
         thumb.className = 'page-picker-thumb';
         item.appendChild(thumb);
 
@@ -1114,6 +1179,71 @@ function rgbToLab(r,g,b) {
 
       document.body.appendChild(picker);
       return picker;
+    }
+
+    var framePickerEl = null;
+    function createFramePicker() {
+      var picker = document.createElement('div');
+      picker.className = 'frame-picker';
+      picker.id = 'frame-picker';
+
+      for (var i = 0; i < 16; i++) {
+        var item = document.createElement('div');
+        item.className = 'frame-picker-item';
+        item.setAttribute('data-frame', i + 1);
+
+        var thumb = document.createElement('canvas');
+        thumb.width = getThumbCols();
+        thumb.height = getThumbRows();
+        thumb.className = 'frame-picker-thumb';
+        item.appendChild(thumb);
+
+        var label = document.createElement('span');
+        label.className = 'frame-picker-label';
+        label.textContent = i + 1;
+        item.appendChild(label);
+
+        (function(frameNum) {
+          item.addEventListener('click', function(e) {
+            e.stopPropagation();
+            setLayer(frameNum);
+            hideFramePicker();
+          });
+        })(i + 1);
+
+        picker.appendChild(item);
+      }
+
+      document.body.appendChild(picker);
+      return picker;
+    }
+
+    function showFramePicker() {
+      if (!framePickerEl) return;
+      var tw = getThumbCols();
+      var th = getThumbRows();
+      for (var i = 0; i < 16; i++) {
+        drawThumbnail(i);
+        var item = framePickerEl.children[i];
+        var thumb = item.querySelector('canvas');
+        if (thumb && thumbnailCanvas[i]) {
+          thumb.width = tw;
+          thumb.height = th;
+          var ctx = thumb.getContext('2d');
+          ctx.drawImage(thumbnailCanvas[i], 0, 0);
+        }
+      }
+      var btn = document.getElementById('mobile-frame-btn');
+      if (btn) {
+        var rect = btn.getBoundingClientRect();
+        framePickerEl.style.left = Math.max(8, rect.left) + 'px';
+        framePickerEl.style.top = (rect.bottom + 4) + 'px';
+      }
+      framePickerEl.classList.add('visible');
+    }
+
+    function hideFramePicker() {
+      if (framePickerEl) framePickerEl.classList.remove('visible');
     }
 
     function showPagePicker(colorIdx) {
@@ -1190,6 +1320,8 @@ function rgbToLab(r,g,b) {
     var ptrTouchMode = false;
     var ptrCursorX = 80.0;
     var ptrCursorY = 50.0;
+    function getThumbRows() { return 8; }
+    function getThumbCols() { return 16; }
     var ptrCursorVisible = false;
     var ptrHoveredIsLink = false;
     var ptrHoveredColorIndex = -1;
@@ -1222,6 +1354,19 @@ function rgbToLab(r,g,b) {
     var visibleCanvas;
     var visibleContext;
     var linkInput;
+
+    // Mobile/desktop layout: portrait + touch => mobile UI
+    var isMobilePortraitTouch = false;
+    function updateLayoutMode() {
+      var portrait = window.matchMedia('(orientation: portrait)').matches;
+      var touch = ('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
+      var next = portrait && touch;
+      if (next !== isMobilePortraitTouch) {
+        isMobilePortraitTouch = next;
+        document.body.setAttribute('data-layout', isMobilePortraitTouch ? 'mobile' : 'desktop');
+        if (typeof onLayoutModeChange === 'function') onLayoutModeChange();
+      }
+    }
 
     var lastX = -1;
     var lastY = -1;
@@ -1309,7 +1454,9 @@ function rgbToLab(r,g,b) {
         fraction = (clickX - leftCenter) / (rightCenter - leftCenter);
       }
       fraction = Math.max(0, Math.min(1, fraction));
-      var raw = BRUSH_SLIDER_MAX - fraction * (BRUSH_SLIDER_MAX - BRUSH_SLIDER_MIN);
+      var raw = isVertical
+        ? BRUSH_SLIDER_MAX - fraction * (BRUSH_SLIDER_MAX - BRUSH_SLIDER_MIN)
+        : BRUSH_SLIDER_MIN + fraction * (BRUSH_SLIDER_MAX - BRUSH_SLIDER_MIN);
       return snapBrushToDiscrete(Math.round(raw));
     }
 
@@ -1393,8 +1540,8 @@ function rgbToLab(r,g,b) {
       if (ptrHoveredIsLink) {
         var target = hyperlinks[canvasIndex][ptrHoveredColorIndex];
         if (target > 0) {
-          ptrCursorX = 80.0;
-          ptrCursorY = 50.0;
+          ptrCursorX = width / 2;
+          ptrCursorY = height / 2;
           setLayer(target); // setLayer expects 1-based page number
           ptrUpdateHover();
           setVisuals();
@@ -1490,6 +1637,9 @@ function rgbToLab(r,g,b) {
 
     var bgColorSelectOptions=[];
     function init() {
+      updateLayoutMode();
+      window.addEventListener('resize', updateLayoutMode);
+      window.addEventListener('orientationchange', updateLayoutMode);
 
       // Populate background color dropdown
       var bgColorSelect = document.getElementById('bgColorSelect');
@@ -1516,25 +1666,34 @@ function rgbToLab(r,g,b) {
         function brushSliderPointerDown(evt) {
           evt.preventDefault();
           brushSliderDragging = true;
+          brushSliderPointerId = evt.pointerId;
           var v = brushSliderValueFromEvent(evt);
           setRadius(v);
-          brushSizeSliderElem.setPointerCapture(evt.pointerId);
+          try { brushSizeSliderElem.setPointerCapture(evt.pointerId); } catch (err) {}
         }
         function brushSliderPointerMove(evt) {
-          if (!brushSliderDragging) return;
+          if (!brushSliderDragging || evt.pointerId !== brushSliderPointerId) return;
+          evt.preventDefault();
           var v = brushSliderValueFromEvent(evt);
           setRadius(v);
         }
         function brushSliderPointerUp(evt) {
-          if (evt.pointerId !== undefined && brushSizeSliderElem.hasPointerCapture(evt.pointerId)) {
-            brushSizeSliderElem.releasePointerCapture(evt.pointerId);
-          }
+          if (evt.pointerId !== brushSliderPointerId) return;
+          try {
+            if (brushSizeSliderElem.hasPointerCapture(evt.pointerId)) {
+              brushSizeSliderElem.releasePointerCapture(evt.pointerId);
+            }
+          } catch (err) {}
           brushSliderDragging = false;
+          brushSliderPointerId = null;
         }
         brushSizeSliderElem.addEventListener("pointerdown", brushSliderPointerDown, false);
         brushSizeSliderElem.addEventListener("pointermove", brushSliderPointerMove, false);
         brushSizeSliderElem.addEventListener("pointerup", brushSliderPointerUp, false);
         brushSizeSliderElem.addEventListener("pointercancel", brushSliderPointerUp, false);
+        document.addEventListener("pointermove", brushSliderPointerMove, true);
+        document.addEventListener("pointerup", brushSliderPointerUp, true);
+        document.addEventListener("pointercancel", brushSliderPointerUp, true);
       }
       updateBrushSliderUI(radius > 0 ? radius : lastBrushSize);
       if (radius > 0 && brushSizeSliderElem) brushSizeSliderElem.classList.add("selected");
@@ -1543,6 +1702,7 @@ function rgbToLab(r,g,b) {
         elem = document.getElementById("thumbnail" + (i + 1));
         thumbnailCanvas[i] = elem;
         thumbnailContext[i] = elem.getContext("2d");
+        if (elem) { elem.width = getThumbCols(); elem.height = getThumbRows(); }
       }
       for (var i = 0; i < 16; i++) {
         elem = document.getElementById("color_" + (i));
@@ -1551,6 +1711,7 @@ function rgbToLab(r,g,b) {
       }
 
       pagePickerEl = createPagePicker();
+      framePickerEl = createFramePicker();
 
       // Click outside to dismiss page picker
       document.addEventListener('click', function(e) {
@@ -1559,7 +1720,62 @@ function rgbToLab(r,g,b) {
             hidePagePicker();
           }
         }
+        if (framePickerEl && framePickerEl.classList.contains('visible')) {
+          if (!framePickerEl.contains(e.target) && !(e.target && e.target.id === 'mobile-frame-btn')) {
+            hideFramePicker();
+          }
+        }
       });
+
+      // Burger dialog background select (same options as desktop)
+      var burgerBgSelect = document.getElementById('burger-bg-select');
+      if (burgerBgSelect) {
+        for (var i = 0; i < colorPalette.length; i++) {
+          var opt = document.createElement('option');
+          opt.value = i;
+          opt.textContent = colorNames[palette_name][i];
+          opt.style.backgroundColor = "var(--col" + i + ")";
+          opt.style.color = "var(--col" + i + "_fg)";
+          burgerBgSelect.appendChild(opt);
+        }
+      }
+
+      var mobileFrameBtn = document.getElementById('mobile-frame-btn');
+      if (mobileFrameBtn) {
+        mobileFrameBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          if (framePickerEl && framePickerEl.classList.contains('visible')) hideFramePicker();
+          else showFramePicker();
+        });
+      }
+      var mobileDownloadBtn = document.getElementById('mobile-download-btn');
+      if (mobileDownloadBtn) mobileDownloadBtn.addEventListener('click', function() { exportClick(); });
+      var mobileBurgerBtn = document.getElementById('mobile-burger-btn');
+      var burgerDialog = document.getElementById('burger-dialog');
+      if (mobileBurgerBtn && burgerDialog) {
+        mobileBurgerBtn.addEventListener('click', function() {
+          var burgerLinkInput = document.getElementById('burger-link-input');
+          if (burgerLinkInput) burgerLinkInput.value = gameLink || '';
+          if (burgerBgSelect) burgerBgSelect.value = bgColorSelect ? bgColorSelect.value : "0";
+          burgerDialog.classList.add('visible');
+          burgerDialog.setAttribute('aria-hidden', 'false');
+        });
+      }
+      var burgerClose = document.getElementById('burger-dialog-close');
+      if (burgerClose && burgerDialog) {
+        burgerClose.addEventListener('click', function() {
+          burgerDialog.classList.remove('visible');
+          burgerDialog.setAttribute('aria-hidden', 'true');
+        });
+      }
+      if (burgerDialog) {
+        burgerDialog.addEventListener('click', function(e) {
+          if (e.target === burgerDialog) {
+            burgerDialog.classList.remove('visible');
+            burgerDialog.setAttribute('aria-hidden', 'true');
+          }
+        });
+      }
 
       for (var i = 0; i < 16; i++) {
         elem = document.getElementById("layerItem" + (i + 1));
@@ -1579,6 +1795,8 @@ function rgbToLab(r,g,b) {
       }
 
       visibleCanvas = document.getElementById("mainCanvas");
+      visibleCanvas.width = width * zoomFactor;
+      visibleCanvas.height = height * zoomFactor;
       visibleCanvas.addEventListener('pointerdown', mouseDown, false);
       document.addEventListener('pointerup', mouseUp, false);
       visibleCanvas.addEventListener('pointermove', mouseMove, false);
@@ -1628,6 +1846,43 @@ function rgbToLab(r,g,b) {
           setVisuals(true);
         }
       }
+
+      window.addEventListener('resize', function() {
+        if (isMobilePortraitTouch) {
+          requestAnimationFrame(function() { updateMobileCanvasSize(); });
+        }
+      });
+      window.onLayoutModeChange = function() {
+        var canvas = document.getElementById('mainCanvas');
+        var desktopCanvasContainer = document.getElementById('desktop-canvas-container');
+        var mobileCanvasContainer = document.getElementById('mobile-canvas-container');
+        var slider = document.getElementById('brush-size-slider');
+        var desktopSliderContainer = document.getElementById('desktop-brush-slider-container');
+        var mobileSliderContainer = document.getElementById('mobile-brush-slider-container');
+        var burgerDlg = document.getElementById('burger-dialog');
+        var swatchContainer = document.getElementById('swatch-container');
+        var desktopSwatchCell = document.getElementById('desktop-swatch-cell');
+        var mobileSwatchGrid = document.getElementById('mobile-swatch-grid');
+        if (isMobilePortraitTouch) {
+          if (canvas && mobileCanvasContainer) mobileCanvasContainer.appendChild(canvas);
+          if (slider && mobileSliderContainer) { mobileSliderContainer.appendChild(slider); slider.className = 'brush-size-slider horizontal'; }
+          if (swatchContainer && mobileSwatchGrid) mobileSwatchGrid.appendChild(swatchContainer);
+          hideFramePicker();
+          if (burgerDlg) { burgerDlg.classList.remove('visible'); burgerDlg.setAttribute('aria-hidden', 'true'); }
+          requestAnimationFrame(function() { requestAnimationFrame(function() { updateMobileCanvasSize(); }); });
+        } else {
+          zoomFactor = 4;
+          if (canvas && desktopCanvasContainer) desktopCanvasContainer.appendChild(canvas);
+          if (slider && desktopSliderContainer) { desktopSliderContainer.appendChild(slider); slider.className = 'brush-size-slider vertical'; }
+          if (swatchContainer && desktopSwatchCell) desktopSwatchCell.appendChild(swatchContainer);
+          hideFramePicker();
+          if (burgerDlg) { burgerDlg.classList.remove('visible'); burgerDlg.setAttribute('aria-hidden', 'true'); }
+        }
+        pointerModeBtn = isMobilePortraitTouch ? document.getElementById('mobile-pointer-btn') : document.getElementById('pointer_mode_btn');
+        if (pointerModeBtn) pointerModeBtn.setAttribute('class', pointerMode ? 'radius selected' : 'radius');
+        if (brushSizeSliderElem) updateBrushSliderUI(radius > 0 ? radius : lastBrushSize);
+      };
+      window.onLayoutModeChange();
     }
 
     function readFile(evt) {
@@ -1689,16 +1944,20 @@ function rgbToLab(r,g,b) {
 
 
     function drawThumbnail(n) {
+      var thumbCols = getThumbCols();
+      var thumbRows = getThumbRows();
+      var blockW = Math.floor(width / thumbCols);
+      var blockH = Math.floor(height / thumbRows);
       thumbCtx = thumbnailContext[n];
       thumbCtx.fillStyle = "#FF0000";
-      thumbCtx.fillRect(0, 0, 16, 10);
+      thumbCtx.fillRect(0, 0, thumbCols, thumbRows);
       var canvas = canvasses[n];
-      for (var i = 0; i < 16; i++) {
-        for (var j = 0; j < 10; j++) {
+      for (var i = 0; i < thumbCols; i++) {
+        for (var j = 0; j < thumbRows; j++) {
           var max = 0;
-          for (var i2 = 0; i2 < 10; i2++) {
-            for (var j2 = 0; j2 < 10; j2++) {
-              var sample = canvas[i * 10 + i2 + width * (j * 10 + j2)];
+          for (var i2 = 0; i2 < blockW; i2++) {
+            for (var j2 = 0; j2 < blockH; j2++) {
+              var sample = canvas[(i * blockW + i2) + width * (j * blockH + j2)];
               if (sample > max) {
                 max = sample;
               }
@@ -1708,9 +1967,6 @@ function rgbToLab(r,g,b) {
           thumbCtx.fillRect(i, j, 1, 1);
         }
       }
-
-      //      var dataUrl = thumbnailCanvas[n].toDataURL();
-      //      "dropdownOption"[0][0].style.backgroundImage="url("+dataUrl+")";
     }
 
     function setVisuals(genAllThumbnails=false) {
@@ -1721,7 +1977,13 @@ function rgbToLab(r,g,b) {
         for (var j = 0; j < height; j++) {
           var pixelIndex = canvas[i + width * j];
           visibleContext.fillStyle = colorPalette[pixelIndex];
-          visibleContext.fillRect(i * zoomFactor, j * zoomFactor, zoomFactor, zoomFactor);
+          var x0 = Math.floor(i * zoomFactor);
+          var y0 = Math.floor(j * zoomFactor);
+          var x1 = Math.floor((i + 1) * zoomFactor);
+          var y1 = Math.floor((j + 1) * zoomFactor);
+          var w = Math.max(1, x1 - x0);
+          var h = Math.max(1, y1 - y0);
+          visibleContext.fillRect(x0, y0, w, h);
         }
       }
       if (genAllThumbnails === true) {
@@ -1742,18 +2004,13 @@ function rgbToLab(r,g,b) {
 
 
     function getCoords(e) {
+      var target = e.target || e.srcElement;
+      var rect = target.getBoundingClientRect();
       var x, y;
-      if (typeof e.offsetX !== "undefined") {
-        x = e.offsetX;
-        y = e.offsetY;
-      }
-      else if (e.touches && e.touches.length > 0) {
+      if (e.touches && e.touches.length > 0) {
         if (e.touches.length === 0) {
           return null;
         }
-        var target = e.target || e.srcElement;
-        var rect = target.getBoundingClientRect();
-
         x = 0;
         y = 0;
         for (var i = 0; i < e.touches.length; i++) {
@@ -1762,12 +2019,13 @@ function rgbToLab(r,g,b) {
         }
         x /= e.touches.length;
         y /= e.touches.length;
-
       } else {
-        var target = e.target || e.srcElement;
-        var rect = target.getBoundingClientRect();
-        x = e.clientX - rect.left,
-          y = e.clientY - rect.top;
+        x = e.clientX - rect.left;
+        y = e.clientY - rect.top;
+      }
+      if (target.width && target.height && rect.width > 0 && rect.height > 0) {
+        x = x * (target.width / rect.width);
+        y = y * (target.height / rect.height);
       }
       return [x, y];
     }
@@ -1808,8 +2066,8 @@ function rgbToLab(r,g,b) {
         visibleCanvas.style.cursor = 'none';
       }
       if (!ptrCursorVisible) {
-        ptrCursorX = 80.0;
-        ptrCursorY = 50.0;
+        ptrCursorX = width / 2;
+        ptrCursorY = height / 2;
         ptrCursorVisible = true;
         ptrUpdateHover();
         setVisuals();
@@ -2105,7 +2363,7 @@ function rgbToLab(r,g,b) {
         for (var i = 0; i < points.length; i++) {
           var px = points[i][0];
           var py = points[i][1];
-          if (px >= 0 && px < 160 && py >= 0 && py < 100) {
+          if (px >= 0 && px < width && py >= 0 && py < height) {
             canvas[px + width * py] = colorIndex;
           }
         }
@@ -2121,7 +2379,7 @@ function rgbToLab(r,g,b) {
         for (var i = 0; i < points.length; i++) {
           var px = points[i][0];
           var py = points[i][1];
-          if (px >= 0 && px < 160 && py >= 0 && py < 100) {
+          if (px >= 0 && px < width && py >= 0 && py < height) {
             canvas[px + width * py] = colorIndex;
           }
         }
@@ -2257,13 +2515,14 @@ function rgbToLab(r,g,b) {
 body{
   overscroll-behavior: none;
 }
-    #maincanvas {
+    #mainCanvas {
       cursor: crosshair;
       image-rendering: optimizeSpeed;
       image-rendering: -moz-crisp-edges;
       image-rendering: -webkit-optimize-contrast;
       image-rendering: -o-crisp-edges;
       image-rendering: pixelated;
+      image-rendering: -webkit-crisp-edges;
       -ms-interpolation-mode: nearest-neighbor;
 
       touch-action: none; /* Disable browser handling of all panning and zooming gestures */
@@ -2474,7 +2733,7 @@ body{
 
     .page-picker-item canvas {
       width: 48px;
-      height: 30px;
+      height: 24px;
       image-rendering: pixelated;
       border: 1px solid #555;
       border-radius: 2px;
@@ -2591,8 +2850,201 @@ body{
       touch-action: manipulation;
     }
 
-    
+    /* Desktop/mobile layout containers */
+    #mobile-editor-wrapper {
+      display: none;
+    }
+    body[data-layout="mobile"] #desktop-editor-wrapper {
+      display: none;
+    }
+    body[data-layout="mobile"] #mobile-editor-wrapper {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      min-height: 100dvh;
+      max-height: 100vh;
+      max-height: 100dvh;
+      overflow: hidden;
+      padding-top: env(safe-area-inset-top, 0);
+      padding-bottom: env(safe-area-inset-bottom, 0);
+      padding-left: env(safe-area-inset-left, 0);
+      padding-right: env(safe-area-inset-right, 0);
+    }
 
+    .mobile-toolbar-top, .mobile-toolbar-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px;
+      background: #1a1a2e;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+    .mobile-toolbar-btn {
+      padding: 8px 12px;
+      background: #2a2a3e;
+      color: var(--foreground-color);
+      border: 2px solid gray;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .mobile-toolbar-bottom img {
+      width: 30px;
+      height: 30px;
+    }
+    #mobile-canvas-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 8px;
+      min-height: 80px;
+      flex: 1 1 0;
+      overflow: hidden;
+    }
+    #mobile-canvas-container canvas {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+    .burger-dialog {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .burger-dialog.visible {
+      display: flex;
+    }
+    .burger-dialog-content {
+      background: #1a1a2e;
+      border: 2px solid gray;
+      padding: 24px;
+      max-width: 280px;
+      max-height: 80vh;
+      overflow-y: auto;
+      position: relative;
+    }
+    .burger-dialog-close {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      background: transparent;
+      border: none;
+      color: var(--foreground-color);
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .burger-dialog-content a {
+      display: block;
+      padding: 6px 0;
+    }
+    .burger-dialog-content .burger-link-input {
+      width: 100%;
+      max-width: 240px;
+      box-sizing: border-box;
+      margin: 4px 0 8px 0;
+      padding: 6px;
+      background: #2a2a3e;
+      color: var(--foreground-color);
+      border: 2px solid gray;
+      font-size: 14px;
+    }
+    .frame-picker {
+      display: none;
+      position: fixed;
+      z-index: 100;
+      background: #2a2a3e;
+      border: 2px solid #777;
+      border-radius: 5px;
+      padding: 8px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+    }
+    .frame-picker.visible {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    .frame-picker-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      cursor: pointer;
+      padding: 3px;
+      border-radius: 3px;
+      border: 1px solid transparent;
+    }
+    .frame-picker-item:hover, .frame-picker-item:focus {
+      background: rgba(255,255,255,0.1);
+      border-color: #888;
+    }
+    .frame-picker-item canvas {
+      width: 48px;
+      height: 24px;
+      image-rendering: pixelated;
+      border: 1px solid #555;
+      border-radius: 2px;
+    }
+    .frame-picker-label {
+      font-size: 10px;
+      color: #aaa;
+    }
+    .mobile-swatch-grid {
+      padding: 8px 12px 12px;
+      max-width: 320px;
+      margin: 0 auto;
+      flex: 0 1 auto;
+      min-height: 0;
+      overflow: hidden;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .swatch-container-desktop {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      gap: 0;
+    }
+    .swatch-container-desktop > a {
+      display: inline-block;
+    }
+    #mobile-swatch-grid #swatch-container {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+      max-height: 100%;
+      align-items: stretch;
+    }
+    #mobile-swatch-grid #swatch-container > a {
+      display: flex;
+      position: relative;
+      width: 100%;
+      aspect-ratio: 2 / 1;
+      min-height: 24px;
+      max-height: 72px;
+    }
+    #mobile-swatch-grid #swatch-container .unselected,
+    #mobile-swatch-grid #swatch-container .selected {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+    }
 
     /*]]>*/
   </style>
@@ -2602,6 +3054,7 @@ body{
 </head>
 
 <body onload="init();" ondragstart="return false;" ondrop="return false;">
+  <div id="desktop-editor-wrapper">
   <center>
     <table cellpadding="10">
       <tr>
@@ -2737,8 +3190,10 @@ body{
                         </span>
                         <br />
                       </center>
+                        <div id="desktop-canvas-container">
                         <canvas id="mainCanvas" oncontextmenu="return false;" width="640" height="400"
                           style="border:2px solid gray; background-color:black;"></canvas>
+                        </div>
                         <br />
                     </td>
                     <td valign="top">
@@ -2751,9 +3206,11 @@ body{
                       <a href="help.html" target="_blank" title="blah">? help</a>
                       <br />
                       <br />
+                      <div id="desktop-brush-slider-container">
                       <div id="brush-size-slider" class="brush-size-slider vertical" title="Brush size (drag or click)">
                         <div class="brush-size-track"></div>
                         <img class="brush-size-thumb" id="brush-size-thumb" alt="" />
+                      </div>
                       </div>
                       <br />
                       <a href="#" onclick="setRadius(0);return false;"><img src="bucket.png" class="radius"
@@ -2768,87 +3225,58 @@ body{
                 </table>
                 <table style="border:2px solid gray; margin-top:2px; margin-left:3px;" margin="0">
                   <tr height="16">
-                    <td>
-                      <a href="#" onclick="setColor(0, event);return false;">
-                        <div class="unselected" id="color_0"><span class="link-label"></span></div>
-                      </a>
+                    <td id="desktop-swatch-cell">
+                      <div id="swatch-container" class="swatch-container-desktop">
+                        <a href="#" onclick="setColor(0, event);return false;">
+                          <div class="unselected" id="color_0"><span class="link-label"></span></div>
+                        </a>
+                        <a href="#" onclick="setColor(1, event);return false;">
+                          <div class="unselected" id="color_1"><span class="link-label"></span></div>
+                        </a>
+                        <a href="#" onclick="setColor(2, event);return false;">
+                          <div class="selected" id="color_2"><span class="link-label"></span></div>
+                        </a>
+                        <a href="#" onclick="setColor(3, event);return false;">
+                          <div class="unselected" id="color_3"><span class="link-label"></span></div>
+                        </a>
+                        <a href="#" onclick="setColor(4, event);return false;">
+                          <div class="unselected" id="color_4"><span class="link-label"></span></div>
+                        </a>
+                        <a href="#" onclick="setColor(5, event);return false;">
+                          <div class="unselected" id="color_5"><span class="link-label"></span></div>
+                        </a>
+                        <a href="#" onclick="setColor(6, event);return false;">
+                          <div class="unselected" id="color_6"><span class="link-label"></span></div>
+                        </a>
+                        <a href="#" onclick="setColor(7, event);return false;">
+                          <div class="unselected" id="color_7"><span class="link-label"></span></div>
+                        </a>
+                        <a href="#" onclick="setColor(8, event);return false;">
+                          <div class="unselected" id="color_8"><span class="link-label"></span></div>
+                        </a>
+                        <a href="#" onclick="setColor(9, event);return false;">
+                          <div class="unselected" id="color_9"><span class="link-label"></span></div>
+                        </a>
+                        <a href="#" onclick="setColor(10, event);return false;">
+                          <div class="unselected" id="color_10"><span class="link-label"></span></div>
+                        </a>
+                        <a href="#" onclick="setColor(11, event);return false;">
+                          <div class="unselected" id="color_11"><span class="link-label"></span></div>
+                        </a>
+                        <a href="#" onclick="setColor(12, event);return false;">
+                          <div class="unselected" id="color_12"><span class="link-label"></span></div>
+                        </a>
+                        <a href="#" onclick="setColor(13, event);return false;">
+                          <div class="unselected" id="color_13"><span class="link-label"></span></div>
+                        </a>
+                        <a href="#" onclick="setColor(14, event);return false;">
+                          <div class="unselected" id="color_14"><span class="link-label"></span></div>
+                        </a>
+                        <a href="#" onclick="setColor(15, event);return false;">
+                          <div class="unselected" id="color_15"><span class="link-label"></span></div>
+                        </a>
+                      </div>
                     </td>
-                    <td>
-                      <a href="#" onclick="setColor(1, event);return false;">
-                        <div class="unselected" id="color_1"><span class="link-label"></span></div>
-                      </a>
-                    </td>
-                    <td>
-                      <a href="#" onclick="setColor(2, event);return false;">
-                        <div class="selected" id="color_2"><span class="link-label"></span></div>
-                      </a>
-                    </td>
-                    <td>
-                      <a href="#" onclick="setColor(3, event);return false;">
-                        <div class="unselected" id="color_3"><span class="link-label"></span></div>
-                      </a>
-                    </td>
-                    <td>
-                      <a href="#" onclick="setColor(4, event);return false;">
-                        <div class="unselected" id="color_4"><span class="link-label"></span></div>
-                      </a>
-                    </td>
-                    <td>
-                      <a href="#" onclick="setColor(5, event);return false;">
-                        <div class="unselected" id="color_5"><span class="link-label"></span></div>
-                      </a>
-                    </td>
-                    <td>
-                      <a href="#" onclick="setColor(6, event);return false;">
-                        <div class="unselected" id="color_6"><span class="link-label"></span></div>
-                      </a>
-                    </td>
-                    <td>
-                      <a href="#" onclick="setColor(7, event);return false;">
-                        <div class="unselected" id="color_7"><span class="link-label"></span></div>
-                      </a>
-                    </td>
-                    <td>
-                      <a href="#" onclick="setColor(8, event);return false;">
-                        <div class="unselected" id="color_8"><span class="link-label"></span></div>
-                      </a>
-                    </td>
-                    <td>
-                      <a href="#" onclick="setColor(9, event);return false;">
-                        <div class="unselected" id="color_9"><span class="link-label"></span></div>
-                      </a>
-                    </td>
-                    <td>
-                      <a href="#" onclick="setColor(10, event);return false;">
-                        <div class="unselected" id="color_10"><span class="link-label"></span></div>
-                      </a>
-                    </td>
-                    <td>
-                      <a href="#" onclick="setColor(11, event);return false;">
-                        <div class="unselected" id="color_11"><span class="link-label"></span></div>
-                      </a>
-                    </td>
-                    <td>
-                      <a href="#" onclick="setColor(12, event);return false;">
-                        <div class="unselected" id="color_12"><span class="link-label"></span></div>
-                      </a>
-                    </td>
-                    <td>
-                      <a href="#" onclick="setColor(13, event);return false;">
-                        <div class="unselected" id="color_13"><span class="link-label"></span></div>
-                      </a>
-                    </td>
-                    <td>
-                      <a href="#" onclick="setColor(14, event);return false;">
-                        <div class="unselected" id="color_14"><span class="link-label"></span></div>
-                      </a>
-                    </td>
-                    <td>
-                      <a href="#" onclick="setColor(15, event);return false;">
-                        <div class="unselected" id="color_15"><span class="link-label"></span></div>
-                      </a>
-                    </td>
-                    <!--must have border to left of this td-->
                     <td style="border-left: 2px solid gray;">
                       <a href="#" onclick="openPaletteSelector();return false;"><img id="palette_button" src="palette.png"></a>
                     </td>
@@ -2862,6 +3290,39 @@ body{
       </tr>
     </table>
   </center>
+  </div>
+  <div id="mobile-editor-wrapper">
+    <div class="mobile-toolbar-top">
+      <button type="button" id="mobile-frame-btn" class="mobile-toolbar-btn">FRAME</button>
+      <button type="button" id="mobile-download-btn" class="mobile-toolbar-btn">DOWNLOAD</button>
+      <button type="button" id="mobile-burger-btn" class="mobile-toolbar-btn" aria-label="Menu">&#9776;</button>
+    </div>
+    <div id="mobile-canvas-container"></div>
+    <div class="mobile-toolbar-bottom">
+      <div id="mobile-brush-slider-container"></div>
+      <a href="#" id="mobile-bucket-btn" onclick="setRadius(0);return false;"><img src="bucket.png" class="radius" alt="bucket" /></a>
+      <a href="#" id="mobile-undo-btn" onclick="doUndo();return false;"><img src="SVG/undo.svg" class="toolbar" alt="undo" /></a>
+      <a href="#" id="mobile-pointer-btn" onclick="togglePointerMode();return false;"><img src="pointer_hand.png" class="radius" alt="pointer" /></a>
+    </div>
+    <div id="mobile-swatch-grid" class="mobile-swatch-grid"></div>
+  </div>
+  <div id="burger-dialog" class="burger-dialog" aria-hidden="true">
+    <div class="burger-dialog-content">
+      <button type="button" class="burger-dialog-close" id="burger-dialog-close" aria-label="Close">&times;</button>
+      <label for="burger-link-input">URL link</label><br />
+      <input type="text" id="burger-link-input" class="burger-link-input" placeholder="www.flickgame.org" oninput="linkChange(this.value); var li=document.getElementById('linkInput'); if(li) li.value=this.value;" /><br />
+      <a href="#" onclick="shareClick();return false;">Share</a><br />
+      <a href="#" onclick="exportClick();return false;">Export</a><br />
+      <a href="#" onclick="document.getElementById('my_file').click();return false;">Import</a><br />
+      <a href="help.html" target="_blank">Help</a><br />
+      <a href="#" onclick="openPaletteSelector();return false;">Select colour palette</a><br />
+      <a href="#" onclick="doCopy();return false;">Copy (current layer)</a><br />
+      <a href="#" onclick="doPaste();return false;">Paste (current layer)</a><br />
+      <a href="#" onclick="clearPalette();return false;">Clear page</a><br />
+      <span id="burger-bg-label">Background:</span>
+      <select id="burger-bg-select" class="toolbar" style="border: 2px solid gray;" onchange="changeBackgroundColor(colorPalette[this.value],true); var b=document.getElementById('bgColorSelect'); if(b) b.value=this.value;"></select>
+    </div>
+  </div>
 </body>
 
 </html>
