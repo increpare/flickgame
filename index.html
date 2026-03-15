@@ -1590,7 +1590,7 @@ function rgbToLab(r,g,b) {
         x = e.offsetX;
         y = e.offsetY;
       }
-      else if (e.touches !== null) {
+      else if (e.touches && e.touches.length > 0) {
         if (e.touches.length === 0) {
           return null;
         }
@@ -2246,7 +2246,7 @@ body{
     }
 
     div.selected {
-      height: 16px;
+      height: 30px;
       width: 30px;
       border: 2px solid var(--selected-border-color);
       touch-action: manipulation;
@@ -2254,7 +2254,7 @@ body{
     }
 
     div.unselected {
-      height: 16px;
+      height: 30px;
       width: 30px;
       border: 2px solid black;
       touch-action: manipulation;
@@ -2569,10 +2569,10 @@ body{
                       <a href="#" onclick="setRadius(0);return false;"><img src="bucket.png" class="radius"
                           id="bucket" /></a>
                       <br />
+                        <a href="#" onclick="togglePointerMode();return false;"><img id="pointer_mode_btn" src="pointer_hand.png" class="radius" title="pointer mode (test links)" /></a>
+                      <br />
                       <a href="#" onclick="clearPalette();return false;"><img src="clear.png" class="radius"
                           id="bucket" /></a>
-                      <br />
-                      <a href="#" onclick="togglePointerMode();return false;"><img id="pointer_mode_btn" src="pointer_hand.png" class="radius" title="pointer mode (test links)" style="image-rendering: pixelated; width: 24px; height: 24px;" /></a>
                     </td>
                   </tr>
                 </table>

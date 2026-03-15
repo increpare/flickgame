@@ -1,3 +1,7 @@
 compressed
 *.gz
 .DS_Store
+/.superpowers
+/.claude
+/.claude
+/docs/superpowers

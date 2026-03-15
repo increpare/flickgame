@@ -5,7 +5,15 @@
       "Bash(bash scripts/start-server.sh --project-dir \"C:\\\\Users\\\\Anwender\\\\Documents\\\\GitHub\\\\flickgame\")",
       "Bash(python3 -c \":*)",
       "Bash(node -e \":*)",
-      "Bash(python -c \":*)"
+      "Bash(python -c \":*)",
+      "Bash(gh pr:*)",
+      "Bash(cat C:UsersAnwenderDocumentsGitHubflickgame.superpowersbrainstorm*.server-info)",
+      "Bash(bash scripts/start-server.sh --project-dir /c/Users/Anwender/Documents/GitHub/flickgame)",
+      "Bash(curl -s http://localhost:49625)",
+      "Bash(bash scripts/start-server.sh --project-dir /c/Users/Anwender/Documents/GitHub/flickgame --foreground)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:58143)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
