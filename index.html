@@ -1839,6 +1839,7 @@ body{
       width: 30px;
       border: 2px solid var(--selected-border-color);
       touch-action: manipulation;
+      position: relative;
     }
 
     div.unselected {
@@ -1846,6 +1847,89 @@ body{
       width: 30px;
       border: 2px solid black;
       touch-action: manipulation;
+      position: relative;
+    }
+
+    .link-label {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: bold;
+      pointer-events: none;
+      line-height: 1;
+    }
+
+    .page-picker {
+      display: none;
+      position: fixed;
+      z-index: 100;
+      background: #2a2a3e;
+      border: 2px solid #777;
+      border-radius: 5px;
+      padding: 8px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+    }
+
+    .page-picker.visible {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .page-picker-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      cursor: pointer;
+      padding: 3px;
+      border-radius: 3px;
+      border: 1px solid transparent;
+    }
+
+    .page-picker-item:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: #888;
+    }
+
+    .page-picker-item.current-target {
+      border-color: #fff;
+      background: rgba(255,255,255,0.15);
+    }
+
+    .page-picker-item canvas {
+      width: 48px;
+      height: 30px;
+      image-rendering: pixelated;
+      border: 1px solid #555;
+      border-radius: 2px;
+    }
+
+    .page-picker-label {
+      font-size: 10px;
+      color: #aaa;
+    }
+
+    .page-picker-clear {
+      grid-column: span 4;
+      text-align: center;
+      padding: 4px;
+      color: #f88;
+      font-size: 11px;
+      cursor: pointer;
+      border-top: 1px solid #444;
+      margin-top: 2px;
+    }
+
+    .page-picker-clear:hover {
+      color: #faa;
+      background: rgba(255,100,100,0.1);
     }
 
     img.radius {
