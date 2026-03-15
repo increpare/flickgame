@@ -22,13 +22,13 @@ DONE 1.D  IDEA: in the dropdown for selecting links for colours, show a thunbmai
 
 DONE 1.E save state to localstorage and automatically load it if it exists when you load a page. Add a 'new flickgame' button to the right of the paste button (use 'new_flickgame.png' as the icon)
 
-STEP 2: figure out a good structure for having two parallel interfaces depending on whether on mobile(touchscreen/portrait) or desktop.
+DONE STEP 2: figure out a good structure for having two parallel interfaces depending on whether on mobile(touchscreen/portrait) or desktop.
 
-2.a we need to figure out an elegant way to have two different interface setups.  The two layouts are *very* different. Some tools from the desktop version need to be reorganised and put into a burger menu dialog thing, because we don't have space.
+DONE 2.a we need to figure out an elegant way to have two different interface setups.  The two layouts are *very* different. Some tools from the desktop version need to be reorganised and put into a burger menu dialog thing, because we don't have space.
 
-2.b The desktop version has a very elegant and simple list of frames that you use to browse frames, that displays thumbnails.  For mobile I don't know what to do. Let's try the following for when we are on mobile with a portrait layout. We do not show the user the <ul> of layers. Instead we have a dropdown menu called 'FRAME' that opens up a frame selection menu (Can share lots of code with the dropdown menu for colour swatch link targets!).
+DONE 2.b he desktop version has a very elegant and simple list of frames that you use to browse frames, that displays thumbnails.  For mobile I don't know what to do. Let's try the following for when we are on mobile with a portrait layout. We do not show the user the <ul> of layers. Instead we have a dropdown menu called 'FRAME' that opens up a frame selection menu (Can share lots of code with the dropdown menu for colour swatch link targets!).
 
-2.d So, to decribe the new interface in detail: 
+DONE 2.d So, to decribe the new interface in detail: 
 
 top row, toolbar: [FRAME (opens frame selection dropdown) ] [ DOWNLOAD (downloads html files )] [ burger menu (opens dialog with rarer options]
 
@@ -42,4 +42,4 @@ then: the dropdown menu for colour swatch link targets, but instead of being 16 
 ===the burger menu brings up a modal dialogue box with the following options:===
 url link (text input), share, export, import, help, select colour palette (another dropdown), copy (current layer), paste (current layer), clear page
 
-2.e I think mobile just needs a square aspect-ratio. So instead of 160x100,we want 128x128 for mobile. I think this means we need to decide what happens when we import games with different resolutions.  The most flexible approach would be to secretly support both resolutions for both platforms. But on mobile you're defaulting to 128x128, and in desktop you're defaulting to 160x100. However, if you import/edit a file made with the other aspect ratio, it just scales to fit the bounding box of what's usually allocated to the canvas. (Hopefully without terribly increasing the complexity of everything lol).
+2.e So, normally we have 160x120 canvas size. IN mobile we have 160 width and we pick the height so that it takes up as much screen space as possible.  HOWEVER if we're loading an existing file (or randomly change device while editing) we do *not* resize the canvas to the new size, but scale the on-screen canvas proportionally to fit as well as we can.

@@ -907,21 +907,33 @@ function rgbToLab(r,g,b) {
       if (!container || !visibleCanvas) return;
       var rect = container.getBoundingClientRect();
       if (rect.width <= 0 || rect.height <= 0) return;
-      var mobileWidth = 160;
-      var newZoom = rect.width / mobileWidth;
-      var newHeight = Math.max(50, Math.min(300, Math.floor(rect.height / newZoom)));
-      if (width !== mobileWidth || newHeight !== height || newZoom !== zoomFactor) {
+      var scaleW = rect.width / width;
+      var scaleH = rect.height / height;
+      var newZoom = Math.min(scaleW, scaleH);
+      if (newZoom <= 0) return;
+      if (newZoom !== zoomFactor) {
         zoomFactor = newZoom;
-        resizeCanvassesTo(mobileWidth, newHeight);
         applyEditorDimensions();
         setVisuals(true);
       }
     }
 
+    function mobileFillCanvasSize() {
+      if (!isMobilePortraitTouch) return;
+      var container = document.getElementById('mobile-canvas-container');
+      if (!container) return;
+      var rect = container.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+      var fillHeight = Math.max(50, Math.min(300, Math.floor(rect.height / (rect.width / 160))));
+      resizeCanvassesTo(160, fillHeight);
+      applyEditorDimensions();
+      setVisuals(true);
+    }
+
     function stringToState(str) {
       var state = JSON.parse(str);
       var stateWidth = state.width !== undefined ? state.width : 160;
-      var stateHeight = state.height !== undefined ? state.height : 100;
+      var stateHeight = state.height !== undefined ? state.height : 120;
       width = stateWidth;
       height = stateHeight;
 
@@ -997,6 +1009,7 @@ function rgbToLab(r,g,b) {
     }
 
     function newFlickgame() {
+      if (isMobilePortraitTouch) mobileFillCanvasSize();
       var w = width;
       var h = height;
       var emptyCanvasRle = [w * h, "0"];
@@ -1307,7 +1320,7 @@ function rgbToLab(r,g,b) {
       return Math.floor(Math.random() * (max - min)) + min;
     }
     var width = 160;
-    var height = 100;
+    var height = 120;
     var zoomFactor = 4;
     var radius = 5;
 
@@ -1865,7 +1878,10 @@ function rgbToLab(r,g,b) {
         var mobileSwatchGrid = document.getElementById('mobile-swatch-grid');
         if (isMobilePortraitTouch) {
           if (canvas && mobileCanvasContainer) mobileCanvasContainer.appendChild(canvas);
-          if (slider && mobileSliderContainer) { mobileSliderContainer.appendChild(slider); slider.className = 'brush-size-slider horizontal'; }
+          if (slider && mobileSliderContainer) {
+            mobileSliderContainer.appendChild(slider);
+            slider.className = 'brush-size-slider horizontal' + (radius > 0 ? ' selected' : '');
+          }
           if (swatchContainer && mobileSwatchGrid) mobileSwatchGrid.appendChild(swatchContainer);
           hideFramePicker();
           if (burgerDlg) { burgerDlg.classList.remove('visible'); burgerDlg.setAttribute('aria-hidden', 'true'); }
@@ -1873,14 +1889,21 @@ function rgbToLab(r,g,b) {
         } else {
           zoomFactor = 4;
           if (canvas && desktopCanvasContainer) desktopCanvasContainer.appendChild(canvas);
-          if (slider && desktopSliderContainer) { desktopSliderContainer.appendChild(slider); slider.className = 'brush-size-slider vertical'; }
+          if (slider && desktopSliderContainer) {
+            desktopSliderContainer.appendChild(slider);
+            slider.className = 'brush-size-slider vertical' + (radius > 0 ? ' selected' : '');
+          }
           if (swatchContainer && desktopSwatchCell) desktopSwatchCell.appendChild(swatchContainer);
           hideFramePicker();
           if (burgerDlg) { burgerDlg.classList.remove('visible'); burgerDlg.setAttribute('aria-hidden', 'true'); }
         }
         pointerModeBtn = isMobilePortraitTouch ? document.getElementById('mobile-pointer-btn') : document.getElementById('pointer_mode_btn');
         if (pointerModeBtn) pointerModeBtn.setAttribute('class', pointerMode ? 'radius selected' : 'radius');
-        if (brushSizeSliderElem) updateBrushSliderUI(radius > 0 ? radius : lastBrushSize);
+        if (brushSizeSliderElem) {
+          updateBrushSliderUI(radius > 0 ? radius : lastBrushSize);
+          if (radius > 0) brushSizeSliderElem.classList.add('selected');
+          else brushSizeSliderElem.classList.remove('selected');
+        }
       };
       window.onLayoutModeChange();
     }
@@ -2132,20 +2155,21 @@ function rgbToLab(r,g,b) {
     function mouseDown(e) {
       e = e || window.event;
 
-      // Pointer mode: click follows links
-      if (pointerMode && !ptrTouchMode) {
+      if (pointerMode) {
         e.preventDefault();
-        var coords = getCoords(e);
-        if (coords === null) return !1;
-        var x = Math.floor(coords[0] / zoomFactor);
-        var y = Math.floor(coords[1] / zoomFactor);
-        if (x >= 0 && x < width && y >= 0 && y < height) {
-          var ci = canvasses[canvasIndex][x + width * y];
-          var target = hyperlinks[canvasIndex][ci];
-          if (target > 0) {
-            setLayer(target);
-            // Update cursor for the new page's content under the mouse
-            updateCursor(e);
+        if (!ptrTouchMode) {
+          var coords = getCoords(e);
+          if (coords !== null) {
+            var x = Math.floor(coords[0] / zoomFactor);
+            var y = Math.floor(coords[1] / zoomFactor);
+            if (x >= 0 && x < width && y >= 0 && y < height) {
+              var ci = canvasses[canvasIndex][x + width * y];
+              var target = hyperlinks[canvasIndex][ci];
+              if (target > 0) {
+                setLayer(target);
+                updateCursor(e);
+              }
+            }
           }
         }
         return !1;
@@ -2236,8 +2260,9 @@ function rgbToLab(r,g,b) {
 
     function updateCursor(e) {
       if (pointerMode) {
-        // Switch back from touch mode on real mouse movement
-        if (ptrTouchMode && (e.movementX !== 0 || e.movementY !== 0)) {
+        // Switch back from touch mode only on real mouse/pen movement (not touch)
+        var isMouseOrPen = e.pointerType === 'mouse' || e.pointerType === 'pen';
+        if (ptrTouchMode && isMouseOrPen && (e.movementX !== 0 || e.movementY !== 0)) {
           if (Date.now() - ptrLastTouchTime > 500) {
             ptrTouchMode = false;
             ptrCursorVisible = false;
@@ -2692,6 +2717,18 @@ body{
       pointer-events: none;
       line-height: 1;
     }
+    #mobile-swatch-grid #swatch-container .unselected,
+    #mobile-swatch-grid #swatch-container .selected {
+      container-type: size;
+    }
+    #mobile-swatch-grid #swatch-container .link-label {
+      font-size: clamp(14px, 5vmin, 28px);
+    }
+    @supports (font-size: 1cqi) {
+      #mobile-swatch-grid #swatch-container .link-label {
+        font-size: 38cqi;
+      }
+    }
 
     .page-picker {
       display: none;
@@ -2857,6 +2894,10 @@ body{
     body[data-layout="mobile"] #desktop-editor-wrapper {
       display: none;
     }
+    body[data-layout="mobile"] {
+      touch-action: none;
+      overflow: hidden;
+    }
     body[data-layout="mobile"] #mobile-editor-wrapper {
       display: flex;
       flex-direction: column;
@@ -2865,6 +2906,7 @@ body{
       max-height: 100vh;
       max-height: 100dvh;
       overflow: hidden;
+      touch-action: none;
       padding-top: env(safe-area-inset-top, 0);
       padding-bottom: env(safe-area-inset-bottom, 0);
       padding-left: env(safe-area-inset-left, 0);
@@ -2895,6 +2937,10 @@ body{
       width: 30px;
       height: 30px;
     }
+    #mobile-pointer-btn.selected img,
+    #mobile-pointer-btn img.selected {
+      border: 2px solid var(--selected-border-color);
+    }
     #mobile-canvas-container {
       display: flex;
       justify-content: center;
@@ -2903,6 +2949,7 @@ body{
       min-height: 80px;
       flex: 1 1 0;
       overflow: hidden;
+      touch-action: none;
     }
     #mobile-canvas-container canvas {
       max-width: 100%;

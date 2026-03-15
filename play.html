@@ -849,7 +849,7 @@ function getData(options) {
 function loadState(code) {
   gameState = JSON.parse(code);
   if (gameState.width === undefined) gameState.width = 160;
-  if (gameState.height === undefined) gameState.height = 100;
+  if (gameState.height === undefined) gameState.height = 120;
   if (typeof cursorX !== 'undefined') { cursorX = gameState.width / 2; cursorY = gameState.height / 2; }
   if (gameState.palette_name === undefined) {
       console.log("palette_name not defined, setting to dawnbringer-16");
@@ -1046,7 +1046,7 @@ function updateCursorHover() {
   var px = Math.floor(cursorX);
   var py = Math.floor(cursorY);
   var gw = gameState ? (gameState.width || 160) : 160;
-  var gh = gameState ? (gameState.height || 100) : 100;
+  var gh = gameState ? (gameState.height || 120) : 120;
   if (gameState && gameState.imageDats && px >= 0 && px < gw && py >= 0 && py < gh) {
     var ch = gameState.imageDats[currentIndex][px + gw * py];
     hoveredColorIndex = parseInt(ch, 16);
@@ -1146,7 +1146,7 @@ function touchEnd(e) {
     // It's a tap — activate hovered link
     if (hoveredIsLink && !animating) {
       var gw = gameState.width || 160;
-      var gh = gameState.height || 100;
+      var gh = gameState.height || 120;
       var px = Math.floor(cursorX);
       var py = Math.floor(cursorY);
       var ch = gameState.imageDats[currentIndex][px + gw * py];
@@ -1189,7 +1189,7 @@ function redraw(){
     mainCanvasCtx.msImageSmoothingEnabled = false;
 
     var gw = gameState.width || 160;
-    var gh = gameState.height || 100;
+    var gh = gameState.height || 120;
     var w = mainCanvasCtx.width;
     var h = mainCanvasCtx.height;
     var wd = w / gw;
@@ -1244,7 +1244,7 @@ function redraw(){
 
   function printNonZeros(a,stack){
     var gw = gameState.width || 160;
-    var gh = gameState.height || 100;
+    var gh = gameState.height || 120;
     var count=0;
     for (var i=0;i<gw;i++){
       for (var j=0;j<gh;j++){
@@ -1260,7 +1260,7 @@ function redraw(){
 
   function calcHeatmap(cal,col,fromCal){
     var gw = gameState.width || 160;
-    var gh = gameState.height || 100;
+    var gh = gameState.height || 120;
     var map = []
     var stack = []
     var c = hex[col]
@@ -1334,7 +1334,7 @@ function redraw(){
 
   function generateParticleMotions(sourceCanvas,targetHeatMap,colIndex,particles,reverse){
     var gw = gameState.width || 160;
-    var gh = gameState.height || 100;
+    var gh = gameState.height || 120;
     if (reverse){
       var c = hex[colIndex];
       for (var i=0;i<gw;i++){
@@ -1369,7 +1369,7 @@ function redraw(){
 
   function generateFrame(sourceImage,particleMap,progress){
     var gw = gameState.width || 160;
-    var gh = gameState.height || 100;
+    var gh = gameState.height || 120;
     var frame = [];
     for (var j=0;j<gh;j++){
       for (var i=0;i<gw;i++){
@@ -1487,7 +1487,7 @@ function redraw(){
     var coords = getCoords(e);
 
     var gw = gameState.width || 160;
-    var gh = gameState.height || 100;
+    var gh = gameState.height || 120;
     var w = mainCanvasCtx.width;
     var h = mainCanvasCtx.height;
     var wd = w / gw;
@@ -1610,7 +1610,7 @@ var imageCtxts = new Array();
 
 function printCanvas(descriptionString){
     var gw = gameState.width || 160;
-    var gh = gameState.height || 100;
+    var gh = gameState.height || 120;
     var canvas = document.createElement('canvas');
     canvas.width = gw;
     canvas.height = gh;
