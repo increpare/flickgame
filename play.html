@@ -1029,11 +1029,12 @@ function drawCursor() {
       } else {
         mainCanvasCtx.fillStyle = outlineColor;
       }
-      mainCanvasCtx.fillRect(
-        screenX + x * zoom,
-        screenY + y * zoom,
-        zoom, zoom
-      );
+      // Snap to integer coords to avoid subpixel gaps between pixels
+      var rx = Math.floor(screenX + x * zoom);
+      var ry = Math.floor(screenY + y * zoom);
+      var rw = Math.floor(screenX + (x + 1) * zoom) - rx;
+      var rh = Math.floor(screenY + (y + 1) * zoom) - ry;
+      mainCanvasCtx.fillRect(rx, ry, rw, rh);
     }
   }
 }
