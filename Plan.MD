@@ -1,3 +1,5 @@
+SCOPE: THIS ONLY APPLIES TO index.html/play.html - that's all we care about right now.
+
 Right now we have a split interface - you can select what colour you're going to draw with by clicking on that colours buttons. Underneath each colour is a dropdown where you can say what it should hyperlink to.  
 
 Better would be to unify both of these - instead of a list of palette colour swatches over a list of dropdowns, we have a single list of palette colour swatches, where you can see overlaid what the linked target page is (if any). Tap on an unselected colour swatch to select that colour for painting. If you tap on an already-selected colour, it brings up the dropdown to assign/clear a link to that colour for your page.
@@ -18,7 +20,7 @@ Better would be to unify both of these - instead of a list of palette colour swa
 
 1.D  IDEA: in the dropdown for selecting links for colours, show a thunbmail for the image you're linking to to the left of its index. Is this even possible? IIRC dropdowns are very restricted in terms of how you can style them.
 
-1.E save state to localstorage and automatically load it. Add a 'new flickgame' button to the right of the paste button (use 'new_flickgame.png' as the icon)
+1.E save state to localstorage and automatically load it if it exists when you load a page. Add a 'new flickgame' button to the right of the paste button (use 'new_flickgame.png' as the icon)
 
 STEP 2: figure out a good structure for having two parallel interfaces depending on whether on mobile(touchscreen/portrait) or desktop.
 

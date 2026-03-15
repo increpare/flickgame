@@ -26,6 +26,7 @@
 
     var shareLinkInner = null;
 
+    var FLICKGAME_STORAGE_KEY = "flickgame_editor_state";
 
 var colorNames = {
   antiquity16: [
@@ -909,6 +910,47 @@ function rgbToLab(r,g,b) {
       }
       hyperlinks = state.hyperlinks;
 
+      // Clear undo so we don't restore pre-load state (e.g. empty init) when undoing
+      undoList.length = 0;
+    }
+
+    function saveFlickgameState() {
+      if (typeof window.localStorage !== "undefined") {
+        try {
+          window.localStorage.setItem(FLICKGAME_STORAGE_KEY, stateToString());
+        } catch (e) {}
+      }
+    }
+
+    function loadFlickgameState() {
+      if (typeof window.localStorage === "undefined") return null;
+      try {
+        return window.localStorage.getItem(FLICKGAME_STORAGE_KEY);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function newFlickgame() {
+      var emptyCanvasRle = [width * height, "0"];
+      var emptyState = {
+        gameLink: gameLink,
+        activeIndex: 0,
+        canvasses: [emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle],
+        palette_name: "dawnbringer-16",
+        background_color: "#000000",
+        foreground_color: "#ffffff",
+        version: version,
+        hyperlinks: []
+      };
+      for (var i = 0; i < 16; i++) {
+        emptyState.hyperlinks[i] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+      }
+      stringToState(JSON.stringify(emptyState));
+      setVisuals(true);
+      setLayer(1);
+      setDropdowns();
+      saveFlickgameState();
     }
 
     document.addEventListener("keydown", press);
@@ -971,6 +1013,7 @@ function rgbToLab(r,g,b) {
           changeBackgroundColor(dat.background_color,false);
         }
         setLayer(dat.canvasIndex + 1,true);
+        saveFlickgameState();
 
         if (shareLinkInner !== null) {
           shareLinkInner.style.color = "gray";
@@ -995,6 +1038,7 @@ function rgbToLab(r,g,b) {
         hyperlinks[canvasIndex] = JSON.parse(copyLinks);
         setVisuals();
         setDropdowns();
+        saveFlickgameState();
       }
     }
 
@@ -1470,11 +1514,24 @@ function rgbToLab(r,g,b) {
 
 
       if (getDataIndex()===false){
-        //set random color palette for fun
-        var palette_names = Object.keys(palettes);
-        var random_palette_name = palette_names[Math.floor(Math.random() * palette_names.length)];
-        set_color_palette(random_palette_name,false);
-        setVisuals(true);
+        var saved = loadFlickgameState();
+        if (saved) {
+          try {
+            stringToState(saved);
+            setVisuals(true);
+            setLayer(canvasIndex + 1);
+            setDropdowns();
+          } catch (err) {
+            saved = null;
+          }
+        }
+        if (!saved) {
+          //set random color palette for fun
+          var palette_names = Object.keys(palettes);
+          var random_palette_name = palette_names[Math.floor(Math.random() * palette_names.length)];
+          set_color_palette(random_palette_name,false);
+          setVisuals(true);
+        }
       }
     }
 
@@ -1501,6 +1558,7 @@ function rgbToLab(r,g,b) {
           setVisuals(true);
           setLayer(canvasIndex + 1);          
           setDropdowns();
+          saveFlickgameState();
         }
         r.readAsText(f);
       } else {
@@ -1517,6 +1575,8 @@ function rgbToLab(r,g,b) {
           stringToState(code);
           setVisuals(true);
           setLayer(canvasIndex + 1);
+          setDropdowns();
+          saveFlickgameState();
         },
         onError: function(message) {
           alert(message);
@@ -1526,6 +1586,8 @@ function rgbToLab(r,g,b) {
           stringToState(code);
           setVisuals(true);
           setLayer(canvasIndex + 1);
+          setDropdowns();
+          saveFlickgameState();
         }
       });
     }
@@ -1754,6 +1816,7 @@ function rgbToLab(r,g,b) {
 
       if (window.onbeforeunload === null) {
         window.onbeforeunload = function () {
+          saveFlickgameState();
           return true;
         };
       }
@@ -2525,6 +2588,10 @@ body{
                           <a href="#" onclick="doPaste();return false;"><img src="SVG/paste.svg"
                               title="paste from clipboard (V)" alt="paste from clipboard" class="toolbar"
                               id="toolbar_paste" /></a>
+                          &nbsp;
+                          <a href="#" onclick="newFlickgame();return false;"><img src="new_flickgame.png"
+                              title="new flickgame" alt="new flickgame" class="toolbar"
+                              id="toolbar_new" /></a>
                         </span>
                         <br />
                       </center>
