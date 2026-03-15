@@ -946,55 +946,34 @@ var lastTouchY = 0;
 var dx = 0;
 var dy = 0;
 
-// Sprite data (populated by loadPointerSprites)
-var pointerArrow = null;   // 2D array: pointerArrow[y][x] = 0|1|2
-var pointerHand = null;    // 2D array: pointerHand[y][x] = 0|1|2
+// Sprite data: 2D arrays of pixel type (0=transparent, 1=white/fill, 2=black/outline)
+// pointer.png (5x8, arrow cursor, hotspot at 0,0)
+var pointerArrow = [
+  [2,0,0,0,0],
+  [2,2,0,0,0],
+  [2,1,2,0,0],
+  [2,1,1,2,0],
+  [2,1,1,1,2],
+  [2,1,2,2,2],
+  [2,2,0,0,0],
+  [2,0,0,0,0]
+];
 var POINTER_ARROW_W = 5, POINTER_ARROW_H = 8;
+
+// pointer_hand.png (8x10, hand cursor, hotspot at 4,0)
+var pointerHand = [
+  [0,0,0,2,0,0,0,0],
+  [0,0,2,1,2,0,0,0],
+  [0,0,2,1,2,0,0,0],
+  [0,0,2,1,2,2,0,0],
+  [0,2,2,1,2,1,2,0],
+  [2,1,2,1,1,1,1,2],
+  [2,1,1,1,1,1,1,2],
+  [0,2,1,1,1,1,1,2],
+  [0,0,2,1,1,1,2,0],
+  [0,0,2,2,2,2,0,0]
+];
 var POINTER_HAND_W = 8, POINTER_HAND_H = 10;
-
-function loadPointerSprites() {
-  function parseSprite(img, w, h) {
-    var c = document.createElement('canvas');
-    c.width = w;
-    c.height = h;
-    var ctx = c.getContext('2d');
-    ctx.drawImage(img, 0, 0);
-    var data = ctx.getImageData(0, 0, w, h).data;
-    var result = [];
-    for (var y = 0; y < h; y++) {
-      var row = [];
-      for (var x = 0; x < w; x++) {
-        var i = (y * w + x) * 4;
-        var a = data[i + 3];
-        if (a < 128) {
-          row.push(0); // transparent
-        } else {
-          var r = data[i], g = data[i+1], b = data[i+2];
-          // white if brightness > 128, black otherwise
-          if (r + g + b > 384) {
-            row.push(1); // white (fill)
-          } else {
-            row.push(2); // black (outline)
-          }
-        }
-      }
-      result.push(row);
-    }
-    return result;
-  }
-
-  var arrowImg = new Image();
-  arrowImg.onload = function() {
-    pointerArrow = parseSprite(arrowImg, POINTER_ARROW_W, POINTER_ARROW_H);
-  };
-  arrowImg.src = 'pointer.png';
-
-  var handImg = new Image();
-  handImg.onload = function() {
-    pointerHand = parseSprite(handImg, POINTER_HAND_W, POINTER_HAND_H);
-  };
-  handImg.src = 'pointer_hand.png';
-}
 
 function hexToRgb(hex) {
   var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -1010,18 +989,16 @@ function drawCursor() {
 
   var sprite, spriteW, spriteH, hotspotX;
 
-  if (hoveredIsLink && pointerHand) {
+  if (hoveredIsLink) {
     sprite = pointerHand;
     spriteW = POINTER_HAND_W;
     spriteH = POINTER_HAND_H;
     hotspotX = 4;
-  } else if (pointerArrow) {
+  } else {
     sprite = pointerArrow;
     spriteW = POINTER_ARROW_W;
     spriteH = POINTER_ARROW_H;
     hotspotX = 0;
-  } else {
-    return; // sprites not loaded yet
   }
 
   var px = Math.floor(cursorX);
@@ -1595,7 +1572,6 @@ function init(){
 
   redraw();
 
-  loadPointerSprites();
   get_page_data();
 
 }
