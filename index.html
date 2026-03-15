@@ -1171,7 +1171,21 @@ function rgbToLab(r,g,b) {
     }
 
 
-    function setColor(newColorIndex) {
+    function setColor(newColorIndex, e) {
+      if (newColorIndex === colorIndex && e) {
+        // Already selected and clicked from swatch — toggle page picker
+        e.stopPropagation();
+        if (pagePickerColorIdx === colorIndex) {
+          hidePagePicker();
+        } else {
+          showPagePicker(colorIndex);
+        }
+        return;
+      }
+
+      // Hide any open picker when switching colors
+      hidePagePicker();
+
       colorIndex = newColorIndex;
       for (var i = 0; i < 16; i++) {
         if (colorElem[i] !== null) {
@@ -2261,82 +2275,82 @@ body{
                 <table style="border:2px solid gray; margin-top:2px; margin-left:3px;" margin="0">
                   <tr height="16">
                     <td>
-                      <a href="#" onclick="setColor(0);return false;">
+                      <a href="#" onclick="setColor(0, event);return false;">
                         <div class="unselected" id="color_0"><span class="link-label"></span></div>
                       </a>
                     </td>
                     <td>
-                      <a href="#" onclick="setColor(1);return false;">
+                      <a href="#" onclick="setColor(1, event);return false;">
                         <div class="unselected" id="color_1"><span class="link-label"></span></div>
                       </a>
                     </td>
                     <td>
-                      <a href="#" onclick="setColor(2);return false;">
+                      <a href="#" onclick="setColor(2, event);return false;">
                         <div class="selected" id="color_2"><span class="link-label"></span></div>
                       </a>
                     </td>
                     <td>
-                      <a href="#" onclick="setColor(3);return false;">
+                      <a href="#" onclick="setColor(3, event);return false;">
                         <div class="unselected" id="color_3"><span class="link-label"></span></div>
                       </a>
                     </td>
                     <td>
-                      <a href="#" onclick="setColor(4);return false;">
+                      <a href="#" onclick="setColor(4, event);return false;">
                         <div class="unselected" id="color_4"><span class="link-label"></span></div>
                       </a>
                     </td>
                     <td>
-                      <a href="#" onclick="setColor(5);return false;">
+                      <a href="#" onclick="setColor(5, event);return false;">
                         <div class="unselected" id="color_5"><span class="link-label"></span></div>
                       </a>
                     </td>
                     <td>
-                      <a href="#" onclick="setColor(6);return false;">
+                      <a href="#" onclick="setColor(6, event);return false;">
                         <div class="unselected" id="color_6"><span class="link-label"></span></div>
                       </a>
                     </td>
                     <td>
-                      <a href="#" onclick="setColor(7);return false;">
+                      <a href="#" onclick="setColor(7, event);return false;">
                         <div class="unselected" id="color_7"><span class="link-label"></span></div>
                       </a>
                     </td>
                     <td>
-                      <a href="#" onclick="setColor(8);return false;">
+                      <a href="#" onclick="setColor(8, event);return false;">
                         <div class="unselected" id="color_8"><span class="link-label"></span></div>
                       </a>
                     </td>
                     <td>
-                      <a href="#" onclick="setColor(9);return false;">
+                      <a href="#" onclick="setColor(9, event);return false;">
                         <div class="unselected" id="color_9"><span class="link-label"></span></div>
                       </a>
                     </td>
                     <td>
-                      <a href="#" onclick="setColor(10);return false;">
+                      <a href="#" onclick="setColor(10, event);return false;">
                         <div class="unselected" id="color_10"><span class="link-label"></span></div>
                       </a>
                     </td>
                     <td>
-                      <a href="#" onclick="setColor(11);return false;">
+                      <a href="#" onclick="setColor(11, event);return false;">
                         <div class="unselected" id="color_11"><span class="link-label"></span></div>
                       </a>
                     </td>
                     <td>
-                      <a href="#" onclick="setColor(12);return false;">
+                      <a href="#" onclick="setColor(12, event);return false;">
                         <div class="unselected" id="color_12"><span class="link-label"></span></div>
                       </a>
                     </td>
                     <td>
-                      <a href="#" onclick="setColor(13);return false;">
+                      <a href="#" onclick="setColor(13, event);return false;">
                         <div class="unselected" id="color_13"><span class="link-label"></span></div>
                       </a>
                     </td>
                     <td>
-                      <a href="#" onclick="setColor(14);return false;">
+                      <a href="#" onclick="setColor(14, event);return false;">
                         <div class="unselected" id="color_14"><span class="link-label"></span></div>
                       </a>
                     </td>
                     <td>
-                      <a href="#" onclick="setColor(15);return false;">
+                      <a href="#" onclick="setColor(15, event);return false;">
                         <div class="unselected" id="color_15"><span class="link-label"></span></div>
                       </a>
                     </td>
