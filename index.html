@@ -751,10 +751,12 @@ function rgbToLab(r,g,b) {
     function printUnauthorized() {
 
       var authUrl = getAuthURL();
-      var toPrint = "<a target=\"_blank\" href=\"" + authUrl + "\">Log in with Github to share</a><br>";
+      var toPrint = "<a target=\"_blank\" href=\"" + authUrl + "\">Log in with Github to share</a>";
 
       var shareLink = document.getElementById("shareLink");
-      shareLink.innerHTML = toPrint;
+      if (shareLink) shareLink.innerHTML = toPrint;
+      var burgerShare = document.getElementById("burger-share-result");
+      if (burgerShare) burgerShare.innerHTML = toPrint;
       shareLinkInner = null;
     }
 
@@ -763,9 +765,11 @@ function rgbToLab(r,g,b) {
     function githubLogOut() {
       window.localStorage.removeItem("oauth_access_token");
       var authUrl = getAuthURL();
-      var toPrint = "Logged out of Github.<br>";
+      var toPrint = "Logged out of Github.";
       var shareLink = document.getElementById("shareLink");
-      shareLink.innerHTML = toPrint;
+      if (shareLink) shareLink.innerHTML = toPrint;
+      var burgerShare = document.getElementById("burger-share-result");
+      if (burgerShare) burgerShare.innerHTML = toPrint;
       shareLinkInner = null;
     }
 
@@ -815,10 +819,12 @@ function rgbToLab(r,g,b) {
         } else {
           var id = result.id;
           var url = qualifyURL("play.html?p=" + id);
+          var shareHtml = "<a target=\"_blank\" href=\"" + url + "\">&#8627;" + id + "</a> " +
+            '(<a onclick="githubLogOut();"  href="javascript:void(0);">log out of GitHub</a>)';
           var shareLink = document.getElementById("shareLink");
-          shareLink.innerHTML = "<a target=\"_blank\" href=\"" + url + "\">&#8627;" + id + "</a><br>" +
-            '(<a onclick="githubLogOut();"  href="javascript:void(0);">log out of GitHub</a>)<br>';
-          shareLinkInner = shareLink.childNodes[0];
+          if (shareLink) { shareLink.innerHTML = shareHtml; shareLinkInner = shareLink.childNodes[0]; }
+          var burgerShare = document.getElementById("burger-share-result");
+          if (burgerShare) burgerShare.innerHTML = shareHtml;
         }
       }
       githubHTTPClient.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -2912,7 +2918,7 @@ body{
       text-align: center;
       padding: 4px;
       color: #f88;
-      font-size: 11px;
+      font-size: 16px;
       cursor: pointer;
       border-top: 1px solid #444;
       margin-top: 2px;
@@ -3240,6 +3246,18 @@ body{
     }
     .burger-dialog-content .burger-dialog-btn:last-child {
       margin-bottom: 0;
+    }
+    .burger-share-result:empty {
+      display: none;
+    }
+    .burger-share-result {
+      margin: 6px 0;
+      padding: 6px 0;
+      word-break: break-all;
+      font-size: var(--burger-menu-font-size);
+    }
+    .burger-share-result a {
+      color: #7af;
     }
     .burger-dialog-content .burger-link-input {
       width: 100%;
@@ -3639,6 +3657,7 @@ body{
       <button type="button" class="burger-dialog-btn" onclick="newFlickgame();">🆕 New Flickgame</button>
       <button type="button" class="burger-dialog-btn" onclick="clearPalette();">🗑️ Clear page</button>
       <button type="button" class="burger-dialog-btn" onclick="shareClick();">📤 Share</button>
+      <div id="burger-share-result" class="burger-share-result"></div>
       <button type="button" class="burger-dialog-btn" onclick="document.getElementById('my_file').click();">📥 Import</button>
       <button type="button" class="burger-dialog-btn" onclick="exportClick();">💾 Export</button>
       <button type="button" class="burger-dialog-btn" onclick="window.open('help.html','_blank');">📖 Help</button>
