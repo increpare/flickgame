@@ -1176,17 +1176,28 @@ function rgbToLab(r,g,b) {
     }
 
     function updateSwatchLabels() {
+      var used = new Set();
+      if (canvasses[canvasIndex]) {
+        var canvas = canvasses[canvasIndex];
+        for (var k = 0; k < canvas.length; k++) used.add(canvas[k]);
+      }
       for (var i = 0; i < 16; i++) {
         var label = colorElem[i].querySelector('.link-label');
         if (!label) continue;
         var linkVal = hyperlinks[canvasIndex][i];
         if (linkVal > 0) {
           label.textContent = linkVal;
-          var dist_white = color_distance(colorPalette[i], "#ffffff");
-          var dist_black = color_distance(colorPalette[i], "#000000");
-          label.style.color = dist_white > dist_black ? "#ffffff" : "#000000";
+          if (used.has(i)) {
+            label.classList.remove('link-label-not-on-page');
+            var dist_white = color_distance(colorPalette[i], "#ffffff");
+            var dist_black = color_distance(colorPalette[i], "#000000");
+            label.style.color = dist_white > dist_black ? "#ffffff" : "#000000";
+          } else {
+            label.classList.add('link-label-not-on-page');
+          }
         } else {
           label.textContent = '';
+          label.classList.remove('link-label-not-on-page');
         }
       }
     }
@@ -1347,7 +1358,11 @@ function rgbToLab(r,g,b) {
     function isCanvasEmpty(idx) {
       var c = canvasses[idx];
       if (!c || !c.length) return true;
-      for (var i = 0; i < c.length; i++) if (c[i] !== 0) return false;
+      var first = c[0];
+      for (var i = 1; i < c.length; i++) if (c[i] !== first) return false;
+      var links = hyperlinks[idx];
+      if (!links) return true;
+      for (var j = 0; j < links.length; j++) if (links[j] !== 0) return false;
       return true;
     }
 
@@ -2277,6 +2292,7 @@ function rgbToLab(r,g,b) {
       //set body background
       // document.body.style.backgroundColor = background_colors[palette_name];
       updateUsedOnFrameIndicators();
+      updateSwatchLabels();
       drawPointerCursor();
       if (!isMobilePortraitTouch) updateLayerItemNumberStyles();
       updateMobileGridIconThumbnails();
@@ -3010,6 +3026,11 @@ body{
       font-weight: bold;
       pointer-events: none;
       line-height: 1;
+    }
+    .link-label.link-label-not-on-page {
+ /* for links that are not on the current page, can make the text red */
+      color: #c00 !important;
+      text-shadow: 0 0 2px #000;
     }
     #mobile-swatch-grid #swatch-container .unselected,
     #mobile-swatch-grid #swatch-container .selected {
