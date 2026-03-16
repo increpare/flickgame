@@ -1323,7 +1323,18 @@ function rgbToLab(r,g,b) {
         framePickerEl.style.left = Math.max(8, rect.left) + 'px';
         framePickerEl.style.top = (rect.bottom + 4) + 'px';
       }
+      var reachable = getReachableFromStart();
+      for (var i = 0; i < 16; i++) {
+        var item = framePickerEl.children[i];
+        if (!item) continue;
+        item.classList.remove('frame-picker-item-empty', 'frame-picker-item-unreachable');
+        var empty = isCanvasEmpty(i);
+        var unreachable = !empty && !reachable.has(i);
+        if (empty) item.classList.add('frame-picker-item-empty');
+        else if (unreachable) item.classList.add('frame-picker-item-unreachable');
+      }
       framePickerEl.classList.add('visible');
+      updateMobileGridIconThumbnails();
       updateGridIconHighlight();
     }
 
@@ -1391,6 +1402,25 @@ function rgbToLab(r,g,b) {
           }
         }
       }
+      var activeBorder = document.getElementById('mobile-grid-active-border');
+      if (activeBorder) {
+        var col = canvasIndex % 4, row = Math.floor(canvasIndex / 4);
+        activeBorder.setAttribute('x', 0.25 + col * 4);
+        activeBorder.setAttribute('y', 0.25 + row * 4);
+        activeBorder.setAttribute('width', 3.5);
+        activeBorder.setAttribute('height', 3.5);
+      }
+    }
+
+    function updateMobileGridIconThumbnails() {
+      for (var i = 0; i < 16; i++) {
+        var img = document.getElementById('mobile-grid-thumb-' + i);
+        if (!img || !thumbnailCanvas[i]) continue;
+        try {
+          var dataUrl = thumbnailCanvas[i].toDataURL('image/png');
+          img.setAttributeNS('http://www.w3.org/1999/xlink', 'href', dataUrl);
+        } catch (e) {}
+      }
     }
 
     function showPagePicker(colorIdx) {
@@ -1404,15 +1434,21 @@ function rgbToLab(r,g,b) {
         ctx.drawImage(thumbnailCanvas[i], 0, 0);
       }
 
-      // Highlight current target
+      // Highlight current target and apply layer state colours (empty / unreachable / reachable)
       var items = pagePickerEl.querySelectorAll('.page-picker-item');
       var currentTarget = hyperlinks[canvasIndex][colorIdx];
+      var reachable = getReachableFromStart();
       for (var i = 0; i < 16; i++) {
         if (currentTarget > 0 && i === currentTarget - 1) {
           items[i].classList.add('current-target');
         } else {
           items[i].classList.remove('current-target');
         }
+        items[i].classList.remove('page-picker-item-empty', 'page-picker-item-unreachable');
+        var empty = isCanvasEmpty(i);
+        var unreachable = !empty && !reachable.has(i);
+        if (empty) items[i].classList.add('page-picker-item-empty');
+        else if (unreachable) items[i].classList.add('page-picker-item-unreachable');
       }
 
       // Position relative to the swatch
@@ -2241,6 +2277,7 @@ function rgbToLab(r,g,b) {
       updateUsedOnFrameIndicators();
       drawPointerCursor();
       if (!isMobilePortraitTouch) updateLayerItemNumberStyles();
+      updateMobileGridIconThumbnails();
     }
 
 
@@ -3033,7 +3070,13 @@ body{
 
     .page-picker-label {
       font-size: 20px;
-      color: #aaa;
+      color: #fff;
+    }
+    .page-picker-item.page-picker-item-empty .page-picker-label {
+      color: #888;
+    }
+    .page-picker-item.page-picker-item-unreachable .page-picker-label {
+      color: #c00;
     }
 
     .page-picker-clear {
@@ -3454,7 +3497,13 @@ body{
     }
     .frame-picker-label {
       font-size: 20px;
-      color: #aaa;
+      color: #fff;
+    }
+    .frame-picker-item.frame-picker-item-empty .frame-picker-label {
+      color: #888;
+    }
+    .frame-picker-item.frame-picker-item-unreachable .frame-picker-label {
+      color: #c00;
     }
     .mobile-swatch-grid {
       padding: 8px 12px 12px;
@@ -3754,7 +3803,7 @@ body{
   <div id="mobile-editor-wrapper">
     <div class="mobile-toolbar-top">
       <button type="button" id="mobile-frame-btn" class="mobile-grid-tab" aria-label="Pages">
-        <svg id="mobile-grid-icon" class="toolbar grid-icon-svg" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" alt="frame">
+        <svg id="mobile-grid-icon" class="toolbar grid-icon-svg" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" alt="frame">
           <rect class="grid-cell" id="grid-cell-0"  x="0.25" y="0.25" width="3.5" height="3.5" />
           <rect class="grid-cell" id="grid-cell-1"  x="4.25" y="0.25" width="3.5" height="3.5" />
           <rect class="grid-cell" id="grid-cell-2"  x="8.25" y="0.25" width="3.5" height="3.5" />
@@ -3771,6 +3820,23 @@ body{
           <rect class="grid-cell" id="grid-cell-13" x="4.25" y="12.25" width="3.5" height="3.5" />
           <rect class="grid-cell" id="grid-cell-14" x="8.25" y="12.25" width="3.5" height="3.5" />
           <rect class="grid-cell" id="grid-cell-15" x="12.25" y="12.25" width="3.5" height="3.5" />
+          <image id="mobile-grid-thumb-0"  x="0.25" y="0.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
+          <image id="mobile-grid-thumb-1"  x="4.25" y="0.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
+          <image id="mobile-grid-thumb-2"  x="8.25" y="0.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
+          <image id="mobile-grid-thumb-3"  x="12.25" y="0.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
+          <image id="mobile-grid-thumb-4"  x="0.25" y="4.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
+          <image id="mobile-grid-thumb-5"  x="4.25" y="4.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
+          <image id="mobile-grid-thumb-6"  x="8.25" y="4.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
+          <image id="mobile-grid-thumb-7"  x="12.25" y="4.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
+          <image id="mobile-grid-thumb-8"  x="0.25" y="8.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
+          <image id="mobile-grid-thumb-9"  x="4.25" y="8.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
+          <image id="mobile-grid-thumb-10" x="8.25" y="8.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
+          <image id="mobile-grid-thumb-11" x="12.25" y="8.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
+          <image id="mobile-grid-thumb-12" x="0.25" y="12.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
+          <image id="mobile-grid-thumb-13" x="4.25" y="12.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
+          <image id="mobile-grid-thumb-14" x="8.25" y="12.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
+          <image id="mobile-grid-thumb-15" x="12.25" y="12.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
+          <rect id="mobile-grid-active-border" x="0.25" y="0.25" width="3.5" height="3.5" fill="none" stroke="white" stroke-width="0.25"/>
         </svg>
       </button>
       <div class="mobile-toolbar-top-inner">
