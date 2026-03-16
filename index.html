@@ -379,19 +379,20 @@ function rgbToLab(r,g,b) {
   };
 }
 
+  /** Shared hex-to-RGB parser. Validates with regex; returns { r, g, b } or { r:0, g:0, b:0 } for invalid input. */
+  function hexToRgb(hex) {
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result
+      ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) }
+      : { r: 0, g: 0, b: 0 };
+  }
+
   function color_distance(color1, color2) {
-    // Convert hex colors to RGB
-    const r1 = parseInt(color1.slice(1,3), 16);
-    const g1 = parseInt(color1.slice(3,5), 16);
-    const b1 = parseInt(color1.slice(5,7), 16);
-    
-    const r2 = parseInt(color2.slice(1,3), 16);
-    const g2 = parseInt(color2.slice(3,5), 16);
-    const b2 = parseInt(color2.slice(5,7), 16);
-    
+    var c1 = hexToRgb(color1);
+    var c2 = hexToRgb(color2);
     // Convert to LAB
-    const lab1 = rgbToLab(r1, g1, b1);
-    const lab2 = rgbToLab(r2, g2, b2);
+    var lab1 = rgbToLab(c1.r, c1.g, c1.b);
+    var lab2 = rgbToLab(c2.r, c2.g, c2.b);
     
     // Calculate Delta E using the CIE76 formula
     const deltaL = lab1.L - lab2.L;
@@ -1227,92 +1228,83 @@ function rgbToLab(r,g,b) {
       bgColorSelect.value = bg_color_idx;
     }
 
-    function createPagePicker() {
+    function createGenericPicker(type, onItemClick, options) {
+      options = options || {};
+      var onClearClick = options.onClearClick;
+      var clearButtonText = options.clearButtonText || '\u2715 clear';
+      var pickerId = options.pickerId;
+      var dataAttr = type.replace('-picker', '');
+
       var picker = document.createElement('div');
-      picker.className = 'page-picker';
+      picker.className = type;
+      if (pickerId) picker.id = pickerId;
 
       for (var i = 0; i < 16; i++) {
         var item = document.createElement('div');
-        item.className = 'page-picker-item';
-        item.setAttribute('data-page', i + 1);
+        item.className = type + '-item';
+        item.setAttribute('data-' + dataAttr, i + 1);
 
         var thumb = document.createElement('canvas');
         thumb.width = getThumbCols();
         thumb.height = getThumbRows();
-        thumb.className = 'page-picker-thumb';
+        thumb.className = type + '-thumb';
         item.appendChild(thumb);
 
         var label = document.createElement('span');
-        label.className = 'page-picker-label';
+        label.className = type + '-label';
         label.textContent = i + 1;
         item.appendChild(label);
 
-        (function(pageNum) {
+        (function(idx) {
           item.addEventListener('click', function(e) {
             e.stopPropagation();
-            hyperlinks[canvasIndex][pagePickerColorIdx] = pageNum;
-            hidePagePicker();
-            updateSwatchLabels();
-            refreshPointerModeCursor();
-            updateLayerItemNumberStyles();
+            onItemClick(e, idx);
           });
         })(i + 1);
 
         picker.appendChild(item);
       }
 
-      var clearBtn = document.createElement('div');
-      clearBtn.className = 'page-picker-clear';
-      clearBtn.textContent = '\u2715 clear link';
-      clearBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        hyperlinks[canvasIndex][pagePickerColorIdx] = 0;
-        hidePagePicker();
-        updateSwatchLabels();
-        refreshPointerModeCursor();
-        updateLayerItemNumberStyles();
-      });
-      picker.appendChild(clearBtn);
+      if (onClearClick) {
+        var clearBtn = document.createElement('div');
+        clearBtn.className = type + '-clear';
+        clearBtn.textContent = clearButtonText;
+        clearBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          onClearClick(e);
+        });
+        picker.appendChild(clearBtn);
+      }
 
       document.body.appendChild(picker);
       return picker;
     }
 
+    function createPagePicker() {
+      return createGenericPicker('page-picker', function(e, pageNum) {
+        hyperlinks[canvasIndex][pagePickerColorIdx] = pageNum;
+        hidePagePicker();
+        updateSwatchLabels();
+        refreshPointerModeCursor();
+        updateLayerItemNumberStyles();
+      }, {
+        onClearClick: function(e) {
+          hyperlinks[canvasIndex][pagePickerColorIdx] = 0;
+          hidePagePicker();
+          updateSwatchLabels();
+          refreshPointerModeCursor();
+          updateLayerItemNumberStyles();
+        },
+        clearButtonText: '\u2715 clear link'
+      });
+    }
+
     var framePickerEl = null;
     function createFramePicker() {
-      var picker = document.createElement('div');
-      picker.className = 'frame-picker';
-      picker.id = 'frame-picker';
-
-      for (var i = 0; i < 16; i++) {
-        var item = document.createElement('div');
-        item.className = 'frame-picker-item';
-        item.setAttribute('data-frame', i + 1);
-
-        var thumb = document.createElement('canvas');
-        thumb.width = getThumbCols();
-        thumb.height = getThumbRows();
-        thumb.className = 'frame-picker-thumb';
-        item.appendChild(thumb);
-
-        var label = document.createElement('span');
-        label.className = 'frame-picker-label';
-        label.textContent = i + 1;
-        item.appendChild(label);
-
-        (function(frameNum) {
-          item.addEventListener('click', function(e) {
-            e.stopPropagation();
-            setLayer(frameNum);
-            hideFramePicker();
-          });
-        })(i + 1);
-
-        picker.appendChild(item);
-      }
-
-      document.body.appendChild(picker);
-      return picker;
+      return createGenericPicker('frame-picker', function(e, frameNum) {
+        setLayer(frameNum);
+        hideFramePicker();
+      }, { pickerId: 'frame-picker' });
     }
 
     function showFramePicker() {
@@ -1754,12 +1746,7 @@ function rgbToLab(r,g,b) {
     }
 
     function hexToRgbEditor(hex) {
-      var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-      return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-      } : {r: 0, g: 0, b: 0};
+      return hexToRgb(hex);
     }
 
     function ptrUpdateHover() {
@@ -2378,16 +2365,19 @@ function rgbToLab(r,g,b) {
       ptrLastTouchY = touch.clientY;
     }
 
+    function findActiveTouchInEvent(e) {
+      for (var i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === ptrActiveTouchId) {
+          return e.changedTouches[i];
+        }
+      }
+      return null;
+    }
+
     function ptrTouchMove(e) {
       if (!pointerMode) return;
       e.preventDefault();
-      var touch = null;
-      for (var i = 0; i < e.changedTouches.length; i++) {
-        if (e.changedTouches[i].identifier === ptrActiveTouchId) {
-          touch = e.changedTouches[i];
-          break;
-        }
-      }
+      var touch = findActiveTouchInEvent(e);
       if (!touch) return;
 
       var deltaX = touch.clientX - ptrLastTouchX;
@@ -2414,13 +2404,7 @@ function rgbToLab(r,g,b) {
     function ptrTouchEnd(e) {
       if (!pointerMode) return;
       e.preventDefault();
-      var touch = null;
-      for (var i = 0; i < e.changedTouches.length; i++) {
-        if (e.changedTouches[i].identifier === ptrActiveTouchId) {
-          touch = e.changedTouches[i];
-          break;
-        }
-      }
+      var touch = findActiveTouchInEvent(e);
       if (!touch) return;
 
       ptrActiveTouchId = null;
