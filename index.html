@@ -941,7 +941,7 @@ function rgbToLab(r,g,b) {
     }
 
     function updateMobileCanvasSize() {
-      if (!isMobilePortraitTouch) return;
+      if (!isMobileLayout()) return;
       var container = document.getElementById('mobile-canvas-container');
       if (!container || !visibleCanvas) return;
       var rect = container.getBoundingClientRect();
@@ -958,7 +958,7 @@ function rgbToLab(r,g,b) {
     }
 
     function mobileFillCanvasSize() {
-      if (!isMobilePortraitTouch) return;
+      if (!isMobileLayout()) return;
       var container = document.getElementById('mobile-canvas-container');
       if (!container) return;
       var rect = container.getBoundingClientRect();
@@ -1049,7 +1049,7 @@ function rgbToLab(r,g,b) {
 
     function newFlickgame() {
       var w, h;
-      if (isMobilePortraitTouch) {
+      if (isMobileLayout()) {
         mobileFillCanvasSize();
         w = width;
         h = height;
@@ -1081,7 +1081,7 @@ function rgbToLab(r,g,b) {
       setDropdowns();
       saveFlickgameState();
       requestAnimationFrame(function() {
-        if (isMobilePortraitTouch) updateMobileCanvasSize();
+        if (isMobileLayout()) updateMobileCanvasSize();
         else updateDesktopScale();
       });
     }
@@ -1549,22 +1549,28 @@ function rgbToLab(r,g,b) {
     var visibleContext;
     var linkInput;
 
-    // Mobile/desktop layout: portrait + touch => mobile UI
-    var isMobilePortraitTouch = false;
+    // Layout: desktop | mobile-portrait | mobile-landscape. Tablets (Surface, iPad) get desktop via viewport threshold.
+    var layoutMode = 'desktop';
+    var hasTouch = false;
     function updateLayoutMode() {
-      var portrait = window.matchMedia('(orientation: portrait)').matches;
       var touch = ('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
-      var next = portrait && touch;
-      if (next !== isMobilePortraitTouch) {
-        isMobilePortraitTouch = next;
-        document.body.setAttribute('data-layout', isMobilePortraitTouch ? 'mobile' : 'desktop');
+      hasTouch = touch;
+      var smallViewport = Math.min(window.innerWidth, window.innerHeight) < 768;
+      var portrait = window.matchMedia('(orientation: portrait)').matches;
+      var next = (touch && smallViewport) ? (portrait ? 'mobile-portrait' : 'mobile-landscape') : 'desktop';
+      if (next !== layoutMode) {
+        layoutMode = next;
+        document.body.setAttribute('data-layout', layoutMode);
         if (typeof onLayoutModeChange === 'function') onLayoutModeChange();
       }
+    }
+    function isMobileLayout() {
+      return layoutMode === 'mobile-portrait' || layoutMode === 'mobile-landscape';
     }
 
     var DESKTOP_SCALE_PADDING = 24;
     function updateDesktopScale() {
-      if (isMobilePortraitTouch) return;
+      if (isMobileLayout()) return;
       var inner = document.getElementById('desktop-editor-inner');
       if (!inner) return;
       inner.style.setProperty('--desktop-scale', '1');
@@ -1726,7 +1732,7 @@ function rgbToLab(r,g,b) {
         if (mobileBucketImg) mobileBucketImg.setAttribute("class", "radius");
         if (brushSizeSliderElem) brushSizeSliderElem.classList.remove("selected");
         visibleCanvas.style.cursor = "default";
-        if (isMobilePortraitTouch) {
+        if (hasTouch) {
           ptrTouchMode = true;
           ptrCursorX = width / 2;
           ptrCursorY = height / 2;
@@ -1866,11 +1872,13 @@ function rgbToLab(r,g,b) {
       updateLayoutMode();
       window.addEventListener('resize', function() {
         updateLayoutMode();
-        if (!isMobilePortraitTouch) updateDesktopScale();
+        if (layoutMode === 'desktop') updateDesktopScale();
+        else updateMobileCanvasSize();
       });
       window.addEventListener('orientationchange', function() {
         updateLayoutMode();
-        if (!isMobilePortraitTouch) updateDesktopScale();
+        if (layoutMode === 'desktop') updateDesktopScale();
+        else updateMobileCanvasSize();
       });
 
       // Populate background color dropdown
@@ -2106,7 +2114,7 @@ function rgbToLab(r,g,b) {
       }
 
       window.addEventListener('resize', function() {
-        if (isMobilePortraitTouch) {
+        if (isMobileLayout()) {
           requestAnimationFrame(function() { updateMobileCanvasSize(); });
         }
       });
@@ -2121,11 +2129,11 @@ function rgbToLab(r,g,b) {
         var swatchContainer = document.getElementById('swatch-container');
         var desktopSwatchCell = document.getElementById('desktop-swatch-cell');
         var mobileSwatchGrid = document.getElementById('mobile-swatch-grid');
-        if (isMobilePortraitTouch) {
+        if (isMobileLayout()) {
           if (canvas && mobileCanvasContainer) mobileCanvasContainer.appendChild(canvas);
           if (slider && mobileSliderContainer) {
             mobileSliderContainer.appendChild(slider);
-            slider.className = 'brush-size-slider horizontal' + (radius > 0 ? ' selected' : '');
+            slider.className = 'brush-size-slider ' + (layoutMode === 'mobile-landscape' ? 'vertical' : 'horizontal') + (radius > 0 ? ' selected' : '');
           }
           if (swatchContainer && mobileSwatchGrid) mobileSwatchGrid.appendChild(swatchContainer);
           hideFramePicker();
@@ -2143,7 +2151,7 @@ function rgbToLab(r,g,b) {
           if (burgerDlg) { burgerDlg.classList.remove('visible'); burgerDlg.setAttribute('aria-hidden', 'true'); }
           requestAnimationFrame(function() { updateDesktopScale(); });
         }
-        pointerModeBtn = isMobilePortraitTouch ? document.getElementById('mobile-pointer-btn') : document.getElementById('pointer_mode_btn');
+        pointerModeBtn = isMobileLayout() ? document.getElementById('mobile-pointer-btn') : document.getElementById('pointer_mode_btn');
         if (pointerModeBtn) pointerModeBtn.setAttribute('class', pointerMode ? 'radius selected' : 'radius');
         if (brushSizeSliderElem) {
           updateBrushSliderUI(radius > 0 ? radius : lastBrushSize);
@@ -2180,7 +2188,7 @@ function rgbToLab(r,g,b) {
           setDropdowns();
           saveFlickgameState();
           requestAnimationFrame(function() {
-            if (isMobilePortraitTouch) updateMobileCanvasSize();
+            if (isMobileLayout()) updateMobileCanvasSize();
             else updateDesktopScale();
           });
         }
@@ -2202,7 +2210,7 @@ function rgbToLab(r,g,b) {
           setDropdowns();
           saveFlickgameState();
           requestAnimationFrame(function() {
-            if (isMobilePortraitTouch) updateMobileCanvasSize();
+            if (isMobileLayout()) updateMobileCanvasSize();
             else updateDesktopScale();
           });
         },
@@ -2217,7 +2225,7 @@ function rgbToLab(r,g,b) {
           setDropdowns();
           saveFlickgameState();
           requestAnimationFrame(function() {
-            if (isMobilePortraitTouch) updateMobileCanvasSize();
+            if (isMobileLayout()) updateMobileCanvasSize();
             else updateDesktopScale();
           });
         }
@@ -2281,7 +2289,7 @@ function rgbToLab(r,g,b) {
       updateUsedOnFrameIndicators();
       updateSwatchLabels();
       drawPointerCursor();
-      if (!isMobilePortraitTouch) updateLayerItemNumberStyles();
+      if (!isMobileLayout()) updateLayerItemNumberStyles();
       updateMobileGridIconThumbnails();
     }
 
@@ -3208,17 +3216,18 @@ body{
     #mobile-editor-wrapper {
       display: none;
     }
-    body[data-layout="mobile"] #desktop-editor-wrapper {
+    body[data-layout="mobile-portrait"] #desktop-editor-wrapper,
+    body[data-layout="mobile-landscape"] #desktop-editor-wrapper {
       display: none;
     }
     /* Desktop: scale editor to fit viewport proportionally, no page scroll */
-    body:not([data-layout="mobile"]) {
+    body[data-layout="desktop"] {
       overflow: hidden;
     }
-    html:has(body:not([data-layout="mobile"])) {
+    html:has(body[data-layout="desktop"]) {
       overflow: hidden;
     }
-    body:not([data-layout="mobile"]) #desktop-editor-wrapper {
+    body[data-layout="desktop"] #desktop-editor-wrapper {
       min-height: 100vh;
       min-height: 100dvh;
       width: 100%;
@@ -3228,18 +3237,20 @@ body{
       justify-content: center;
       box-sizing: border-box;
     }
-    body:not([data-layout="mobile"]) #desktop-editor-inner {
+    body[data-layout="desktop"] #desktop-editor-inner {
       width: max-content;
       height: max-content;
       transform: scale(var(--desktop-scale, 1));
       transform-origin: center center;
       flex-shrink: 0;
     }
-    body[data-layout="mobile"] {
+    body[data-layout="mobile-portrait"],
+    body[data-layout="mobile-landscape"] {
       touch-action: none;
       overflow: hidden;
     }
-    body[data-layout="mobile"] #mobile-editor-wrapper {
+    body[data-layout="mobile-portrait"] #mobile-editor-wrapper,
+    body[data-layout="mobile-landscape"] #mobile-editor-wrapper {
       display: flex;
       flex-direction: column;
       min-height: 100vh;
@@ -3252,6 +3263,70 @@ body{
       padding-bottom: env(safe-area-inset-bottom, 0);
       padding-left: env(safe-area-inset-left, 0);
       padding-right: env(safe-area-inset-right, 0);
+    }
+
+    /* Landscape mobile: left toolbar (vertical) | canvas | vertical palette | 4x4 colour grid */
+    body[data-layout="mobile-landscape"] #mobile-editor-wrapper {
+      flex-direction: row;
+      align-items: stretch;
+    }
+    body[data-layout="mobile-landscape"] .mobile-toolbar-top {
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 6px 4px;
+      gap: 6px;
+      flex-shrink: 0;
+      width: 56px;
+      min-width: 56px;
+      border-radius: 0 8px 8px 0;
+    }
+    body[data-layout="mobile-landscape"] .mobile-toolbar-top-inner {
+      flex-direction: column;
+      flex-wrap: nowrap;
+      gap: 4px;
+      padding: 4px;
+      order: 1;
+    }
+    body[data-layout="mobile-landscape"] #mobile-burger-btn { order: 1; }
+    body[data-layout="mobile-landscape"] #mobile-download-btn { order: 2; }
+    body[data-layout="mobile-landscape"] #mobile-paste-btn { order: 3; }
+    body[data-layout="mobile-landscape"] #mobile-copy-btn { order: 4; }
+    body[data-layout="mobile-landscape"] .mobile-toolbar-btn {
+      width: 44px;
+      height: 44px;
+    }
+    body[data-layout="mobile-landscape"] .mobile-grid-tab {
+      order: 2;
+      width: 48px;
+      height: 48px;
+      border-width: 4px;
+    }
+    body[data-layout="mobile-landscape"] .mobile-toolbar-top img,
+    body[data-layout="mobile-landscape"] .mobile-toolbar-top svg {
+      width: 28px;
+      height: 28px;
+    }
+    body[data-layout="mobile-landscape"] #mobile-canvas-wrapper {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+    body[data-layout="mobile-landscape"] .mobile-toolbar-bottom {
+      flex-direction: column;
+      justify-content: flex-start;
+      padding: 6px 4px;
+      gap: 6px;
+      flex-shrink: 0;
+      width: 52px;
+      min-width: 52px;
+      border-radius: 8px 0 0 8px;
+    }
+    body[data-layout="mobile-landscape"] .mobile-toolbar-bottom-icons {
+      flex-direction: column;
+    }
+    body[data-layout="mobile-landscape"] .mobile-toolbar-bottom img {
+      width: 26px;
+      height: 26px;
     }
 
     .mobile-toolbar-top {
@@ -3557,6 +3632,33 @@ body{
       height: 100%;
       box-sizing: border-box;
     }
+    /* Landscape mobile: same as portrait but rotated – portrait is 320×~160 (4 cols, 2:1 cells); rotated = 160 wide, full height */
+    body[data-layout="mobile-landscape"] .mobile-swatch-grid {
+      padding: 8px 6px 8px 8px;
+      flex: 0 0 auto;
+      align-self: stretch;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      width: 160px;
+      min-width: 160px;
+      max-width: 160px;
+      margin: 0;
+      min-height: 0;
+    }
+    body[data-layout="mobile-landscape"] #mobile-swatch-grid #swatch-container {
+      display: grid;
+      grid-template-rows: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+      width: 160px;
+      flex-shrink: 0;
+    }
+    body[data-layout="mobile-landscape"] #mobile-swatch-grid #swatch-container > a {
+      aspect-ratio: 1 / 2;
+      min-height: 24px;
+      max-height: 72px;
+    }
     #burger-bg-select {
       height: 30px;
     }
@@ -3567,7 +3669,7 @@ body{
   </title>
 </head>
 
-<body onload="init();" ondragstart="return false;" ondrop="return false;">
+<body data-layout="desktop" onload="init();" ondragstart="return false;" ondrop="return false;">
   <div id="desktop-editor-wrapper">
   <div id="desktop-editor-inner">
   <center>
