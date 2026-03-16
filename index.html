@@ -1057,13 +1057,15 @@ function rgbToLab(r,g,b) {
         h = 100;
       }
       var emptyCanvasRle = [w * h, "0"];
+      var palette_names = Object.keys(palettes);
+      var random_palette_name = palette_names[Math.floor(Math.random() * palette_names.length)];
       var emptyState = {
         gameLink: gameLink,
         activeIndex: 0,
         width: w,
         height: h,
         canvasses: [emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle],
-        palette_name: "dawnbringer-16",
+        palette_name: random_palette_name,
         background_color: "#000000",
         foreground_color: "#ffffff",
         version: version,
