@@ -599,7 +599,7 @@ function rgbToLab(r,g,b) {
       if (modal.parentNode) modal.parentNode.removeChild(modal);
       modal = null;
     }
-    function openPaletteSelector(){
+    function openPaletteSelector(evt){
       if (modal !== null) {
         closePaletteSelector();
         return;
@@ -675,11 +675,36 @@ function rgbToLab(r,g,b) {
       
       // Add modal to body
       document.body.appendChild(modal);
+
+      // Position relative to trigger button, clamped to window
+      var pad = 8;
+      var trigger = (evt && evt.currentTarget) ? evt.currentTarget : (document.getElementById('palette_button') || document.querySelector('a[onclick*="openPaletteSelector"]'));
+      var rect = trigger ? trigger.getBoundingClientRect() : { top: pad, left: pad, bottom: pad + 40, right: pad + 40 };
+      var mw = modal.offsetWidth;
+      var mh = modal.offsetHeight;
+      var winW = window.innerWidth;
+      var winH = window.innerHeight;
+      var gap = 4;
+      // Prefer below, then right-aligned with button; if doesn't fit, try above or shift horizontal
+      var top = rect.bottom + gap;
+      var left = Math.min(rect.left, winW - pad - mw);
+      if (left < pad) left = pad;
+      if (top + mh > winH - pad) {
+        top = rect.top - gap - mh;
+        if (top < pad) top = pad;
+      }
+      if (top + mh > winH - pad) {
+        modal.style.maxHeight = (winH - pad - top) + 'px';
+      }
+      modal.style.top = top + 'px';
+      modal.style.left = left + 'px';
+
       //invert color of #palette_button using a transform
       var palette_button = document.getElementById('palette_button');
-      palette_button.style.filter = 'invert(1)';
-      //webkit also
-      palette_button.style.webkitFilter = 'invert(1)';
+      if (palette_button) {
+        palette_button.style.filter = 'invert(1)';
+        palette_button.style.webkitFilter = 'invert(1)';
+      }
     }
     
     var colorElem = new Array();
@@ -1052,9 +1077,10 @@ function rgbToLab(r,g,b) {
       setLayer(1);
       setDropdowns();
       saveFlickgameState();
-      if (isMobilePortraitTouch) {
-        requestAnimationFrame(function() { updateMobileCanvasSize(); });
-      }
+      requestAnimationFrame(function() {
+        if (isMobilePortraitTouch) updateMobileCanvasSize();
+        else updateDesktopScale();
+      });
     }
 
     document.addEventListener("keydown", press);
@@ -1215,6 +1241,7 @@ function rgbToLab(r,g,b) {
             hidePagePicker();
             updateSwatchLabels();
             refreshPointerModeCursor();
+            updateLayerItemNumberStyles();
           });
         })(i + 1);
 
@@ -1230,6 +1257,7 @@ function rgbToLab(r,g,b) {
         hidePagePicker();
         updateSwatchLabels();
         refreshPointerModeCursor();
+        updateLayerItemNumberStyles();
       });
       picker.appendChild(clearBtn);
 
@@ -1308,6 +1336,43 @@ function rgbToLab(r,g,b) {
       if (!c || !c.length) return true;
       for (var i = 0; i < c.length; i++) if (c[i] !== 0) return false;
       return true;
+    }
+
+    function getReachableFromStart() {
+      var reachable = new Set();
+      var queue = [0];
+      reachable.add(0);
+      while (queue.length > 0) {
+        var pageIdx = queue.shift();
+        var links = hyperlinks[pageIdx];
+        if (!links) continue;
+        for (var c = 0; c < 16; c++) {
+          var target = links[c];
+          if (target >= 1 && target <= 16) {
+            var idx = target - 1;
+            if (!reachable.has(idx)) {
+              reachable.add(idx);
+              queue.push(idx);
+            }
+          }
+        }
+      }
+      return reachable;
+    }
+
+    function updateLayerItemNumberStyles() {
+      if (!layerElem || !layerElem[0]) return;
+      var reachable = getReachableFromStart();
+      for (var i = 0; i < 16; i++) {
+        var el = layerElem[i];
+        if (!el) continue;
+        var empty = isCanvasEmpty(i);
+        var unreachable = !empty && !reachable.has(i);
+        var baseClass = "layerItem" + (i === canvasIndex ? " selectedItem" : "");
+        if (empty) baseClass += " layerItemEmpty";
+        else if (unreachable) baseClass += " layerItemUnreachable";
+        el.setAttribute("class", baseClass);
+      }
     }
 
     function updateGridIconHighlight() {
@@ -1452,6 +1517,22 @@ function rgbToLab(r,g,b) {
       }
     }
 
+    var DESKTOP_SCALE_PADDING = 24;
+    function updateDesktopScale() {
+      if (isMobilePortraitTouch) return;
+      var inner = document.getElementById('desktop-editor-inner');
+      if (!inner) return;
+      inner.style.setProperty('--desktop-scale', '1');
+      inner.offsetHeight; /* force reflow to measure at scale 1 */
+      var w = inner.offsetWidth;
+      var h = inner.offsetHeight;
+      if (!w || !h) return;
+      var maxW = window.innerWidth - DESKTOP_SCALE_PADDING * 2;
+      var maxH = window.innerHeight - DESKTOP_SCALE_PADDING * 2;
+      var scale = Math.min(maxW / w, maxH / h);
+      inner.style.setProperty('--desktop-scale', String(scale));
+    }
+
     var lastX = -1;
     var lastY = -1;
     var lastButton = -1
@@ -1497,14 +1578,16 @@ function rgbToLab(r,g,b) {
       if (!brushSizeSliderElem || !brushSizeThumbElem) return;
       brushValue = snapBrushToDiscrete(Math.max(BRUSH_SLIDER_MIN, Math.min(BRUSH_SLIDER_MAX, brushValue)));
       var isVertical = brushSizeSliderElem.classList.contains("vertical");
-      var rect = brushSizeSliderElem.getBoundingClientRect();
+      /* Use offsetWidth/offsetHeight so thumb position is correct when ancestor has transform:scale() */
+      var w = brushSizeSliderElem.offsetWidth;
+      var h = brushSizeSliderElem.offsetHeight;
       brushSizeThumbElem.src = brushValue + ".png";
       var discreteIndex = BRUSH_SLIDER_DISCRETE.indexOf(brushValue);
       if (discreteIndex < 0) discreteIndex = 0;
       var fraction = (BRUSH_SLIDER_DISCRETE.length - 1 - discreteIndex) / (BRUSH_SLIDER_DISCRETE.length - 1);
       if (isVertical) {
         var topCenter = BRUSH_SLIDER_MARGIN + BRUSH_SLIDER_MAX_RADIUS;
-        var bottomCenter = rect.height - BRUSH_SLIDER_MARGIN_BOTTOM - BRUSH_SLIDER_MIN_RADIUS;
+        var bottomCenter = h - BRUSH_SLIDER_MARGIN_BOTTOM - BRUSH_SLIDER_MIN_RADIUS;
         var centerY = topCenter + fraction * (bottomCenter - topCenter);
         brushSizeThumbElem.style.left = "50%";
         brushSizeThumbElem.style.top = centerY + "px";
@@ -1514,7 +1597,7 @@ function rgbToLab(r,g,b) {
       } else {
         var fractionH = discreteIndex / (BRUSH_SLIDER_DISCRETE.length - 1);
         var leftCenter = BRUSH_SLIDER_MARGIN + BRUSH_SLIDER_MAX_RADIUS;
-        var rightCenter = rect.width - BRUSH_SLIDER_MARGIN_RIGHT_H - BRUSH_SLIDER_MIN_RADIUS;
+        var rightCenter = w - BRUSH_SLIDER_MARGIN_RIGHT_H - BRUSH_SLIDER_MIN_RADIUS;
         var centerX = leftCenter + fractionH * (rightCenter - leftCenter);
         brushSizeThumbElem.style.top = "50%";
         brushSizeThumbElem.style.left = centerX + "px";
@@ -1527,17 +1610,22 @@ function rgbToLab(r,g,b) {
     function brushSliderValueFromEvent(evt) {
       if (!brushSizeSliderElem) return 5;
       var rect = brushSizeSliderElem.getBoundingClientRect();
+      var w = brushSizeSliderElem.offsetWidth;
+      var h = brushSizeSliderElem.offsetHeight;
       var isVertical = brushSizeSliderElem.classList.contains("vertical");
       var fraction;
+      /* Convert click to slider's layout coords when ancestor has transform:scale() */
+      var scaleX = w > 0 ? rect.width / w : 1;
+      var scaleY = h > 0 ? rect.height / h : 1;
       if (isVertical) {
         var topCenter = BRUSH_SLIDER_MARGIN + BRUSH_SLIDER_MAX_RADIUS;
-        var bottomCenter = rect.height - BRUSH_SLIDER_MARGIN_BOTTOM - BRUSH_SLIDER_MIN_RADIUS;
-        var clickY = evt.clientY - rect.top;
+        var bottomCenter = h - BRUSH_SLIDER_MARGIN_BOTTOM - BRUSH_SLIDER_MIN_RADIUS;
+        var clickY = (evt.clientY - rect.top) / scaleY;
         fraction = (clickY - topCenter) / (bottomCenter - topCenter);
       } else {
         var leftCenter = BRUSH_SLIDER_MARGIN + BRUSH_SLIDER_MAX_RADIUS;
-        var rightCenter = rect.width - BRUSH_SLIDER_MARGIN_RIGHT_H - BRUSH_SLIDER_MIN_RADIUS;
-        var clickX = evt.clientX - rect.left;
+        var rightCenter = w - BRUSH_SLIDER_MARGIN_RIGHT_H - BRUSH_SLIDER_MIN_RADIUS;
+        var clickX = (evt.clientX - rect.left) / scaleX;
         fraction = (clickX - leftCenter) / (rightCenter - leftCenter);
       }
       fraction = Math.max(0, Math.min(1, fraction));
@@ -1726,12 +1814,7 @@ function rgbToLab(r,g,b) {
 
     function setLayer(newCanvasIndex,force_gen_thumbnails=false) {
       canvasIndex = newCanvasIndex - 1;
-      for (var i = 0; i < 16; i++) {
-        if (layerElem[i] !== null) {
-          layerElem[i].setAttribute("class", "layerItem");
-        }
-      }
-      layerElem[canvasIndex].setAttribute("class", "layerItem selectedItem");
+      updateLayerItemNumberStyles();
       setVisuals(force_gen_thumbnails);
       setDropdowns();
       updateGridIconHighlight();
@@ -1741,8 +1824,14 @@ function rgbToLab(r,g,b) {
     var burgerBgSelectOptions=[];
     function init() {
       updateLayoutMode();
-      window.addEventListener('resize', updateLayoutMode);
-      window.addEventListener('orientationchange', updateLayoutMode);
+      window.addEventListener('resize', function() {
+        updateLayoutMode();
+        if (!isMobilePortraitTouch) updateDesktopScale();
+      });
+      window.addEventListener('orientationchange', function() {
+        updateLayoutMode();
+        if (!isMobilePortraitTouch) updateDesktopScale();
+      });
 
       // Populate background color dropdown
       var bgColorSelect = document.getElementById('bgColorSelect');
@@ -2012,6 +2101,7 @@ function rgbToLab(r,g,b) {
           if (swatchContainer && desktopSwatchCell) desktopSwatchCell.appendChild(swatchContainer);
           hideFramePicker();
           if (burgerDlg) { burgerDlg.classList.remove('visible'); burgerDlg.setAttribute('aria-hidden', 'true'); }
+          requestAnimationFrame(function() { updateDesktopScale(); });
         }
         pointerModeBtn = isMobilePortraitTouch ? document.getElementById('mobile-pointer-btn') : document.getElementById('pointer_mode_btn');
         if (pointerModeBtn) pointerModeBtn.setAttribute('class', pointerMode ? 'radius selected' : 'radius');
@@ -2022,6 +2112,7 @@ function rgbToLab(r,g,b) {
         }
       };
       window.onLayoutModeChange();
+      requestAnimationFrame(function() { updateDesktopScale(); });
     }
 
     function readFile(evt) {
@@ -2048,6 +2139,10 @@ function rgbToLab(r,g,b) {
           setLayer(canvasIndex + 1);          
           setDropdowns();
           saveFlickgameState();
+          requestAnimationFrame(function() {
+            if (isMobilePortraitTouch) updateMobileCanvasSize();
+            else updateDesktopScale();
+          });
         }
         r.readAsText(f);
       } else {
@@ -2066,6 +2161,10 @@ function rgbToLab(r,g,b) {
           setLayer(canvasIndex + 1);
           setDropdowns();
           saveFlickgameState();
+          requestAnimationFrame(function() {
+            if (isMobilePortraitTouch) updateMobileCanvasSize();
+            else updateDesktopScale();
+          });
         },
         onError: function(message) {
           alert(message);
@@ -2077,6 +2176,10 @@ function rgbToLab(r,g,b) {
           setLayer(canvasIndex + 1);
           setDropdowns();
           saveFlickgameState();
+          requestAnimationFrame(function() {
+            if (isMobilePortraitTouch) updateMobileCanvasSize();
+            else updateDesktopScale();
+          });
         }
       });
     }
@@ -2137,6 +2240,7 @@ function rgbToLab(r,g,b) {
       // document.body.style.backgroundColor = background_colors[palette_name];
       updateUsedOnFrameIndicators();
       drawPointerCursor();
+      if (!isMobilePortraitTouch) updateLayerItemNumberStyles();
     }
 
 
@@ -2690,26 +2794,16 @@ body{
       user-select: none;
     }
 
-    /* Add new styles for palette modal */
+    /* Add new styles for palette modal - position set by JS relative to trigger button */
     .palette-modal {
       position: fixed;
       max-width: 220px;
       max-height: 400px;
       overflow-y: auto;
-      top: 20px;
-      right:0;
       background-color: black;
       border: 2px solid gray;
       padding: 25px;
       z-index: 1000;
-    }
-
-    @media (min-width: 1400px) {
-      .palette-modal {
-        right:unset;
-        left: 50%;
-        transform: translate(calc(50% + 300px), 0);
-      }
     }
 
 
@@ -2798,6 +2892,18 @@ body{
     a.layerItem.selectedItem {
       color: black;
       background-color: white;
+    }
+
+    a.layerItem.layerItemEmpty {
+      color: #888;
+    }
+
+    a.layerItem.layerItemUnreachable {
+      color: #c00;
+    }
+
+    a.layerItem.selectedItem.layerItemEmpty {
+      color: black;
     }
 
     /*all images pixelated*/
@@ -3054,6 +3160,30 @@ body{
     }
     body[data-layout="mobile"] #desktop-editor-wrapper {
       display: none;
+    }
+    /* Desktop: scale editor to fit viewport proportionally, no page scroll */
+    body:not([data-layout="mobile"]) {
+      overflow: hidden;
+    }
+    html:has(body:not([data-layout="mobile"])) {
+      overflow: hidden;
+    }
+    body:not([data-layout="mobile"]) #desktop-editor-wrapper {
+      min-height: 100vh;
+      min-height: 100dvh;
+      width: 100%;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+    body:not([data-layout="mobile"]) #desktop-editor-inner {
+      width: max-content;
+      height: max-content;
+      transform: scale(var(--desktop-scale, 1));
+      transform-origin: center center;
+      flex-shrink: 0;
     }
     body[data-layout="mobile"] {
       touch-action: none;
@@ -3383,6 +3513,7 @@ body{
 
 <body onload="init();" ondragstart="return false;" ondrop="return false;">
   <div id="desktop-editor-wrapper">
+  <div id="desktop-editor-inner">
   <center>
     <table cellpadding="10">
       <tr>
@@ -3606,7 +3737,7 @@ body{
                       </div>
                     </td>
                     <td style="border-left: 2px solid gray;">
-                      <a href="#" onclick="openPaletteSelector();return false;"><img id="palette_button" src="palette.png"></a>
+                      <a href="#" onclick="openPaletteSelector(event);return false;"><img id="palette_button" src="palette.png"></a>
                     </td>
                   </tr>
                 </table>
@@ -3618,6 +3749,7 @@ body{
       </tr>
     </table>
   </center>
+  </div>
   </div>
   <div id="mobile-editor-wrapper">
     <div class="mobile-toolbar-top">
@@ -3669,7 +3801,7 @@ body{
       <span id="burger-bg-label">Background:</span>
       <select id="burger-bg-select" class="toolbar" style="border: 2px solid gray;" onchange="changeBackgroundColor(colorPalette[this.value],true); var b=document.getElementById('bgColorSelect'); if(b) b.value=this.value;"></select>
       <p>
-      <button type="button" class="burger-dialog-btn" onclick="openPaletteSelector();">🎨 Select colour palette</button>
+      <button type="button" class="burger-dialog-btn" onclick="openPaletteSelector(event);">🎨 Select colour palette</button>
       <hr>
       <button type="button" class="burger-dialog-btn" onclick="newFlickgame();">🆕 New Flickgame</button>
       <button type="button" class="burger-dialog-btn" onclick="clearPalette();">🗑️ Clear page</button>
