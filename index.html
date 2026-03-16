@@ -1325,8 +1325,21 @@ function rgbToLab(r,g,b) {
       var btn = document.getElementById('mobile-frame-btn');
       if (btn) {
         var rect = btn.getBoundingClientRect();
-        framePickerEl.style.left = Math.max(8, rect.left) + 'px';
-        framePickerEl.style.top = (rect.bottom + 4) + 'px';
+        if (layoutMode === 'mobile-landscape') {
+          framePickerEl.classList.add('visible');
+          var pickerW = framePickerEl.offsetWidth;
+          var pickerH = framePickerEl.offsetHeight;
+          var left = rect.right + 8;
+          if (left + pickerW > window.innerWidth - 8) left = window.innerWidth - pickerW - 8;
+          if (left < 8) left = 8;
+          var top = rect.bottom + 4;
+          top = Math.max(8, Math.min(top, window.innerHeight - pickerH - 8));
+          framePickerEl.style.left = left + 'px';
+          framePickerEl.style.top = top + 'px';
+        } else {
+          framePickerEl.style.left = Math.max(8, rect.left) + 'px';
+          framePickerEl.style.top = (rect.bottom + 4) + 'px';
+        }
       }
       var reachable = getReachableFromStart();
       for (var i = 0; i < 16; i++) {
@@ -1466,23 +1479,26 @@ function rgbToLab(r,g,b) {
 
       var pickerWidth = pagePickerEl.offsetWidth;
       var pickerHeight = pagePickerEl.offsetHeight;
-      var left = swatchRect.left + (swatchRect.width / 2) - (pickerWidth / 2);
+      var left, top;
 
-      // Keep on screen horizontally
-      if (left + pickerWidth > window.innerWidth - 8) {
-        left = window.innerWidth - pickerWidth - 8;
-      }
-      if (left < 8) {
-        left = 8;
-      }
-
-      // Prefer below, flip above if it would go off screen
-      var top;
-      if (swatchRect.bottom + 4 + pickerHeight <= window.innerHeight - 8) {
-        top = swatchRect.bottom + 4;
+      if (layoutMode === 'mobile-landscape') {
+        // Landscape mobile: open to the left of the swatch so it doesn't obscure it
+        left = swatchRect.left - pickerWidth - 8;
+        top = swatchRect.top + (swatchRect.height / 2) - (pickerHeight / 2);
       } else {
-        top = swatchRect.top - 4 - pickerHeight;
+        // Other modes: centered below or above the swatch
+        left = swatchRect.left + (swatchRect.width / 2) - (pickerWidth / 2);
+        if (swatchRect.bottom + 4 + pickerHeight <= window.innerHeight - 8) {
+          top = swatchRect.bottom + 4;
+        } else {
+          top = swatchRect.top - 4 - pickerHeight;
+        }
       }
+
+      // Keep on screen
+      if (left + pickerWidth > window.innerWidth - 8) left = window.innerWidth - pickerWidth - 8;
+      if (left < 8) left = 8;
+      top = Math.max(8, Math.min(top, window.innerHeight - pickerHeight - 8));
 
       pagePickerEl.style.left = left + 'px';
       pagePickerEl.style.top = top + 'px';
@@ -1966,7 +1982,7 @@ function rgbToLab(r,g,b) {
             hideFramePicker();
           }
         }
-        if (modal && !modal.contains(e.target) && e.target.id !== 'palette_button' && !e.target.closest('a[onclick*="openPaletteSelector"]')) {
+        if (modal && !modal.contains(e.target) && e.target.id !== 'palette_button' && !e.target.closest('[onclick*="openPaletteSelector"]')) {
           closePaletteSelector();
         }
       });
@@ -1983,7 +1999,7 @@ function rgbToLab(r,g,b) {
             hideFramePicker();
           }
         }
-        if (modal && !modal.contains(e.target) && e.target.id !== 'palette_button' && !e.target.closest('a[onclick*="openPaletteSelector"]')) {
+        if (modal && !modal.contains(e.target) && e.target.id !== 'palette_button' && !e.target.closest('[onclick*="openPaletteSelector"]')) {
           closePaletteSelector();
         }
       });
@@ -3130,6 +3146,10 @@ body{
       height: 200px;
       margin: 4px 0;
     }
+    body[data-layout="mobile-landscape"] .brush-size-slider.vertical {
+      height: 96px;
+      margin: 2px 0;
+    }
     .brush-size-slider.horizontal {
       width: 200px;
       height: 32px;
@@ -3314,15 +3334,24 @@ body{
     body[data-layout="mobile-landscape"] .mobile-toolbar-bottom {
       flex-direction: column;
       justify-content: flex-start;
-      padding: 6px 4px;
-      gap: 6px;
+      padding: 4px 4px;
+      gap: 4px;
       flex-shrink: 0;
       width: 52px;
       min-width: 52px;
+      max-height: 100%;
       border-radius: 8px 0 0 8px;
+      overflow: hidden;
+    }
+    body[data-layout="mobile-landscape"] #mobile-brush-slider-container {
+      flex-shrink: 1;
+      min-height: 0;
+      display: flex;
+      align-items: center;
     }
     body[data-layout="mobile-landscape"] .mobile-toolbar-bottom-icons {
       flex-direction: column;
+      flex-shrink: 0;
     }
     body[data-layout="mobile-landscape"] .mobile-toolbar-bottom img {
       width: 26px;
@@ -3634,30 +3663,35 @@ body{
     }
     /* Landscape mobile: same as portrait but rotated – portrait is 320×~160 (4 cols, 2:1 cells); rotated = 160 wide, full height */
     body[data-layout="mobile-landscape"] .mobile-swatch-grid {
-      padding: 8px 6px 8px 8px;
+      padding: 6px 4px 6px 6px;
       flex: 0 0 auto;
       align-self: stretch;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      width: 160px;
-      min-width: 160px;
-      max-width: 160px;
+      width: 148px;
+      min-width: 148px;
+      max-width: 148px;
       margin: 0;
       min-height: 0;
+      overflow: hidden;
+      box-sizing: border-box;
     }
     body[data-layout="mobile-landscape"] #mobile-swatch-grid #swatch-container {
       display: grid;
       grid-template-rows: repeat(4, minmax(0, 1fr));
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 6px;
-      width: 160px;
-      flex-shrink: 0;
+      gap: 4px;
+      width: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      flex-shrink: 1;
+      min-height: 0;
     }
     body[data-layout="mobile-landscape"] #mobile-swatch-grid #swatch-container > a {
       aspect-ratio: 1 / 2;
-      min-height: 24px;
-      max-height: 72px;
+      min-height: 20px;
+      max-height: 100%;
     }
     #burger-bg-select {
       height: 30px;
