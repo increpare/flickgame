@@ -915,6 +915,11 @@ function rgbToLab(r,g,b) {
           thumbnailCanvas[i].width = getThumbCols();
           thumbnailCanvas[i].height = getThumbRows();
         }
+        var gridThumb = document.getElementById('mobile-grid-thumb-' + i);
+        if (gridThumb && gridThumb.getContext) {
+          gridThumb.width = getThumbCols();
+          gridThumb.height = getThumbRows();
+        }
       }
     }
 
@@ -1434,14 +1439,23 @@ function rgbToLab(r,g,b) {
       }
     }
 
-    function updateMobileGridIconThumbnails() {
-      for (var i = 0; i < 16; i++) {
-        var img = document.getElementById('mobile-grid-thumb-' + i);
-        if (!img || !thumbnailCanvas[i]) continue;
-        try {
-          var dataUrl = thumbnailCanvas[i].toDataURL('image/png');
-          img.setAttributeNS('http://www.w3.org/1999/xlink', 'href', dataUrl);
-        } catch (e) {}
+    function updateMobileGridIconThumbnails(onlyIndex) {
+      if (!isMobileLayout()) return;
+      var tw = getThumbCols(), th = getThumbRows();
+      var indices = onlyIndex !== undefined ? [onlyIndex] : [];
+      if (indices.length === 0) {
+        for (var i = 0; i < 16; i++) indices.push(i);
+      }
+      for (var k = 0; k < indices.length; k++) {
+        var i = indices[k];
+        var dest = document.getElementById('mobile-grid-thumb-' + i);
+        if (!dest || !thumbnailCanvas[i]) continue;
+        if (dest.width !== tw || dest.height !== th) {
+          dest.width = tw;
+          dest.height = th;
+        }
+        var ctx = dest.getContext('2d');
+        if (ctx) ctx.drawImage(thumbnailCanvas[i], 0, 0);
       }
     }
 
@@ -2306,7 +2320,7 @@ function rgbToLab(r,g,b) {
       updateSwatchLabels();
       drawPointerCursor();
       if (!isMobileLayout()) updateLayerItemNumberStyles();
-      updateMobileGridIconThumbnails();
+      updateMobileGridIconThumbnails(genAllThumbnails ? undefined : canvasIndex);
     }
 
 
@@ -3204,6 +3218,11 @@ body{
     .grid-icon-svg .grid-cell.grid-cell-active {
       fill: white;
     }
+    .grid-icon-svg .mobile-grid-thumb-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
 
     #toolbarcontainer {
       float: right;
@@ -3963,22 +3982,22 @@ body{
           <rect class="grid-cell" id="grid-cell-13" x="4.25" y="12.25" width="3.5" height="3.5" />
           <rect class="grid-cell" id="grid-cell-14" x="8.25" y="12.25" width="3.5" height="3.5" />
           <rect class="grid-cell" id="grid-cell-15" x="12.25" y="12.25" width="3.5" height="3.5" />
-          <image id="mobile-grid-thumb-0"  x="0.25" y="0.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
-          <image id="mobile-grid-thumb-1"  x="4.25" y="0.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
-          <image id="mobile-grid-thumb-2"  x="8.25" y="0.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
-          <image id="mobile-grid-thumb-3"  x="12.25" y="0.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
-          <image id="mobile-grid-thumb-4"  x="0.25" y="4.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
-          <image id="mobile-grid-thumb-5"  x="4.25" y="4.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
-          <image id="mobile-grid-thumb-6"  x="8.25" y="4.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
-          <image id="mobile-grid-thumb-7"  x="12.25" y="4.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
-          <image id="mobile-grid-thumb-8"  x="0.25" y="8.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
-          <image id="mobile-grid-thumb-9"  x="4.25" y="8.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
-          <image id="mobile-grid-thumb-10" x="8.25" y="8.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
-          <image id="mobile-grid-thumb-11" x="12.25" y="8.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
-          <image id="mobile-grid-thumb-12" x="0.25" y="12.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
-          <image id="mobile-grid-thumb-13" x="4.25" y="12.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
-          <image id="mobile-grid-thumb-14" x="8.25" y="12.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
-          <image id="mobile-grid-thumb-15" x="12.25" y="12.25" width="3.5" height="3.5" preserveAspectRatio="xMidYMid slice"/>
+          <foreignObject x="0.25" y="0.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-0" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
+          <foreignObject x="4.25" y="0.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-1" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
+          <foreignObject x="8.25" y="0.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-2" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
+          <foreignObject x="12.25" y="0.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-3" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
+          <foreignObject x="0.25" y="4.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-4" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
+          <foreignObject x="4.25" y="4.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-5" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
+          <foreignObject x="8.25" y="4.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-6" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
+          <foreignObject x="12.25" y="4.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-7" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
+          <foreignObject x="0.25" y="8.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-8" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
+          <foreignObject x="4.25" y="8.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-9" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
+          <foreignObject x="8.25" y="8.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-10" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
+          <foreignObject x="12.25" y="8.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-11" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
+          <foreignObject x="0.25" y="12.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-12" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
+          <foreignObject x="4.25" y="12.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-13" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
+          <foreignObject x="8.25" y="12.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-14" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
+          <foreignObject x="12.25" y="12.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-15" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
           <rect id="mobile-grid-active-border" x="0.25" y="0.25" width="3.5" height="3.5" fill="none" stroke="white" stroke-width="0.25"/>
         </svg>
       </button>
