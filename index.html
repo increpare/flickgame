@@ -1817,7 +1817,24 @@ function rgbToLab(r,g,b) {
       framePickerEl = createFramePicker();
       updateGridIconHighlight();
 
-      // Click outside to dismiss page picker, frame picker, and palette selector
+      // Pointer down outside: dismiss popups immediately (good for touch)
+      document.addEventListener('pointerdown', function(e) {
+        if (pagePickerEl && pagePickerColorIdx >= 0) {
+          if (!pagePickerEl.contains(e.target)) {
+            hidePagePicker();
+          }
+        }
+        if (framePickerEl && framePickerEl.classList.contains('visible')) {
+          if (!framePickerEl.contains(e.target) && !(e.target && e.target.id === 'mobile-frame-btn')) {
+            hideFramePicker();
+          }
+        }
+        if (modal && !modal.contains(e.target) && e.target.id !== 'palette_button' && !e.target.closest('a[onclick*="openPaletteSelector"]')) {
+          closePaletteSelector();
+        }
+      });
+
+      // Click outside (fallback / mouse) to dismiss page picker, frame picker, and palette selector
       document.addEventListener('click', function(e) {
         if (pagePickerEl && pagePickerColorIdx >= 0) {
           if (!pagePickerEl.contains(e.target)) {
