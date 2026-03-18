@@ -1161,10 +1161,6 @@ function touchEnd(e) {
       var linkTarget = gameState.hyperlinks[currentIndex][colIndex];
 
       if (linkTarget > 0) {
-        // Reset cursor to center for new page
-        cursorX = gw / 2;
-        cursorY = gh / 2;
-
         if (showAnimation) {
           transition(currentIndex, linkTarget - 1);
           currentIndex = linkTarget - 1;

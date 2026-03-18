@@ -1803,8 +1803,6 @@ function rgbToLab(r,g,b) {
       if (ptrHoveredIsLink) {
         var target = hyperlinks[canvasIndex][ptrHoveredColorIndex];
         if (target > 0) {
-          ptrCursorX = width / 2;
-          ptrCursorY = height / 2;
           setLayer(target); // setLayer expects 1-based page number
           ptrUpdateHover();
           setVisuals();
