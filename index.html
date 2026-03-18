@@ -689,7 +689,7 @@ function rgbToLab(r,g,b) {
       }
     }
 
-    function newFlickgame() {
+    function newFlickgame(keepPalette) {
       var w, h;
       if (isMobileLayout()) {
         mobileFillCanvasSize();
@@ -700,17 +700,26 @@ function rgbToLab(r,g,b) {
         h = 100;
       }
       var emptyCanvasRle = [w * h, "0"];
-      var palette_names = Object.keys(palettes);
-      var random_palette_name = palette_names[Math.floor(Math.random() * palette_names.length)];
+      var chosenPalette, chosenBg, chosenFg;
+      if (keepPalette) {
+        chosenPalette = palette_name;
+        chosenBg = background_color;
+        chosenFg = foreground_color;
+      } else {
+        var palette_names = Object.keys(palettes);
+        chosenPalette = palette_names[Math.floor(Math.random() * palette_names.length)];
+        chosenBg = "#000000";
+        chosenFg = "#ffffff";
+      }
       var emptyState = {
         gameLink: gameLink,
         activeIndex: 0,
         width: w,
         height: h,
         canvasses: Array(16).fill(emptyCanvasRle),
-        palette_name: random_palette_name,
-        background_color: "#000000",
-        foreground_color: "#ffffff",
+        palette_name: chosenPalette,
+        background_color: chosenBg,
+        foreground_color: chosenFg,
         version: version,
         hyperlinks: Array.from({length: 16}, function() { return new Array(16).fill(0); })
       };
@@ -1007,6 +1016,14 @@ function rgbToLab(r,g,b) {
       var links = hyperlinks[idx];
       if (!links) return true;
       for (var j = 0; j < links.length; j++) if (links[j] !== 0) return false;
+      return true;
+    }
+
+    function isProjectBlank() {
+      if (undoList.length > 0) return false;
+      for (var i = 0; i < 16; i++) {
+        if (!isCanvasEmpty(i)) return false;
+      }
       return true;
     }
 
@@ -1772,7 +1789,12 @@ function rgbToLab(r,g,b) {
           if (swatchContainer && mobileSwatchGrid) mobileSwatchGrid.appendChild(swatchContainer);
           hideFramePicker();
           closeBurgerDialog();
-          requestAnimationFrame(function() { requestAnimationFrame(function() { updateMobileCanvasSize(); }); });
+          requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+              if (isProjectBlank()) newFlickgame(true);
+              else updateMobileCanvasSize();
+            });
+          });
         } else {
           zoomFactor = 4;
           if (canvas && desktopCanvasContainer) desktopCanvasContainer.appendChild(canvas);
@@ -1783,7 +1805,10 @@ function rgbToLab(r,g,b) {
           if (swatchContainer && desktopSwatchCell) desktopSwatchCell.appendChild(swatchContainer);
           hideFramePicker();
           closeBurgerDialog();
-          requestAnimationFrame(function() { updateDesktopScale(); });
+          requestAnimationFrame(function() {
+            if (isProjectBlank()) newFlickgame(true);
+            else updateDesktopScale();
+          });
         }
         pointerModeBtn = isMobileLayout() ? document.getElementById('mobile-pointer-btn') : document.getElementById('pointer_mode_btn');
         if (pointerModeBtn) pointerModeBtn.setAttribute('class', pointerMode ? 'radius selected' : 'radius');
