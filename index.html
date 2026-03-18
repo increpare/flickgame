@@ -957,6 +957,7 @@ function rgbToLab(r,g,b) {
       if (newZoom <= 0) return;
       if (newZoom !== zoomFactor) {
         zoomFactor = newZoom;
+        if (typeof resetViewTransform === 'function') resetViewTransform();
         applyEditorDimensions();
         setVisuals(true);
       }
@@ -2111,6 +2112,15 @@ function rgbToLab(r,g,b) {
         ptrLastTouchTime = Date.now();
       }, false);
 
+      // Pinch-to-zoom touch events
+      visibleCanvas.addEventListener('touchstart', canvasTouchStart, {passive: false});
+      visibleCanvas.addEventListener('touchmove', canvasTouchMove, {passive: false});
+      visibleCanvas.addEventListener('touchend', canvasTouchEnd, {passive: false});
+      visibleCanvas.addEventListener('touchcancel', function(e) {
+        pinchActive = false;
+        pinchTouched = false;
+      }, false);
+
       // Init pointer mode button
       pointerModeBtn = document.getElementById("pointer_mode_btn");
 
@@ -2147,6 +2157,7 @@ function rgbToLab(r,g,b) {
         }
       });
       window.onLayoutModeChange = function() {
+        resetViewTransform();
         var canvas = document.getElementById('mainCanvas');
         var desktopCanvasContainer = document.getElementById('desktop-canvas-container');
         var mobileCanvasContainer = document.getElementById('mobile-canvas-container');
@@ -2323,6 +2334,11 @@ function rgbToLab(r,g,b) {
 
 
     var drawing = 0;
+    var drawingStartTime = 0;
+    var PINCH_UNDO_THRESHOLD = 400;
+    var TOUCH_DRAW_DELAY = 80;
+    var touchDrawTimer = null;
+    var touchDrawEvent = null;
 
 
     function getCoords(e) {
@@ -2454,8 +2470,183 @@ function rgbToLab(r,g,b) {
       }
     }
 
+    // --- Two-finger pinch/pan zoom ---
+    var viewScale = 1;
+    var viewOffsetX = 0;
+    var viewOffsetY = 0;
+    var VIEW_MIN_SCALE = 1;
+    var VIEW_MAX_SCALE = 10;
+    var pinchActive = false;
+    var pinchTouched = false;
+    var pinchStartDist = 0;
+    var pinchStartScale = 1;
+    var pinchStartCenterX = 0;
+    var pinchStartCenterY = 0;
+    var pinchStartOffsetX = 0;
+    var pinchStartOffsetY = 0;
+    var pinchAnchorX = 0;
+    var pinchAnchorY = 0;
+
+    function applyViewTransform() {
+      if (!visibleCanvas) return;
+      if (viewScale === 1 && viewOffsetX === 0 && viewOffsetY === 0) {
+        visibleCanvas.style.transform = '';
+        visibleCanvas.style.transformOrigin = '';
+      } else {
+        visibleCanvas.style.transformOrigin = '0 0';
+        visibleCanvas.style.transform = 'translate(' + viewOffsetX + 'px,' + viewOffsetY + 'px) scale(' + viewScale + ')';
+      }
+    }
+
+    function resetViewTransform() {
+      viewScale = 1;
+      viewOffsetX = 0;
+      viewOffsetY = 0;
+      applyViewTransform();
+    }
+
+    function clampViewOffset() {
+      if (!visibleCanvas) return;
+      var cw = visibleCanvas.width * viewScale;
+      var ch = visibleCanvas.height * viewScale;
+      var container = visibleCanvas.parentElement;
+      if (!container) return;
+      var rect = container.getBoundingClientRect();
+      var pw = rect.width;
+      var ph = rect.height;
+
+      if (cw <= pw) {
+        viewOffsetX = (pw - cw) / 2;
+      } else {
+        if (viewOffsetX > 0) viewOffsetX = 0;
+        if (viewOffsetX < pw - cw) viewOffsetX = pw - cw;
+      }
+      if (ch <= ph) {
+        viewOffsetY = (ph - ch) / 2;
+      } else {
+        if (viewOffsetY > 0) viewOffsetY = 0;
+        if (viewOffsetY < ph - ch) viewOffsetY = ph - ch;
+      }
+    }
+
+    function pinchDist(t1, t2) {
+      var dx = t1.clientX - t2.clientX;
+      var dy = t1.clientY - t2.clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function canvasTouchStart(e) {
+      if (pointerMode) return;
+      if (e.touches.length >= 2) {
+        pinchTouched = true;
+        cancelPendingTouchDraw();
+        if (drawing) {
+          var strokeDuration = Date.now() - drawingStartTime;
+          drawing = 0;
+          lastX = -1;
+          lastY = -1;
+          if (strokeDuration < PINCH_UNDO_THRESHOLD && undoList.length > 0) {
+            var dat = undoList.pop();
+            canvasses[dat.canvasIndex] = dat.canvasDat;
+            setVisuals();
+          }
+        }
+        if (!pinchActive) {
+          pinchActive = true;
+          pinchStartDist = pinchDist(e.touches[0], e.touches[1]);
+          pinchStartScale = viewScale;
+          pinchStartCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+          pinchStartCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+          pinchStartOffsetX = viewOffsetX;
+          pinchStartOffsetY = viewOffsetY;
+          var canvasRect = visibleCanvas.getBoundingClientRect();
+          pinchAnchorX = (pinchStartCenterX - canvasRect.left) / viewScale;
+          pinchAnchorY = (pinchStartCenterY - canvasRect.top) / viewScale;
+        }
+        e.preventDefault();
+      }
+    }
+
+    function canvasTouchMove(e) {
+      if (pointerMode) return;
+      if (pinchActive && e.touches.length >= 2) {
+        e.preventDefault();
+        var dist = pinchDist(e.touches[0], e.touches[1]);
+        var newScale = Math.max(VIEW_MIN_SCALE, Math.min(VIEW_MAX_SCALE, pinchStartScale * dist / pinchStartDist));
+
+        var cx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        var cy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        var panDX = cx - pinchStartCenterX;
+        var panDY = cy - pinchStartCenterY;
+
+        viewOffsetX = panDX + pinchStartOffsetX + pinchAnchorX * (pinchStartScale - newScale);
+        viewOffsetY = panDY + pinchStartOffsetY + pinchAnchorY * (pinchStartScale - newScale);
+        viewScale = newScale;
+
+        clampViewOffset();
+        applyViewTransform();
+      }
+    }
+
+    function canvasTouchEnd(e) {
+      if (pointerMode) return;
+      if (e.touches.length < 2) {
+        if (pinchActive) {
+          pinchActive = false;
+          if (viewScale <= VIEW_MIN_SCALE + 0.01) resetViewTransform();
+          else { clampViewOffset(); applyViewTransform(); }
+        }
+      }
+      if (e.touches.length === 0) {
+        pinchTouched = false;
+      }
+    }
+
+    function beginDrawStroke(e) {
+      drawing = 1;
+      drawingStartTime = Date.now();
+      var coords = getCoords(e);
+      if (coords === null) {
+        lastX = -1;
+        lastY = -1;
+        return;
+      }
+      startTargetX = coords[0];
+      startTargetY = coords[1];
+      lastX = Math.floor(startTargetX / zoomFactor);
+      lastY = Math.floor(startTargetY / zoomFactor);
+
+      preserveUndoState();
+
+      if (window.onbeforeunload === null) {
+        window.onbeforeunload = function () {
+          saveFlickgameState();
+          return true;
+        };
+      }
+
+      mouseMove(e);
+      if (radius === 0) {
+        drawing = 0;
+      }
+    }
+
+    function cancelPendingTouchDraw() {
+      if (touchDrawTimer) {
+        clearTimeout(touchDrawTimer);
+        touchDrawTimer = null;
+        touchDrawEvent = null;
+      }
+    }
+
     function mouseDown(e) {
       e = e || window.event;
+
+      // Suppress drawing during/after a pinch gesture
+      if (pinchActive || pinchTouched) {
+        e.preventDefault();
+        return !1;
+      }
 
       if (pointerMode) {
         e.preventDefault();
@@ -2477,32 +2668,18 @@ function rgbToLab(r,g,b) {
         return !1;
       }
 
-      drawing = 1;
-      var coords = getCoords(e);
-      if (coords === null) {
-        lastX = -1;
-        lastY = -1;
-        e.preventDefault();
-        return !1;
-      }
-      startTargetX = coords[0];
-      startTargetY = coords[1];
-      lastX = Math.floor(startTargetX / zoomFactor);
-      lastY = Math.floor(startTargetY / zoomFactor);
-
-      preserveUndoState();
-
-
-      if (window.onbeforeunload === null) {
-        window.onbeforeunload = function () {
-          saveFlickgameState();
-          return true;
-        };
-      }
-
-      mouseMove(e);
-      if (radius === 0) {
-        drawing = 0;
+      if (e.pointerType === 'touch') {
+        cancelPendingTouchDraw();
+        touchDrawEvent = e;
+        touchDrawTimer = setTimeout(function() {
+          if (touchDrawEvent && !pinchActive && !pinchTouched) {
+            beginDrawStroke(touchDrawEvent);
+          }
+          touchDrawTimer = null;
+          touchDrawEvent = null;
+        }, TOUCH_DRAW_DELAY);
+      } else {
+        beginDrawStroke(e);
       }
 
       e.preventDefault();
@@ -2512,6 +2689,7 @@ function rgbToLab(r,g,b) {
     function mouseUp(e) {
       e = e || window.event;
 
+      cancelPendingTouchDraw();
       drawing = 0;
       lastX = -1;
       lastY = -1;
@@ -2619,7 +2797,11 @@ function rgbToLab(r,g,b) {
 
     function mouseMove(e) {
       e = e || window.event;
-      // console.log(e.type);
+
+      if (pinchActive || pinchTouched || touchDrawTimer) {
+        e.preventDefault();
+        return !1;
+      }
 
       e.preventDefault();
       var coords = getCoords(e);
