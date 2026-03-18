@@ -314,6 +314,7 @@ function rgbToLab(r,g,b) {
 
             set_color_palette(name);
             setVisuals(true);
+            saveFlickgameState();
           };
         })(paletteName);
 
@@ -930,6 +931,7 @@ function rgbToLab(r,g,b) {
         updateSwatchLabels();
         refreshPointerModeCursor();
         updateLayerItemNumberStyles();
+        saveFlickgameState();
       }, {
         onClearClick: function(e) {
           hyperlinks[canvasIndex][pagePickerColorIdx] = 0;
@@ -937,6 +939,7 @@ function rgbToLab(r,g,b) {
           updateSwatchLabels();
           refreshPointerModeCursor();
           updateLayerItemNumberStyles();
+          saveFlickgameState();
         },
         clearButtonText: '\u2715 clear link'
       });
@@ -1265,6 +1268,7 @@ function rgbToLab(r,g,b) {
 
     function linkChange(newLink) {
       gameLink = newLink;
+      saveFlickgameState();
     }
 
     function clearPalette() {
@@ -1277,6 +1281,7 @@ function rgbToLab(r,g,b) {
       }
 
       setVisuals();
+      saveFlickgameState();
     }
     var BRUSH_SLIDER_DISCRETE = [1, 3, 5, 7, 9, 11, 13, 16];
     var BRUSH_SLIDER_MIN = BRUSH_SLIDER_DISCRETE[0];
@@ -2279,6 +2284,7 @@ function rgbToLab(r,g,b) {
       lastX = -1;
       lastY = -1;
       lastButton = -1;
+      saveFlickgameState();
 
       e.preventDefault();
     }
@@ -3231,13 +3237,12 @@ function rgbToLab(r,g,b) {
       align-items: center;
       justify-content: center;
       box-sizing: border-box;
-      background: var(--background-color);
+      background: var(--toolbar-color);
       color: var(--foreground-color);
-      border: 6px solid var(--background-color);
+      border: 6px solid var(--toolbar-color);
       border-radius: 6px;
       cursor: pointer;
       touch-action: manipulation;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
     .mobile-grid-tab #mobile-grid-icon {
       width: 100%;
@@ -3514,7 +3519,7 @@ function rgbToLab(r,g,b) {
                       <center>
                         <input width="640" style="border:2px solid gray;" onkeydown="event.stopPropagation();"
                           value="www.flickgame.org" id="linkInput" oninput="linkChange(this.value)" />
-                          <span id="bgColorSelectContainer"><select id="bgColorSelect" class="toolbar"  style="border: 2px solid gray;" onchange="changeBackgroundColor(colorPalette[this.value],true);">
+                          <span id="bgColorSelectContainer"><select id="bgColorSelect" class="toolbar"  style="border: 2px solid gray;" onchange="changeBackgroundColor(colorPalette[this.value],true);saveFlickgameState();">
                           </select></span>
                           &nbsp;
                         <span id="toolbarcontainer">
@@ -3664,7 +3669,7 @@ function rgbToLab(r,g,b) {
       <label for="burger-link-input">URL Link</label><br />
       <input type="text" id="burger-link-input" class="burger-link-input" placeholder="www.flickgame.org" oninput="linkChange(this.value); var li=document.getElementById('linkInput'); if(li) li.value=this.value;" />
       <span id="burger-bg-label">Background:</span>
-      <select id="burger-bg-select" class="toolbar" style="border: 2px solid gray;" onchange="changeBackgroundColor(colorPalette[this.value],true); var b=document.getElementById('bgColorSelect'); if(b) b.value=this.value;"></select>
+      <select id="burger-bg-select" class="toolbar" style="border: 2px solid gray;" onchange="changeBackgroundColor(colorPalette[this.value],true); var b=document.getElementById('bgColorSelect'); if(b) b.value=this.value; saveFlickgameState();"></select>
       <p>
       <button type="button" class="burger-dialog-btn" onclick="openPaletteSelector(event);">🎨 Select colour palette</button>
       <hr>
