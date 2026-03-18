@@ -2786,17 +2786,27 @@ function rgbToLab(r,g,b) {
       document.body.style.backgroundColor = color;
       var distance_from_white = color_distance(color, "#ffffff");
       var distance_from_black = color_distance(color, "#000000");
+      var rgb = hexToRgb(color);
+      var tr, tg, tb;
       if (distance_from_white < distance_from_black){
         foreground_color = "#000000";
         document.documentElement.style.setProperty('--foreground-color', "#000000");
         document.documentElement.style.setProperty('--radius-filter', 'invert(1)');
         document.documentElement.style.setProperty('--selected-border-color', '#00ffff');
+        tr = Math.round(rgb.r * 0.9);
+        tg = Math.round(rgb.g * 0.9);
+        tb = Math.round(rgb.b * 0.9);
       } else {
         foreground_color = "#ffffff";
         document.documentElement.style.setProperty('--foreground-color', "#ffffff");
         document.documentElement.style.setProperty('--radius-filter', 'none');
         document.documentElement.style.setProperty('--selected-border-color', '#ff0000');
+        tr = Math.min(255, Math.round(rgb.r + (255 - rgb.r) * 0.2));
+        tg = Math.min(255, Math.round(rgb.g + (255 - rgb.g) * 0.2));
+        tb = Math.min(255, Math.round(rgb.b + (255 - rgb.b) * 0.2));
       }
+      var toolbarColor = '#' + ((1 << 24) | (tr << 16) | (tg << 8) | tb).toString(16).slice(1);
+      document.documentElement.style.setProperty('--toolbar-color', toolbarColor);
     }
   </script>
 
@@ -2804,9 +2814,19 @@ function rgbToLab(r,g,b) {
     /*<![CDATA[*/
 
     /* foreground text color variable*/
+  * {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  input, textarea {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
   :root {
     --background-color: black;
     --foreground-color: white;
+    --toolbar-color: #1a1a1a;
     --radius-filter: none;
     --selected-border-color: #ff0000;
     --burger-menu-font-size: 16px;
@@ -2865,8 +2885,6 @@ body{
       -ms-interpolation-mode: nearest-neighbor;
 
       touch-action: none; /* Disable browser handling of all panning and zooming gestures */
-      -webkit-user-select: none; /* Prevent selection */
-      user-select: none;
     }
 
     /* Add new styles for palette modal - position set by JS relative to trigger button */
@@ -2875,7 +2893,7 @@ body{
       max-width: 220px;
       max-height: 400px;
       overflow-y: auto;
-      background-color: black;
+      background-color: var(--toolbar-color);
       border: 2px solid gray;
       padding: 25px;
       z-index: 1000;
@@ -2883,8 +2901,8 @@ body{
 
 
     select {
-      background-color: black;
-      color: white;
+      background-color: var(--toolbar-color);
+      color: var(--foreground-color);
       text-indent: 5px;
     }
 
@@ -2907,16 +2925,16 @@ body{
     }
 
     input {
-      background-color: black;
-      color: white;
+      background-color: var(--toolbar-color);
+      color: var(--foreground-color);
       font-size: 200%;
       text-align: center;
       margin-bottom: 5px;
     }
 
     input#linkInput {
-      background-color: black;
-      color: white;
+      background-color: var(--toolbar-color);
+      color: var(--foreground-color);
       font-size: 150%;
       text-align: center;
       margin-bottom: 5px;
@@ -2984,8 +3002,6 @@ body{
     /*all images pixelated*/
     img {
       image-rendering: pixelated;
-      /*disable selection*/
-      user-select: none;
     }
 
     img.selected {
@@ -3069,7 +3085,7 @@ body{
       display: none;
       position: fixed;
       z-index: 100;
-      background: #2a2a3e;
+      background: var(--toolbar-color);
       border: 2px solid #777;
       border-radius: 5px;
       padding: 8px;
@@ -3387,7 +3403,7 @@ body{
       align-items: center;
       gap: 8px;
       flex-wrap: wrap;
-      background: #1a1a2e;
+      background: var(--toolbar-color);
       padding: 8px;
       border-radius: 8px;
     }
@@ -3397,7 +3413,7 @@ body{
       justify-content: center;
       gap: 8px;
       padding: 8px;
-      background: #1a1a2e;
+      background: var(--toolbar-color);
       flex-wrap: nowrap;
       flex-shrink: 0;
       border-radius: 8px;
@@ -3410,7 +3426,7 @@ body{
       align-items: center;
       justify-content: center;
       box-sizing: border-box;
-      background: #2a2a3e;
+      background: var(--background-color);
       color: var(--foreground-color);
       border: 2px solid gray;
       border-radius: 4px;
@@ -3477,9 +3493,9 @@ body{
       align-items: center;
       justify-content: center;
       box-sizing: border-box;
-      background: #2a2a3e;
+      background: var(--background-color);
       color: var(--foreground-color);
-      border: 6px solid #2a2a3e;
+      border: 6px solid var(--background-color);
       border-radius: 6px;
       cursor: pointer;
       touch-action: manipulation;
@@ -3525,7 +3541,8 @@ body{
       display: flex;
     }
     .burger-dialog-content {
-      background: #1a1a2e;
+      background: var(--toolbar-color);
+      color: var(--foreground-color);
       border: 2px solid gray;
       padding: 24px;
       max-width: 280px;
@@ -3553,7 +3570,7 @@ body{
       width: 100%;
       margin-bottom: 6px;
       padding: 6px 10px;
-      background: #2a2a3e;
+      background: var(--background-color);
       color: var(--foreground-color);
       border: 2px solid gray;
       border-radius: 4px;
@@ -3582,7 +3599,7 @@ body{
       box-sizing: border-box;
       margin: 4px 0 8px 0;
       padding: 6px;
-      background: #2a2a3e;
+      background: var(--background-color);
       color: var(--foreground-color);
       border: 2px solid gray;
       font-size: var(--burger-menu-font-size);
@@ -3591,7 +3608,7 @@ body{
       display: none;
       position: fixed;
       z-index: 100;
-      background: #2a2a3e;
+      background: var(--toolbar-color);
       border: 2px solid #777;
       border-radius: 5px;
       padding: 8px;
