@@ -11,7 +11,6 @@
   <script src="colorNames.js"></script>
   <script type="text/javascript">
 
-    var contexts = new Array();
     const version = "2";
     var gameLink = "www.flickgame.org"
     var canvasIndex = 0;
@@ -87,19 +86,6 @@ function rgbToLab(r,g,b) {
     function nearest_color_in_palette(palette,target_color){
       var nearest_color_idx = nearest_color_index_in_palette(palette,target_color);
       return palette[nearest_color_idx];
-    }
-
-    function furthest_color_in_palette(palette,target_color){
-      var furthest_color = palette[0];
-      var furthest_distance = color_distance(target_color, palette[0]);
-      for (var i = 1; i < palette.length; i++){
-        var distance = color_distance(target_color, palette[i]);
-        if (distance > furthest_distance){
-          furthest_distance = distance;
-          furthest_color = palette[i];
-        }
-      }
-      return furthest_color;
     }
 
     function find_palette_transformation(palettea,paletteb){
@@ -375,7 +361,6 @@ function rgbToLab(r,g,b) {
     var layerElem = new Array();
     var colorIndex = getRandomInt(7, 16);
 
-    var radiusElem = new Array();
     var brushSizeSliderElem = null;
     var brushSizeThumbElem = null;
     var brushSliderDragging = false;
@@ -722,16 +707,13 @@ function rgbToLab(r,g,b) {
         activeIndex: 0,
         width: w,
         height: h,
-        canvasses: [emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle, emptyCanvasRle],
+        canvasses: Array(16).fill(emptyCanvasRle),
         palette_name: random_palette_name,
         background_color: "#000000",
         foreground_color: "#ffffff",
         version: version,
-        hyperlinks: []
+        hyperlinks: Array.from({length: 16}, function() { return new Array(16).fill(0); })
       };
-      for (var i = 0; i < 16; i++) {
-        emptyState.hyperlinks[i] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-      }
       stringToState(JSON.stringify(emptyState));
       setVisuals(true);
       setLayer(1);
@@ -1678,21 +1660,17 @@ function rgbToLab(r,g,b) {
           burgerDialog.setAttribute('aria-hidden', 'false');
         });
       }
-      var burgerClose = document.getElementById('burger-dialog-close');
-      if (burgerClose && burgerDialog) {
-        burgerClose.addEventListener('click', function() {
-          burgerDialog.classList.remove('visible');
-          burgerDialog.setAttribute('aria-hidden', 'true');
-          closePaletteSelector();
-        });
+      function closeBurgerDialog() {
+        if (!burgerDialog) return;
+        burgerDialog.classList.remove('visible');
+        burgerDialog.setAttribute('aria-hidden', 'true');
+        closePaletteSelector();
       }
+      var burgerClose = document.getElementById('burger-dialog-close');
+      if (burgerClose) burgerClose.addEventListener('click', closeBurgerDialog);
       if (burgerDialog) {
         burgerDialog.addEventListener('click', function(e) {
-          if (e.target === burgerDialog) {
-            burgerDialog.classList.remove('visible');
-            burgerDialog.setAttribute('aria-hidden', 'true');
-            closePaletteSelector();
-          }
+          if (e.target === burgerDialog) closeBurgerDialog();
         });
       }
 
@@ -1774,11 +1752,6 @@ function rgbToLab(r,g,b) {
         }
       }
 
-      window.addEventListener('resize', function() {
-        if (isMobileLayout()) {
-          requestAnimationFrame(function() { updateMobileCanvasSize(); });
-        }
-      });
       window.onLayoutModeChange = function() {
         resetViewTransform();
         var canvas = document.getElementById('mainCanvas');
@@ -1787,7 +1760,6 @@ function rgbToLab(r,g,b) {
         var slider = document.getElementById('brush-size-slider');
         var desktopSliderContainer = document.getElementById('desktop-brush-slider-container');
         var mobileSliderContainer = document.getElementById('mobile-brush-slider-container');
-        var burgerDlg = document.getElementById('burger-dialog');
         var swatchContainer = document.getElementById('swatch-container');
         var desktopSwatchCell = document.getElementById('desktop-swatch-cell');
         var mobileSwatchGrid = document.getElementById('mobile-swatch-grid');
@@ -1799,7 +1771,7 @@ function rgbToLab(r,g,b) {
           }
           if (swatchContainer && mobileSwatchGrid) mobileSwatchGrid.appendChild(swatchContainer);
           hideFramePicker();
-          if (burgerDlg) { burgerDlg.classList.remove('visible'); burgerDlg.setAttribute('aria-hidden', 'true'); }
+          closeBurgerDialog();
           requestAnimationFrame(function() { requestAnimationFrame(function() { updateMobileCanvasSize(); }); });
         } else {
           zoomFactor = 4;
@@ -1810,7 +1782,7 @@ function rgbToLab(r,g,b) {
           }
           if (swatchContainer && desktopSwatchCell) desktopSwatchCell.appendChild(swatchContainer);
           hideFramePicker();
-          if (burgerDlg) { burgerDlg.classList.remove('visible'); burgerDlg.setAttribute('aria-hidden', 'true'); }
+          closeBurgerDialog();
           requestAnimationFrame(function() { updateDesktopScale(); });
         }
         pointerModeBtn = isMobileLayout() ? document.getElementById('mobile-pointer-btn') : document.getElementById('pointer_mode_btn');
@@ -1959,15 +1931,11 @@ function rgbToLab(r,g,b) {
       return [x, y];
     }
 
-    function uint8ar_copy(src) {
-      return src.slice();
-    }
-
     var undoList = new Array();
     function preserveUndoState() {
       var undoItem = new Object();
       undoItem.canvasIndex = canvasIndex;
-      undoItem.canvasDat = uint8ar_copy(canvasses[canvasIndex]);
+      undoItem.canvasDat = canvasses[canvasIndex].slice();
       undoItem.palette_name = palette_name;
       undoItem.background_color = background_color;
       undoList.push(undoItem);
