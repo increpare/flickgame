@@ -8,6 +8,7 @@
   <script src="FileSaver.js"></script>
   <script src="flickgame_base.js"></script>
   <script src="flickgame_vanilla.js"></script>
+  <script src="colorNames.js"></script>
   <script type="text/javascript">
 
     var contexts = new Array();
@@ -19,7 +20,6 @@
     var foreground_color = "#ffffff";
     var canvasses = new Array();
       var hyperlinks = new Array();
-      //16 arrays of 16 elements, filled with 0s
       for (var i = 0; i < 16; i++){
         hyperlinks[i] = new Array(16).fill(0);
     }
@@ -27,337 +27,6 @@
     var shareLinkInner = null;
 
     var FLICKGAME_STORAGE_KEY = "flickgame_editor_state";
-
-var colorNames = {
-  antiquity16: [
-    'Mine Shaft',         'Cocoa Brown',
-    'Crater Brown',       'Pickled Bean',
-    'Santa Fe',           'Apricot',
-    'Gold Sand',          'Cactus',
-    'Clay Creek',         'Raven',
-    'Cascade',            'Burnt Sienna',
-    'Juicy Passionfruit', 'Flame Pea',
-    'Golden Grass',       'Zombie'
-  ],
-  arq16: [
-    'White',            'Peach Orange',
-    'Aluminium',        'Indigo',
-    'Cinnabar',         'Haiti',
-    'Wine Berry',       'Congress Blue',
-    'Carrot Orange',    'Nutmeg',
-    'Cornflower Lilac', 'Pastel Green',
-    'Gorse',            'Fuchsia Blue',
-    'Deep Blush',       'Eucalyptus'
-  ],
-  'bubblegum-16': [
-    'Woodsmoke',      'Monarch',
-    'Thunderbird',    'Crusta',
-    'Gold',           'Alice Blue',
-    'Tickle Me Pink', 'Radical Red',
-    'Disco',          'Ripe Plum',
-    'Astronaut',      'Danube',
-    'Green Yellow',   'Malachite',
-    'Allports',       'Prussian Blue'
-  ],
-  colodore: [
-    'Black',        'Tundora',
-    'Boulder',      'Silver Chalice',
-    'White',        'Solid Pink',
-    'Contessa',     'Saddle Brown',
-    'Mule Fawn',    'Manz',
-    'Mint Green',   'Fruit Salad',
-    'Downy',        'Cornflower Blue',
-    'Governor Bay', 'Vivid Violet'
-  ],
-  'color-graphics-adapter': [
-    'Black',           'Emperor',
-    'Silver Chalice',  'White',
-    'Dark Blue',       'Dodger Blue',
-    'Japanese Laurel', "Screamin' Green",
-    'Persian Green',   'Aquamarine',
-    'Bright Red',      'Persimmon',
-    'Flirt',           'Pink Flamingo',
-    'Chelsea Gem',     'Gorse'
-  ],
-  commodore64: [
-    'Black',              'Dove Gray',
-    'Gray',               'Silver Chalice',
-    'White',              'Sepia Skin',
-    'Contessa',           'Raw Umber',
-    'Earth',              'Deco',
-    'Granny Smith Apple', 'Fruit Salad',
-    'Fountain Blue',      'Moody Blue',
-    'Victoria',           'Trendy Pink'
-  ],
-  'cretaceous-16': [
-    'Cape Cod',       'Outer Space',
-    'Moonless Sky',   'Tom Thumb',
-    'Spicy Mix',      'Millbrook',
-    'Don Juan',       'Chalet Green',
-    'Sandstone',      'Dingley',
-    'Barley Corn',    'Stonewall',
-    'Sandrift',       'Dawn',
-    'Heathered Gray', 'Nomad'
-  ],
-  'darkseed-16': [
-    'Black',            'Swamp',
-    'Stellar Explorer', 'Daintree',
-    'Elephant',         'Thunder',
-    'Eggplant',         'Kabul',
-    'Russett',          'Corduroy',
-    'Schooner',         'Donkey Brown',
-    'Rodeo Dust',       'Eunry',
-    'Oyster Pink',      'Alabaster'
-  ],
-  'dawnbringer-16': [
-    'Ebony',          'Livid Brown',
-    'Rhino',          'Emperor',
-    'Mule Fawn',      'Green Pea',
-    'Flush Mahogany', 'Pablo',
-    'Danube',         'Brandy Punch',
-    'Regent Gray',    'Olive Drab',
-    'Eunry',          'Downy',
-    'Tacha',          'Zanah'
-  ],
-  'daylight-16': [
-    'Wheat',         'Porsche',
-    'Antique Brass', 'Au Chico',
-    'Matterhorn',    'Old Lavender',
-    'Stack',         'Swamp Green',
-    'Thunder',       'Costa Del Sol',
-    'Tussock',       'Saffron Mango',
-    'Brandy Punch',  'Potters Clay',
-    'Spice',         'Brown Rust'
-  ],
-  'endesga-16': [
-    'Harvest Gold',     'Santa Fe',
-    'Lotus',            'Woody Brown',
-    'Mexican Red',      'Cinnabar',
-    'Sea Buckthorn',    'Mustard',
-    'Mantis',           'Goblin',
-    'Gable Green',      'Blue Bayoux',
-    'Casper',           'White',
-    'Bright Turquoise', 'Lochmara'
-  ],
-  'eroge-copper': [
-    'Gondola',          'Saddle',
-    'Potters Clay',     'Tussock',
-    'Tacao',            'Cherokee',
-    'Gin Fizz',         'Cotton Seed',
-    'Chelsea Cucumber', 'Neptune',
-    'Steel Blue',       'Spectra',
-    'Port Gore',        'Lotus',
-    'Contessa',         'Apricot'
-  ],
-  'fading-16': [
-    'Sapling',      'Tan',
-    'Muddy Waters', 'Copper Rust',
-    'Cosmic',       'Matterhorn',
-    'Trout',        'Cutty Sark',
-    'Sage',         'Zambezi',
-    'Hurricane',    'Zorba',
-    'Flax Smoke',   'Teak',
-    'Domino',       'Barley Corn'
-  ],
-  'galaxy-flame': [
-    'Hippie Blue',      'Calypso',
-    'Pickled Bluewood', 'Woodsmoke',
-    'Outer Space',      'Timber Green',
-    'Mineral Green',    'Axolotl',
-    'Sage',             'Parchment',
-    'Maize',            'Porsche',
-    'Driftwood',        'Old Copper',
-    'Cork',             'Thunder'
-  ],
-  'go-line': [
-    'Ripe Plum',   'Disco',
-    'Torch Red',   'Crusta',
-    'Bright Sun',  'Lima',
-    'Ocean Green', 'Chambray',
-    'Black',       'Blue',
-    'Dodger Blue', 'Bright Turquoise',
-    'Serenade',    'French Gray',
-    'Brown Rust',  'Soya Bean'
-  ],
-  'grayscale-16': [
-    'Black',      'Cod Gray',
-    'Mine Shaft', 'Lacquered Liquorice',
-    'Tundora',    'Scorpion',
-    'Dove Gray',  'Dull',
-    'Gray',       'More Than A Week',
-    'Dusty Gray', 'Silver Chalice',
-    'Silver',     'Alto',
-    'Mercury',    'White'
-  ],
-  'island-joy-16': [
-    'White',           'Aquamarine',
-    'Java',            'Shuttle Gray',
-    'Martinique',      'Elm',
-    'Fern',            'Conifer',
-    'Marigold Yellow', 'Tan Hide',
-    'Chestnut Rose',   'Eminence',
-    'Maroon Flush',    'Persian Pink',
-    'Manhattan',       'Sage'
-  ],
-  'lost-century': [
-    'Tan',           'Antique Brass',
-    'Brown Rust',    'Spicy Mix',
-    'Matterhorn',    'Muddy Waters',
-    'Cape Palliser', 'Taupe',
-    'Yellow Metal',  'Husk',
-    'Akaroa',        'Cascade',
-    'Cutty Sark',    'Don Juan',
-    'Hurricane',     'Bronco'
-  ],
-  'microsoft-windows': [
-    'Black',           'Gray',
-    'Silver',          'White',
-    'Maroon',          'Red',
-    'Japanese Laurel', 'Green',
-    'Olive',           'Yellow',
-    'Navy Blue',       'Blue',
-    'Fresh Eggplant',  'Electric Violet',
-    'Blue Lagoon',     'Cyan / Aqua'
-  ],
-  'miyazaki-16': [
-    'Baltic Sea',        'Rhino',
-    'Dorado',            'Bandicoot',
-    'Heathered Gray',    'Sea Mist',
-    'Satin Linen',       'Jelly Bean',
-    'Shakespeare',       'Roman Coffee',
-    'Fuzzy Wuzzy Brown', 'Tonys Pink',
-    'Green Pea',         'Fruit Salad',
-    'Sushi',             'Anzac'
-  ],
-  na16: [
-    'Manatee',       'Mulled Wine',
-    'Livid Brown',   'Cape Palliser',
-    'Burning Sand',  'Sidecar',
-    'Lime',          'Pesto',
-    'Fire Bush',     'Stiletto',
-    'Chestnut Rose', 'Eminence',
-    'Half Baked',    'Astral',
-    'Nile Blue',     'Gondola'
-  ],
-  'nanner-jam': [
-    'Blackcurrant',  'Eggplant',
-    'Tosca',         'Brown Rust',
-    'Antique Brass', 'Calico',
-    'Tahuna Sands',  'De York',
-    'Como',          'Waikawa Gray',
-    'Polo Blue',     'Cornflower',
-    'Old Rose',      'Cameo',
-    'Spicy Pink',    'Bison Hide'
-  ],
-  'pico-8': [
-    'Black',
-    'Cloud Burst',
-    'Tawny Port',
-    'Tropical Rain Forest',
-    'Brown Rust',
-    'Soya Bean',
-    'French Gray',
-    'Serenade',
-    'Torch Red',
-    'Web Orange',
-    'Broom',
-    'Malachite',
-    'Dodger Blue',
-    'Kimberly',
-    'Tickle Me Pink',
-    'Flesh'
-  ],
-  'r-place': [
-    'White',          'Mercury',
-    'Gray',           'Mine Shaft',
-    'Carnation Pink', 'Red',
-    'Tangerine',      'Cape Palliser',
-    'Turbo',          'Conifer',
-    'Green',          "Robin's Egg Blue",
-    'Lochmara',       'Blue',
-    'Lavender',       'Fresh Eggplant'
-  ],
-  'shido-cyberneon': [
-    'Stratos',       'Blue Stone',
-    'Green Haze',    'Spring Green',
-    'Congress Blue', 'Lochmara',
-    'Cyan / Aqua',   'Pink Flamingo',
-    'Purple Heart',  'Purple',
-    'Lipstick',      'Torch Red',
-    'Astronaut',     'San Marino',
-    'Sail',          'White'
-  ],
-  'steam-lords': [
-    'Green Kelp',    'Killarney',
-    'Spring Leaves', 'Gurkha',
-    'Go Ben',        'Roman Coffee',
-    'Congo Brown',   'Livid Brown',
-    'Cinder',        'Bleached Cedar',
-    'Martinique',    'Comet',
-    'Slate Gray',    'Regent Gray',
-    'Tower Gray',    'Tiara'
-  ],
-  'summers-past-16': [
-    'Temptress',        'Voodoo',
-    'Falcon',           'Thatch',
-    'Fall Green',       'Glacier',
-    'Hippie Blue',      'Willow Grove',
-    'Chelsea Cucumber', 'Old Gold',
-    'Energy Yellow',    'Gold Sand',
-    'Burnt Sienna',     'Contessa',
-    'Flush Mahogany',   'Solid Pink'
-  ],
-  'sweetie-16': [
-    'Mirage',              'Finn',
-    'Night Shadz',         'Burnt Sienna',
-    'Macaroni and Cheese', 'Sulu',
-    'Chateau Green',       'Lochinvar',
-    'Astronaut',           'Indigo',
-    'Picton Blue',         'Malibu',
-    'Wild Sand',           'Nepal',
-    'Blue Bayoux',         'Pickled Bluewood'
-  ],
-  'taffy-16': [
-    'Ebony Clay',     'Blue Violet',
-    'Regent St Blue', 'Hint of Green',
-    'Hit Pink',       'Wild Watermelon',
-    'Cabaret',        'Indigo',
-    'Picton Blue',    'Shamrock',
-    'Green Yellow',   'Golden Fizz',
-    'Jaffa',          'Valencia',
-    'Night Shadz',    'Martinique'
-  ],
-  'urbex-16': [
-    'Foggy Gray',   'Lemon Grass',
-    'Fuscous Gray', 'Cocoa Brown',
-    'Harvest Gold', 'Sage',
-    'Dingley',      'Kelp',
-    'Well Read',    'Claret',
-    'Cannon Pink',  'Mamba',
-    'Asphalt',      'Eminence',
-    'Indigo',       'Hippie Blue'
-  ],
-  'vanilla-milkshake': [
-    'Shark',         'Salt Box',
-    'Wafer',         'Geraldine',
-    'Dull Lavender', 'Regent St Blue',
-    'Jagged Ice',    'Lavender Rose',
-    'Envy',          'Sulu',
-    'Sandwisp',      'Tequila',
-    'Tumbleweed',    'Chardonnay',
-    'Picasso',       'Early Dawn'
-  ],
-  woodspark: [
-    'Sandwisp',    'Saffron Mango',
-    'Di Serria',   'Au Chico',
-    'Matterhorn',  'Killarney',
-    'Fruit Salad', 'Lime',
-    'Downy',       'Wedgewood',
-    'Smoky',       'Gumbo',
-    'Wafer',       'Carnation',
-    'Camelot',     'Deep Blush'
-  ]
-};
 
 function rgbToLab(r,g,b) {
   r /= 255;
@@ -393,16 +62,14 @@ function rgbToLab(r,g,b) {
     // Convert to LAB
     var lab1 = rgbToLab(c1.r, c1.g, c1.b);
     var lab2 = rgbToLab(c2.r, c2.g, c2.b);
-    
+
     // Calculate Delta E using the CIE76 formula
     const deltaL = lab1.L - lab2.L;
     const deltaA = lab1.a - lab2.a;
     const deltaB = lab1.b - lab2.b;
-    
+
     return Math.sqrt(deltaL * deltaL + deltaA * deltaA + deltaB * deltaB);
   }
-
-
 
   function nearest_color_index_in_palette(palette,target_color){
       var nearest_color_idx = 0;
@@ -415,7 +82,7 @@ function rgbToLab(r,g,b) {
         }
       }
       return nearest_color_idx;
-    }  
+    }
 
     function nearest_color_in_palette(palette,target_color){
       var nearest_color_idx = nearest_color_index_in_palette(palette,target_color);
@@ -434,11 +101,11 @@ function rgbToLab(r,g,b) {
       }
       return furthest_color;
     }
-          
+
     function find_palette_transformation(palettea,paletteb){
       //finds what colours in the second palette correspond most closely to those in the first palette - has to be a 1-1 mapping.
       var mapping = {};
-      
+
       var colors_to_allocate = palettea.concat([]);
       var colors_to_target = paletteb.concat([]);
       while (colors_to_allocate.length > 0){
@@ -455,7 +122,7 @@ function rgbToLab(r,g,b) {
         }
        }
        //remove best_match from colors_to_allocate
-       colors_to_allocate.splice(colors_to_allocate.indexOf(best_pair[0]), 1);   
+       colors_to_allocate.splice(colors_to_allocate.indexOf(best_pair[0]), 1);
        colors_to_target.splice(colors_to_target.indexOf(best_pair[1]), 1);
        mapping[palettea.indexOf(best_pair[0])] = paletteb.indexOf(best_pair[1]);
       }
@@ -487,9 +154,9 @@ function rgbToLab(r,g,b) {
       //need to transform canvasses and hyperlinks to the new palette.
       var mapping = find_palette_transformation(palette_before, palette_after);
       apply_state_mapping(mapping);
-      
-      //transform background_color      
-      var new_background_color = nearest_color_in_palette(palette_after, background_color);  
+
+      //transform background_color
+      var new_background_color = nearest_color_in_palette(palette_after, background_color);
       changeBackgroundColor(new_background_color);
     }
 
@@ -504,14 +171,14 @@ function rgbToLab(r,g,b) {
     var colorPalette = palettes[palette_name];
 
     function set_color_palette(name,preserver_undo_state = true){
-      // if there is something on the undo stack, let's check if the previous one 
-      // was a change of colour palette 
+      // if there is something on the undo stack, let's check if the previous one
+      // was a change of colour palette
       // so that information doesn't get lost if you're changing palette rapidly
       if (undoList.length > 0){
         var previous_action = undoList[undoList.length - 1];
         if (previous_action.palette_name !== palette_name){
           var old_canvas_index = canvasIndex;
-          doUndo();        
+          doUndo();
           setLayer(old_canvas_index+1,false)
         }
       }
@@ -522,7 +189,6 @@ function rgbToLab(r,g,b) {
         burgerBgSelectOptions[i].textContent = colorNames[name][i];
       }
 
-      
       if (preserver_undo_state){
         preserveUndoState();
       }
@@ -530,14 +196,13 @@ function rgbToLab(r,g,b) {
       colorPalette = palettes[name];
       // Update color swatches
       for (var i = 0; i < 16; i++) {
-        document.documentElement.style.setProperty('--col' + i, colorPalette[i]);          
+        document.documentElement.style.setProperty('--col' + i, colorPalette[i]);
         var distance_from_white = color_distance(colorPalette[i], "#ffffff");
         var distance_from_black = color_distance(colorPalette[i], "#000000");
         var text_color = distance_from_white > distance_from_black ? "#ffffff" : "#000000";
         bgColorSelectOptions[i].style.setProperty('--col' + i + '_fg', text_color);
-        
-      }
 
+      }
 
       var bgColorSelect = document.getElementById('bgColorSelect');
       bgColorSelect.value = colorPalette.indexOf(background_color);
@@ -550,7 +215,7 @@ function rgbToLab(r,g,b) {
 
     function revert_color_palette_to(p_name){
       var old_palette = palettes[p_name];
-      var newer_palette = palettes[palette_name];   
+      var newer_palette = palettes[palette_name];
       var mapping = find_palette_transformation(old_palette, newer_palette);
       //invert the mapping
       var inverted_mapping = {};
@@ -561,12 +226,12 @@ function rgbToLab(r,g,b) {
       set_modal_panel_selected_item(palette_name,p_name);
       palette_name = p_name;
       colorPalette = palettes[p_name];
-      
+
       // Update color swatches
       for (var i = 0; i < 16; i++) {
         document.documentElement.style.setProperty('--col' + i, colorPalette[i]);
       }
-      
+
       // Set the background color properly
       if (background_colors[p_name]) {
         changeBackgroundColor(background_colors[p_name], false);
@@ -579,7 +244,7 @@ function rgbToLab(r,g,b) {
       }
       var old_palette_index = Object.keys(palettes).indexOf(from_name);
       var new_palette_index = Object.keys(palettes).indexOf(to_name);
-      
+
       let old_name_div = document.getElementById('palette_name_' + old_palette_index);
       let new_name_div = document.getElementById('palette_name_' + new_palette_index);
       old_name_div.textContent = from_name;
@@ -608,15 +273,13 @@ function rgbToLab(r,g,b) {
       // Create a modal dialog
       modal = document.createElement('div');
       modal.className = 'palette-modal';
-      
 
-      
       // Create grid container
       var grid = document.createElement('div');
       grid.style.display = 'grid';
       grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(200px, 1fr))';
       grid.style.gap = '10px';
-      
+
       // Add all palette previews
       for (var paletteName in palettes) {
         let currently_selected = paletteName === palette_name;
@@ -624,26 +287,26 @@ function rgbToLab(r,g,b) {
         paletteDiv.style.border = '1px solid gray';
         paletteDiv.style.padding = '5px';
         paletteDiv.style.cursor = 'pointer';
-        
+
         // Add palette name
         let nameDiv = document.createElement('div');
         if (currently_selected){
           nameDiv.textContent = "[ "+paletteName+" ]";
           nameDiv.style.color = 'white';
-        } else {          
+        } else {
           nameDiv.textContent = paletteName;
         }
         nameDiv.style.marginBottom = '5px';
         nameDiv.style.textAlign = 'center';
         nameDiv.id = 'palette_name_' + Object.keys(palettes).indexOf(paletteName);
         paletteDiv.appendChild(nameDiv);
-        
+
         // Add color previews
         let colorsDiv = document.createElement('div');
         colorsDiv.style.display = 'grid';
         colorsDiv.style.gridTemplateColumns = 'repeat(8, 1fr)';
         colorsDiv.style.gap = '2px';
-        
+
         palettes[paletteName].forEach(function(color) {
           let colorDiv = document.createElement('div');
           colorDiv.style.width = '100%';
@@ -651,29 +314,29 @@ function rgbToLab(r,g,b) {
           colorDiv.style.backgroundColor = color;
           colorsDiv.appendChild(colorDiv);
         });
-        
+
         paletteDiv.appendChild(colorsDiv);
-        
+
         // Add click handler with proper closure
         (function(name) {
           paletteDiv.onclick = function() {
             if (name === palette_name){
               return;
-            }            
+            }
             //update nameDiv for previous and new item
             set_modal_panel_selected_item(palette_name, name);
 
-            set_color_palette(name);            
+            set_color_palette(name);
             setVisuals(true);
           };
         })(paletteName);
-        
+
         grid.appendChild(paletteDiv);
       }
-      
+
       // Add elements to modal
       modal.appendChild(grid);
-      
+
       // Add modal to body
       document.body.appendChild(modal);
 
@@ -707,12 +370,10 @@ function rgbToLab(r,g,b) {
         palette_button.style.webkitFilter = 'invert(1)';
       }
     }
-    
+
     var colorElem = new Array();
     var layerElem = new Array();
     var colorIndex = getRandomInt(7, 16);
-
-
 
     var radiusElem = new Array();
     var brushSizeSliderElem = null;
@@ -739,7 +400,6 @@ function rgbToLab(r,g,b) {
     }
     clientStandaloneRequest.send();
 
-
     function buildStandalone(sourceCode) {
       if (standalone_HTML_String.length === 0) {
         alert("Can't export yet - still downloading html template.", true);
@@ -758,7 +418,6 @@ function rgbToLab(r,g,b) {
     }
 
     OAUTH_CLIENT_ID = "eb2aad12c63aec0136b1";
-
 
     function getAuthURL() {
       var randomState = window.btoa(Array.prototype.map.call(
@@ -786,8 +445,6 @@ function rgbToLab(r,g,b) {
       shareLinkInner = null;
     }
 
-
-
     function githubLogOut() {
       window.localStorage.removeItem("oauth_access_token");
       var authUrl = getAuthURL();
@@ -799,7 +456,6 @@ function rgbToLab(r,g,b) {
       shareLinkInner = null;
     }
 
-
     function shareClick() {
       var oauthAccessToken = window.localStorage.getItem("oauth_access_token");
       if (typeof oauthAccessToken !== "string") {
@@ -807,7 +463,6 @@ function rgbToLab(r,g,b) {
         printUnauthorized();
         return;
       }
-
 
       var str = stateToString();
 
@@ -878,11 +533,10 @@ function rgbToLab(r,g,b) {
       return encoding;
     }
 
-
     function stateToString() {
       var state = new Object();
       state.gameLink = gameLink;
-      state.activeIndex = canvasIndex;      
+      state.activeIndex = canvasIndex;
       state.canvasses = new Array();
       state.palette_name = palette_name;
       state.background_color = background_color;
@@ -903,7 +557,6 @@ function rgbToLab(r,g,b) {
       var result = JSON.stringify(state);
       return result;
     }
-
 
     function applyEditorDimensions() {
       if (visibleCanvas) {
@@ -989,16 +642,14 @@ function rgbToLab(r,g,b) {
       if (state.activeIndex >= 16){
         state.activeIndex = 0;
       }
-      
+
       canvasIndex = state.activeIndex;
 
-      
       //if palette_name not defined, set it to dawnbringer-16
       if (state.palette_name === undefined){
         state.palette_name = "dawnbringer-16";
       }
 
-      
       //if version not defined, then I need to do the pallette_fix
       if (state.version === undefined){//only introduced version numbers in v2
         upgrade_v1_to_v2(state);
@@ -1141,12 +792,12 @@ function rgbToLab(r,g,b) {
         var dat = undoList.pop();
         if (dat.palette_name!==palette_name){
           //then we need to change the color palette of ALL canvasses
-          revert_color_palette_to(dat.palette_name); 
-          setVisuals(true);    
+          revert_color_palette_to(dat.palette_name);
+          setVisuals(true);
           setDropdowns();
-          return;    
+          return;
         }
-        canvasses[dat.canvasIndex] = dat.canvasDat;        
+        canvasses[dat.canvasIndex] = dat.canvasDat;
         colorPalette = palettes[palette_name];
         if (background_color !== dat.background_color){
           changeBackgroundColor(dat.background_color,false);
@@ -1628,7 +1279,7 @@ function rgbToLab(r,g,b) {
 
     function clearPalette() {
       preserveUndoState();
-      var canvas = canvasses[canvasIndex];      
+      var canvas = canvasses[canvasIndex];
       var bg_color_idx = nearest_color_index_in_palette(colorPalette, background_color);
 
       for (var i = 0; i < width * height; i++) {
@@ -1782,10 +1433,6 @@ function rgbToLab(r,g,b) {
       }
     }
 
-    function hexToRgbEditor(hex) {
-      return hexToRgb(hex);
-    }
-
     function ptrUpdateHover() {
       var px = Math.floor(ptrCursorX);
       var py = Math.floor(ptrCursorY);
@@ -1839,7 +1486,7 @@ function rgbToLab(r,g,b) {
 
       if (ptrHoveredIsLink && ptrHoveredColorIndex >= 0 && ptrHoveredColorIndex < 16) {
         fillColor = colorPalette[ptrHoveredColorIndex];
-        var rgb = hexToRgbEditor(fillColor);
+        var rgb = hexToRgb(fillColor);
         var luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
         if (luminance < DARK_LUMINANCE) {
           outlineColor = '#ffffff';
@@ -1859,7 +1506,6 @@ function rgbToLab(r,g,b) {
         }
       }
     }
-
 
     function setColor(newColorIndex, e) {
       if (newColorIndex === colorIndex && e) {
@@ -1927,7 +1573,6 @@ function rgbToLab(r,g,b) {
       linkInput = document.getElementById("linkInput");
       linkInput.value = gameLink;
 
-
       brushSizeSliderElem = document.getElementById("brush-size-slider");
       brushSizeThumbElem = document.getElementById("brush-size-thumb");
       if (brushSizeSliderElem && brushSizeThumbElem) {
@@ -1983,39 +1628,20 @@ function rgbToLab(r,g,b) {
       framePickerEl = createFramePicker();
       updateGridIconHighlight();
 
-      // Pointer down outside: dismiss popups immediately (good for touch)
-      document.addEventListener('pointerdown', function(e) {
-        if (pagePickerEl && pagePickerColorIdx >= 0) {
-          if (!pagePickerEl.contains(e.target)) {
-            hidePagePicker();
-          }
+      function dismissPopupsOutside(e) {
+        if (pagePickerEl && pagePickerColorIdx >= 0 && !pagePickerEl.contains(e.target)) {
+          hidePagePicker();
         }
-        if (framePickerEl && framePickerEl.classList.contains('visible')) {
-          if (!framePickerEl.contains(e.target) && !(e.target && e.target.id === 'mobile-frame-btn')) {
-            hideFramePicker();
-          }
+        if (framePickerEl && framePickerEl.classList.contains('visible') &&
+            !framePickerEl.contains(e.target) && !(e.target && e.target.id === 'mobile-frame-btn')) {
+          hideFramePicker();
         }
         if (modal && !modal.contains(e.target) && e.target.id !== 'palette_button' && !e.target.closest('[onclick*="openPaletteSelector"]')) {
           closePaletteSelector();
         }
-      });
-
-      // Click outside (fallback / mouse) to dismiss page picker, frame picker, and palette selector
-      document.addEventListener('click', function(e) {
-        if (pagePickerEl && pagePickerColorIdx >= 0) {
-          if (!pagePickerEl.contains(e.target)) {
-            hidePagePicker();
-          }
-        }
-        if (framePickerEl && framePickerEl.classList.contains('visible')) {
-          if (!framePickerEl.contains(e.target) && !(e.target && e.target.id === 'mobile-frame-btn')) {
-            hideFramePicker();
-          }
-        }
-        if (modal && !modal.contains(e.target) && e.target.id !== 'palette_button' && !e.target.closest('[onclick*="openPaletteSelector"]')) {
-          closePaletteSelector();
-        }
-      });
+      }
+      document.addEventListener('pointerdown', dismissPopupsOutside);
+      document.addEventListener('click', dismissPopupsOutside);
 
       // Burger dialog background select (same options as desktop)
       var burgerBgSelect = document.getElementById('burger-bg-select');
@@ -2075,11 +1701,9 @@ function rgbToLab(r,g,b) {
         layerElem[i] = elem;
       }
 
-
       bucketElem = document.getElementById("bucket");
       var mobileBucketBtn = document.getElementById("mobile-bucket-btn");
       mobileBucketImg = mobileBucketBtn ? mobileBucketBtn.querySelector("img") : null;
-
 
       for (var i = 0; i < 16; i++) {
         canvasses[i] = new Uint8Array(width * height);
@@ -2128,7 +1752,6 @@ function rgbToLab(r,g,b) {
       visibleContext.imageSmoothingEnabled = false;
       setVisuals(true);
       setColor(colorIndex);
-
 
       if (getDataIndex()===false){
         var saved = loadFlickgameState();
@@ -2221,15 +1844,7 @@ function rgbToLab(r,g,b) {
           // everything after that.
           var final_quote_index = left_removed.lastIndexOf("\"");
           var left_right_removed = left_removed.substring(0, final_quote_index);
-          stringToState(left_right_removed);
-          setVisuals(true);
-          setLayer(canvasIndex + 1);          
-          setDropdowns();
-          saveFlickgameState();
-          requestAnimationFrame(function() {
-            if (isMobileLayout()) updateMobileCanvasSize();
-            else updateDesktopScale();
-          });
+          loadAndDisplayState(left_right_removed);
         }
         r.readAsText(f);
       } else {
@@ -2237,40 +1852,25 @@ function rgbToLab(r,g,b) {
       }
     }
 
-
-
-
-    function getDataIndex() {
-      return getData({
-        onSuccess: function(code) {
-          stringToState(code);
-          setVisuals(true);
-          setLayer(canvasIndex + 1);
-          setDropdowns();
-          saveFlickgameState();
-          requestAnimationFrame(function() {
-            if (isMobileLayout()) updateMobileCanvasSize();
-            else updateDesktopScale();
-          });
-        },
-        onError: function(message) {
-          alert(message);
-        },
-        onEmbedded: function(code) {
-          // Index.html doesn't typically handle embedded data, but we can support it
-          stringToState(code);
-          setVisuals(true);
-          setLayer(canvasIndex + 1);
-          setDropdowns();
-          saveFlickgameState();
-          requestAnimationFrame(function() {
-            if (isMobileLayout()) updateMobileCanvasSize();
-            else updateDesktopScale();
-          });
-        }
+    function loadAndDisplayState(code) {
+      stringToState(code);
+      setVisuals(true);
+      setLayer(canvasIndex + 1);
+      setDropdowns();
+      saveFlickgameState();
+      requestAnimationFrame(function() {
+        if (isMobileLayout()) updateMobileCanvasSize();
+        else updateDesktopScale();
       });
     }
 
+    function getDataIndex() {
+      return getData({
+        onSuccess: loadAndDisplayState,
+        onError: function(message) { alert(message); },
+        onEmbedded: loadAndDisplayState
+      });
+    }
 
     function drawThumbnail(n) {
       var thumbCols = getThumbCols();
@@ -2299,8 +1899,6 @@ function rgbToLab(r,g,b) {
     }
 
     function setVisuals(genAllThumbnails=false) {
-      //visibleContext.drawImage(canvasses[canvasIndex], 0, 0); 
-      //visibleContext.drawImage(canvasses[canvasIndex], 0, 0,width*zoomFactor,height*zoomFactor); 
       canvas = canvasses[canvasIndex];
       for (var i = 0; i < width; i++) {
         for (var j = 0; j < height; j++) {
@@ -2323,15 +1921,12 @@ function rgbToLab(r,g,b) {
         drawThumbnail(canvasIndex);
       }
       linkInput.value = gameLink;
-      //set body background
-      // document.body.style.backgroundColor = background_colors[palette_name];
       updateUsedOnFrameIndicators();
       updateSwatchLabels();
       drawPointerCursor();
       if (!isMobileLayout()) updateLayerItemNumberStyles();
       updateMobileGridIconThumbnails(genAllThumbnails ? undefined : canvasIndex);
     }
-
 
     var drawing = 0;
     var drawingStartTime = 0;
@@ -2340,15 +1935,11 @@ function rgbToLab(r,g,b) {
     var touchDrawTimer = null;
     var touchDrawEvent = null;
 
-
     function getCoords(e) {
       var target = e.target || e.srcElement;
       var rect = target.getBoundingClientRect();
       var x, y;
       if (e.touches && e.touches.length > 0) {
-        if (e.touches.length === 0) {
-          return null;
-        }
         x = 0;
         y = 0;
         for (var i = 0; i < e.touches.length; i++) {
@@ -2367,8 +1958,6 @@ function rgbToLab(r,g,b) {
       }
       return [x, y];
     }
-
-
 
     function uint8ar_copy(src) {
       return src.slice();
@@ -2712,14 +2301,12 @@ function rgbToLab(r,g,b) {
 
     function mouseOut(e) {
       e = e || window.event;
-      // window.console.log(e);
       mouseMove(e);
       lastX = -1;
       lastY = -1;
 
       e.preventDefault();
     }
-
 
     function line(x1, y1, x2, y2) {
       var coordinatesArray = new Array();
@@ -2834,7 +2421,6 @@ function rgbToLab(r,g,b) {
         mousePressure = 0.5;
       }
       if (mousePressure === 0) {
-        //   mouseUp(e);
         return;
       }
 
@@ -2847,14 +2433,10 @@ function rgbToLab(r,g,b) {
         var canvas = canvasses[canvasIndex];
         var newColorIndex = canvas[pIndex];
 
-        // console.log(` x = ${x}; y = ${y}; pIndex = ${pIndex}; newColorIndex = ${newColorIndex}`);
         setColor(newColorIndex);
         return false;
       }
 
-      // Prevent default behavior for touch events to stop scrolling
-
-      
       var canvas = canvasses[canvasIndex];
 
       var points;
@@ -2879,7 +2461,6 @@ function rgbToLab(r,g,b) {
           floodFill(canvas, p[0], p[1], colorIndex);
         }
       }
-
 
       setVisuals();
 
@@ -3005,9 +2586,6 @@ function rgbToLab(r,g,b) {
   </script>
 
   <style type="text/css">
-    /*<![CDATA[*/
-
-    /* foreground text color variable*/
   * {
     -webkit-user-select: none;
     user-select: none;
@@ -3058,15 +2636,10 @@ function rgbToLab(r,g,b) {
     --col13_fg: #000000;
     --col14_fg: #000000;
     --col15_fg: #000000;
-  
-    
+    overscroll-behavior: none;
   }
-  
-  :root {
-  overscroll-behavior: none;
-}
-body{
-  overscroll-behavior: none;
+  body {
+    overscroll-behavior: none;
 }
     #mainCanvas {
       cursor: crosshair;
@@ -3092,7 +2665,6 @@ body{
       padding: 25px;
       z-index: 1000;
     }
-
 
     select {
       background-color: var(--toolbar-color);
@@ -3133,7 +2705,6 @@ body{
       text-align: center;
       margin-bottom: 5px;
       padding-bottom: 3px;
-      /*inlin*/
       display: inline;
     }
     #bgColorSelect {
@@ -3154,10 +2725,10 @@ body{
       text-align: right;
       /*don't capture input!*/
       pointer-events: none;
-      width:20px;    
+      width:20px;
       margin-left:10px;
     }
-    
+
     li {
       font-size: 150%;
       text-align: center;
@@ -3199,7 +2770,7 @@ body{
     }
 
     img.selected {
-      border: 2px solid var(--selected-border-color);
+      border: 1px solid var(--selected-border-color);
       touch-action: manipulation;
     }
 
@@ -3396,7 +2967,7 @@ body{
       pointer-events: none;
       object-fit: contain;
     }
-    
+
     .brush-size-slider.selected {
       border: 1px solid var(--selected-border-color);
     }
@@ -3416,7 +2987,6 @@ body{
       touch-action: manipulation;
     }
 
-    
     .grid-icon-svg .grid-cell {
       fill: rgba(255,255,255,0.45);
     }
@@ -3437,10 +3007,6 @@ body{
       margin-right: 20px;
       margin-top: 5px;
       touch-action: manipulation;
-    }
-
-    img.selected {
-      border: 1px solid var(--selected-border-color);
     }
 
     select {
@@ -3924,7 +3490,6 @@ body{
     #burger-bg-select {
       height: 30px;
     }
-    /*]]>*/
   </style>
   <title>
     flickgame.org
@@ -3938,104 +3503,28 @@ body{
     <table cellpadding="10">
       <tr>
         <td>
-          <ul>
-            <li>
-              <a class="layerItem selectedItem" id="layerItem1" href="#" onclick="setLayer(1);return false;">
-                <canvas id="thumbnail1" width="16" height="10"
-                  style="border:2px solid gray; background-color:transparent;"></canvas>
-                1</a>
-            </li>
-            <li>
-              <a class="layerItem" id="layerItem2" href="#" onclick="setLayer(2);return false;">
-                <canvas id="thumbnail2" width="16" height="10"
-                  style="border:2px solid gray; background-color:transparent;"></canvas>
-                2</a>
-            </li>
-            <li>
-              <a class="layerItem" id="layerItem3" href="#" onclick="setLayer(3);return false;">
-                <canvas id="thumbnail3" width="16" height="10"
-                  style="border:2px solid gray; background-color:transparent;"></canvas>
-                3</a>
-            </li>
-            <li>
-              <a class="layerItem" id="layerItem4" href="#" onclick="setLayer(4);return false;">
-                <canvas id="thumbnail4" width="16" height="10"
-                  style="border:2px solid gray; background-color:transparent;"></canvas>
-                4</a>
-            </li>
-            <li>
-              <a class="layerItem" id="layerItem5" href="#" onclick="setLayer(5);return false;">
-                <canvas id="thumbnail5" width="16" height="10"
-                  style="border:2px solid gray; background-color:transparent;"></canvas>
-                5</a>
-            </li>
-            <li>
-              <a class="layerItem" id="layerItem6" href="#" onclick="setLayer(6);return false;">
-                <canvas id="thumbnail6" width="16" height="10"
-                  style="border:2px solid gray; background-color:transparent;"></canvas>
-                6</a>
-            </li>
-            <li>
-              <a class="layerItem" id="layerItem7" href="#" onclick="setLayer(7);return false;">
-                <canvas id="thumbnail7" width="16" height="10"
-                  style="border:2px solid gray; background-color:transparent;"></canvas>
-                7</a>
-            </li>
-            <li>
-              <a class="layerItem" id="layerItem8" href="#" onclick="setLayer(8);return false;">
-                <canvas id="thumbnail8" width="16" height="10"
-                  style="border:2px solid gray; background-color:transparent;"></canvas>
-                8</a>
-            </li>
-            <li>
-              <a class="layerItem" id="layerItem9" href="#" onclick="setLayer(9);return false;">
-                <canvas id="thumbnail9" width="16" height="10"
-                  style="border:2px solid gray; background-color:transparent;"></canvas>
-                9</a>
-            </li>
-            <li>
-              <a class="layerItem" id="layerItem10" href="#" onclick="setLayer(10);return false;">
-                <canvas id="thumbnail10" width="16" height="10"
-                  style="border:2px solid gray; background-color:transparent;"></canvas>
-                10</a>
-            </li>
-            <li>
-              <a class="layerItem" id="layerItem11" href="#" onclick="setLayer(11);return false;">
-                <canvas id="thumbnail11" width="16" height="10"
-                  style="border:2px solid gray; background-color:transparent;"></canvas>
-                11</a>
-            </li>
-            <li>
-              <a class="layerItem" id="layerItem12" href="#" onclick="setLayer(12);return false;">
-                <canvas id="thumbnail12" width="16" height="10"
-                  style="border:2px solid gray; background-color:transparent;"></canvas>
-                12</a>
-            </li>
-            <li>
-              <a class="layerItem" id="layerItem13" href="#" onclick="setLayer(13);return false;">
-                <canvas id="thumbnail13" width="16" height="10"
-                  style="border:2px solid gray; background-color:transparent;"></canvas>
-                13</a>
-            </li>
-            <li>
-              <a class="layerItem" id="layerItem14" href="#" onclick="setLayer(14);return false;">
-                <canvas id="thumbnail14" width="16" height="10"
-                  style="border:2px solid gray; background-color:transparent;"></canvas>
-                14</a>
-            </li>
-            <li>
-              <a class="layerItem" id="layerItem15" href="#" onclick="setLayer(15);return false;">
-                <canvas id="thumbnail15" width="16" height="10"
-                  style="border:2px solid gray; background-color:transparent;"></canvas>
-                15</a>
-            </li>
-            <li>
-              <a class="layerItem" id="layerItem16" href="#" onclick="setLayer(16);return false;">
-                <canvas id="thumbnail16" width="16" height="10"
-                  style="border:2px solid gray; background-color:transparent;"></canvas>
-                16</a>
-            </li>
-          </ul>
+          <ul id="layer-list"></ul>
+          <script>
+            (function() {
+              var ul = document.getElementById('layer-list');
+              for (var i = 1; i <= 16; i++) {
+                var li = document.createElement('li');
+                var a = document.createElement('a');
+                a.className = 'layerItem' + (i === 1 ? ' selectedItem' : '');
+                a.id = 'layerItem' + i;
+                a.href = '#';
+                a.onclick = (function(n) { return function() { setLayer(n); return false; }; })(i);
+                var c = document.createElement('canvas');
+                c.id = 'thumbnail' + i;
+                c.width = 16; c.height = 10;
+                c.style.cssText = 'border:2px solid gray; background-color:transparent;';
+                a.appendChild(c);
+                a.appendChild(document.createTextNode(' ' + i));
+                li.appendChild(a);
+                ul.appendChild(li);
+              }
+            })();
+          </script>
         </td>
         <td valign="top">
           <table>
@@ -4054,15 +3543,15 @@ body{
 
                           <a href="#" onclick="doUndo();return false;"><img src="SVG/undo.svg" title="undo (U)"
                               alt="undo" class="toolbar" id="toolbar_undo" /></a>
-                           
+
                           <a href="#" onclick="doCopy();return false;"><img src="SVG/copy.svg"
                               title="copy to clipboard (C)" alt="copy to clipboard" class="toolbar"
                               id="toolbar_copy" /></a>
-                           
+
                           <a href="#" onclick="doPaste();return false;"><img src="SVG/paste.svg"
                               title="paste from clipboard (V)" alt="paste from clipboard" class="toolbar"
                               id="toolbar_paste" /></a>
-                           
+
                           <a href="#" onclick="newFlickgame();return false;"><img src="new_flickgame.png"
                               title="new flickgame" alt="new flickgame" class="toolbar"
                               id="toolbar_new" /></a>
@@ -4105,56 +3594,25 @@ body{
                 <table style="border:2px solid gray; margin-top:2px; margin-left:3px;" margin="0">
                   <tr height="16">
                     <td id="desktop-swatch-cell">
-                      <div id="swatch-container" class="swatch-container-desktop">
-                        <a href="#" onclick="setColor(0, event);return false;">
-                          <div class="unselected" id="color_0"><span class="link-label"></span></div>
-                        </a>
-                        <a href="#" onclick="setColor(1, event);return false;">
-                          <div class="unselected" id="color_1"><span class="link-label"></span></div>
-                        </a>
-                        <a href="#" onclick="setColor(2, event);return false;">
-                          <div class="selected" id="color_2"><span class="link-label"></span></div>
-                        </a>
-                        <a href="#" onclick="setColor(3, event);return false;">
-                          <div class="unselected" id="color_3"><span class="link-label"></span></div>
-                        </a>
-                        <a href="#" onclick="setColor(4, event);return false;">
-                          <div class="unselected" id="color_4"><span class="link-label"></span></div>
-                        </a>
-                        <a href="#" onclick="setColor(5, event);return false;">
-                          <div class="unselected" id="color_5"><span class="link-label"></span></div>
-                        </a>
-                        <a href="#" onclick="setColor(6, event);return false;">
-                          <div class="unselected" id="color_6"><span class="link-label"></span></div>
-                        </a>
-                        <a href="#" onclick="setColor(7, event);return false;">
-                          <div class="unselected" id="color_7"><span class="link-label"></span></div>
-                        </a>
-                        <a href="#" onclick="setColor(8, event);return false;">
-                          <div class="unselected" id="color_8"><span class="link-label"></span></div>
-                        </a>
-                        <a href="#" onclick="setColor(9, event);return false;">
-                          <div class="unselected" id="color_9"><span class="link-label"></span></div>
-                        </a>
-                        <a href="#" onclick="setColor(10, event);return false;">
-                          <div class="unselected" id="color_10"><span class="link-label"></span></div>
-                        </a>
-                        <a href="#" onclick="setColor(11, event);return false;">
-                          <div class="unselected" id="color_11"><span class="link-label"></span></div>
-                        </a>
-                        <a href="#" onclick="setColor(12, event);return false;">
-                          <div class="unselected" id="color_12"><span class="link-label"></span></div>
-                        </a>
-                        <a href="#" onclick="setColor(13, event);return false;">
-                          <div class="unselected" id="color_13"><span class="link-label"></span></div>
-                        </a>
-                        <a href="#" onclick="setColor(14, event);return false;">
-                          <div class="unselected" id="color_14"><span class="link-label"></span></div>
-                        </a>
-                        <a href="#" onclick="setColor(15, event);return false;">
-                          <div class="unselected" id="color_15"><span class="link-label"></span></div>
-                        </a>
-                      </div>
+                      <div id="swatch-container" class="swatch-container-desktop"></div>
+                      <script>
+                        (function() {
+                          var sc = document.getElementById('swatch-container');
+                          for (var i = 0; i < 16; i++) {
+                            var a = document.createElement('a');
+                            a.href = '#';
+                            a.onclick = (function(n) { return function(e) { setColor(n, e); return false; }; })(i);
+                            var d = document.createElement('div');
+                            d.className = 'unselected';
+                            d.id = 'color_' + i;
+                            var s = document.createElement('span');
+                            s.className = 'link-label';
+                            d.appendChild(s);
+                            a.appendChild(d);
+                            sc.appendChild(a);
+                          }
+                        })();
+                      </script>
                     </td>
                     <td style="border-left: 2px solid gray;">
                       <a href="#" onclick="openPaletteSelector(event);return false;"><img id="palette_button" src="palette.png"></a>
@@ -4175,40 +3633,34 @@ body{
     <div class="mobile-toolbar-top">
       <button type="button" id="mobile-frame-btn" class="mobile-grid-tab" aria-label="Pages">
         <svg id="mobile-grid-icon" class="toolbar grid-icon-svg" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" alt="frame">
-          <rect class="grid-cell" id="grid-cell-0"  x="0.25" y="0.25" width="3.5" height="3.5" />
-          <rect class="grid-cell" id="grid-cell-1"  x="4.25" y="0.25" width="3.5" height="3.5" />
-          <rect class="grid-cell" id="grid-cell-2"  x="8.25" y="0.25" width="3.5" height="3.5" />
-          <rect class="grid-cell" id="grid-cell-3"  x="12.25" y="0.25" width="3.5" height="3.5" />
-          <rect class="grid-cell" id="grid-cell-4"  x="0.25" y="4.25" width="3.5" height="3.5" />
-          <rect class="grid-cell" id="grid-cell-5"  x="4.25" y="4.25" width="3.5" height="3.5" />
-          <rect class="grid-cell" id="grid-cell-6"  x="8.25" y="4.25" width="3.5" height="3.5" />
-          <rect class="grid-cell" id="grid-cell-7"  x="12.25" y="4.25" width="3.5" height="3.5" />
-          <rect class="grid-cell" id="grid-cell-8"  x="0.25" y="8.25" width="3.5" height="3.5" />
-          <rect class="grid-cell" id="grid-cell-9"  x="4.25" y="8.25" width="3.5" height="3.5" />
-          <rect class="grid-cell" id="grid-cell-10" x="8.25" y="8.25" width="3.5" height="3.5" />
-          <rect class="grid-cell" id="grid-cell-11" x="12.25" y="8.25" width="3.5" height="3.5" />
-          <rect class="grid-cell" id="grid-cell-12" x="0.25" y="12.25" width="3.5" height="3.5" />
-          <rect class="grid-cell" id="grid-cell-13" x="4.25" y="12.25" width="3.5" height="3.5" />
-          <rect class="grid-cell" id="grid-cell-14" x="8.25" y="12.25" width="3.5" height="3.5" />
-          <rect class="grid-cell" id="grid-cell-15" x="12.25" y="12.25" width="3.5" height="3.5" />
-          <foreignObject x="0.25" y="0.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-0" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
-          <foreignObject x="4.25" y="0.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-1" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
-          <foreignObject x="8.25" y="0.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-2" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
-          <foreignObject x="12.25" y="0.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-3" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
-          <foreignObject x="0.25" y="4.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-4" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
-          <foreignObject x="4.25" y="4.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-5" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
-          <foreignObject x="8.25" y="4.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-6" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
-          <foreignObject x="12.25" y="4.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-7" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
-          <foreignObject x="0.25" y="8.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-8" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
-          <foreignObject x="4.25" y="8.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-9" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
-          <foreignObject x="8.25" y="8.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-10" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
-          <foreignObject x="12.25" y="8.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-11" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
-          <foreignObject x="0.25" y="12.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-12" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
-          <foreignObject x="4.25" y="12.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-13" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
-          <foreignObject x="8.25" y="12.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-14" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
-          <foreignObject x="12.25" y="12.25" width="3.5" height="3.5"><canvas xmlns="http://www.w3.org/1999/xhtml" id="mobile-grid-thumb-15" class="mobile-grid-thumb-canvas"></canvas></foreignObject>
           <rect id="mobile-grid-active-border" x="0.25" y="0.25" width="3.5" height="3.5" fill="none" stroke="white" stroke-width="0.25"/>
         </svg>
+        <script>
+          (function() {
+            var svg = document.getElementById('mobile-grid-icon');
+            var border = document.getElementById('mobile-grid-active-border');
+            var svgNS = 'http://www.w3.org/2000/svg';
+            var xhtmlNS = 'http://www.w3.org/1999/xhtml';
+            for (var i = 0; i < 16; i++) {
+              var col = i % 4, row = Math.floor(i / 4);
+              var cx = 0.25 + col * 4, cy = 0.25 + row * 4;
+              var rect = document.createElementNS(svgNS, 'rect');
+              rect.setAttribute('class', 'grid-cell');
+              rect.id = 'grid-cell-' + i;
+              rect.setAttribute('x', cx); rect.setAttribute('y', cy);
+              rect.setAttribute('width', '3.5'); rect.setAttribute('height', '3.5');
+              svg.insertBefore(rect, border);
+              var fo = document.createElementNS(svgNS, 'foreignObject');
+              fo.setAttribute('x', cx); fo.setAttribute('y', cy);
+              fo.setAttribute('width', '3.5'); fo.setAttribute('height', '3.5');
+              var canvas = document.createElementNS(xhtmlNS, 'canvas');
+              canvas.id = 'mobile-grid-thumb-' + i;
+              canvas.className = 'mobile-grid-thumb-canvas';
+              fo.appendChild(canvas);
+              svg.insertBefore(fo, border);
+            }
+          })();
+        </script>
       </button>
       <div class="mobile-toolbar-top-inner">
         <button type="button" id="mobile-copy-btn" class="mobile-toolbar-btn" title="Copy (current layer)" aria-label="Copy" onclick="doCopy();"><img src="clipboard_copy.svg" alt="copy" class="toolbar" /></button>
