@@ -2674,11 +2674,12 @@ function rgbToLab(r,g,b) {
         cancelPendingTouchDraw();
         touchDrawEvent = e;
         touchDrawTimer = setTimeout(function() {
-          if (touchDrawEvent && !pinchActive && !pinchTouched) {
-            beginDrawStroke(touchDrawEvent);
-          }
+          var evt = touchDrawEvent;
           touchDrawTimer = null;
           touchDrawEvent = null;
+          if (evt && !pinchActive && !pinchTouched) {
+            beginDrawStroke(evt);
+          }
         }, TOUCH_DRAW_DELAY);
       } else {
         beginDrawStroke(e);
@@ -2691,7 +2692,16 @@ function rgbToLab(r,g,b) {
     function mouseUp(e) {
       e = e || window.event;
 
-      cancelPendingTouchDraw();
+      // If a touch draw was pending (finger lifted before delay expired), execute it now (tap)
+      if (touchDrawTimer) {
+        var evt = touchDrawEvent;
+        clearTimeout(touchDrawTimer);
+        touchDrawTimer = null;
+        touchDrawEvent = null;
+        if (evt && !pinchActive && !pinchTouched) {
+          beginDrawStroke(evt);
+        }
+      }
       drawing = 0;
       lastX = -1;
       lastY = -1;
