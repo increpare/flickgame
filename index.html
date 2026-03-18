@@ -553,11 +553,6 @@ function rgbToLab(r,g,b) {
           thumbnailCanvas[i].width = getThumbCols();
           thumbnailCanvas[i].height = getThumbRows();
         }
-        var gridThumb = document.getElementById('mobile-grid-thumb-' + i);
-        if (gridThumb && gridThumb.getContext) {
-          gridThumb.width = getThumbCols();
-          gridThumb.height = getThumbRows();
-        }
       }
     }
 
@@ -1092,21 +1087,17 @@ function rgbToLab(r,g,b) {
 
     function updateMobileGridIconThumbnails(onlyIndex) {
       if (!isMobileLayout()) return;
-      var tw = getThumbCols(), th = getThumbRows();
       var indices = onlyIndex !== undefined ? [onlyIndex] : [];
       if (indices.length === 0) {
         for (var i = 0; i < 16; i++) indices.push(i);
       }
       for (var k = 0; k < indices.length; k++) {
         var i = indices[k];
-        var dest = document.getElementById('mobile-grid-thumb-' + i);
-        if (!dest || !thumbnailCanvas[i]) continue;
-        if (dest.width !== tw || dest.height !== th) {
-          dest.width = tw;
-          dest.height = th;
-        }
-        var ctx = dest.getContext('2d');
-        if (ctx) ctx.drawImage(thumbnailCanvas[i], 0, 0);
+        var img = document.getElementById('mobile-grid-thumb-' + i);
+        if (!img || !thumbnailCanvas[i]) continue;
+        try {
+          img.setAttributeNS('http://www.w3.org/1999/xlink', 'href', thumbnailCanvas[i].toDataURL('image/png'));
+        } catch (e) {}
       }
     }
 
@@ -2989,12 +2980,6 @@ function rgbToLab(r,g,b) {
     .grid-icon-svg .grid-cell.grid-cell-active {
       fill: white;
     }
-    .grid-icon-svg .mobile-grid-thumb-canvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-
     #toolbarcontainer {
       float: right;
       margin-right: 20px;
@@ -3633,7 +3618,7 @@ function rgbToLab(r,g,b) {
             var svg = document.getElementById('mobile-grid-icon');
             var border = document.getElementById('mobile-grid-active-border');
             var svgNS = 'http://www.w3.org/2000/svg';
-            var xhtmlNS = 'http://www.w3.org/1999/xhtml';
+            var xlinkNS = 'http://www.w3.org/1999/xlink';
             for (var i = 0; i < 16; i++) {
               var col = i % 4, row = Math.floor(i / 4);
               var cx = 0.25 + col * 4, cy = 0.25 + row * 4;
@@ -3643,14 +3628,12 @@ function rgbToLab(r,g,b) {
               rect.setAttribute('x', cx); rect.setAttribute('y', cy);
               rect.setAttribute('width', '3.5'); rect.setAttribute('height', '3.5');
               svg.insertBefore(rect, border);
-              var fo = document.createElementNS(svgNS, 'foreignObject');
-              fo.setAttribute('x', cx); fo.setAttribute('y', cy);
-              fo.setAttribute('width', '3.5'); fo.setAttribute('height', '3.5');
-              var canvas = document.createElementNS(xhtmlNS, 'canvas');
-              canvas.id = 'mobile-grid-thumb-' + i;
-              canvas.className = 'mobile-grid-thumb-canvas';
-              fo.appendChild(canvas);
-              svg.insertBefore(fo, border);
+              var img = document.createElementNS(svgNS, 'image');
+              img.id = 'mobile-grid-thumb-' + i;
+              img.setAttribute('x', cx); img.setAttribute('y', cy);
+              img.setAttribute('width', '3.5'); img.setAttribute('height', '3.5');
+              img.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+              svg.insertBefore(img, border);
             }
           })();
         </script>
