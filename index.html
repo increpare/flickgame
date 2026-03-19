@@ -804,6 +804,39 @@ function rgbToLab(r,g,b) {
     function doCopy() {
       copyImage = JSON.stringify(canvasses[canvasIndex])
       copyLinks = JSON.stringify(hyperlinks[canvasIndex])
+      showCopyFeedback();
+    }
+
+    function showCopyFeedback() {
+      var thumbImg = document.getElementById('copy-thumb-img');
+      var btn = document.getElementById('mobile-copy-btn');
+      if (!thumbImg && !btn) return;
+
+      if (thumbImg) {
+        var thumbCanvas = document.createElement('canvas');
+        thumbCanvas.width = width;
+        thumbCanvas.height = height;
+        var ctx = thumbCanvas.getContext('2d');
+        var src = canvasses[canvasIndex];
+        for (var j = 0; j < height; j++) {
+          for (var i = 0; i < width; i++) {
+            ctx.fillStyle = colorPalette[src[i + width * j]];
+            ctx.fillRect(i, j, 1, 1);
+          }
+        }
+        thumbImg.setAttribute('href', thumbCanvas.toDataURL());
+      }
+
+      if (btn) {
+        var existing = btn.querySelector('.copy-label');
+        if (existing) existing.remove();
+        var label = document.createElement('span');
+        label.className = 'copy-label';
+        label.textContent = 'Copied!';
+        btn.appendChild(label);
+        setTimeout(function() { label.classList.add('fade-out'); }, 50);
+        setTimeout(function() { label.remove(); }, 1200);
+      }
     }
 
     function doPaste() {
@@ -1287,7 +1320,7 @@ function rgbToLab(r,g,b) {
       setVisuals();
       saveFlickgameState();
     }
-    var BRUSH_SIZES = [1, 3, 5, 7, 9, 11, 13, 16];
+    var BRUSH_SIZES = [1, 3, 5, 7, 11, 16];
 
     var BRUSH_BTN_RING = 2;
     var BRUSH_BTN_MAX_DOT = 26;
@@ -3047,15 +3080,6 @@ function rgbToLab(r,g,b) {
       display: flex;
       align-items: center;
     }
-    body[data-layout="mobile-landscape"] .mobile-toolbar-bottom-icons {
-      flex-direction: column;
-      flex-shrink: 0;
-      gap: var(--toolbar-gap);
-    }
-    body[data-layout="mobile-landscape"] .mobile-toolbar-bottom img {
-      width: 26px;
-      height: 26px;
-    }
 
     .mobile-toolbar-top {
       display: flex;
@@ -3103,6 +3127,28 @@ function rgbToLab(r,g,b) {
     .mobile-toolbar-btn.selected {
       border-color: var(--selected-border-color);
     }
+
+    #mobile-copy-btn {
+      position: relative;
+    }
+    .copy-label {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: bold;
+      color: white;
+      text-shadow: 0 0 3px black, 0 0 3px black;
+      opacity: 1;
+      transition: opacity 0.8s ease 0.3s;
+      pointer-events: none;
+    }
+    .copy-label.fade-out {
+      opacity: 0;
+    }
+
     .mobile-toolbar-icon {
       display: flex;
       align-items: center;
@@ -3567,7 +3613,18 @@ function rgbToLab(r,g,b) {
         </script>
       </button>
       <div class="mobile-toolbar-top-inner">
-        <button type="button" id="mobile-copy-btn" class="mobile-toolbar-btn" title="Copy (current layer)" aria-label="Copy" onclick="doCopy();"><img src="clipboard_copy.svg" alt="copy" class="toolbar" /></button>
+        <button type="button" id="mobile-copy-btn" class="mobile-toolbar-btn" title="Copy (current layer)" aria-label="Copy" onclick="doCopy();">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 16 16" class="toolbar" id="copy-icon-svg">
+            <defs>
+              <clipPath id="front-page-clip">
+                <rect x="5" y="1" width="10" height="10" rx="1" ry="1"/>
+              </clipPath>
+            </defs>
+            <path fill="white" d="M2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"/>
+            <image id="copy-thumb-img" x="5" y="1" width="10" height="10" clip-path="url(#front-page-clip)" preserveAspectRatio="xMidYMid slice" style="image-rendering:pixelated;" href=""/>
+            <path fill="white" fill-rule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1z"/>
+          </svg>
+        </button>
         <button type="button" id="mobile-paste-btn" class="mobile-toolbar-btn" title="Paste (current layer)" aria-label="Paste" onclick="doPaste();"><img src="clipboard_paste.svg" alt="paste" class="toolbar" /></button>
         <button type="button" id="mobile-pointer-btn" class="mobile-toolbar-btn" title="Pointer mode (test links)" aria-label="Pointer mode" onclick="togglePointerMode();"><img src="play.svg" alt="pointer mode" class="toolbar" /></button>
         <button type="button" id="mobile-burger-btn" class="mobile-toolbar-btn" aria-label="Menu"><img src="list.svg" alt="menu" class="toolbar" /></button>
