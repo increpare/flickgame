@@ -362,10 +362,7 @@ function rgbToLab(r,g,b) {
     var layerElem = new Array();
     var colorIndex = getRandomInt(7, 16);
 
-    var brushSizeSliderElem = null;
-    var brushSizeThumbElem = null;
-    var brushSliderDragging = false;
-    var brushSliderPointerId = null;
+    var brushButtonsElem = null;
     var lastBrushSize = 5;
     var thumbnailCanvas = new Array();
     var thumbnailContext = new Array();
@@ -746,27 +743,22 @@ function rgbToLab(r,g,b) {
       } else if (evt.keyCode === 86) { //v
         doPaste();
       } else if (evt.keyCode === 189 || evt.keyCode === 173) {//- minus
-        if (radius>1){
-          setRadius(radius-2);
-        }
+        var idx = BRUSH_SIZES.indexOf(radius);
+        if (idx > 0) setRadius(BRUSH_SIZES[idx - 1]);
       } else if (evt.keyCode === 187 || evt.keyCode === 61) {//+ plus
-        if (radius < 16){
-          setRadius(radius+2);
-        }
+        var idx = BRUSH_SIZES.indexOf(radius);
+        if (idx >= 0 && idx < BRUSH_SIZES.length - 1) setRadius(BRUSH_SIZES[idx + 1]);
       } else if (evt.keyCode === 90) {//z
         doUndo();
       }
     }
 
     function wheel(evt) {
+      var idx = BRUSH_SIZES.indexOf(radius);
       if (evt.deltaY < 0) {
-        if (radius < 16){
-          setRadius(radius+2);
-        }
+        if (idx >= 0 && idx < BRUSH_SIZES.length - 1) setRadius(BRUSH_SIZES[idx + 1]);
       } else if (evt.deltaY > 0) {
-        if (radius>1){
-          setRadius(radius-2);
-        }
+        if (idx > 0) setRadius(BRUSH_SIZES[idx - 1]);
       }
     }
 
@@ -1283,111 +1275,39 @@ function rgbToLab(r,g,b) {
       setVisuals();
       saveFlickgameState();
     }
-    var BRUSH_SLIDER_DISCRETE = [1, 3, 5, 7, 9, 11, 13, 16];
-    var BRUSH_SLIDER_MIN = BRUSH_SLIDER_DISCRETE[0];
-    var BRUSH_SLIDER_MAX = BRUSH_SLIDER_DISCRETE[BRUSH_SLIDER_DISCRETE.length - 1];
-    var BRUSH_SLIDER_MARGIN = 2;
-    var BRUSH_SLIDER_MARGIN_BOTTOM = 10;
-    var BRUSH_SLIDER_MAX_RADIUS = 16;
-    var BRUSH_SLIDER_MIN_RADIUS = 2;
-    /** Right-side inner margin for horizontal slider so thumb does not overlap the selected border */
-    var BRUSH_SLIDER_MARGIN_RIGHT_H = BRUSH_SLIDER_MAX_RADIUS + 2;
+    var BRUSH_SIZES = [1, 3, 5, 7, 9, 11, 13, 16];
 
-    function snapBrushToDiscrete(value) {
-      var best = BRUSH_SLIDER_DISCRETE[0], bestDist = Math.abs(value - best);
-      for (var i = 1; i < BRUSH_SLIDER_DISCRETE.length; i++) {
-        var d = Math.abs(value - BRUSH_SLIDER_DISCRETE[i]);
-        if (d < bestDist) { bestDist = d; best = BRUSH_SLIDER_DISCRETE[i]; }
-      }
-      return best;
+    var BRUSH_BTN_RING = 2;
+    var BRUSH_BTN_MAX_DOT = 26;
+    var BRUSH_BTN_TOTAL = BRUSH_BTN_MAX_DOT + BRUSH_BTN_RING * 2;
+    function brushDotDiameter(size) {
+      return Math.max(2, Math.round(size * BRUSH_BTN_MAX_DOT / BRUSH_SIZES[BRUSH_SIZES.length - 1]));
     }
 
-    function updateBrushSliderUI(brushValue) {
-      if (!brushSizeSliderElem || !brushSizeThumbElem) return;
-      brushValue = snapBrushToDiscrete(Math.max(BRUSH_SLIDER_MIN, Math.min(BRUSH_SLIDER_MAX, brushValue)));
-      var isVertical = brushSizeSliderElem.classList.contains("vertical");
-      /* Use offsetWidth/offsetHeight so thumb position is correct when ancestor has transform:scale() */
-      var w = brushSizeSliderElem.offsetWidth;
-      var h = brushSizeSliderElem.offsetHeight;
-      brushSizeThumbElem.src = brushValue + ".png";
-      var discreteIndex = BRUSH_SLIDER_DISCRETE.indexOf(brushValue);
-      if (discreteIndex < 0) discreteIndex = 0;
-      var fraction = (BRUSH_SLIDER_DISCRETE.length - 1 - discreteIndex) / (BRUSH_SLIDER_DISCRETE.length - 1);
-      if (isVertical) {
-        var topCenter = BRUSH_SLIDER_MARGIN + BRUSH_SLIDER_MAX_RADIUS;
-        var bottomCenter = h - BRUSH_SLIDER_MARGIN_BOTTOM - BRUSH_SLIDER_MIN_RADIUS;
-        var centerY = topCenter + fraction * (bottomCenter - topCenter);
-        brushSizeThumbElem.style.left = "50%";
-        brushSizeThumbElem.style.top = centerY + "px";
-        brushSizeThumbElem.style.transform = "translate(-50%, -50%)";
-        brushSizeThumbElem.style.right = "";
-        brushSizeThumbElem.style.bottom = "";
-      } else {
-        var fractionH = discreteIndex / (BRUSH_SLIDER_DISCRETE.length - 1);
-        var leftCenter = BRUSH_SLIDER_MARGIN + BRUSH_SLIDER_MAX_RADIUS;
-        var rightCenter = w - BRUSH_SLIDER_MARGIN_RIGHT_H - BRUSH_SLIDER_MIN_RADIUS;
-        var centerX = leftCenter + fractionH * (rightCenter - leftCenter);
-        brushSizeThumbElem.style.top = "50%";
-        brushSizeThumbElem.style.left = centerX + "px";
-        brushSizeThumbElem.style.transform = "translate(-50%, -50%)";
-        brushSizeThumbElem.style.right = "";
-        brushSizeThumbElem.style.bottom = "";
+    function updateBrushButtonsUI() {
+      if (!brushButtonsElem) return;
+      var buttons = brushButtonsElem.querySelectorAll('.brush-btn');
+      for (var i = 0; i < buttons.length; i++) {
+        var size = parseInt(buttons[i].getAttribute('data-size'));
+        if (radius > 0 && size === radius) {
+          buttons[i].classList.add('selected');
+        } else {
+          buttons[i].classList.remove('selected');
+        }
       }
-    }
-
-    function brushSliderValueFromEvent(evt) {
-      if (!brushSizeSliderElem) return 5;
-      var rect = brushSizeSliderElem.getBoundingClientRect();
-      var w = brushSizeSliderElem.offsetWidth;
-      var h = brushSizeSliderElem.offsetHeight;
-      var isVertical = brushSizeSliderElem.classList.contains("vertical");
-      var fraction;
-      /* Convert click to slider's layout coords when ancestor has transform:scale() */
-      var scaleX = w > 0 ? rect.width / w : 1;
-      var scaleY = h > 0 ? rect.height / h : 1;
-      if (isVertical) {
-        var topCenter = BRUSH_SLIDER_MARGIN + BRUSH_SLIDER_MAX_RADIUS;
-        var bottomCenter = h - BRUSH_SLIDER_MARGIN_BOTTOM - BRUSH_SLIDER_MIN_RADIUS;
-        var clickY = (evt.clientY - rect.top) / scaleY;
-        fraction = (clickY - topCenter) / (bottomCenter - topCenter);
-      } else {
-        var leftCenter = BRUSH_SLIDER_MARGIN + BRUSH_SLIDER_MAX_RADIUS;
-        var rightCenter = w - BRUSH_SLIDER_MARGIN_RIGHT_H - BRUSH_SLIDER_MIN_RADIUS;
-        var clickX = (evt.clientX - rect.left) / scaleX;
-        fraction = (clickX - leftCenter) / (rightCenter - leftCenter);
-      }
-      fraction = Math.max(0, Math.min(1, fraction));
-      var raw = isVertical
-        ? BRUSH_SLIDER_MAX - fraction * (BRUSH_SLIDER_MAX - BRUSH_SLIDER_MIN)
-        : BRUSH_SLIDER_MIN + fraction * (BRUSH_SLIDER_MAX - BRUSH_SLIDER_MIN);
-      return snapBrushToDiscrete(Math.round(raw));
     }
 
     function setRadius(newRadius) {
-      if (newRadius==15){
-        newRadius = 16;
-      } else if (newRadius==14){
-        newRadius = 13;
-      }
-      if (newRadius > 0) {
-        newRadius = snapBrushToDiscrete(newRadius);
-      }
-
       radius = newRadius;
       bucketElem.setAttribute("class", "radius");
       if (mobileBucketImg) mobileBucketImg.setAttribute("class", "radius");
-      if (brushSizeSliderElem) {
-        brushSizeSliderElem.classList.remove("selected");
-      }
       if (newRadius > 0) {
         lastBrushSize = newRadius;
-        if (brushSizeSliderElem) brushSizeSliderElem.classList.add("selected");
-        updateBrushSliderUI(newRadius);
       } else {
         bucketElem.setAttribute("class", "radius selected");
         if (mobileBucketImg) mobileBucketImg.setAttribute("class", "radius selected");
-        updateBrushSliderUI(lastBrushSize); // keep thumb at last brush size when bucket selected
       }
+      updateBrushButtonsUI();
 
       // Exit pointer mode when selecting a brush/bucket tool
       if (pointerMode) {
@@ -1407,7 +1327,7 @@ function rgbToLab(r,g,b) {
         if (pointerModeBtn) pointerModeBtn.setAttribute("class", "radius selected");
         bucketElem.setAttribute("class", "radius");
         if (mobileBucketImg) mobileBucketImg.setAttribute("class", "radius");
-        if (brushSizeSliderElem) brushSizeSliderElem.classList.remove("selected");
+        updateBrushButtonsUI();
         visibleCanvas.style.cursor = "default";
         if (hasTouch) {
           ptrTouchMode = true;
@@ -1568,44 +1488,58 @@ function rgbToLab(r,g,b) {
       linkInput = document.getElementById("linkInput");
       linkInput.value = gameLink;
 
-      brushSizeSliderElem = document.getElementById("brush-size-slider");
-      brushSizeThumbElem = document.getElementById("brush-size-thumb");
-      if (brushSizeSliderElem && brushSizeThumbElem) {
-        brushSizeThumbElem.style.pointerEvents = "auto";
-        function brushSliderPointerDown(evt) {
-          evt.preventDefault();
-          brushSliderDragging = true;
-          brushSliderPointerId = evt.pointerId;
-          var v = brushSliderValueFromEvent(evt);
-          setRadius(v);
-          try { brushSizeSliderElem.setPointerCapture(evt.pointerId); } catch (err) {}
-        }
-        function brushSliderPointerMove(evt) {
-          if (!brushSliderDragging || evt.pointerId !== brushSliderPointerId) return;
-          evt.preventDefault();
-          var v = brushSliderValueFromEvent(evt);
-          setRadius(v);
-        }
-        function brushSliderPointerUp(evt) {
-          if (evt.pointerId !== brushSliderPointerId) return;
-          try {
-            if (brushSizeSliderElem.hasPointerCapture(evt.pointerId)) {
-              brushSizeSliderElem.releasePointerCapture(evt.pointerId);
+      brushButtonsElem = document.getElementById("brush-size-buttons");
+      if (brushButtonsElem) {
+        var svgNS = 'http://www.w3.org/2000/svg';
+        for (var bi = 0; bi < BRUSH_SIZES.length; bi++) {
+          (function(index,size) {
+            var dot = brushDotDiameter(size);
+            var t = BRUSH_BTN_TOTAL;
+            var cx = t / 2, cy = t / 2;
+            var btn = document.createElement('a');
+            btn.href = '#';
+            btn.className = 'brush-btn';
+            btn.setAttribute('data-size', size);
+            var svg = document.createElementNS(svgNS, 'svg');
+            svg.setAttribute('viewBox', '0 0 ' + t + ' ' + t);
+            svg.setAttribute('width', t);
+            svg.setAttribute('height', t);
+            var bg = document.createElementNS(svgNS, 'circle');
+            bg.setAttribute('cx', cx);
+            bg.setAttribute('cy', cy);
+            bg.setAttribute('r', BRUSH_BTN_MAX_DOT / 2);
+            bg.setAttribute('class', 'brush-bg');
+            svg.appendChild(bg);
+            var ring = document.createElementNS(svgNS, 'circle');
+            ring.setAttribute('cx', cx);
+            ring.setAttribute('cy', cy);
+            ring.setAttribute('r', (t - BRUSH_BTN_RING) / 2);
+            ring.setAttribute('class', 'brush-ring');
+            svg.appendChild(ring);
+            if (size === 1) {
+              var sq = dot;
+              var rect = document.createElementNS(svgNS, 'rect');
+              rect.setAttribute('x', cx - sq / 2);
+              rect.setAttribute('y', cy - sq / 2);
+              rect.setAttribute('width', sq);
+              rect.setAttribute('height', sq);
+              rect.setAttribute('class', 'brush-dot');
+              svg.appendChild(rect);
+            } else {
+              var circle = document.createElementNS(svgNS, 'circle');
+              circle.setAttribute('cx', cx);
+              circle.setAttribute('cy', cy);
+              circle.setAttribute('r', dot / 2);
+              circle.setAttribute('class', 'brush-dot');
+              svg.appendChild(circle);
             }
-          } catch (err) {}
-          brushSliderDragging = false;
-          brushSliderPointerId = null;
+            btn.appendChild(svg);
+            btn.addEventListener('click', function(e) { e.preventDefault(); setRadius(size); });
+            brushButtonsElem.appendChild(btn);
+          })(bi,BRUSH_SIZES[bi]);
         }
-        brushSizeSliderElem.addEventListener("pointerdown", brushSliderPointerDown, false);
-        brushSizeSliderElem.addEventListener("pointermove", brushSliderPointerMove, false);
-        brushSizeSliderElem.addEventListener("pointerup", brushSliderPointerUp, false);
-        brushSizeSliderElem.addEventListener("pointercancel", brushSliderPointerUp, false);
-        document.addEventListener("pointermove", brushSliderPointerMove, true);
-        document.addEventListener("pointerup", brushSliderPointerUp, true);
-        document.addEventListener("pointercancel", brushSliderPointerUp, true);
       }
-      updateBrushSliderUI(radius > 0 ? radius : lastBrushSize);
-      if (radius > 0 && brushSizeSliderElem) brushSizeSliderElem.classList.add("selected");
+      updateBrushButtonsUI();
 
       for (var i = 0; i < 16; i++) {
         elem = document.getElementById("thumbnail" + (i + 1));
@@ -1770,7 +1704,7 @@ function rgbToLab(r,g,b) {
         var canvas = document.getElementById('mainCanvas');
         var desktopCanvasContainer = document.getElementById('desktop-canvas-container');
         var mobileCanvasContainer = document.getElementById('mobile-canvas-container');
-        var slider = document.getElementById('brush-size-slider');
+        var slider = document.getElementById('brush-size-buttons');
         var desktopSliderContainer = document.getElementById('desktop-brush-slider-container');
         var mobileSliderContainer = document.getElementById('mobile-brush-slider-container');
         var swatchContainer = document.getElementById('swatch-container');
@@ -1780,7 +1714,7 @@ function rgbToLab(r,g,b) {
           if (canvas && mobileCanvasContainer) mobileCanvasContainer.appendChild(canvas);
           if (slider && mobileSliderContainer) {
             mobileSliderContainer.appendChild(slider);
-            slider.className = 'brush-size-slider ' + (layoutMode === 'mobile-landscape' ? 'vertical' : 'horizontal') + (radius > 0 ? ' selected' : '');
+            slider.className = 'brush-size-buttons ' + (layoutMode === 'mobile-landscape' ? 'vertical' : 'horizontal');
           }
           if (swatchContainer && mobileSwatchGrid) mobileSwatchGrid.appendChild(swatchContainer);
           hideFramePicker();
@@ -1796,7 +1730,7 @@ function rgbToLab(r,g,b) {
           if (canvas && desktopCanvasContainer) desktopCanvasContainer.appendChild(canvas);
           if (slider && desktopSliderContainer) {
             desktopSliderContainer.appendChild(slider);
-            slider.className = 'brush-size-slider vertical' + (radius > 0 ? ' selected' : '');
+            slider.className = 'brush-size-buttons vertical';
           }
           if (swatchContainer && desktopSwatchCell) desktopSwatchCell.appendChild(swatchContainer);
           hideFramePicker();
@@ -1808,11 +1742,7 @@ function rgbToLab(r,g,b) {
         }
         pointerModeBtn = isMobileLayout() ? document.getElementById('mobile-pointer-btn') : document.getElementById('pointer_mode_btn');
         if (pointerModeBtn) pointerModeBtn.setAttribute('class', pointerMode ? 'radius selected' : 'radius');
-        if (brushSizeSliderElem) {
-          updateBrushSliderUI(radius > 0 ? radius : lastBrushSize);
-          if (radius > 0) brushSizeSliderElem.classList.add('selected');
-          else brushSizeSliderElem.classList.remove('selected');
-        }
+        updateBrushButtonsUI();
       };
       window.onLayoutModeChange();
       requestAnimationFrame(function() { updateDesktopScale(); });
@@ -2592,6 +2522,7 @@ function rgbToLab(r,g,b) {
     --radius-filter: none;
     --selected-border-color: #ff0000;
     --burger-menu-font-size: 16px;
+    --toolbar-gap: 4px;
 
     --col0:#140c1c;
     --col1:#442434;
@@ -2915,54 +2846,36 @@ function rgbToLab(r,g,b) {
       filter: var(--radius-filter);
     }
 
-    /* Brush size slider: tapered track, thumb size = brush size */
-    .brush-size-slider {
-      position: relative;
-      touch-action: none;
+    /* Brush size buttons */
+    .brush-size-buttons {
+      display: flex;
+      align-items: center;
+      gap: var(--toolbar-gap);
       flex-shrink: 0;
-      overflow: visible;
-      border: 1px solid transparent;
-      box-sizing: border-box;
     }
-    .brush-size-slider.vertical {
-      width: 32px;
-      height: 200px;
-      margin: 4px 0;
+    .brush-size-buttons.vertical {
+      flex-direction: column-reverse;
     }
-    body[data-layout="mobile-landscape"] .brush-size-slider.vertical {
-      height: 96px;
-      margin: 2px 0;
+    .brush-size-buttons.horizontal {
+      flex-direction: row;
     }
-    .brush-size-slider.horizontal {
-      width: 200px;
-      height: 32px;
-      margin: 0 4px;
+    .brush-btn {
+      display: block;
+      flex-shrink: 0;
+      cursor: pointer;
+      touch-action: manipulation;
+      line-height: 0;
     }
-    .brush-size-track {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: #444;
-      border-radius: 4px;
-      clip-path: polygon(25% 8%, 75% 8%, 53% 96%, 47% 96%);
+    .brush-btn svg { display: block; }
+    .brush-bg { fill: var(--foreground-color, white); opacity: 0.15; }
+    .brush-dot { fill: var(--foreground-color, white); }
+    .brush-ring {
+      fill: none;
+      stroke: transparent;
+      stroke-width: 2;
     }
-    .brush-size-slider.horizontal .brush-size-track {
-      clip-path: polygon(10% 45%, 10% 55%, 96% 62.5%, 96% 37.5%);
-    }
-    .brush-size-thumb {
-      position: absolute;
-      box-sizing: border-box;
-      pointer-events: none;
-      object-fit: contain;
-    }
-
-    .brush-size-slider.selected {
-      border: 1px solid var(--selected-border-color);
-    }
-    .brush-size-slider.selected .brush-size-track {
-      background: #555;
+    .brush-btn.selected .brush-ring {
+      stroke: var(--selected-border-color);
     }
 
     img.toolbar,
@@ -3111,8 +3024,8 @@ function rgbToLab(r,g,b) {
     body[data-layout="mobile-landscape"] .mobile-toolbar-bottom {
       flex-direction: column;
       justify-content: flex-start;
-      padding: 4px 4px;
-      gap: 4px;
+      padding: var(--toolbar-gap);
+      gap: var(--toolbar-gap);
       flex-shrink: 0;
       width: 52px;
       min-width: 52px;
@@ -3129,6 +3042,7 @@ function rgbToLab(r,g,b) {
     body[data-layout="mobile-landscape"] .mobile-toolbar-bottom-icons {
       flex-direction: column;
       flex-shrink: 0;
+      gap: var(--toolbar-gap);
     }
     body[data-layout="mobile-landscape"] .mobile-toolbar-bottom img {
       width: 26px;
@@ -3155,8 +3069,8 @@ function rgbToLab(r,g,b) {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      padding: 8px;
+      gap: var(--toolbar-gap);
+      padding: var(--toolbar-gap);
       background: var(--toolbar-color);
       flex-wrap: nowrap;
       flex-shrink: 0;
@@ -3195,14 +3109,14 @@ function rgbToLab(r,g,b) {
     .mobile-toolbar-bottom-icons {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: var(--toolbar-gap);
       flex-shrink: 0;
     }
     .mobile-toolbar-bottom a {
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 4px;
+      padding: 0;
       outline: none;
       -webkit-tap-highlight-color: transparent;
       box-sizing: border-box;
@@ -3558,9 +3472,7 @@ function rgbToLab(r,g,b) {
                       <br />
                       <br />
                       <div id="desktop-brush-slider-container">
-                      <div id="brush-size-slider" class="brush-size-slider vertical" title="Brush size (drag or click)">
-                        <div class="brush-size-track"></div>
-                        <img class="brush-size-thumb" id="brush-size-thumb" alt="" />
+                      <div id="brush-size-buttons" class="brush-size-buttons vertical">
                       </div>
                       </div>
                       <br />
