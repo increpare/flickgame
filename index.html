@@ -805,6 +805,7 @@ function rgbToLab(r,g,b) {
       copyImage = JSON.stringify(canvasses[canvasIndex])
       copyLinks = JSON.stringify(hyperlinks[canvasIndex])
       showCopyFeedback();
+      updatePasteButtonState();
     }
 
     function showCopyFeedback() {
@@ -853,6 +854,32 @@ function rgbToLab(r,g,b) {
         setDropdowns();
         refreshPointerModeCursor();
         saveFlickgameState();
+        showPasteFeedback();
+      }
+    }
+
+    function showPasteFeedback() {
+      var btn = document.getElementById('mobile-paste-btn');
+      if (!btn) return;
+      var existing = btn.querySelector('.paste-label');
+      if (existing) existing.remove();
+      var label = document.createElement('span');
+      label.className = 'paste-label';
+      label.textContent = 'Pasted!';
+      btn.appendChild(label);
+      setTimeout(function() { label.classList.add('fade-out'); }, 50);
+      setTimeout(function() { label.remove(); }, 1200);
+    }
+
+    function updatePasteButtonState() {
+      var btn = document.getElementById('mobile-paste-btn');
+      if (!btn) return;
+      if (copyImage !== null) {
+        btn.disabled = false;
+        btn.classList.remove('disabled');
+      } else {
+        btn.disabled = true;
+        btn.classList.add('disabled');
       }
     }
 
@@ -1639,6 +1666,8 @@ function rgbToLab(r,g,b) {
           else showFramePicker();
         });
       }
+      updatePasteButtonState();
+
       var mobileBurgerBtn = document.getElementById('mobile-burger-btn');
       var burgerDialog = document.getElementById('burger-dialog');
       if (mobileBurgerBtn && burgerDialog) {
@@ -3146,6 +3175,31 @@ function rgbToLab(r,g,b) {
       pointer-events: none;
     }
     .copy-label.fade-out {
+      opacity: 0;
+    }
+
+    #mobile-paste-btn {
+      position: relative;
+    }
+    #mobile-paste-btn.disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    .paste-label {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: bold;
+      color: white;
+      text-shadow: 0 0 3px black, 0 0 3px black;
+      opacity: 1;
+      transition: opacity 0.8s ease 0.3s;
+      pointer-events: none;
+    }
+    .paste-label.fade-out {
       opacity: 0;
     }
 
