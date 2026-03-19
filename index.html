@@ -25,6 +25,14 @@
 
     var shareLinkInner = null;
 
+    function closeBurgerDialog() {
+      var d = document.getElementById('burger-dialog');
+      if (!d) return;
+      d.classList.remove('visible');
+      d.setAttribute('aria-hidden', 'true');
+      closePaletteSelector();
+    }
+
     var FLICKGAME_STORAGE_KEY = "flickgame_editor_state";
 
 function rgbToLab(r,g,b) {
@@ -396,9 +404,11 @@ function rgbToLab(r,g,b) {
     }
 
     function exportClick() {
+      closeBurgerDialog();
       var embedDat = stateToString();
       buildStandalone(embedDat);
     }
+
 
     OAUTH_CLIENT_ID = "eb2aad12c63aec0136b1";
 
@@ -683,6 +693,7 @@ function rgbToLab(r,g,b) {
     }
 
     function newFlickgame(keepPalette) {
+      closeBurgerDialog();
       var w, h;
       if (isMobileLayout()) {
         mobileFillCanvasSize();
@@ -1264,6 +1275,7 @@ function rgbToLab(r,g,b) {
     }
 
     function clearPalette() {
+      closeBurgerDialog();
       preserveUndoState();
       var canvas = canvasses[canvasIndex];
       var bg_color_idx = nearest_color_index_in_palette(colorPalette, background_color);
@@ -1314,7 +1326,7 @@ function rgbToLab(r,g,b) {
         pointerMode = false;
         ptrCursorVisible = false;
         ptrTouchMode = false;
-        if (pointerModeBtn) pointerModeBtn.setAttribute("class", "radius");
+        if (pointerModeBtn) pointerModeBtn.classList.remove("selected");
         visibleCanvas.style.cursor = "crosshair";
         setVisuals(); // redraw without cursor
       }
@@ -1324,7 +1336,7 @@ function rgbToLab(r,g,b) {
       pointerMode = !pointerMode;
       if (pointerMode) {
         prevRadius = radius;
-        if (pointerModeBtn) pointerModeBtn.setAttribute("class", "radius selected");
+        if (pointerModeBtn) pointerModeBtn.classList.add("selected");
         bucketElem.setAttribute("class", "radius");
         if (mobileBucketImg) mobileBucketImg.setAttribute("class", "radius");
         updateBrushButtonsUI();
@@ -1339,7 +1351,7 @@ function rgbToLab(r,g,b) {
           setVisuals();
         }
       } else {
-        if (pointerModeBtn) pointerModeBtn.setAttribute("class", "radius");
+        if (pointerModeBtn) pointerModeBtn.classList.remove("selected");
         ptrCursorVisible = false;
         ptrTouchMode = false;
         setRadius(prevRadius);
@@ -1594,8 +1606,6 @@ function rgbToLab(r,g,b) {
           else showFramePicker();
         });
       }
-      var mobileDownloadBtn = document.getElementById('mobile-download-btn');
-      if (mobileDownloadBtn) mobileDownloadBtn.addEventListener('click', function() { exportClick(); });
       var mobileBurgerBtn = document.getElementById('mobile-burger-btn');
       var burgerDialog = document.getElementById('burger-dialog');
       if (mobileBurgerBtn && burgerDialog) {
@@ -1606,12 +1616,6 @@ function rgbToLab(r,g,b) {
           burgerDialog.classList.add('visible');
           burgerDialog.setAttribute('aria-hidden', 'false');
         });
-      }
-      function closeBurgerDialog() {
-        if (!burgerDialog) return;
-        burgerDialog.classList.remove('visible');
-        burgerDialog.setAttribute('aria-hidden', 'true');
-        closePaletteSelector();
       }
       var burgerClose = document.getElementById('burger-dialog-close');
       if (burgerClose) burgerClose.addEventListener('click', closeBurgerDialog);
@@ -1627,6 +1631,7 @@ function rgbToLab(r,g,b) {
       }
 
       bucketElem = document.getElementById("bucket");
+
       var mobileBucketBtn = document.getElementById("mobile-bucket-btn");
       mobileBucketImg = mobileBucketBtn ? mobileBucketBtn.querySelector("img") : null;
 
@@ -1741,7 +1746,10 @@ function rgbToLab(r,g,b) {
           });
         }
         pointerModeBtn = isMobileLayout() ? document.getElementById('mobile-pointer-btn') : document.getElementById('pointer_mode_btn');
-        if (pointerModeBtn) pointerModeBtn.setAttribute('class', pointerMode ? 'radius selected' : 'radius');
+        if (pointerModeBtn) {
+          if (pointerMode) pointerModeBtn.classList.add('selected');
+          else pointerModeBtn.classList.remove('selected');
+        }
         updateBrushButtonsUI();
       };
       window.onLayoutModeChange();
@@ -1749,7 +1757,7 @@ function rgbToLab(r,g,b) {
     }
 
     function readFile(evt) {
-      //Retrieve the first (and only!) File from the FileList object
+      closeBurgerDialog();
       var f = evt.target.files[0];
 
       if (f) {
@@ -2999,7 +3007,7 @@ function rgbToLab(r,g,b) {
       order: 1;
     }
     body[data-layout="mobile-landscape"] #mobile-burger-btn { order: 1; }
-    body[data-layout="mobile-landscape"] #mobile-download-btn { order: 2; }
+    body[data-layout="mobile-landscape"] #mobile-pointer-btn { order: 2; }
     body[data-layout="mobile-landscape"] #mobile-paste-btn { order: 3; }
     body[data-layout="mobile-landscape"] #mobile-copy-btn { order: 4; }
     body[data-layout="mobile-landscape"] .mobile-toolbar-btn {
@@ -3091,6 +3099,9 @@ function rgbToLab(r,g,b) {
       font-size: 14px;
       cursor: pointer;
       touch-action: manipulation;
+    }
+    .mobile-toolbar-btn.selected {
+      border-color: var(--selected-border-color);
     }
     .mobile-toolbar-icon {
       display: flex;
@@ -3558,7 +3569,7 @@ function rgbToLab(r,g,b) {
       <div class="mobile-toolbar-top-inner">
         <button type="button" id="mobile-copy-btn" class="mobile-toolbar-btn" title="Copy (current layer)" aria-label="Copy" onclick="doCopy();"><img src="clipboard_copy.svg" alt="copy" class="toolbar" /></button>
         <button type="button" id="mobile-paste-btn" class="mobile-toolbar-btn" title="Paste (current layer)" aria-label="Paste" onclick="doPaste();"><img src="clipboard_paste.svg" alt="paste" class="toolbar" /></button>
-        <button type="button" id="mobile-download-btn" class="mobile-toolbar-btn"><img src="download.svg" alt="download" class="toolbar" /></button>
+        <button type="button" id="mobile-pointer-btn" class="mobile-toolbar-btn" title="Pointer mode (test links)" aria-label="Pointer mode" onclick="togglePointerMode();"><img src="play.svg" alt="pointer mode" class="toolbar" /></button>
         <button type="button" id="mobile-burger-btn" class="mobile-toolbar-btn" aria-label="Menu"><img src="list.svg" alt="menu" class="toolbar" /></button>
       </div>
     </div>
@@ -3570,7 +3581,6 @@ function rgbToLab(r,g,b) {
       <div class="mobile-toolbar-bottom-icons">
         <a href="#" id="mobile-bucket-btn" onclick="setRadius(0);return false;"><img src="bucket.svg" class="radius" alt="bucket" /></a>
         <a href="#" id="mobile-undo-btn" onclick="doUndo();return false;"><img src="undo2.svg" class="radius" alt="undo" /></a>
-        <a href="#" id="mobile-pointer-btn" onclick="togglePointerMode();return false;"><img src="play.svg" class="radius" alt="pointer" /></a>
       </div>
     </div>
     <div id="mobile-swatch-grid" class="mobile-swatch-grid"></div>
@@ -3590,7 +3600,7 @@ function rgbToLab(r,g,b) {
       <button type="button" class="burger-dialog-btn" onclick="shareClick();">📤 Share</button>
       <div id="burger-share-result" class="burger-share-result"></div>
       <button type="button" class="burger-dialog-btn" onclick="document.getElementById('my_file').click();">📥 Import</button>
-      <button type="button" class="burger-dialog-btn" onclick="exportClick();">💾 Export</button>
+      <button type="button" class="burger-dialog-btn" onclick="exportClick();">⬇️ Download file</button>
       <button type="button" class="burger-dialog-btn" onclick="window.open('help.html','_blank');">📖 Help</button>
     </div>
   </div>
