@@ -3,8 +3,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="Description" CONTENT="Draw and share simple games with your mouse or fingers!">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Flickgame">
+  <link rel="manifest" href="manifest.webmanifest">
 
   <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="apple-touch-icon" href="icons/app-icon-180.png">
   <script src="FileSaver.js"></script>
   <script src="flickgame_base.js"></script>
   <script src="flickgame_vanilla.js"></script>
@@ -834,7 +840,7 @@ function rgbToLab(r,g,b) {
         showActionFeedback(['toolbar_undo', 'mobile-undo-btn'], 'Undo!');
 
         if (shareLinkInner !== null) {
-          shareLinkInner.style.color = "gray";
+          shareLinkInner.style.color = "var(--muted-foreground)";
         }
       }
     }
@@ -2005,7 +2011,7 @@ function rgbToLab(r,g,b) {
       }
 
       if (shareLinkInner !== null) {
-        shareLinkInner.style.color = "gray";
+        shareLinkInner.style.color = "var(--muted-foreground)";
       }
     }
 
@@ -2695,7 +2701,7 @@ function rgbToLab(r,g,b) {
       max-height: 400px;
       overflow-y: auto;
       background-color: var(--toolbar-color);
-      border: 2px solid gray;
+      border: 2px solid var(--muted-foreground);
       padding: 25px;
       z-index: 1000;
     }
@@ -2712,7 +2718,7 @@ function rgbToLab(r,g,b) {
 
     body {
       background-color: var(--background-color);
-      color: gray;
+      color: var(--muted-foreground);
       margin-top: 0;
       padding-top: 0;
       border-top: 0;
@@ -2787,7 +2793,7 @@ function rgbToLab(r,g,b) {
     }
 
     a.layerItem.layerItemEmpty {
-      color: #888;
+      color: var(--muted-foreground);
     }
 
     a.layerItem.layerItemUnreachable {
@@ -2829,7 +2835,7 @@ function rgbToLab(r,g,b) {
     div.unselected {
       height: 30px;
       width: 30px;
-      border: 2px solid black;
+      border: 2px solid var(--muted-foreground);
       touch-action: manipulation;
       position: relative;
     }
@@ -2885,7 +2891,7 @@ function rgbToLab(r,g,b) {
       position: fixed;
       z-index: 100;
       background: var(--toolbar-color);
-      border: 2px solid #777;
+      border: 2px solid var(--muted-foreground);
       border-radius: 5px;
       padding: 8px;
       box-shadow: 0 6px 20px rgba(0,0,0,0.6);
@@ -2910,7 +2916,7 @@ function rgbToLab(r,g,b) {
 
     .page-picker-item:hover {
       background: rgba(255,255,255,0.1);
-      border-color: #888;
+      border-color: var(--muted-foreground);
     }
 
     .page-picker-item.current-target {
@@ -2931,7 +2937,7 @@ function rgbToLab(r,g,b) {
       color: #fff;
     }
     .page-picker-item.page-picker-item-empty .page-picker-label {
-      color: #888;
+      color: var(--muted-foreground);
     }
     .page-picker-item.page-picker-item-unreachable .page-picker-label {
       color: #c00;
@@ -3073,7 +3079,7 @@ function rgbToLab(r,g,b) {
     }
 
     canvas#dropdownthumb {
-      border: 2px solid gray;
+      border: 2px solid var(--muted-foreground);
       background-color: black;
       touch-action: manipulation;
     }
@@ -3234,7 +3240,7 @@ function rgbToLab(r,g,b) {
       box-sizing: border-box;
       background: var(--background-color);
       color: var(--foreground-color);
-      border: 2px solid gray;
+      border: 2px solid var(--muted-foreground);
       border-radius: 4px;
       font-size: 14px;
       cursor: pointer;
@@ -3380,7 +3386,7 @@ function rgbToLab(r,g,b) {
     .burger-dialog-content {
       background: var(--toolbar-color);
       color: var(--foreground-color);
-      border: 2px solid gray;
+      border: 2px solid var(--muted-foreground);
       padding: 24px;
       max-width: 280px;
       max-height: 80vh;
@@ -3409,7 +3415,7 @@ function rgbToLab(r,g,b) {
       padding: 6px 10px;
       background: var(--background-color);
       color: var(--foreground-color);
-      border: 2px solid gray;
+      border: 2px solid var(--muted-foreground);
       border-radius: 4px;
       font-size: var(--burger-menu-font-size);
       cursor: pointer;
@@ -3435,7 +3441,7 @@ function rgbToLab(r,g,b) {
       padding: 6px;
       background: var(--background-color);
       color: var(--foreground-color);
-      border: 2px solid gray;
+      border: 2px solid var(--muted-foreground);
       font-size: var(--burger-menu-font-size);
     }
     .frame-picker {
@@ -3443,7 +3449,7 @@ function rgbToLab(r,g,b) {
       position: fixed;
       z-index: 100;
       background: var(--toolbar-color);
-      border: 2px solid #777;
+      border: 2px solid var(--muted-foreground);
       border-radius: 5px;
       padding: 8px;
       box-shadow: 0 6px 20px rgba(0,0,0,0.6);
@@ -3465,7 +3471,7 @@ function rgbToLab(r,g,b) {
     }
     .frame-picker-item:hover, .frame-picker-item:focus {
       background: rgba(255,255,255,0.1);
-      border-color: #888;
+      border-color: var(--muted-foreground);
     }
     .frame-picker-item canvas {
       width: 48px;
@@ -3479,7 +3485,7 @@ function rgbToLab(r,g,b) {
       color: #fff;
     }
     .frame-picker-item.frame-picker-item-empty .frame-picker-label {
-      color: #888;
+      color: var(--muted-foreground);
     }
     .frame-picker-item.frame-picker-item-unreachable .frame-picker-label {
       color: #c00;
@@ -3568,6 +3574,15 @@ function rgbToLab(r,g,b) {
   <title>
     flickgame.org
   </title>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('./sw.js').catch(function (error) {
+          console.error('Service worker registration failed:', error);
+        });
+      });
+    }
+  </script>
 </head>
 
 <body data-layout="desktop" onload="init();" ondragstart="return false;" ondrop="return false;">
@@ -3591,7 +3606,7 @@ function rgbToLab(r,g,b) {
                 var c = document.createElement('canvas');
                 c.id = 'thumbnail' + i;
                 c.width = 16; c.height = 10;
-                c.style.cssText = 'border:2px solid gray; background-color:transparent;';
+                c.style.cssText = 'border:2px solid var(--muted-foreground); background-color:transparent;';
                 a.appendChild(c);
                 a.appendChild(document.createTextNode(' ' + i));
                 li.appendChild(a);
@@ -3608,9 +3623,9 @@ function rgbToLab(r,g,b) {
                   <tr>
                     <td colspan="2">
                       <center>
-                        <input width="640" style="border:2px solid gray;" onkeydown="event.stopPropagation();"
+                        <input width="640" style="border:2px solid var(--muted-foreground);" onkeydown="event.stopPropagation();"
                           value="www.flickgame.org" id="linkInput" oninput="linkChange(this.value)" />
-                          <span id="bgColorSelectContainer"><select id="bgColorSelect" class="toolbar"  style="border: 2px solid gray;" onchange="changeBackgroundColor(colorPalette[this.value],true);saveFlickgameState();">
+                          <span id="bgColorSelectContainer"><select id="bgColorSelect" class="toolbar"  style="border: 2px solid var(--muted-foreground);" onchange="changeBackgroundColor(colorPalette[this.value],true);saveFlickgameState();">
                           </select></span>
                           &nbsp;
                         <span id="toolbarcontainer">
@@ -3642,7 +3657,7 @@ function rgbToLab(r,g,b) {
                     <td>
                         <div id="desktop-canvas-container">
                         <canvas id="mainCanvas" oncontextmenu="return false;" width="640" height="400"
-                          style="border:2px solid gray; background-color:black;"></canvas>
+                          style="border:2px solid var(--muted-foreground); background-color:black;"></canvas>
                         </div>
                     </td>
                     <td class="tool-toolbar-container"  valign="top">
@@ -3666,7 +3681,7 @@ function rgbToLab(r,g,b) {
                     </td>
                   </tr>
                 </table>
-                <table style="border:2px solid gray; margin-top:2px; margin-left:3px;" margin="0">
+                <table style="border:2px solid var(--muted-foreground); margin-top:2px; margin-left:3px;" margin="0">
                   <tr height="16">
                     <td id="desktop-swatch-cell">
                       <div id="swatch-container" class="swatch-container-desktop"></div>
@@ -3689,7 +3704,7 @@ function rgbToLab(r,g,b) {
                         })();
                       </script>
                     </td>
-                    <td style="border-left: 2px solid gray;">
+                    <td style="border-left: 2px solid var(--muted-foreground);">
                       <a href="#" onclick="openPaletteSelector(event);return false;"><img id="palette_button" src="palette.png"></a>
                     </td>
                   </tr>
@@ -3771,7 +3786,7 @@ function rgbToLab(r,g,b) {
       <label for="burger-link-input">URL Link</label><br />
       <input type="text" id="burger-link-input" class="burger-link-input" placeholder="www.flickgame.org" oninput="linkChange(this.value); var li=document.getElementById('linkInput'); if(li) li.value=this.value;" />
       <span id="burger-bg-label">Background:</span>
-      <select id="burger-bg-select" class="toolbar" style="border: 2px solid gray;" onchange="changeBackgroundColor(colorPalette[this.value],true); var b=document.getElementById('bgColorSelect'); if(b) b.value=this.value; saveFlickgameState();"></select>
+      <select id="burger-bg-select" class="toolbar" style="border: 2px solid var(--muted-foreground);" onchange="changeBackgroundColor(colorPalette[this.value],true); var b=document.getElementById('bgColorSelect'); if(b) b.value=this.value; saveFlickgameState();"></select>
       <p>
       <button type="button" class="burger-dialog-btn" onclick="openPaletteSelector(event);">🎨 Select colour palette</button>
       <hr>
