@@ -2919,7 +2919,7 @@ function rgbToLab(r,g,b) {
     /* Brush size buttons */
     .brush-size-buttons {
       display: flex;
-      align-items: center;
+      align-items: left;
       gap: var(--toolbar-gap);
       flex-shrink: 0;
     }
@@ -2927,6 +2927,7 @@ function rgbToLab(r,g,b) {
       flex-direction: column-reverse;
     }
     .brush-size-buttons.horizontal {
+      align-items: center;
       flex-direction: row;
     }
     .brush-btn {
@@ -2950,12 +2951,16 @@ function rgbToLab(r,g,b) {
 
     .tool-buttons {
       display: flex;
-      align-items: center;
+      align-items: left;
       gap: var(--toolbar-gap);
       flex-shrink: 0;
     }
     .tool-buttons.vertical {
       flex-direction: column;
+    }
+    .tool-buttons.horizontal {
+      flex-direction: row;
+      align-items: center;
     }
     .tool-btn {
       display: block;
@@ -2983,6 +2988,10 @@ function rgbToLab(r,g,b) {
       touch-action: manipulation;
     }
 
+    .tool-toolbar-container {
+      padding-left: 10px;
+    }
+
     .grid-icon-svg .grid-cell {
       fill: rgba(255,255,255,0.45);
     }
@@ -2998,6 +3007,7 @@ function rgbToLab(r,g,b) {
       margin-top: 5px;
       touch-action: manipulation;
     }
+
 
     select {
       width: 100%;
@@ -3566,7 +3576,7 @@ function rgbToLab(r,g,b) {
               <td>
                 <table>
                   <tr>
-                    <td>
+                    <td colspan="2">
                       <center>
                         <input width="640" style="border:2px solid gray;" onkeydown="event.stopPropagation();"
                           value="www.flickgame.org" id="linkInput" oninput="linkChange(this.value)" />
@@ -3590,15 +3600,17 @@ function rgbToLab(r,g,b) {
                               title="new flickgame" alt="new flickgame" class="toolbar"
                               id="toolbar_new" /></a>
                         </span>
-                        <br />
                       </center>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
                         <div id="desktop-canvas-container">
                         <canvas id="mainCanvas" oncontextmenu="return false;" width="640" height="400"
                           style="border:2px solid gray; background-color:black;"></canvas>
                         </div>
-                        <br />
                     </td>
-                    <td valign="top">
+                    <td class="tool-toolbar-container"  valign="top">
                       <a href="#" onclick="shareClick();return false;">&ocir; share</a><br />
                       <div id="shareLink"></div>
                       <a href="#" onclick="exportClick();return false;">&sdotb; export</a><br />
@@ -3609,8 +3621,7 @@ function rgbToLab(r,g,b) {
                       <br />
                       <br />
                       <div id="desktop-brush-slider-container">
-                      <div id="brush-size-buttons" class="brush-size-buttons vertical">
-                      </div>
+                        <div id="brush-size-buttons" class="brush-size-buttons vertical"></div>
                       </div>
                       <div class="tool-buttons vertical">
                         <a href="#" class="tool-btn" onclick="setRadius(0);return false;"><img src="bucket.png" class="radius" id="bucket" /></a>
