@@ -12,6 +12,8 @@
   <script type="text/javascript">
 
     const version = "2";
+    //either 'centered' or 'split'
+    var SWATCH_LAYOUT_VARIANT = 'split';
     var gameLink = "www.flickgame.org"
     var canvasIndex = 0;
     var palette_name = "dawnbringer-16";
@@ -922,53 +924,95 @@ function rgbToLab(r,g,b) {
       }
     }
 
-    function updateSwatchLabels() {
+    function createSwatchElement(index) {
+      var a = document.createElement('a');
+      a.href = '#';
+      a.onclick = (function(n) { return function(e) { setColor(n, e); return false; }; })(index);
+
+      var d = document.createElement('div');
+      d.className = 'swatch-button unselected';
+      d.id = 'color_' + index;
+
+      var chip = document.createElement('span');
+      chip.className = 'swatch-chip';
+      d.appendChild(chip);
+
+      var arrow = document.createElement('span');
+      arrow.className = 'swatch-arrow';
+      arrow.textContent = '\u2192';
+      arrow.setAttribute('aria-hidden', 'true');
+      d.appendChild(arrow);
+
+      var status = document.createElement('span');
+      status.className = 'swatch-status';
+
+      var icon = document.createElement('span');
+      icon.className = 'swatch-link-icon';
+      icon.setAttribute('aria-hidden', 'true');
+      status.appendChild(icon);
+
+      var label = document.createElement('span');
+      label.className = 'link-label';
+      status.appendChild(label);
+
+      d.appendChild(status);
+      a.appendChild(d);
+      return a;
+    }
+
+    function getUsedColorsOnCurrentPage() {
       var used = new Set();
       if (canvasses[canvasIndex]) {
         var canvas = canvasses[canvasIndex];
         for (var k = 0; k < canvas.length; k++) used.add(canvas[k]);
       }
+      return used;
+    }
+
+    function renderSwatches() {
+      if (!colorElem.length) return;
+      var used = getUsedColorsOnCurrentPage();
       for (var i = 0; i < 16; i++) {
-        var label = colorElem[i].querySelector('.link-label');
-        if (!label) continue;
+        var swatch = colorElem[i];
+        if (!swatch) continue;
+
+        var label = swatch.querySelector('.link-label');
         var linkVal = hyperlinks[canvasIndex][i];
-        if (linkVal > 0) {
+        var usedOnCurrentPage = used.has(i);
+        var hasTarget = linkVal > 0;
+        var targetOffPage = hasTarget && !usedOnCurrentPage;
+        var dist_white = color_distance(colorPalette[i], "#ffffff");
+        var dist_black = color_distance(colorPalette[i], "#000000");
+        var contrastColor = dist_white > dist_black ? "#ffffff" : "#000000";
+        var labelColor = '';
+
+        swatch.classList.toggle('selected', i === colorIndex);
+        swatch.classList.toggle('unselected', i !== colorIndex);
+        swatch.classList.toggle('state-unused', !usedOnCurrentPage && !hasTarget);
+        swatch.classList.toggle('state-used', usedOnCurrentPage && !hasTarget);
+        swatch.classList.toggle('state-linked', usedOnCurrentPage && hasTarget);
+        swatch.classList.toggle('state-linked-offpage', targetOffPage);
+        swatch.style.color = contrastColor;
+
+        if (!label) continue;
+        if (hasTarget) {
           label.textContent = linkVal;
-          if (used.has(i)) {
-            label.classList.remove('link-label-not-on-page');
-            var dist_white = color_distance(colorPalette[i], "#ffffff");
-            var dist_black = color_distance(colorPalette[i], "#000000");
-            label.style.color = dist_white > dist_black ? "#ffffff" : "#000000";
-          } else {
+          if (targetOffPage) {
             label.classList.add('link-label-not-on-page');
+          } else {
+            label.classList.remove('link-label-not-on-page');
+            labelColor = contrastColor;
           }
         } else {
           label.textContent = '';
           label.classList.remove('link-label-not-on-page');
         }
-      }
-    }
-
-    function updateUsedOnFrameIndicators() {
-      if (!canvasses[canvasIndex] || !colorElem.length) return;
-      var used = new Set();
-      var canvas = canvasses[canvasIndex];
-      for (var k = 0; k < canvas.length; k++) {
-        used.add(canvas[k]);
-      }
-      for (var i = 0; i < 16; i++) {
-        if (colorElem[i]) {
-          if (used.has(i)) {
-            colorElem[i].classList.add("used-on-frame");
-          } else {
-            colorElem[i].classList.remove("used-on-frame");
-          }
-        }
+        label.style.color = labelColor;
       }
     }
 
     function setDropdowns() {
-      updateSwatchLabels();
+      renderSwatches();
       //set background dropdown
       var bg_color_idx = nearest_color_index_in_palette(colorPalette, background_color);
       bgColorSelect.value = bg_color_idx;
@@ -1030,7 +1074,7 @@ function rgbToLab(r,g,b) {
       return createGenericPicker('page-picker', function(e, pageNum) {
         hyperlinks[canvasIndex][pagePickerColorIdx] = pageNum;
         hidePagePicker();
-        updateSwatchLabels();
+        renderSwatches();
         refreshPointerModeCursor();
         updateLayerItemNumberStyles();
         saveFlickgameState();
@@ -1038,7 +1082,7 @@ function rgbToLab(r,g,b) {
         onClearClick: function(e) {
           hyperlinks[canvasIndex][pagePickerColorIdx] = 0;
           hidePagePicker();
-          updateSwatchLabels();
+          renderSwatches();
           refreshPointerModeCursor();
           updateLayerItemNumberStyles();
           saveFlickgameState();
@@ -1550,14 +1594,7 @@ function rgbToLab(r,g,b) {
       hidePagePicker();
 
       colorIndex = newColorIndex;
-      for (var i = 0; i < 16; i++) {
-        if (colorElem[i] !== null) {
-          colorElem[i].classList.remove("selected");
-          colorElem[i].classList.add("unselected");
-        }
-      }
-      colorElem[colorIndex].classList.remove("unselected");
-      colorElem[colorIndex].classList.add("selected");
+      renderSwatches();
     }
 
     function setLayer(newCanvasIndex,force_gen_thumbnails=false) {
@@ -1661,8 +1698,13 @@ function rgbToLab(r,g,b) {
       }
       for (var i = 0; i < 16; i++) {
         elem = document.getElementById("color_" + (i));
-        elem.style.backgroundColor = "var(--col" + i + ")";
+        elem.style.setProperty('--swatch-color', "var(--col" + i + ")");
         colorElem[i] = elem;
+      }
+
+      var swatchContainer = document.getElementById('swatch-container');
+      if (swatchContainer) {
+        swatchContainer.classList.add('swatch-layout-' + SWATCH_LAYOUT_VARIANT);
       }
 
       pagePickerEl = createPagePicker();
@@ -1954,8 +1996,7 @@ function rgbToLab(r,g,b) {
         drawThumbnail(canvasIndex);
       }
       linkInput.value = gameLink;
-      updateUsedOnFrameIndicators();
-      updateSwatchLabels();
+      renderSwatches();
       drawPointerCursor();
       if (!isMobileLayout()) updateLayerItemNumberStyles();
       updateMobileGridIconThumbnails(genAllThumbnails ? undefined : canvasIndex);
@@ -2818,34 +2859,69 @@ function rgbToLab(r,g,b) {
       touch-action: manipulation;
     }
 
-    div.selected {
-      height: 30px;
-      width: 30px;
-      border: 2px solid var(--selected-border-color);
-      touch-action: manipulation;
-      position: relative;
-    }
-
-    div.unselected {
+    .swatch-button {
       height: 30px;
       width: 30px;
       border: 2px solid black;
       touch-action: manipulation;
       position: relative;
+      box-sizing: border-box;
+      display: block;
+      color: var(--foreground-color);
+      --swatch-border-color: rgba(0, 0, 0, 0.7);
+      --swatch-status-bg: transparent;
     }
 
-    /* Dot in top-right when this colour appears on the current frame */
-    #swatch-container [id^="color_"].used-on-frame::after {
-      content: "";
+    .swatch-button.selected {
+      border-color: var(--selected-border-color);
+    }
+
+    .swatch-chip,
+    .swatch-status {
       position: absolute;
-      top: 2px;
-      right: 2px;
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      background: #fff;
-      border: 1px solid #333;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       box-sizing: border-box;
+    }
+
+    .swatch-chip {
+      background: var(--swatch-color);
+    }
+
+    .swatch-status {
+      background: var(--swatch-status-bg);
+      pointer-events: none;
+    }
+
+    .swatch-arrow {
+      display: none;
+      pointer-events: none;
+    }
+
+    .swatch-link-icon {
+      width: 16px;
+      height: 16px;
+      display: block;
+      background: currentColor;
+      opacity: 0;
+      mask: url('link.svg') center / contain no-repeat;
+      -webkit-mask: url('link.svg') center / contain no-repeat;
+      pointer-events: none;
+    }
+
+    .swatch-button.state-unused .swatch-link-icon {
+      opacity: 0.18;
+    }
+
+    .swatch-button.state-used .swatch-link-icon {
+      opacity: 0.9;
+    }
+
+    .swatch-button.state-linked .swatch-link-icon,
+    .swatch-button.state-linked-offpage .swatch-link-icon {
+      display: none;
     }
 
     .link-label {
@@ -2867,8 +2943,10 @@ function rgbToLab(r,g,b) {
       color: #c00 !important;
       text-shadow: 0 0 2px #000;
     }
-    #mobile-swatch-grid #swatch-container .unselected,
-    #mobile-swatch-grid #swatch-container .selected {
+    .swatch-button.state-linked-offpage {
+      --swatch-status-bg: radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0) 70%);
+    }
+    #mobile-swatch-grid #swatch-container .swatch-button {
       container-type: size;
     }
     #mobile-swatch-grid #swatch-container .link-label {
@@ -2878,6 +2956,57 @@ function rgbToLab(r,g,b) {
       #mobile-swatch-grid #swatch-container .link-label {
         font-size: 38cqi;
       }
+    }
+    #swatch-container.swatch-layout-split {
+      display: grid;
+      grid-template-columns: repeat(8, minmax(0, 34px));
+      gap: 2px;
+    }
+    #swatch-container.swatch-layout-split > a {
+      display: flex;
+    }
+    #swatch-container.swatch-layout-split .swatch-button {
+      width: 34px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      gap: 2px;
+      align-items: center;
+      padding: 1px;
+      background: var(--toolbar-color);
+    }
+    #swatch-container.swatch-layout-split .swatch-chip,
+    #swatch-container.swatch-layout-split .swatch-status {
+      position: relative;
+      inset: auto;
+      min-width: 0;
+      height: 100%;
+      border: 1px solid var(--swatch-border-color);
+    }
+    #swatch-container.swatch-layout-split .swatch-status {
+      background-color: rgba(0, 0, 0, 0.16);
+    }
+    #swatch-container.swatch-layout-split .swatch-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--foreground-color);
+      font-size: 10px;
+      line-height: 1;
+    }
+    #swatch-container.swatch-layout-split .link-label {
+      font-size: 12px;
+    }
+    #swatch-container.swatch-layout-centered .swatch-button.state-unused .swatch-status {
+      background: linear-gradient(to bottom, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.05));
+    }
+    #swatch-container.swatch-layout-split .swatch-button.state-unused .swatch-link-icon {
+      opacity: 0.14;
+    }
+    #swatch-container.swatch-layout-split .swatch-button.state-used .swatch-link-icon {
+      opacity: 0.62;
+    }
+    #mobile-swatch-grid #swatch-container.swatch-layout-split .link-label {
+      font-size: clamp(11px, 3vmin, 18px);
     }
 
     .page-picker {
@@ -3501,7 +3630,7 @@ function rgbToLab(r,g,b) {
       gap: 0;
     }
     .swatch-container-desktop > a {
-      display: inline-block;
+      display: inline-flex;
     }
     #mobile-swatch-grid #swatch-container {
       display: grid;
@@ -3518,8 +3647,7 @@ function rgbToLab(r,g,b) {
       min-height: 24px;
       max-height: 72px;
     }
-    #mobile-swatch-grid #swatch-container .unselected,
-    #mobile-swatch-grid #swatch-container .selected {
+    #mobile-swatch-grid #swatch-container .swatch-button {
       position: absolute;
       top: 0;
       left: 0;
@@ -3674,17 +3802,7 @@ function rgbToLab(r,g,b) {
                         (function() {
                           var sc = document.getElementById('swatch-container');
                           for (var i = 0; i < 16; i++) {
-                            var a = document.createElement('a');
-                            a.href = '#';
-                            a.onclick = (function(n) { return function(e) { setColor(n, e); return false; }; })(i);
-                            var d = document.createElement('div');
-                            d.className = 'unselected';
-                            d.id = 'color_' + i;
-                            var s = document.createElement('span');
-                            s.className = 'link-label';
-                            d.appendChild(s);
-                            a.appendChild(d);
-                            sc.appendChild(a);
+                            sc.appendChild(createSwatchElement(i));
                           }
                         })();
                       </script>
