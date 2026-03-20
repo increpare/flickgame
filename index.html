@@ -3024,11 +3024,14 @@ function rgbToLab(r,g,b) {
       width: 30px;
       height: 30px;
       background-color: transparent;
-      color: white;
+      color: var(--foreground-color);
       font-size: 200%;
       text-align: center;
       margin-bottom: 5px;
       touch-action: manipulation;
+    }
+    img.toolbar {
+      filter: var(--radius-filter);
     }
 
     .tool-toolbar-container {
@@ -3615,9 +3618,9 @@ function rgbToLab(r,g,b) {
                           <a href="#" onclick="doCopy();return false;" id="toolbar_copy" title="copy to clipboard (C)">
                             <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 16 16" class="toolbar">
                               <defs><clipPath id="desktop-front-page-clip"><rect x="5" y="1" width="10" height="10" rx="1" ry="1"/></clipPath></defs>
-                              <path fill="white" d="M2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"/>
+                              <path fill="currentColor" d="M2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"/>
                               <image id="desktop-copy-thumb-img" x="5" y="1" width="10" height="10" clip-path="url(#desktop-front-page-clip)" preserveAspectRatio="xMidYMid slice" style="image-rendering:pixelated;" href=""/>
-                              <path fill="white" fill-rule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1z"/>
+                              <path fill="currentColor" fill-rule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1z"/>
                             </svg>
                           </a>
 
@@ -3737,9 +3740,9 @@ function rgbToLab(r,g,b) {
                 <rect x="5" y="1" width="10" height="10" rx="1" ry="1"/>
               </clipPath>
             </defs>
-            <path fill="white" d="M2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"/>
+            <path fill="currentColor" d="M2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"/>
             <image id="copy-thumb-img" x="5" y="1" width="10" height="10" clip-path="url(#front-page-clip)" preserveAspectRatio="xMidYMid slice" style="image-rendering:pixelated;" href=""/>
-            <path fill="white" fill-rule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1z"/>
+            <path fill="currentColor" fill-rule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1z"/>
           </svg>
         </button>
         <button type="button" id="mobile-paste-btn" class="mobile-toolbar-btn" title="Paste (current layer)" aria-label="Paste" onclick="doPaste();"><img src="clipboard_paste.svg" alt="paste" class="toolbar" /></button>
