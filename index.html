@@ -818,10 +818,10 @@ function rgbToLab(r,g,b) {
       if (undoList.length > 0) {
         var dat = undoList.pop();
         if (dat.palette_name!==palette_name){
-          //then we need to change the color palette of ALL canvasses
           revert_color_palette_to(dat.palette_name);
           setVisuals(true);
           setDropdowns();
+          showActionFeedback(['toolbar_undo', 'mobile-undo-btn'], 'Undo!');
           return;
         }
         canvasses[dat.canvasIndex] = dat.canvasDat;
@@ -831,6 +831,7 @@ function rgbToLab(r,g,b) {
         }
         setLayer(dat.canvasIndex + 1,true);
         saveFlickgameState();
+        showActionFeedback(['toolbar_undo', 'mobile-undo-btn'], 'Undo!');
 
         if (shareLinkInner !== null) {
           shareLinkInner.style.color = "gray";
@@ -845,12 +846,30 @@ function rgbToLab(r,g,b) {
       updatePasteButtonState();
     }
 
+    function showActionFeedback(ids, text) {
+      for (var i = 0; i < ids.length; i++) {
+        var el = document.getElementById(ids[i]);
+        if (!el) continue;
+        if (el.tagName === 'IMG') el = el.parentElement;
+        if (!el) continue;
+        el.style.position = 'relative';
+        var existing = el.querySelector('.action-feedback');
+        if (existing) existing.remove();
+        var label = document.createElement('span');
+        label.className = 'action-feedback';
+        label.textContent = text;
+        el.appendChild(label);
+        (function(l) {
+          setTimeout(function() { l.classList.add('fade-out'); }, 50);
+          setTimeout(function() { l.remove(); }, 1200);
+        })(label);
+      }
+    }
+
     function showCopyFeedback() {
       var thumbImg = document.getElementById('copy-thumb-img');
-      var btn = document.getElementById('mobile-copy-btn');
-      if (!thumbImg && !btn) return;
-
-      if (thumbImg) {
+      var desktopThumbImg = document.getElementById('desktop-copy-thumb-img');
+      if (thumbImg || desktopThumbImg) {
         var thumbCanvas = document.createElement('canvas');
         thumbCanvas.width = width;
         thumbCanvas.height = height;
@@ -862,19 +881,11 @@ function rgbToLab(r,g,b) {
             ctx.fillRect(i, j, 1, 1);
           }
         }
-        thumbImg.setAttribute('href', thumbCanvas.toDataURL());
+        var dataUrl = thumbCanvas.toDataURL();
+        if (thumbImg) thumbImg.setAttribute('href', dataUrl);
+        if (desktopThumbImg) desktopThumbImg.setAttribute('href', dataUrl);
       }
-
-      if (btn) {
-        var existing = btn.querySelector('.copy-label');
-        if (existing) existing.remove();
-        var label = document.createElement('span');
-        label.className = 'copy-label';
-        label.textContent = 'Copied!';
-        btn.appendChild(label);
-        setTimeout(function() { label.classList.add('fade-out'); }, 50);
-        setTimeout(function() { label.remove(); }, 1200);
-      }
+      showActionFeedback(['mobile-copy-btn', 'toolbar_copy'], 'Copied!');
     }
 
     function doPaste() {
@@ -896,16 +907,7 @@ function rgbToLab(r,g,b) {
     }
 
     function showPasteFeedback() {
-      var btn = document.getElementById('mobile-paste-btn');
-      if (!btn) return;
-      var existing = btn.querySelector('.paste-label');
-      if (existing) existing.remove();
-      var label = document.createElement('span');
-      label.className = 'paste-label';
-      label.textContent = 'Pasted!';
-      btn.appendChild(label);
-      setTimeout(function() { label.classList.add('fade-out'); }, 50);
-      setTimeout(function() { label.remove(); }, 1200);
+      showActionFeedback(['mobile-paste-btn', 'toolbar_paste'], 'Pasted!');
     }
 
     function updatePasteButtonState() {
@@ -1387,6 +1389,7 @@ function rgbToLab(r,g,b) {
 
       setVisuals();
       saveFlickgameState();
+      showActionFeedback(['desktop-clear-btn'], 'Cleared!');
     }
     var BRUSH_SIZES = [1, 3, 5, 7, 11, 16];
 
@@ -2956,6 +2959,9 @@ function rgbToLab(r,g,b) {
       touch-action: manipulation;
       filter: var(--radius-filter);
     }
+    img.radius.selected {
+      border-color: var(--selected-border-color);
+    }
 
     /* Brush size buttons */
     .brush-size-buttons {
@@ -3047,6 +3053,10 @@ function rgbToLab(r,g,b) {
       margin-right: 20px;
       margin-top: 5px;
       touch-action: manipulation;
+    }
+    #toolbarcontainer a {
+      display: inline-block;
+      position: relative;
     }
 
 
@@ -3235,24 +3245,6 @@ function rgbToLab(r,g,b) {
     #mobile-copy-btn {
       position: relative;
     }
-    .copy-label {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 9px;
-      font-weight: bold;
-      color: white;
-      text-shadow: 0 0 3px black, 0 0 3px black;
-      opacity: 1;
-      transition: opacity 0.8s ease 0.3s;
-      pointer-events: none;
-    }
-    .copy-label.fade-out {
-      opacity: 0;
-    }
-
     #mobile-paste-btn {
       position: relative;
     }
@@ -3260,7 +3252,7 @@ function rgbToLab(r,g,b) {
       opacity: 0.5;
       pointer-events: none;
     }
-    .paste-label {
+    .action-feedback {
       position: absolute;
       inset: 0;
       display: flex;
@@ -3274,7 +3266,7 @@ function rgbToLab(r,g,b) {
       transition: opacity 0.8s ease 0.3s;
       pointer-events: none;
     }
-    .paste-label.fade-out {
+    .action-feedback.fade-out {
       opacity: 0;
     }
 
@@ -3621,18 +3613,23 @@ function rgbToLab(r,g,b) {
                           &nbsp;
                         <span id="toolbarcontainer">
 
-                          <a href="#" onclick="doUndo();return false;"><img src="SVG/undo.svg" title="undo (U)"
+                          <a href="#" onclick="doUndo();return false;"><img src="undo2.svg" title="undo (U)"
                               alt="undo" class="toolbar" id="toolbar_undo" /></a>
 
-                          <a href="#" onclick="doCopy();return false;"><img src="SVG/copy.svg"
-                              title="copy to clipboard (C)" alt="copy to clipboard" class="toolbar"
-                              id="toolbar_copy" /></a>
+                          <a href="#" onclick="doCopy();return false;" id="toolbar_copy" title="copy to clipboard (C)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 16 16" class="toolbar">
+                              <defs><clipPath id="desktop-front-page-clip"><rect x="5" y="1" width="10" height="10" rx="1" ry="1"/></clipPath></defs>
+                              <path fill="white" d="M2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"/>
+                              <image id="desktop-copy-thumb-img" x="5" y="1" width="10" height="10" clip-path="url(#desktop-front-page-clip)" preserveAspectRatio="xMidYMid slice" style="image-rendering:pixelated;" href=""/>
+                              <path fill="white" fill-rule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1z"/>
+                            </svg>
+                          </a>
 
-                          <a href="#" onclick="doPaste();return false;"><img src="SVG/paste.svg"
+                          <a href="#" onclick="doPaste();return false;"><img src="clipboard_paste.svg"
                               title="paste from clipboard (V)" alt="paste from clipboard" class="toolbar"
                               id="toolbar_paste" /></a>
 
-                          <a href="#" onclick="confirmNewFlickgame();return false;"><img src="new_flickgame.png"
+                          <a href="#" onclick="confirmNewFlickgame();return false;"><img src="new_file.svg"
                               title="new flickgame" alt="new flickgame" class="toolbar"
                               id="toolbar_new" /></a>
                         </span>
@@ -3660,9 +3657,9 @@ function rgbToLab(r,g,b) {
                         <div id="brush-size-buttons" class="brush-size-buttons vertical"></div>
                       </div>
                       <div class="tool-buttons vertical">
-                        <a href="#" class="tool-btn" onclick="setRadius(0);return false;"><img src="bucket.png" class="radius" id="bucket" /></a>
-                        <a href="#" class="tool-btn" onclick="togglePointerMode();return false;"><img id="pointer_mode_btn" src="pointer_hand.png" class="radius" title="pointer mode (test links)" /></a>
-                        <a href="#" class="tool-btn" onclick="clearPalette();return false;"><img src="clear.png" class="radius" title="clear frame" /></a>
+                        <a href="#" class="tool-btn" onclick="setRadius(0);return false;"><img src="bucket.svg" class="radius" id="bucket" /></a>
+                        <a href="#" class="tool-btn" onclick="togglePointerMode();return false;"><img id="pointer_mode_btn" src="play.svg" class="radius" title="pointer mode (test links)" /></a>
+                        <a href="#" class="tool-btn" id="desktop-clear-btn" onclick="clearPalette();return false;"><img src="clear.png" class="radius" title="clear frame" /></a>
                       </div>
                     </td>
                   </tr>

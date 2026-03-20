@@ -1,0 +1,2 @@
+./gzipper
+scp -r .* r3okadmin_flickgame@ssh.nyc1.nearlyfreespeech.net:/home/public/beta
