@@ -692,6 +692,43 @@ function rgbToLab(r,g,b) {
       }
     }
 
+    function confirmNewFlickgame() {
+      if (isProjectBlank()) {
+        newFlickgame();
+        return;
+      }
+      closeBurgerDialog();
+      var overlay = document.createElement('div');
+      overlay.className = 'burger-dialog visible';
+      overlay.id = 'confirm-new-dialog';
+      var box = document.createElement('div');
+      box.className = 'burger-dialog-content';
+      box.style.textAlign = 'center';
+      var msg = document.createElement('p');
+      msg.textContent = 'Start a new flickgame? Unsaved changes will be lost.';
+      msg.style.marginTop = '0';
+      var btnRow = document.createElement('div');
+      btnRow.style.cssText = 'display:flex;gap:12px;justify-content:center;margin-top:16px;';
+      var btnOk = document.createElement('button');
+      btnOk.className = 'burger-dialog-btn';
+      btnOk.textContent = 'New Flickgame';
+      btnOk.style.cssText = 'flex:1;';
+      var btnCancel = document.createElement('button');
+      btnCancel.className = 'burger-dialog-btn';
+      btnCancel.textContent = 'Cancel';
+      btnCancel.style.cssText = 'flex:1;';
+      function dismiss() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+      btnOk.addEventListener('click', function() { dismiss(); newFlickgame(); });
+      btnCancel.addEventListener('click', dismiss);
+      overlay.addEventListener('click', function(e) { if (e.target === overlay) dismiss(); });
+      btnRow.appendChild(btnOk);
+      btnRow.appendChild(btnCancel);
+      box.appendChild(msg);
+      box.appendChild(btnRow);
+      overlay.appendChild(box);
+      document.body.appendChild(overlay);
+    }
+
     function newFlickgame(keepPalette) {
       closeBurgerDialog();
       var w, h;
@@ -3385,9 +3422,6 @@ function rgbToLab(r,g,b) {
       text-align: left;
       touch-action: manipulation;
     }
-    .burger-dialog-content .burger-dialog-btn:last-child {
-      margin-bottom: 0;
-    }
     .burger-share-result:empty {
       display: none;
     }
@@ -3598,7 +3632,7 @@ function rgbToLab(r,g,b) {
                               title="paste from clipboard (V)" alt="paste from clipboard" class="toolbar"
                               id="toolbar_paste" /></a>
 
-                          <a href="#" onclick="newFlickgame();return false;"><img src="new_flickgame.png"
+                          <a href="#" onclick="confirmNewFlickgame();return false;"><img src="new_flickgame.png"
                               title="new flickgame" alt="new flickgame" class="toolbar"
                               id="toolbar_new" /></a>
                         </span>
@@ -3742,7 +3776,7 @@ function rgbToLab(r,g,b) {
       <p>
       <button type="button" class="burger-dialog-btn" onclick="openPaletteSelector(event);">🎨 Select colour palette</button>
       <hr>
-      <button type="button" class="burger-dialog-btn" onclick="newFlickgame();">🆕 New Flickgame</button>
+      <button type="button" class="burger-dialog-btn" onclick="confirmNewFlickgame();">🆕 New Flickgame</button>
       <button type="button" class="burger-dialog-btn" onclick="clearPalette();">🗑️ Clear page</button>
       <button type="button" class="burger-dialog-btn" onclick="shareClick();">📤 Share</button>
       <div id="burger-share-result" class="burger-share-result"></div>
