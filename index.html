@@ -242,7 +242,7 @@ function rgbToLab(r,g,b) {
       let old_name_div = document.getElementById('palette_name_' + old_palette_index);
       let new_name_div = document.getElementById('palette_name_' + new_palette_index);
       old_name_div.textContent = from_name;
-      old_name_div.style.color = 'gray';
+      old_name_div.style.color = 'var(--muted-foreground)';
       new_name_div.textContent = "[ "+to_name+" ]";
       new_name_div.style.color = 'white';
 
@@ -278,7 +278,7 @@ function rgbToLab(r,g,b) {
       for (var paletteName in palettes) {
         let currently_selected = paletteName === palette_name;
         let paletteDiv = document.createElement('div');
-        paletteDiv.style.border = '1px solid gray';
+        paletteDiv.style.border = '1px solid var(--muted-foreground)';
         paletteDiv.style.padding = '5px';
         paletteDiv.style.cursor = 'pointer';
 
@@ -2598,6 +2598,7 @@ function rgbToLab(r,g,b) {
         document.documentElement.style.setProperty('--foreground-color', "#000000");
         document.documentElement.style.setProperty('--radius-filter', 'invert(1)');
         document.documentElement.style.setProperty('--selected-border-color', '#00ffff');
+        document.documentElement.style.setProperty('--muted-foreground', 'rgba(0, 0, 0, 0.5)');
         tr = Math.round(rgb.r * 0.9);
         tg = Math.round(rgb.g * 0.9);
         tb = Math.round(rgb.b * 0.9);
@@ -2606,6 +2607,7 @@ function rgbToLab(r,g,b) {
         document.documentElement.style.setProperty('--foreground-color', "#ffffff");
         document.documentElement.style.setProperty('--radius-filter', 'none');
         document.documentElement.style.setProperty('--selected-border-color', '#ff0000');
+        document.documentElement.style.setProperty('--muted-foreground', 'rgba(255, 255, 255, 0.5)');
         tr = Math.min(255, Math.round(rgb.r + (255 - rgb.r) * 0.2));
         tg = Math.min(255, Math.round(rgb.g + (255 - rgb.g) * 0.2));
         tb = Math.min(255, Math.round(rgb.b + (255 - rgb.b) * 0.2));
@@ -2631,6 +2633,7 @@ function rgbToLab(r,g,b) {
     --toolbar-color: #1a1a1a;
     --radius-filter: none;
     --selected-border-color: #ff0000;
+    --muted-foreground: rgba(255, 255, 255, 0.5);
     --burger-menu-font-size: 16px;
     --toolbar-gap: 4px;
 
