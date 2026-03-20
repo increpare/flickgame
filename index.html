@@ -1351,8 +1351,6 @@ function rgbToLab(r,g,b) {
       var inner = document.getElementById('desktop-editor-inner');
       if (!inner) return;
       inner.style.setProperty('--desktop-scale', '1');
-      inner.style.width = '';
-      inner.style.height = '';
       inner.offsetHeight; /* force reflow to measure at scale 1 */
       var w = inner.offsetWidth;
       var h = inner.offsetHeight;
@@ -1361,8 +1359,6 @@ function rgbToLab(r,g,b) {
       var maxH = window.innerHeight - DESKTOP_SCALE_PADDING * 2;
       var scale = Math.min(maxW / w, maxH / h);
       inner.style.setProperty('--desktop-scale', String(scale));
-      inner.style.width = Math.floor(w * scale) + 'px';
-      inner.style.height = Math.floor(h * scale) + 'px';
     }
 
     var lastX = -1;
@@ -3096,17 +3092,17 @@ function rgbToLab(r,g,b) {
       min-height: 100dvh;
       width: 100%;
       overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      position: relative;
       box-sizing: border-box;
     }
     body[data-layout="desktop"] #desktop-editor-inner {
+      position: absolute;
+      left: 50%;
+      top: 50%;
       width: max-content;
       height: max-content;
-      transform: scale(var(--desktop-scale, 1));
-      transform-origin: 0 0;
-      flex-shrink: 0;
+      transform: translate(-50%, -50%) scale(var(--desktop-scale, 1));
+      transform-origin: center center;
     }
     body[data-layout="mobile-portrait"],
     body[data-layout="mobile-landscape"] {

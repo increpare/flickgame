@@ -1,2 +1,11 @@
-./gzipper
-scp -r .* r3okadmin_flickgame@ssh.nyc1.nearlyfreespeech.net:/home/public/beta
+#!/bin/bash
+REMOTE="r3okadmin_flickgame@ssh.nyc1.nearlyfreespeech.net:/home/public/beta"
+
+rsync -avz --checksum \
+  --include='*.*' \
+  --exclude='.git' \
+  --exclude='node_modules' \
+  --exclude='agent-transcripts' \
+  . "$REMOTE"
+
+ssh r3okadmin_flickgame@ssh.nyc1.nearlyfreespeech.net 'cd /home/public/beta && perl gzipper'
