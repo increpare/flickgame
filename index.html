@@ -588,6 +588,34 @@ function rgbToLab(r,g,b) {
       height = newHeight;
     }
 
+    function updateMobileToolbarBottomScale() {
+      var toolbar = document.querySelector('.mobile-toolbar-bottom');
+      var content = document.querySelector('.mobile-toolbar-bottom-content');
+      var maxControlSize = 100;
+      var baseControlSize = 30;
+      if (!toolbar || !content) return;
+
+      content.style.setProperty('--mobile-toolbar-bottom-scale', '1');
+
+      if (!isMobileLayout()) return;
+
+      var toolbarStyle = window.getComputedStyle(toolbar);
+      var availableWidth = toolbar.clientWidth - parseFloat(toolbarStyle.paddingLeft) - parseFloat(toolbarStyle.paddingRight);
+      var availableHeight = toolbar.clientHeight - parseFloat(toolbarStyle.paddingTop) - parseFloat(toolbarStyle.paddingBottom);
+      var naturalWidth = content.scrollWidth;
+      var naturalHeight = content.scrollHeight;
+
+      if (availableWidth <= 0 || availableHeight <= 0 || naturalWidth <= 0 || naturalHeight <= 0) return;
+
+      var maxScale = maxControlSize / baseControlSize;
+      var scaleByWidth = availableWidth / naturalWidth;
+      var scaleByHeight = availableHeight / naturalHeight;
+      var scale = layoutMode === 'mobile-portrait'
+        ? Math.min(maxScale, scaleByWidth)
+        : Math.min(maxScale, scaleByWidth, scaleByHeight);
+      content.style.setProperty('--mobile-toolbar-bottom-scale', scale);
+    }
+
     function updateMobileCanvasSize() {
       if (!isMobileLayout()) return;
       var container = document.getElementById('mobile-canvas-container');
@@ -604,6 +632,7 @@ function rgbToLab(r,g,b) {
         applyEditorDimensions();
         setVisuals(true);
       }
+      updateMobileToolbarBottomScale();
     }
 
     function mobileFillCanvasSize() {
@@ -939,7 +968,6 @@ function rgbToLab(r,g,b) {
 
       var arrow = document.createElement('span');
       arrow.className = 'swatch-arrow';
-      arrow.textContent = '\u2192';
       arrow.setAttribute('aria-hidden', 'true');
       d.appendChild(arrow);
 
@@ -984,6 +1012,7 @@ function rgbToLab(r,g,b) {
         var dist_white = color_distance(colorPalette[i], "#ffffff");
         var dist_black = color_distance(colorPalette[i], "#000000");
         var contrastColor = dist_white > dist_black ? "#ffffff" : "#000000";
+        var statusColor = SWATCH_LAYOUT_VARIANT === 'split' ? 'var(--foreground-color)' : contrastColor;
         var labelColor = '';
 
         swatch.classList.toggle('selected', i === colorIndex);
@@ -992,7 +1021,8 @@ function rgbToLab(r,g,b) {
         swatch.classList.toggle('state-used', usedOnCurrentPage && !hasTarget);
         swatch.classList.toggle('state-linked', usedOnCurrentPage && hasTarget);
         swatch.classList.toggle('state-linked-offpage', targetOffPage);
-        swatch.style.color = contrastColor;
+        swatch.style.color = statusColor;
+        swatch.style.setProperty('--swatch-chip-indicator-color', contrastColor);
 
         if (!label) continue;
         if (hasTarget) {
@@ -1001,7 +1031,7 @@ function rgbToLab(r,g,b) {
             label.classList.add('link-label-not-on-page');
           } else {
             label.classList.remove('link-label-not-on-page');
-            labelColor = contrastColor;
+            labelColor = statusColor;
           }
         } else {
           label.textContent = '';
@@ -1613,11 +1643,13 @@ function rgbToLab(r,g,b) {
         updateLayoutMode();
         if (layoutMode === 'desktop') updateDesktopScale();
         else updateMobileCanvasSize();
+        updateMobileToolbarBottomScale();
       });
       window.addEventListener('orientationchange', function() {
         updateLayoutMode();
         if (layoutMode === 'desktop') updateDesktopScale();
         else updateMobileCanvasSize();
+        updateMobileToolbarBottomScale();
       });
 
       // Populate background color dropdown
@@ -1872,6 +1904,7 @@ function rgbToLab(r,g,b) {
             requestAnimationFrame(function() {
               if (isProjectBlank()) newFlickgame(true);
               else updateMobileCanvasSize();
+              updateMobileToolbarBottomScale();
             });
           });
         } else {
@@ -1887,6 +1920,7 @@ function rgbToLab(r,g,b) {
           requestAnimationFrame(function() {
             if (isProjectBlank()) newFlickgame(true);
             else updateDesktopScale();
+            updateMobileToolbarBottomScale();
           });
         }
         pointerModeBtn = isMobileLayout() ? document.getElementById('mobile-pointer-btn') : document.getElementById('pointer_mode_btn');
@@ -2862,7 +2896,7 @@ function rgbToLab(r,g,b) {
     .swatch-button {
       height: 30px;
       width: 30px;
-      border: 2px solid black;
+      border: 2px solid var(--toolbar-color);
       touch-action: manipulation;
       position: relative;
       box-sizing: border-box;
@@ -2889,6 +2923,25 @@ function rgbToLab(r,g,b) {
     .swatch-chip {
       background: var(--swatch-color);
     }
+    .swatch-chip::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 8px;
+      height: 8px;
+      margin-left: -4px;
+      margin-top: -4px;
+      border-radius: 50%;
+      background: var(--swatch-chip-indicator-color, var(--foreground-color));
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .swatch-button.state-used .swatch-chip::after,
+    .swatch-button.state-linked .swatch-chip::after {
+      opacity: 1;
+    }
 
     .swatch-status {
       background: var(--swatch-status-bg);
@@ -2901,9 +2954,9 @@ function rgbToLab(r,g,b) {
     }
 
     .swatch-link-icon {
-      width: 16px;
-      height: 16px;
-      display: block;
+      width: 24px;
+      height: 24px;
+      display: none;
       background: currentColor;
       opacity: 0;
       mask: url('link.svg') center / contain no-repeat;
@@ -2912,11 +2965,11 @@ function rgbToLab(r,g,b) {
     }
 
     .swatch-button.state-unused .swatch-link-icon {
-      opacity: 0.18;
+      opacity: 0.0;
     }
 
     .swatch-button.state-used .swatch-link-icon {
-      opacity: 0.9;
+      opacity: 1.0;
     }
 
     .swatch-button.state-linked .swatch-link-icon,
@@ -2959,14 +3012,15 @@ function rgbToLab(r,g,b) {
     }
     #swatch-container.swatch-layout-split {
       display: grid;
-      grid-template-columns: repeat(8, minmax(0, 34px));
+      grid-template-columns: repeat(8, minmax(0, 78px));
       gap: 2px;
     }
     #swatch-container.swatch-layout-split > a {
       display: flex;
     }
     #swatch-container.swatch-layout-split .swatch-button {
-      width: 34px;
+      width: 100%;
+      height: 30px;
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
       gap: 2px;
@@ -2974,13 +3028,21 @@ function rgbToLab(r,g,b) {
       padding: 1px;
       background: var(--toolbar-color);
     }
-    #swatch-container.swatch-layout-split .swatch-chip,
+    #swatch-container.swatch-layout-split .swatch-chip{
+      position: relative;
+      inset: auto;
+      min-width: 0;
+      height: 100%;
+      /* border: 1px solid var(--swatch-border-color); */
+      border-radius: 0px;
+    }
     #swatch-container.swatch-layout-split .swatch-status {
       position: relative;
       inset: auto;
       min-width: 0;
       height: 100%;
-      border: 1px solid var(--swatch-border-color);
+      /* border: 1px solid var(--swatch-border-color); */
+      border-radius: 5px;
     }
     #swatch-container.swatch-layout-split .swatch-status {
       background-color: rgba(0, 0, 0, 0.16);
@@ -2989,9 +3051,18 @@ function rgbToLab(r,g,b) {
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--foreground-color);
-      font-size: 10px;
-      line-height: 1;
+      width: 10px;
+      min-width: 10px;
+      opacity: 0.5;
+    }
+    #swatch-container.swatch-layout-split .swatch-arrow::before {
+      content: "";
+      display: block;
+      width: 0;
+      height: 0;
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+      border-left: 8px solid var(--foreground-color);
     }
     #swatch-container.swatch-layout-split .link-label {
       font-size: 12px;
@@ -3000,10 +3071,10 @@ function rgbToLab(r,g,b) {
       background: linear-gradient(to bottom, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.05));
     }
     #swatch-container.swatch-layout-split .swatch-button.state-unused .swatch-link-icon {
-      opacity: 0.14;
+      opacity: 0.0;
     }
     #swatch-container.swatch-layout-split .swatch-button.state-used .swatch-link-icon {
-      opacity: 0.62;
+      opacity: 1.0;
     }
     #mobile-swatch-grid #swatch-container.swatch-layout-split .link-label {
       font-size: clamp(11px, 3vmin, 18px);
@@ -3307,10 +3378,7 @@ function rgbToLab(r,g,b) {
       min-width: 0;
     }
     body[data-layout="mobile-landscape"] .mobile-toolbar-bottom {
-      flex-direction: column;
-      justify-content: flex-start;
-      padding: var(--toolbar-gap);
-      gap: var(--toolbar-gap);
+      justify-content: center;
       flex-shrink: 0;
       max-height: 100%;
       border-radius: 8px 8px 8px 8px;
@@ -3344,14 +3412,42 @@ function rgbToLab(r,g,b) {
     }
     .mobile-toolbar-bottom {
       display: flex;
-      align-items: center;
+      align-items: stretch;
       justify-content: center;
-      gap: var(--toolbar-gap);
       padding: var(--toolbar-gap);
       background: var(--toolbar-color);
-      flex-wrap: nowrap;
       flex-shrink: 0;
       border-radius: 8px;
+      overflow: hidden;
+    }
+    .mobile-toolbar-bottom-scale-box {
+      flex: 1 1 auto;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .mobile-toolbar-bottom-content {
+      --mobile-toolbar-bottom-scale: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: calc(var(--toolbar-gap) * var(--mobile-toolbar-bottom-scale));
+      flex-wrap: nowrap;
+    }
+    body[data-layout="mobile-landscape"] .mobile-toolbar-bottom-content {
+      flex-direction: column;
+    }
+    .mobile-toolbar-bottom .brush-size-buttons,
+    .mobile-toolbar-bottom .mobile-toolbar-bottom-icons {
+      gap: calc(var(--toolbar-gap) * var(--mobile-toolbar-bottom-scale));
+    }
+    .mobile-toolbar-bottom .brush-btn svg,
+    .mobile-toolbar-bottom img.radius {
+      width: calc(30px * var(--mobile-toolbar-bottom-scale));
+      height: calc(30px * var(--mobile-toolbar-bottom-scale));
     }
     .mobile-toolbar-btn {
       width: 52px;
@@ -3689,6 +3785,36 @@ function rgbToLab(r,g,b) {
       min-height: 20px;
       max-height: 100%;
     }
+    body[data-layout="mobile-landscape"] #mobile-swatch-grid #swatch-container.swatch-layout-split .swatch-button {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr);
+      grid-template-areas:
+        "status"
+        "arrow"
+        "chip";
+      gap: 2px;
+      align-items: stretch;
+      justify-items: stretch;
+    }
+    body[data-layout="mobile-landscape"] #mobile-swatch-grid #swatch-container.swatch-layout-split .swatch-chip,
+    body[data-layout="mobile-landscape"] #mobile-swatch-grid #swatch-container.swatch-layout-split .swatch-status {
+      width: 100%;
+      min-height: 0;
+    }
+    body[data-layout="mobile-landscape"] #mobile-swatch-grid #swatch-container.swatch-layout-split .swatch-chip {
+      grid-area: chip;
+    }
+    body[data-layout="mobile-landscape"] #mobile-swatch-grid #swatch-container.swatch-layout-split .swatch-status {
+      grid-area: status;
+    }
+    body[data-layout="mobile-landscape"] #mobile-swatch-grid #swatch-container.swatch-layout-split .swatch-arrow {
+      grid-area: arrow;
+      transform: rotate(-90deg);
+      width: 12px;
+      min-width: 12px;
+      justify-self: center;
+      align-self: center;
+    }
     #burger-bg-select {
       height: 30px;
     }
@@ -3875,10 +4001,14 @@ function rgbToLab(r,g,b) {
       <div id="mobile-canvas-container"></div>
     </div>
     <div class="mobile-toolbar-bottom">
-      <div id="mobile-brush-slider-container"></div>
-      <div class="mobile-toolbar-bottom-icons">
-        <a href="#" id="mobile-bucket-btn" onclick="setRadius(0);return false;"><img src="bucket.svg" class="radius" alt="bucket" /></a>
-        <a href="#" id="mobile-undo-btn" onclick="doUndo();return false;"><img src="undo2.svg" class="radius" alt="undo" /></a>
+      <div class="mobile-toolbar-bottom-scale-box">
+        <div class="mobile-toolbar-bottom-content">
+          <div id="mobile-brush-slider-container"></div>
+          <div class="mobile-toolbar-bottom-icons">
+            <a href="#" id="mobile-bucket-btn" onclick="setRadius(0);return false;"><img src="bucket.svg" class="radius" alt="bucket" /></a>
+            <a href="#" id="mobile-undo-btn" onclick="doUndo();return false;"><img src="undo2.svg" class="radius" alt="undo" /></a>
+          </div>
+        </div>
       </div>
     </div>
     <div id="mobile-swatch-grid" class="mobile-swatch-grid"></div>
