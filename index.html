@@ -2749,6 +2749,7 @@ function rgbToLab(r,g,b) {
   }
   body {
     overscroll-behavior: none;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
 }
     #mainCanvas {
       cursor: crosshair;
@@ -2926,8 +2927,8 @@ function rgbToLab(r,g,b) {
     .swatch-chip::after {
       content: "";
       position: absolute;
-      top: 50%;
-      left: 50%;
+      bottom: 12px;
+      left: 12px;
       width: 8px;
       height: 8px;
       margin-left: -4px;
@@ -2986,7 +2987,7 @@ function rgbToLab(r,g,b) {
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
+      font-size: 13px;
       font-weight: bold;
       pointer-events: none;
       line-height: 1;
@@ -3022,7 +3023,7 @@ function rgbToLab(r,g,b) {
       width: 100%;
       height: 30px;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr) auto auto;
       gap: 2px;
       align-items: center;
       padding: 1px;
@@ -3039,8 +3040,9 @@ function rgbToLab(r,g,b) {
     #swatch-container.swatch-layout-split .swatch-status {
       position: relative;
       inset: auto;
-      min-width: 0;
+      min-width: 16px;
       height: 100%;
+      aspect-ratio: 3 / 4;
       /* border: 1px solid var(--swatch-border-color); */
       border-radius: 5px;
     }
@@ -3077,7 +3079,7 @@ function rgbToLab(r,g,b) {
       opacity: 1.0;
     }
     #mobile-swatch-grid #swatch-container.swatch-layout-split .link-label {
-      font-size: clamp(11px, 3vmin, 18px);
+      font-size: clamp(11px, 3vmin, 32px);
     }
 
     .page-picker {
@@ -3710,8 +3712,7 @@ function rgbToLab(r,g,b) {
       color: #c00;
     }
     .mobile-swatch-grid {
-      padding: 8px 12px 12px;
-      max-width: 320px;
+      padding: 8px 0px;
       margin: 0 auto;
       flex: 0 1 auto;
       min-height: 0;
@@ -3752,6 +3753,20 @@ function rgbToLab(r,g,b) {
       width: 100%;
       height: 100%;
       box-sizing: border-box;
+      overflow: hidden;
+    }
+    #mobile-swatch-grid #swatch-container.swatch-layout-split .swatch-button {
+      grid-template-columns: minmax(0, 1fr) auto auto;
+    }
+    #mobile-swatch-grid #swatch-container.swatch-layout-split .swatch-status {
+      min-width: 32px;
+      width: 32px;
+      height: 100%;
+      aspect-ratio: unset;
+    }
+    #mobile-swatch-grid #swatch-container.swatch-layout-split .swatch-arrow {
+      min-width: 0;
+      width: 8px;
     }
     /* Landscape mobile: same as portrait but rotated – portrait is 320×~160 (4 cols, 2:1 cells); rotated = 160 wide, full height */
     body[data-layout="mobile-landscape"] .mobile-swatch-grid {
@@ -3761,9 +3776,7 @@ function rgbToLab(r,g,b) {
       display: flex;
       flex-direction: column;
       justify-content: center;
-      width: 148px;
-      min-width: 148px;
-      max-width: 148px;
+      width: clamp(148px, 46vh, 210px);
       margin: 0;
       min-height: 0;
       overflow: hidden;
@@ -3777,12 +3790,12 @@ function rgbToLab(r,g,b) {
       width: 100%;
       max-width: 100%;
       max-height: 100%;
-      flex-shrink: 1;
+      flex: 1;
       min-height: 0;
     }
     body[data-layout="mobile-landscape"] #mobile-swatch-grid #swatch-container > a {
-      aspect-ratio: 1 / 2;
-      min-height: 20px;
+      aspect-ratio: auto;
+      min-height: 0;
       max-height: 100%;
     }
     body[data-layout="mobile-landscape"] #mobile-swatch-grid #swatch-container.swatch-layout-split .swatch-button {
@@ -3806,6 +3819,8 @@ function rgbToLab(r,g,b) {
     }
     body[data-layout="mobile-landscape"] #mobile-swatch-grid #swatch-container.swatch-layout-split .swatch-status {
       grid-area: status;
+      aspect-ratio: 1 / 1;
+      align-self: center;
     }
     body[data-layout="mobile-landscape"] #mobile-swatch-grid #swatch-container.swatch-layout-split .swatch-arrow {
       grid-area: arrow;
