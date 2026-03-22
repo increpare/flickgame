@@ -190,6 +190,7 @@ function rgbToLab(r,g,b) {
       }
       transform_state(colorPalette, palettes[name]);
       colorPalette = palettes[name];
+      updatePaletteRGB();
       // Update color swatches
       for (var i = 0; i < 16; i++) {
         document.documentElement.style.setProperty('--col' + i, colorPalette[i]);
@@ -222,6 +223,7 @@ function rgbToLab(r,g,b) {
       set_modal_panel_selected_item(palette_name,p_name);
       palette_name = p_name;
       colorPalette = palettes[p_name];
+      updatePaletteRGB();
 
       // Update color swatches
       for (var i = 0; i < 16; i++) {
@@ -886,6 +888,7 @@ function rgbToLab(r,g,b) {
         }
         canvasses[dat.canvasIndex] = dat.canvasDat;
         colorPalette = palettes[palette_name];
+        updatePaletteRGB();
         if (background_color !== dat.background_color){
           changeBackgroundColor(dat.background_color,false);
         }
@@ -1667,6 +1670,7 @@ function rgbToLab(r,g,b) {
     var bgColorSelectOptions=[];
     var burgerBgSelectOptions=[];
     function init() {
+      updatePaletteRGB();
       updateLayoutMode();
       window.addEventListener('resize', function() {
         updateLayoutMode();
@@ -2036,33 +2040,75 @@ function rgbToLab(r,g,b) {
       }
     }
 
+    // Pre-parsed palette RGB values for fast ImageData rendering
+    var paletteRGB = [];
+    function updatePaletteRGB() {
+      paletteRGB = [];
+      for (var i = 0; i < colorPalette.length; i++) {
+        var rgb = hexToRgb(colorPalette[i]);
+        paletteRGB.push(rgb ? [rgb.r, rgb.g, rgb.b] : [0, 0, 0]);
+      }
+    }
+
+    function drawCanvasFast() {
+      canvas = canvasses[canvasIndex];
+      var cw = visibleCanvas.width;
+      var ch = visibleCanvas.height;
+      var imgData = visibleContext.createImageData(cw, ch);
+      var data = imgData.data;
+      for (var j = 0; j < height; j++) {
+        var y0 = Math.floor(j * zoomFactor);
+        var y1 = Math.floor((j + 1) * zoomFactor);
+        for (var i = 0; i < width; i++) {
+          var rgb = paletteRGB[canvas[i + width * j]] || [0, 0, 0];
+          var x0 = Math.floor(i * zoomFactor);
+          var x1 = Math.floor((i + 1) * zoomFactor);
+          for (var py = y0; py < y1; py++) {
+            var rowOff = py * cw;
+            for (var px = x0; px < x1; px++) {
+              var off = (rowOff + px) << 2;
+              data[off] = rgb[0];
+              data[off + 1] = rgb[1];
+              data[off + 2] = rgb[2];
+              data[off + 3] = 255;
+            }
+          }
+        }
+      }
+      visibleContext.putImageData(imgData, 0, 0);
+    }
+
+    var _thumbsDirty = false;
+    var _thumbsRAF = 0;
+
     function setVisuals(genAllThumbnails=false) {
       canvas = canvasses[canvasIndex];
-      for (var i = 0; i < width; i++) {
-        for (var j = 0; j < height; j++) {
-          var pixelIndex = canvas[i + width * j];
-          visibleContext.fillStyle = colorPalette[pixelIndex];
-          var x0 = Math.floor(i * zoomFactor);
-          var y0 = Math.floor(j * zoomFactor);
-          var x1 = Math.floor((i + 1) * zoomFactor);
-          var y1 = Math.floor((j + 1) * zoomFactor);
-          var w = Math.max(1, x1 - x0);
-          var h = Math.max(1, y1 - y0);
-          visibleContext.fillRect(x0, y0, w, h);
-        }
-      }
-      if (genAllThumbnails === true) {
-        for (var i = 0; i < 16; i++) {
-          drawThumbnail(i);
+      drawCanvasFast();
+      if (drawing) {
+        // During active drawing, defer expensive updates
+        if (!_thumbsDirty) {
+          _thumbsDirty = true;
+          _thumbsRAF = requestAnimationFrame(function() {
+            _thumbsDirty = false;
+            _thumbsRAF = 0;
+            drawThumbnail(canvasIndex);
+            updateMobileGridIconThumbnails(canvasIndex);
+          });
         }
       } else {
-        drawThumbnail(canvasIndex);
+        if (genAllThumbnails === true) {
+          for (var i = 0; i < 16; i++) {
+            drawThumbnail(i);
+          }
+        } else {
+          drawThumbnail(canvasIndex);
+        }
+        updateMobileGridIconThumbnails(genAllThumbnails ? undefined : canvasIndex);
       }
       linkInput.value = gameLink;
-      renderSwatches();
+      if (!drawing) renderSwatches();
       drawPointerCursor();
       if (!isMobileLayout()) updateLayerItemNumberStyles();
-      updateMobileGridIconThumbnails(genAllThumbnails ? undefined : canvasIndex);
     }
 
     var drawing = 0;
@@ -2428,6 +2474,10 @@ function rgbToLab(r,g,b) {
       lastX = -1;
       lastY = -1;
       lastButton = -1;
+      // Update deferred visuals now that drawing stopped
+      renderSwatches();
+      drawThumbnail(canvasIndex);
+      updateMobileGridIconThumbnails(canvasIndex);
       saveFlickgameState();
 
       e.preventDefault();
