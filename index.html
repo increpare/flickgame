@@ -2701,16 +2701,20 @@
       var rgb = hexToRgb(color);
       foreground_color = contrastTextColor(color);
       document.documentElement.style.setProperty('--foreground-color', foreground_color);
+      var fgRgb = hexToRgb(foreground_color);
+      var mr = Math.round((rgb.r + fgRgb.r) / 2);
+      var mg = Math.round((rgb.g + fgRgb.g) / 2);
+      var mb = Math.round((rgb.b + fgRgb.b) / 2);
+      var mutedColor = '#' + ((1 << 24) | (mr << 16) | (mg << 8) | mb).toString(16).slice(1);
+      document.documentElement.style.setProperty('--muted-foreground', mutedColor);
       var tr, tg, tb;
       if (foreground_color === "#000000"){
         document.documentElement.style.setProperty('--radius-filter', 'invert(1)');
-        document.documentElement.style.setProperty('--muted-foreground', 'rgba(0, 0, 0, 0.5)');
         tr = Math.round(rgb.r * 0.9);
         tg = Math.round(rgb.g * 0.9);
         tb = Math.round(rgb.b * 0.9);
       } else {
         document.documentElement.style.setProperty('--radius-filter', 'none');
-        document.documentElement.style.setProperty('--muted-foreground', 'rgba(255, 255, 255, 0.5)');
         tr = Math.min(255, Math.round(rgb.r + (255 - rgb.r) * 0.2));
         tg = Math.min(255, Math.round(rgb.g + (255 - rgb.g) * 0.2));
         tb = Math.min(255, Math.round(rgb.b + (255 - rgb.b) * 0.2));
@@ -2814,7 +2818,7 @@
       max-height: 400px;
       overflow-y: auto;
       background-color: var(--toolbar-color);
-      border: 2px solid gray;
+      border: 2px solid var(--muted-foreground);
       padding: 25px;
       z-index: 1000;
     }
@@ -2906,7 +2910,7 @@
     }
 
     a.layerItem.layerItemEmpty {
-      color: #888;
+      color: var(--muted-foreground);
     }
 
     a.layerItem.layerItemUnreachable {
@@ -2914,7 +2918,7 @@
     }
 
     a.layerItem.selectedItem.layerItemEmpty {
-      color: black;
+      color: var(--foreground-color);
     }
 
     /*all images pixelated*/
@@ -3344,7 +3348,7 @@
     }
 
     canvas#dropdownthumb {
-      border: 2px solid gray;
+      border: 2px solid var(--muted-foreground);
       background-color: black;
       touch-action: manipulation;
     }
@@ -3534,7 +3538,7 @@
       box-sizing: border-box;
       background: var(--background-color);
       color: var(--foreground-color);
-      border: 2px solid gray;
+      border: 2px solid var(--muted-foreground);
       border-radius: 4px;
       font-size: 14px;
       cursor: pointer;
@@ -3680,7 +3684,7 @@
     .burger-dialog-content {
       background: var(--toolbar-color);
       color: var(--foreground-color);
-      border: 2px solid gray;
+      border: 2px solid var(--muted-foreground);
       padding: 24px;
       max-width: 280px;
       max-height: 80vh;
@@ -3709,7 +3713,7 @@
       padding: 6px 10px;
       background: var(--background-color);
       color: var(--foreground-color);
-      border: 2px solid gray;
+      border: 2px solid var(--muted-foreground);
       border-radius: 4px;
       font-size: var(--burger-menu-font-size);
       cursor: pointer;
@@ -3735,7 +3739,7 @@
       padding: 6px;
       background: var(--background-color);
       color: var(--foreground-color);
-      border: 2px solid gray;
+      border: 2px solid var(--muted-foreground);
       font-size: var(--burger-menu-font-size);
     }
     .frame-picker {
@@ -3933,7 +3937,7 @@
                 var c = document.createElement('canvas');
                 c.id = 'thumbnail' + i;
                 c.width = 16; c.height = 10;
-                c.style.cssText = 'border:2px solid gray; background-color:transparent;';
+                c.style.cssText = 'border:2px solid var(--muted-foreground); background-color:transparent;';
                 a.appendChild(c);
                 a.appendChild(document.createTextNode(' ' + i));
                 li.appendChild(a);
@@ -3950,9 +3954,9 @@
                   <tr>
                     <td colspan="2">
                       <center>
-                        <input width="640" style="border:2px solid gray;" onkeydown="event.stopPropagation();"
+                        <input width="640" style="border:2px solid var(--muted-foreground);" onkeydown="event.stopPropagation();"
                           value="www.flickgame.org" id="linkInput" oninput="linkChange(this.value)" />
-                          <span id="bgColorSelectContainer"><select id="bgColorSelect" class="toolbar"  style="border: 2px solid gray;" onchange="changeBackgroundColor(colorPalette[this.value],true);saveFlickgameState();">
+                          <span id="bgColorSelectContainer"><select id="bgColorSelect" class="toolbar"  style="border: 2px solid var(--muted-foreground);" onchange="changeBackgroundColor(colorPalette[this.value],true);saveFlickgameState();">
                           </select></span>
                           &nbsp;
                         <span id="toolbarcontainer">
@@ -3984,7 +3988,7 @@
                     <td>
                         <div id="desktop-canvas-container">
                         <canvas id="mainCanvas" oncontextmenu="return false;" width="640" height="400"
-                          style="border:2px solid gray; background-color:black;"></canvas>
+                          style="border:2px solid var(--muted-foreground); background-color:black;"></canvas>
                         </div>
                     </td>
                     <td class="tool-toolbar-container"  valign="top">
@@ -4003,12 +4007,12 @@
                       <div class="tool-buttons vertical">
                         <a href="#" class="tool-btn" onclick="setRadius(0);return false;"><img src="bucket.svg" class="radius" id="bucket" /></a>
                         <a href="#" class="tool-btn" onclick="togglePointerMode();return false;"><img id="pointer_mode_btn" src="play.svg" class="radius" title="pointer mode (test links)" /></a>
-                        <a href="#" class="tool-btn" id="desktop-clear-btn" onclick="clearPalette();return false;"><img src="clear.png" class="radius" title="clear frame" /></a>
+                        <a href="#" class="tool-btn" id="desktop-clear-btn" onclick="clearPalette();return false;"><img src="x.svg" class="radius" title="clear frame" /></a>
                       </div>
                     </td>
                   </tr>
                 </table>
-                <table style="border:2px solid gray; margin-top:2px; margin-left:3px;" margin="0">
+                <table style="border:2px solid var(--muted-foreground); margin-top:2px; margin-left:3px;" margin="0">
                   <tr height="16">
                     <td id="desktop-swatch-cell">
                       <div id="swatch-container" class="swatch-container-desktop"></div>
@@ -4021,7 +4025,7 @@
                         })();
                       </script>
                     </td>
-                    <td style="border-left: 2px solid gray;">
+                    <td style="border-left: 2px solid var(--muted-foreground);">
                       <a href="#" onclick="openPaletteSelector(event);return false;"><img id="palette_button" src="palette.png"></a>
                     </td>
                   </tr>
@@ -4107,7 +4111,7 @@
       <label for="burger-link-input">URL Link</label><br />
       <input type="text" id="burger-link-input" class="burger-link-input" placeholder="www.flickgame.org" oninput="linkChange(this.value); var li=document.getElementById('linkInput'); if(li) li.value=this.value;" />
       <span id="burger-bg-label">Background:</span>
-      <select id="burger-bg-select" class="toolbar" style="border: 2px solid gray;" onchange="changeBackgroundColor(colorPalette[this.value],true); var b=document.getElementById('bgColorSelect'); if(b) b.value=this.value; saveFlickgameState();"></select>
+      <select id="burger-bg-select" class="toolbar" style="border: 2px solid var(--muted-foreground);" onchange="changeBackgroundColor(colorPalette[this.value],true); var b=document.getElementById('bgColorSelect'); if(b) b.value=this.value; saveFlickgameState();"></select>
       <p>
       <button type="button" class="burger-dialog-btn" onclick="openPaletteSelector(event);">🎨 Select colour palette</button>
       <hr>
