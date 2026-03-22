@@ -1344,8 +1344,18 @@ function rgbToLab(r,g,b) {
       var swatchRect = colorElem[colorIdx].getBoundingClientRect();
       pagePickerEl.classList.add('visible');
 
+      // Clamp picker height to viewport, use compact layout if needed
+      var maxH = window.innerHeight - 16;
+      pagePickerEl.classList.remove('compact');
+      pagePickerEl.style.maxHeight = maxH + 'px';
+
+      var pickerHeight = pagePickerEl.scrollHeight;
+      if (pickerHeight > maxH) {
+        pagePickerEl.classList.add('compact');
+      }
+
       var pickerWidth = pagePickerEl.offsetWidth;
-      var pickerHeight = pagePickerEl.offsetHeight;
+      pickerHeight = pagePickerEl.offsetHeight;
       var left, top;
 
       if (layoutMode === 'mobile-landscape') {
@@ -3184,6 +3194,9 @@ function rgbToLab(r,g,b) {
       border-radius: 5px;
       padding: 8px;
       box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+      box-sizing: border-box;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     .page-picker.visible {
@@ -3241,6 +3254,27 @@ function rgbToLab(r,g,b) {
       cursor: pointer;
       border-top: 1px solid #444;
       margin-top: 2px;
+    }
+
+    .page-picker.compact {
+      padding: 4px;
+      gap: 3px;
+    }
+    .page-picker.compact .page-picker-item {
+      padding: 1px;
+      gap: 1px;
+    }
+    .page-picker.compact .page-picker-item canvas {
+      width: 36px;
+      height: 18px;
+    }
+    .page-picker.compact .page-picker-label {
+      font-size: 14px;
+    }
+    .page-picker.compact .page-picker-clear {
+      padding: 2px;
+      font-size: 13px;
+      margin-top: 0;
     }
 
     .page-picker-clear:hover {
