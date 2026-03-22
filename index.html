@@ -2664,6 +2664,7 @@ function rgbToLab(r,g,b) {
       background_color = color;
       document.documentElement.style.setProperty('--background-color', color);
       document.body.style.backgroundColor = color;
+      var distance_from_red = color_distance(color, "#ff0000");
       var distance_from_white = color_distance(color, "#ffffff");
       var distance_from_black = color_distance(color, "#000000");
       var rgb = hexToRgb(color);
@@ -2672,7 +2673,6 @@ function rgbToLab(r,g,b) {
         foreground_color = "#000000";
         document.documentElement.style.setProperty('--foreground-color', "#000000");
         document.documentElement.style.setProperty('--radius-filter', 'invert(1)');
-        document.documentElement.style.setProperty('--selected-border-color', '#00ffff');
         document.documentElement.style.setProperty('--muted-foreground', 'rgba(0, 0, 0, 0.5)');
         tr = Math.round(rgb.r * 0.9);
         tg = Math.round(rgb.g * 0.9);
@@ -2681,11 +2681,15 @@ function rgbToLab(r,g,b) {
         foreground_color = "#ffffff";
         document.documentElement.style.setProperty('--foreground-color', "#ffffff");
         document.documentElement.style.setProperty('--radius-filter', 'none');
-        document.documentElement.style.setProperty('--selected-border-color', '#ff0000');
         document.documentElement.style.setProperty('--muted-foreground', 'rgba(255, 255, 255, 0.5)');
         tr = Math.min(255, Math.round(rgb.r + (255 - rgb.r) * 0.2));
         tg = Math.min(255, Math.round(rgb.g + (255 - rgb.g) * 0.2));
         tb = Math.min(255, Math.round(rgb.b + (255 - rgb.b) * 0.2));
+      }
+      if (distance_from_red<60){
+        document.documentElement.style.setProperty('--selected-border-color', '#00ffff');
+      } else {
+        document.documentElement.style.setProperty('--selected-border-color', '#ff0000');
       }
       var toolbarColor = '#' + ((1 << 24) | (tr << 16) | (tg << 8) | tb).toString(16).slice(1);
       document.documentElement.style.setProperty('--toolbar-color', toolbarColor);
