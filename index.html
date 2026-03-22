@@ -808,7 +808,7 @@ function rgbToLab(r,g,b) {
 
     document.addEventListener("keydown", press);
     document.addEventListener("keyup", release);
-    document.addEventListener("wheel", wheel);
+    document.addEventListener("wheel", wheel, {passive: false});
 
     var copyImage = null;
     var copyLinks = null;
@@ -833,6 +833,30 @@ function rgbToLab(r,g,b) {
     }
 
     function wheel(evt) {
+      if (evt.ctrlKey) {
+        evt.preventDefault();
+        var factor = evt.deltaY > 0 ? 1 / 1.1 : 1.1;
+        var newScale = Math.max(VIEW_MIN_SCALE, Math.min(VIEW_MAX_SCALE, viewScale * factor));
+        if (newScale !== viewScale) {
+          var canvasRect = visibleCanvas.getBoundingClientRect();
+          var anchorX = (evt.clientX - canvasRect.left) / viewScale;
+          var anchorY = (evt.clientY - canvasRect.top) / viewScale;
+          viewOffsetX = viewOffsetX + anchorX * (viewScale - newScale);
+          viewOffsetY = viewOffsetY + anchorY * (viewScale - newScale);
+          viewScale = newScale;
+          clampViewOffset();
+          applyViewTransform();
+        }
+        return;
+      }
+      if (evt.target === visibleCanvas) {
+        evt.preventDefault();
+        viewOffsetX -= evt.deltaX;
+        viewOffsetY -= evt.deltaY;
+        clampViewOffset();
+        applyViewTransform();
+        return;
+      }
       var idx = BRUSH_SIZES.indexOf(radius);
       if (evt.deltaY < 0) {
         if (idx >= 0 && idx < BRUSH_SIZES.length - 1) setRadius(BRUSH_SIZES[idx + 1]);
@@ -3291,6 +3315,10 @@ function rgbToLab(r,g,b) {
     body[data-layout="mobile-portrait"] #desktop-editor-wrapper,
     body[data-layout="mobile-landscape"] #desktop-editor-wrapper {
       display: none;
+    }
+    #desktop-canvas-container {
+      overflow: hidden;
+      display: inline-block;
     }
     /* Desktop: scale editor to fit viewport proportionally, no page scroll */
     body[data-layout="desktop"] {
