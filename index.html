@@ -37,66 +37,11 @@
 
     var FLICKGAME_STORAGE_KEY = "flickgame_editor_state";
 
-function rgbToLab(r,g,b) {
-  r /= 255;
-  g /= 255;
-  b /= 255;
-  r = (r > 0.04045) ? (((r + 0.055) / 1.055) ** 2.4) : r / 12.92;
-  g = (g > 0.04045) ? (((g + 0.055) / 1.055) ** 2.4) : g / 12.92;
-  b = (b > 0.04045) ? (((b + 0.055) / 1.055) ** 2.4) : b / 12.92;
-  var x = (r * 0.4124 + g * 0.3576 + b * 0.1805) / 0.95047;
-  var y = (r * 0.2126 + g * 0.7152 + b * 0.0722) / 1.00000;
-  var z = (r * 0.0193 + g * 0.1192 + b * 0.9505) / 1.08883;
-  x = (x > 0.008856) ? (x ** (1 / 3)) : (7.787 * x) + 16 / 116;
-  y = (y > 0.008856) ? (y ** (1 / 3)) : (7.787 * y) + 16 / 116;
-  z = (z > 0.008856) ? (z ** (1 / 3)) : (7.787 * z) + 16 / 116;
-  return {
-    L: (116 * y) - 16,
-    a: 500 * (x - y),
-    b: 200 * (y - z),
-  };
-}
+    // color math utilities are in flickgame_base.js: hexToRgb, rgbToLab, color_distance,
+    // nearest_color_index_in_palette, nearest_color_in_palette, contrastTextColor
 
-  /** Shared hex-to-RGB parser. Validates with regex; returns { r, g, b } or { r:0, g:0, b:0 } for invalid input. */
-  function hexToRgb(hex) {
-    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result
-      ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) }
-      : { r: 0, g: 0, b: 0 };
-  }
-
-  function color_distance(color1, color2) {
-    var c1 = hexToRgb(color1);
-    var c2 = hexToRgb(color2);
-    // Convert to LAB
-    var lab1 = rgbToLab(c1.r, c1.g, c1.b);
-    var lab2 = rgbToLab(c2.r, c2.g, c2.b);
-
-    // Calculate Delta E using the CIE76 formula
-    const deltaL = lab1.L - lab2.L;
-    const deltaA = lab1.a - lab2.a;
-    const deltaB = lab1.b - lab2.b;
-
-    return Math.sqrt(deltaL * deltaL + deltaA * deltaA + deltaB * deltaB);
-  }
-
-  function nearest_color_index_in_palette(palette,target_color){
-      var nearest_color_idx = 0;
-      var nearest_distance = color_distance(target_color, palette[0]);
-      for (var i = 1; i < palette.length; i++){
-        var distance = color_distance(target_color, palette[i]);
-        if (distance < nearest_distance){
-          nearest_distance = distance;
-          nearest_color_idx = i;
-        }
-      }
-      return nearest_color_idx;
-    }
-
-    function nearest_color_in_palette(palette,target_color){
-      var nearest_color_idx = nearest_color_index_in_palette(palette,target_color);
-      return palette[nearest_color_idx];
-    }
+    // Pre-computed contrast colors for current palette (updated on palette change)
+    var paletteContrastColors = new Array(16);
 
     function find_palette_transformation(palettea,paletteb){
       //finds what colours in the second palette correspond most closely to those in the first palette - has to be a 1-1 mapping.
@@ -191,14 +136,11 @@ function rgbToLab(r,g,b) {
       transform_state(colorPalette, palettes[name]);
       colorPalette = palettes[name];
       updatePaletteRGB();
-      // Update color swatches
+      // Update color swatches and pre-compute contrast colors
       for (var i = 0; i < 16; i++) {
         document.documentElement.style.setProperty('--col' + i, colorPalette[i]);
-        var distance_from_white = color_distance(colorPalette[i], "#ffffff");
-        var distance_from_black = color_distance(colorPalette[i], "#000000");
-        var text_color = distance_from_white > distance_from_black ? "#ffffff" : "#000000";
-        bgColorSelectOptions[i].style.setProperty('--col' + i + '_fg', text_color);
-
+        paletteContrastColors[i] = contrastTextColor(colorPalette[i]);
+        bgColorSelectOptions[i].style.setProperty('--col' + i + '_fg', paletteContrastColors[i]);
       }
 
       var bgColorSelect = document.getElementById('bgColorSelect');
@@ -225,9 +167,10 @@ function rgbToLab(r,g,b) {
       colorPalette = palettes[p_name];
       updatePaletteRGB();
 
-      // Update color swatches
+      // Update color swatches and contrast colors
       for (var i = 0; i < 16; i++) {
         document.documentElement.style.setProperty('--col' + i, colorPalette[i]);
+        paletteContrastColors[i] = contrastTextColor(colorPalette[i]);
       }
 
       // Set the background color properly
@@ -1041,9 +984,7 @@ function rgbToLab(r,g,b) {
         var usedOnCurrentPage = used.has(i);
         var hasTarget = linkVal > 0;
         var targetOffPage = hasTarget && !usedOnCurrentPage;
-        var dist_white = color_distance(colorPalette[i], "#ffffff");
-        var dist_black = color_distance(colorPalette[i], "#000000");
-        var contrastColor = dist_white > dist_black ? "#ffffff" : "#000000";
+        var contrastColor = paletteContrastColors[i];
         var statusColor = SWATCH_LAYOUT_VARIANT === 'split' ? 'var(--foreground-color)' : contrastColor;
         var labelColor = '';
 
@@ -1681,6 +1622,9 @@ function rgbToLab(r,g,b) {
     var burgerBgSelectOptions=[];
     function init() {
       updatePaletteRGB();
+      for (var i = 0; i < 16; i++) {
+        paletteContrastColors[i] = contrastTextColor(colorPalette[i]);
+      }
       updateLayoutMode();
       window.addEventListener('resize', function() {
         updateLayoutMode();
@@ -2754,21 +2698,17 @@ function rgbToLab(r,g,b) {
       document.documentElement.style.setProperty('--background-color', color);
       document.body.style.backgroundColor = color;
       var distance_from_red = color_distance(color, "#ff0000");
-      var distance_from_white = color_distance(color, "#ffffff");
-      var distance_from_black = color_distance(color, "#000000");
       var rgb = hexToRgb(color);
+      foreground_color = contrastTextColor(color);
+      document.documentElement.style.setProperty('--foreground-color', foreground_color);
       var tr, tg, tb;
-      if (distance_from_white < distance_from_black){
-        foreground_color = "#000000";
-        document.documentElement.style.setProperty('--foreground-color', "#000000");
+      if (foreground_color === "#000000"){
         document.documentElement.style.setProperty('--radius-filter', 'invert(1)');
         document.documentElement.style.setProperty('--muted-foreground', 'rgba(0, 0, 0, 0.5)');
         tr = Math.round(rgb.r * 0.9);
         tg = Math.round(rgb.g * 0.9);
         tb = Math.round(rgb.b * 0.9);
       } else {
-        foreground_color = "#ffffff";
-        document.documentElement.style.setProperty('--foreground-color', "#ffffff");
         document.documentElement.style.setProperty('--radius-filter', 'none');
         document.documentElement.style.setProperty('--muted-foreground', 'rgba(255, 255, 255, 0.5)');
         tr = Math.min(255, Math.round(rgb.r + (255 - rgb.r) * 0.2));
@@ -2781,7 +2721,7 @@ function rgbToLab(r,g,b) {
         document.documentElement.style.setProperty('--selected-border-color', '#ff0000');
       }
       // Pre-invert the selection color for elements with invert(1) filter so it displays correctly
-      if (distance_from_white < distance_from_black) {
+      if (foreground_color === "#000000") {
         // Light bg: filter is invert(1), so pre-invert the border color
         document.documentElement.style.setProperty('--filtered-selected-border-color',
           distance_from_red < 60 ? '#ff0000' : '#00ffff');
