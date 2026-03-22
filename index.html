@@ -1,7 +1,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <meta name="Description" CONTENT="Draw and share simple games with your mouse or fingers!">
 
   <link rel="icon" type="image/png" href="favicon.png">
@@ -809,6 +809,11 @@ function rgbToLab(r,g,b) {
     document.addEventListener("keydown", press);
     document.addEventListener("keyup", release);
     document.addEventListener("wheel", wheel, {passive: false});
+
+    // Prevent Safari pinch-to-zoom on the page (gesturestart is Safari-only)
+    document.addEventListener("gesturestart", function(e) { e.preventDefault(); });
+    // Prevent double-tap zoom
+    document.addEventListener("dblclick", function(e) { e.preventDefault(); });
 
     var copyImage = null;
     var copyLinks = null;
@@ -2715,6 +2720,16 @@ function rgbToLab(r,g,b) {
       } else {
         document.documentElement.style.setProperty('--selected-border-color', '#ff0000');
       }
+      // Pre-invert the selection color for elements with invert(1) filter so it displays correctly
+      if (distance_from_white < distance_from_black) {
+        // Light bg: filter is invert(1), so pre-invert the border color
+        document.documentElement.style.setProperty('--filtered-selected-border-color',
+          distance_from_red < 60 ? '#ff0000' : '#00ffff');
+      } else {
+        // Dark bg: no filter, use normal color
+        document.documentElement.style.setProperty('--filtered-selected-border-color',
+          distance_from_red < 60 ? '#00ffff' : '#ff0000');
+      }
       var toolbarColor = '#' + ((1 << 24) | (tr << 16) | (tg << 8) | tb).toString(16).slice(1);
       document.documentElement.style.setProperty('--toolbar-color', toolbarColor);
     }
@@ -2955,10 +2970,10 @@ function rgbToLab(r,g,b) {
     .swatch-chip::after {
       content: "";
       position: absolute;
-      bottom: 12px;
-      left: 12px;
-      width: 8px;
-      height: 8px;
+      bottom: 2px;
+      left: 6px;
+      width: 6px;
+      height: 6px;
       margin-left: -4px;
       margin-top: -4px;
       border-radius: 50%;
@@ -3189,7 +3204,7 @@ function rgbToLab(r,g,b) {
       filter: var(--radius-filter);
     }
     img.radius.selected {
-      border-color: var(--selected-border-color);
+      border-color: var(--filtered-selected-border-color, var(--selected-border-color));
     }
 
     /* Brush size buttons */
@@ -3207,11 +3222,12 @@ function rgbToLab(r,g,b) {
       flex-direction: row;
     }
     .brush-btn {
-      display: block;
+      display: inline-block;
       flex-shrink: 0;
       cursor: pointer;
       touch-action: manipulation;
       line-height: 0;
+      width: fit-content;
     }
     .brush-btn svg { display: block; }
     .brush-bg { fill: var(--foreground-color, white); opacity: 0.15; }
@@ -3239,11 +3255,12 @@ function rgbToLab(r,g,b) {
       align-items: center;
     }
     .tool-btn {
-      display: block;
+      display: inline-block;
       flex-shrink: 0;
       cursor: pointer;
       touch-action: manipulation;
       line-height: 0;
+      width: fit-content;
     }
     .tool-btn img {
       width: 30px;
@@ -3574,7 +3591,7 @@ function rgbToLab(r,g,b) {
     #mobile-bucket-btn img.selected,
     #mobile-pointer-btn.selected img,
     #mobile-pointer-btn img.selected {
-      border-color: var(--selected-border-color);
+      border-color: var(--filtered-selected-border-color, var(--selected-border-color));
     }
     .mobile-canvas-wrapper {
       flex: 1 1 0;
