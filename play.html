@@ -85,7 +85,7 @@ a {
   text-align: center;
   padding: 0;
   line-height: 30px;
-  font-size: clamp(14px, 3vw, 18px);
+  font-size: clamp(16px, 3.4vw, 20px);
 }
 #touch-cursor-layer {
   display: none;
@@ -110,6 +110,29 @@ a {
   position: absolute;
   inset: 0;
   pointer-events: none;
+}
+#touch-tutorial {
+  position: absolute;
+  max-width: 260px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  font-size: 15px;
+  line-height: 1.3;
+  text-align: left;
+  pointer-events: none;
+  z-index: 11;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 180ms ease-out, visibility 0s linear 180ms;
+}
+#touch-tutorial.visible {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 120ms ease-out;
 }
 .touch-ripple {
   position: absolute;
@@ -1018,6 +1041,44 @@ if(urlVars["a"]==="1"){
 }
 var showAnimation = frameCount>1;
 
+// Localizable UI strings
+var i18nStrings = {
+  en: {
+    tutorial_move_cursor: "Drag anywhere to move the cursor. Can you find a link?",
+    tutorial_tap_link: "Tap to go to the hovered link!",
+    edit_link_label_html: "&sdotb; edit"
+  },
+  de: {
+    tutorial_move_cursor: "Zieh herum, um den Cursor zu bewegen. Kannst du einen Link finden?",
+    tutorial_tap_link: "Tappen, um einem Link zu folgen!",
+    edit_link_label_html: "&sdotb; bearbeiten"
+  }
+};
+function resolveI18nLocale() {
+  var requested = getParameterByName("lang");
+  if (!requested && typeof navigator !== "undefined" && navigator.language) {
+    requested = navigator.language;
+  }
+  if (!requested) return "en";
+
+  requested = String(requested).replace("_", "-").toLowerCase();
+  if (Object.prototype.hasOwnProperty.call(i18nStrings, requested)) {
+    return requested;
+  }
+
+  var base = requested.split("-")[0];
+  if (Object.prototype.hasOwnProperty.call(i18nStrings, base)) {
+    return base;
+  }
+  return "en";
+}
+var i18nLocale = resolveI18nLocale();
+
+function t(key) {
+  var localeDict = i18nStrings[i18nLocale] || i18nStrings.en;
+  return (localeDict && localeDict[key] !== undefined) ? localeDict[key] : key;
+}
+
 
 var animating=false;
 var zoom=1;
@@ -1053,6 +1114,13 @@ var cursorLayerEl = null;
 var cursorIconEl = null;
 var cursorUseEl = null;
 var rippleLayerEl = null;
+var tutorialEl = null;
+var tutorialTimeoutId = 0;
+var tutorialPendingDuration = 0;
+var tutorialCountdownEnabled = false;
+var tutorialHasMoved = false;
+var tutorialHoverHintShown = false;
+var wasHoverLink = false;
 var cursorDragging = false;
 var cursorTapUntil = 0;
 var cursorOffsetX = 0;
@@ -1070,6 +1138,7 @@ function initTouchCursorOverlay() {
   cursorIconEl = document.getElementById('touch-cursor-icon');
   cursorUseEl = document.getElementById('touch-cursor-use');
   rippleLayerEl = document.getElementById('touch-ripple-layer');
+  tutorialEl = document.getElementById('touch-tutorial');
 }
 
 function hexToRgb(hex) {
@@ -1094,6 +1163,33 @@ function getCursorAnchorPx() {
   };
 }
 
+function getEffectiveCursorGamePos() {
+  var gw = getGameWidth();
+  var gh = getGameHeight();
+  var z = (zoom && zoom > 0) ? zoom : 1;
+  var gx = cursorX + (cursorOffsetX / z);
+  var gy = cursorY + (cursorOffsetY / z);
+  if (gx < 0) gx = 0;
+  if (gy < 0) gy = 0;
+  if (gx > gw - 1) gx = gw - 1;
+  if (gy > gh - 1) gy = gh - 1;
+  return { x: gx, y: gy };
+}
+
+function commitCursorOffsetToPosition() {
+  if (Math.abs(cursorOffsetX) < 0.01 && Math.abs(cursorOffsetY) < 0.01) return;
+  var effective = getEffectiveCursorGamePos();
+  cursorX = effective.x;
+  cursorY = effective.y;
+  cursorOffsetX = 0;
+  cursorOffsetY = 0;
+  cursorOffsetStartX = 0;
+  cursorOffsetStartY = 0;
+  cursorOffsetTargetX = 0;
+  cursorOffsetTargetY = 0;
+  cursorOffsetDuration = 0;
+}
+
 function getCursorHotspot(iconSize, isHand) {
   var iconScale = iconSize / 16;
   return {
@@ -1108,11 +1204,27 @@ function getContrastingStroke(fillHex) {
   return luminance < DARK_LUMINANCE ? '#ffffff' : '#000000';
 }
 
-function getNeutralCursorFill() {
-  var base = (gameState && gameState.background_color) ? gameState.background_color : '#000000';
-  var rgb = hexToRgb(base);
-  var luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
-  return luminance < DARK_LUMINANCE ? '#ffffff' : '#000000';
+function distanceSqRgb(a, b) {
+  var dr = a.r - b.r;
+  var dg = a.g - b.g;
+  var db = a.b - b.b;
+  return dr * dr + dg * dg + db * db;
+}
+
+function chooseClosestBlackOrWhite(hex) {
+  var c = hexToRgb(hex);
+  var white = { r: 255, g: 255, b: 255 };
+  var black = { r: 0, g: 0, b: 0 };
+  var dWhite = distanceSqRgb(c, white);
+  var dBlack = distanceSqRgb(c, black);
+  return dBlack <= dWhite ? '#000000' : '#ffffff';
+}
+
+function getCursorReferenceBackgroundColor(isHand) {
+  if (isHand && hoveredIsLink && hoveredColorIndex >= 0 && hoveredColorIndex < colorPalette.length) {
+    return colorPalette[hoveredColorIndex];
+  }
+  return (gameState && gameState.background_color) ? gameState.background_color : '#000000';
 }
 
 function setCursorOffsetTarget(tx, ty, durationMs) {
@@ -1200,6 +1312,69 @@ function chooseCursorOffset(anchorX, anchorY, iconSize, hotspot, touchX, touchY)
   return choices[0];
 }
 
+function hideTutorialMessage() {
+  if (tutorialTimeoutId) {
+    clearTimeout(tutorialTimeoutId);
+    tutorialTimeoutId = 0;
+  }
+  tutorialPendingDuration = 0;
+  if (tutorialEl) tutorialEl.classList.remove('visible');
+}
+
+function startTutorialTimeout(durationMs) {
+  if (!durationMs || durationMs <= 0) return;
+  if (tutorialTimeoutId) {
+    clearTimeout(tutorialTimeoutId);
+  }
+  tutorialTimeoutId = setTimeout(function() {
+    tutorialTimeoutId = 0;
+    if (tutorialEl) tutorialEl.classList.remove('visible');
+  }, durationMs);
+}
+
+function armTutorialCountdown() {
+  if (tutorialCountdownEnabled) return;
+  tutorialCountdownEnabled = true;
+  if (tutorialEl && tutorialEl.classList.contains('visible') && tutorialPendingDuration > 0) {
+    startTutorialTimeout(tutorialPendingDuration);
+    tutorialPendingDuration = 0;
+  }
+}
+
+function showTutorialMessage(text, durationMs) {
+  if (!tutorialEl) return;
+  if (tutorialTimeoutId) {
+    clearTimeout(tutorialTimeoutId);
+    tutorialTimeoutId = 0;
+  }
+  tutorialPendingDuration = 0;
+  tutorialEl.textContent = text;
+  tutorialEl.classList.add('visible');
+  if (durationMs && durationMs > 0) {
+    if (tutorialCountdownEnabled) {
+      startTutorialTimeout(durationMs);
+    } else {
+      tutorialPendingDuration = durationMs;
+    }
+  }
+}
+
+function positionTutorial(anchorX, anchorY) {
+  if (!tutorialEl || !tutorialEl.classList.contains('visible') || !mainCanvasContainer) return;
+  var containerW = mainCanvasContainer.clientWidth;
+  var containerH = mainCanvasContainer.clientHeight;
+  var bubbleW = tutorialEl.offsetWidth || 220;
+  var bubbleH = tutorialEl.offsetHeight || 48;
+  var x = anchorX + 16;
+  var y = anchorY - bubbleH - 18;
+  if (x + bubbleW > containerW - 8) x = containerW - bubbleW - 8;
+  if (x < 8) x = 8;
+  if (y < 8) y = anchorY + 18;
+  if (y + bubbleH > containerH - 8) y = containerH - bubbleH - 8;
+  tutorialEl.style.left = Math.round(x) + 'px';
+  tutorialEl.style.top = Math.round(y) + 'px';
+}
+
 function maybeStartOcclusionOffset(touch) {
   if (!mainCanvasContainer) {
     setCursorOffsetTarget(0, 0, 110);
@@ -1217,7 +1392,7 @@ function maybeStartOcclusionOffset(touch) {
   var iconCy = iconTop + iconSize * 0.5;
   var dxTouch = localTouchX - iconCx;
   var dyTouch = localTouchY - iconCy;
-  var radius = iconSize * 0.62;
+  var radius = iconSize * 0.95;
   if (dxTouch * dxTouch + dyTouch * dyTouch <= radius * radius) {
     var offset = chooseCursorOffset(anchor.x, anchor.y, iconSize, hotspot, localTouchX, localTouchY);
     setCursorOffsetTarget(offset.x, offset.y, 120);
@@ -1257,6 +1432,7 @@ function renderTouchCursorOverlay() {
 
   var now = Date.now();
   updateCursorOffset(now);
+  updateCursorHover();
 
   var isHand = hoveredIsLink;
   var baseSize = getCursorBaseSize();
@@ -1268,8 +1444,9 @@ function renderTouchCursorOverlay() {
   var left = Math.round(anchor.x + cursorOffsetX - hotspot.x);
   var top = Math.round(anchor.y + cursorOffsetY - hotspot.y);
 
-  var fillColor = getNeutralCursorFill();
-  if (isHand && hoveredColorIndex >= 0 && hoveredColorIndex < colorPalette.length) {
+  var referenceColor = getCursorReferenceBackgroundColor(isHand);
+  var fillColor = chooseClosestBlackOrWhite(referenceColor);
+  if (isHand && hoveredIsLink && hoveredColorIndex >= 0 && hoveredColorIndex < colorPalette.length) {
     fillColor = colorPalette[hoveredColorIndex];
   }
   var strokeColor = getContrastingStroke(fillColor);
@@ -1282,11 +1459,13 @@ function renderTouchCursorOverlay() {
   cursorIconEl.style.setProperty('--cursor-fill', fillColor);
   cursorIconEl.style.setProperty('--cursor-stroke', strokeColor);
   cursorLayerEl.style.display = 'block';
+  positionTutorial(anchor.x + cursorOffsetX, anchor.y + cursorOffsetY);
 }
 
 function updateCursorHover() {
-  var px = Math.floor(cursorX);
-  var py = Math.floor(cursorY);
+  var effective = getEffectiveCursorGamePos();
+  var px = Math.floor(effective.x);
+  var py = Math.floor(effective.y);
   var gw = getGameWidth();
   var gh = getGameHeight();
   if (gameState && gameState.imageDats && px >= 0 && px < gw && py >= 0 && py < gh) {
@@ -1297,6 +1476,13 @@ function updateCursorHover() {
     hoveredColorIndex = -1;
     hoveredIsLink = false;
   }
+
+  // "Tap" hint should dominate once user has actually moved the cursor.
+  if (touchMode && tutorialHasMoved && hoveredIsLink && !tutorialHoverHintShown) {
+    tutorialHoverHintShown = true;
+    showTutorialMessage(t("tutorial_tap_link"), 1900);
+  }
+  wasHoverLink = hoveredIsLink;
 }
 
 function touchStart(e) {
@@ -1312,6 +1498,8 @@ function touchStart(e) {
   if (!touchMode) {
     touchMode = true;
     mainCanvas.style.cursor = 'none';
+    tutorialCountdownEnabled = false;
+    tutorialHasMoved = false;
   }
 
   // Show cursor at center if not yet visible
@@ -1357,6 +1545,8 @@ function touchMove(e) {
   lastTouchY = touch.clientY;
   if (Math.abs(deltaX) + Math.abs(deltaY) > 1) {
     cursorDragging = true;
+    tutorialHasMoved = true;
+    armTutorialCountdown();
   }
 
   // Convert to game-pixel delta
@@ -1390,7 +1580,8 @@ function touchEnd(e) {
   activeTouchId = null;
   lastTouchTime = Date.now();
   cursorDragging = false;
-  setCursorOffsetTarget(0, 0, 110);
+  commitCursorOffsetToPosition();
+  updateCursorHover();
 
   // Tap detection
   var totalMove = Math.abs(touch.clientX - touchStartX) + Math.abs(touch.clientY - touchStartY);
@@ -1405,13 +1596,15 @@ function touchEnd(e) {
     if (hoveredIsLink && !animating) {
       var gw = getGameWidth();
       var gh = getGameHeight();
-      var px = Math.floor(cursorX);
-      var py = Math.floor(cursorY);
+      var effective = getEffectiveCursorGamePos();
+      var px = Math.floor(effective.x);
+      var py = Math.floor(effective.y);
       var ch = gameState.imageDats[currentIndex][px + gw * py];
       var colIndex = parseInt(ch, 16);
       var linkTarget = gameState.hyperlinks[currentIndex][colIndex];
 
       if (linkTarget > 0) {
+        hideTutorialMessage();
         if (showAnimation) {
           transition(currentIndex, linkTarget - 1);
           currentIndex = linkTarget - 1;
@@ -1739,6 +1932,7 @@ function redraw(){
         cursorDragging = false;
         mainCanvas.style.cursor = 'default';
         if (cursorLayerEl) cursorLayerEl.style.display = 'none';
+        hideTutorialMessage();
       }
     }
 
@@ -1809,7 +2003,7 @@ function get_page_data() {
                     var id = getParameterByName("p").replace(/[\\\/]/, "");
                     hacklink.href = qualifyURL("index.html?p=" + id);
                 }
-                hacklink.innerHTML = "&sdotb; edit";
+                hacklink.innerHTML = t("edit_link_label_html");
             }
             
             // Call renderImages if it exists
@@ -1857,7 +2051,9 @@ function init(){
     activeTouchId = null;
     lastTouchTime = Date.now();
     cursorDragging = false;
-    setCursorOffsetTarget(0, 0, 110);
+    commitCursorOffsetToPosition();
+    updateCursorHover();
+    redraw();
   }, false);
 
   initTouchCursorOverlay();
@@ -1867,6 +2063,9 @@ function init(){
     touchMode = true;
     cursorVisible = true;
     mainCanvas.style.cursor = 'none';
+    tutorialCountdownEnabled = false;
+    tutorialHasMoved = false;
+    showTutorialMessage(t("tutorial_move_cursor"), 2600);
   }
 
   redraw();
@@ -1973,6 +2172,7 @@ document.addEventListener("keydown", goFullscreen);
     <use id="touch-cursor-use" href="#icon-cursor-arrow"></use>
   </svg>
   <div id="touch-ripple-layer"></div>
+  <div id="touch-tutorial"></div>
 </div>
 </div>
 <p>
