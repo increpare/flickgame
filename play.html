@@ -87,42 +87,46 @@ a {
   line-height: 30px;
   font-size: clamp(14px, 3vw, 18px);
 }
-#dpad-hint {
+#touch-cursor-layer {
   display: none;
   position: absolute;
-  width: 108px;
-  height: 108px;
+  inset: 0;
   pointer-events: none;
   z-index: 10;
-  opacity: 0.35;
 }
-#dpad-outer {
+#touch-cursor-icon {
   position: absolute;
-  top: 0; left: 0;
-  width: 108px; height: 108px;
-  border: 3px solid var(--foreground-color);
-  border-radius: 50%;
-  box-sizing: border-box;
+  width: 56px;
+  height: 56px;
+  overflow: visible;
+  transform-origin: 0 0;
+  --cursor-fill: #ffffff;
+  --cursor-stroke: #000000;
 }
-#dpad-inner {
+#touch-cursor-icon use {
+  display: block;
+}
+#touch-ripple-layer {
   position: absolute;
-  width: 39px; height: 39px;
-  top: 35px; left: 35px;
-  background: var(--foreground-color);
+  inset: 0;
+  pointer-events: none;
+}
+.touch-ripple {
+  position: absolute;
   border-radius: 50%;
-  transition: transform 0.08s ease-out;
+  border: 2px solid rgba(255,255,255,0.9);
+  transform: translate(-50%, -50%) scale(0.25);
+  opacity: 0.95;
+  animation: touch-ripple-expand 280ms ease-out forwards;
 }
-@media (orientation: portrait) {
-  #dpad-hint {
-    bottom: 24px;
-    left: 24px;
-  }
+.touch-ripple.secondary {
+  border-width: 1px;
+  opacity: 0.7;
+  animation-duration: 320ms;
 }
-@media (orientation: landscape) {
-  #dpad-hint {
-    bottom: 24px;
-    right: 24px;
-  }
+@keyframes touch-ripple-expand {
+  0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0.95; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
 }
 </style>
 <script id="flickgame_base.js">
@@ -137,6 +141,52 @@ function getParameterByName(name) {
     var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
         results = regex.exec(location.search);
     return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+}
+
+/** True when play.html is opened with ?test (loads testgame.txt from same folder). */
+function isLocalTestMode() {
+    try {
+        return new URLSearchParams(location.search).has("test");
+    } catch (e) {
+        return /[?&]test(?:&|$|=)/.test(location.search);
+    }
+}
+
+function decodeGzipArrayBufferToText(arrayBuffer) {
+    if (typeof DecompressionStream === "undefined") {
+        return Promise.reject(new Error("This browser cannot decode .gz local test files."));
+    }
+    var ds = new DecompressionStream("gzip");
+    var stream = new Blob([arrayBuffer]).stream().pipeThrough(ds);
+    return new Response(stream).text();
+}
+
+function loadLocalTestGame(onSuccess, onError) {
+    var candidates = ["testgame.txt", "testgame.txt.gz"];
+    var index = 0;
+
+    function tryNext() {
+        if (index >= candidates.length) {
+            onError("Could not find testgame.txt (or testgame.txt.gz) in this directory.");
+            return;
+        }
+        var fileName = candidates[index++];
+        fetch(qualifyURL(fileName)).then(function(response) {
+            if (!response.ok) {
+                throw new Error("HTTP " + response.status);
+            }
+            if (fileName.slice(-3) === ".gz") {
+                return response.arrayBuffer().then(decodeGzipArrayBufferToText);
+            }
+            return response.text();
+        }).then(function(text) {
+            onSuccess(text);
+        }).catch(function() {
+            tryNext();
+        });
+    }
+
+    tryNext();
 }
 
 // Helper function to strip http/https from URLs
@@ -178,6 +228,12 @@ function getData(options) {
     if (typeof embeddedDat !== 'undefined' && embeddedDat[0] !== '_') {
         embeddedDat = decodeURI(embeddedDat);
         onEmbedded(embeddedDat);
+        return true;
+    }
+
+    // Local test mode: bypass gist loading and read testgame.txt from this directory.
+    if (isLocalTestMode()) {
+        loadLocalTestGame(onSuccess, onError);
         return true;
     }
 
@@ -930,9 +986,9 @@ function loadState(code) {
 </script>
 <script>
 
-<!--__EmbedBegin__-->
+//<!--__EmbedBegin__-->
 var embeddedDat="__EMBED__";
-<!--__EmbedEnd__-->
+//<!--__EmbedEnd__-->
 
 function getUrlVars() {
     var vars = {};
@@ -992,54 +1048,29 @@ var lastTouchY = 0;
 var dx = 0;
 var dy = 0;
 
-// Dpad hint overlay
-var dpadHint = null;
-var dpadInner = null;
-var DPAD_MAX_OFFSET = 27;
+// Touch cursor overlay refs/state
+var cursorLayerEl = null;
+var cursorIconEl = null;
+var cursorUseEl = null;
+var rippleLayerEl = null;
+var cursorDragging = false;
+var cursorTapUntil = 0;
+var cursorOffsetX = 0;
+var cursorOffsetY = 0;
+var cursorOffsetStartX = 0;
+var cursorOffsetStartY = 0;
+var cursorOffsetTargetX = 0;
+var cursorOffsetTargetY = 0;
+var cursorOffsetStartTs = 0;
+var cursorOffsetDuration = 0;
+var cursorOverlayRaf = 0;
 
-function updateDpad(screenOffX, screenOffY) {
-  if (!dpadInner) return;
-  var dist = Math.sqrt(screenOffX * screenOffX + screenOffY * screenOffY);
-  if (dist > DPAD_MAX_OFFSET) {
-    screenOffX = screenOffX / dist * DPAD_MAX_OFFSET;
-    screenOffY = screenOffY / dist * DPAD_MAX_OFFSET;
-  }
-  dpadInner.style.transform = 'translate(' + screenOffX + 'px,' + screenOffY + 'px)';
+function initTouchCursorOverlay() {
+  cursorLayerEl = document.getElementById('touch-cursor-layer');
+  cursorIconEl = document.getElementById('touch-cursor-icon');
+  cursorUseEl = document.getElementById('touch-cursor-use');
+  rippleLayerEl = document.getElementById('touch-ripple-layer');
 }
-
-function resetDpad() {
-  if (!dpadInner) return;
-  dpadInner.style.transform = '';
-}
-
-// Sprite data: 2D arrays of pixel type (0=transparent, 1=white/fill, 2=black/outline)
-// pointer.png (5x8, arrow cursor, hotspot at 0,0)
-var pointerArrow = [
-  [2,0,0,0,0],
-  [2,2,0,0,0],
-  [2,1,2,0,0],
-  [2,1,1,2,0],
-  [2,1,1,1,2],
-  [2,1,2,2,2],
-  [2,2,0,0,0],
-  [2,0,0,0,0]
-];
-var POINTER_ARROW_W = 5, POINTER_ARROW_H = 8;
-
-// pointer_hand.png (8x10, hand cursor, hotspot at 3,0)
-var pointerHand = [
-  [0,0,0,2,0,0,0,0],
-  [0,0,2,1,2,0,0,0],
-  [0,0,2,1,2,0,0,0],
-  [0,0,2,1,2,2,0,0],
-  [0,2,2,1,2,1,2,0],
-  [2,1,2,1,1,1,1,2],
-  [2,1,1,1,1,1,1,2],
-  [0,2,1,1,1,1,1,2],
-  [0,0,2,1,1,1,2,0],
-  [0,0,2,2,2,2,0,0]
-];
-var POINTER_HAND_W = 8, POINTER_HAND_H = 10;
 
 function hexToRgb(hex) {
   var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -1050,59 +1081,207 @@ function hexToRgb(hex) {
   } : {r: 0, g: 0, b: 0};
 }
 
-function drawCursor() {
-  if (!touchMode || !cursorVisible) return;
+function getCursorBaseSize() {
+  return Math.max(44, Math.min(92, Math.round(zoom * 18)));
+}
 
-  var sprite, spriteW, spriteH, hotspotX;
-
-  if (hoveredIsLink) {
-    sprite = pointerHand;
-    spriteW = POINTER_HAND_W;
-    spriteH = POINTER_HAND_H;
-    hotspotX = 3;
-  } else {
-    sprite = pointerArrow;
-    spriteW = POINTER_ARROW_W;
-    spriteH = POINTER_ARROW_H;
-    hotspotX = 0;
-  }
-
+function getCursorAnchorPx() {
   var px = Math.floor(cursorX);
   var py = Math.floor(cursorY);
-  var screenX = (px - hotspotX) * zoom + dx;
-  var screenY = py * zoom + dy;
+  return {
+    x: dx + px * zoom + zoom * 0.5,
+    y: dy + py * zoom + zoom * 0.5
+  };
+}
 
-  // Determine fill and outline colors
-  var fillColor = '#ffffff';
-  var outlineColor = '#000000';
+function getCursorHotspot(iconSize, isHand) {
+  var iconScale = iconSize / 16;
+  return {
+    x: (isHand ? 6.5 : 1.5) * iconScale,
+    y: 1.5 * iconScale
+  };
+}
 
-  if (hoveredIsLink && hoveredColorIndex >= 0 && hoveredColorIndex < 16) {
-    fillColor = colorPalette[hoveredColorIndex];
-    var rgb = hexToRgb(fillColor);
-    var luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
-    if (luminance < DARK_LUMINANCE) {
-      outlineColor = '#ffffff';
+function getContrastingStroke(fillHex) {
+  var rgb = hexToRgb(fillHex);
+  var luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
+  return luminance < DARK_LUMINANCE ? '#ffffff' : '#000000';
+}
+
+function getNeutralCursorFill() {
+  var base = (gameState && gameState.background_color) ? gameState.background_color : '#000000';
+  var rgb = hexToRgb(base);
+  var luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
+  return luminance < DARK_LUMINANCE ? '#ffffff' : '#000000';
+}
+
+function setCursorOffsetTarget(tx, ty, durationMs) {
+  cursorOffsetStartX = cursorOffsetX;
+  cursorOffsetStartY = cursorOffsetY;
+  cursorOffsetTargetX = tx;
+  cursorOffsetTargetY = ty;
+  cursorOffsetStartTs = Date.now();
+  cursorOffsetDuration = durationMs;
+  if (durationMs > 0) {
+    startCursorOverlayAnimation();
+  }
+}
+
+function updateCursorOffset(now) {
+  if (cursorOffsetDuration <= 0) {
+    cursorOffsetX = cursorOffsetTargetX;
+    cursorOffsetY = cursorOffsetTargetY;
+    return;
+  }
+  var t = (now - cursorOffsetStartTs) / cursorOffsetDuration;
+  if (t >= 1) {
+    cursorOffsetX = cursorOffsetTargetX;
+    cursorOffsetY = cursorOffsetTargetY;
+    cursorOffsetDuration = 0;
+    return;
+  }
+  if (t < 0) t = 0;
+  var eased = 1 - Math.pow(1 - t, 3);
+  cursorOffsetX = cursorOffsetStartX + (cursorOffsetTargetX - cursorOffsetStartX) * eased;
+  cursorOffsetY = cursorOffsetStartY + (cursorOffsetTargetY - cursorOffsetStartY) * eased;
+}
+
+function needsCursorOverlayAnimation(now) {
+  return cursorOffsetDuration > 0 || now < cursorTapUntil;
+}
+
+function startCursorOverlayAnimation() {
+  if (cursorOverlayRaf) return;
+  function tick() {
+    cursorOverlayRaf = 0;
+    renderTouchCursorOverlay();
+    if (!touchMode) return;
+    if (needsCursorOverlayAnimation(Date.now())) {
+      cursorOverlayRaf = requestAnimationFrame(tick);
     }
   }
+  cursorOverlayRaf = requestAnimationFrame(tick);
+}
 
-  for (var y = 0; y < spriteH; y++) {
-    for (var x = 0; x < spriteW; x++) {
-      var pixelType = sprite[y][x];
-      if (pixelType === 0) continue; // transparent
+function chooseCursorOffset(anchorX, anchorY, iconSize, hotspot, touchX, touchY) {
+  var choices = [
+    { x: -28, y: -36 }, // up-left (preferred)
+    { x: -36, y: 0 },   // left
+    { x: 0, y: -36 },   // up
+    { x: 36, y: 0 },    // right
+    { x: 0, y: 36 }     // down
+  ];
+  var w = mainCanvasContainer ? mainCanvasContainer.clientWidth : 0;
+  var h = mainCanvasContainer ? mainCanvasContainer.clientHeight : 0;
+  var margin = 6;
+  var pushX = anchorX - touchX;
+  var pushY = anchorY - touchY;
+  var best = null;
+  var bestScore = -Infinity;
+  var bestIndex = 9999;
 
-      if (pixelType === 1) {
-        mainCanvasCtx.fillStyle = fillColor;
-      } else {
-        mainCanvasCtx.fillStyle = outlineColor;
+  for (var i = 0; i < choices.length; i++) {
+    var c = choices[i];
+    var left = anchorX + c.x - hotspot.x;
+    var top = anchorY + c.y - hotspot.y;
+    var right = left + iconSize;
+    var bottom = top + iconSize;
+    if (left >= margin && top >= margin && right <= w - margin && bottom <= h - margin) {
+      // Prefer offsets that move away from finger, then fallback to preferred order.
+      var away = c.x * pushX + c.y * pushY;
+      if (away > bestScore || (away === bestScore && i < bestIndex)) {
+        best = c;
+        bestScore = away;
+        bestIndex = i;
       }
-      // Snap to integer coords to avoid subpixel gaps between pixels
-      var rx = Math.floor(screenX + x * zoom);
-      var ry = Math.floor(screenY + y * zoom);
-      var rw = Math.floor(screenX + (x + 1) * zoom) - rx;
-      var rh = Math.floor(screenY + (y + 1) * zoom) - ry;
-      mainCanvasCtx.fillRect(rx, ry, rw, rh);
     }
   }
+  if (best) return best;
+  return choices[0];
+}
+
+function maybeStartOcclusionOffset(touch) {
+  if (!mainCanvasContainer) {
+    setCursorOffsetTarget(0, 0, 110);
+    return;
+  }
+  var rect = mainCanvasContainer.getBoundingClientRect();
+  var localTouchX = touch.clientX - rect.left;
+  var localTouchY = touch.clientY - rect.top;
+  var anchor = getCursorAnchorPx();
+  var iconSize = getCursorBaseSize();
+  var hotspot = getCursorHotspot(iconSize, hoveredIsLink);
+  var iconLeft = anchor.x + cursorOffsetX - hotspot.x;
+  var iconTop = anchor.y + cursorOffsetY - hotspot.y;
+  var iconCx = iconLeft + iconSize * 0.5;
+  var iconCy = iconTop + iconSize * 0.5;
+  var dxTouch = localTouchX - iconCx;
+  var dyTouch = localTouchY - iconCy;
+  var radius = iconSize * 0.62;
+  if (dxTouch * dxTouch + dyTouch * dyTouch <= radius * radius) {
+    var offset = chooseCursorOffset(anchor.x, anchor.y, iconSize, hotspot, localTouchX, localTouchY);
+    setCursorOffsetTarget(offset.x, offset.y, 120);
+  } else {
+    setCursorOffsetTarget(0, 0, 110);
+  }
+}
+
+function emitTapRipple(localX, localY) {
+  if (!rippleLayerEl) return;
+  var rings = [
+    { cls: 'touch-ripple', size: 34, color: 'rgba(255,255,255,0.95)', ttl: 340 },
+    { cls: 'touch-ripple secondary', size: 50, color: 'rgba(0,0,0,0.95)', ttl: 360 },
+    { cls: 'touch-ripple secondary', size: 66, color: 'rgba(255,255,255,0.85)', ttl: 390 }
+  ];
+  for (var i = 0; i < rings.length; i++) {
+    (function(ring) {
+      var el = document.createElement('div');
+      el.className = ring.cls;
+      el.style.left = localX + 'px';
+      el.style.top = localY + 'px';
+      el.style.width = ring.size + 'px';
+      el.style.height = ring.size + 'px';
+      el.style.borderColor = ring.color;
+      rippleLayerEl.appendChild(el);
+      setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, ring.ttl);
+    })(rings[i]);
+  }
+}
+
+function renderTouchCursorOverlay() {
+  if (!cursorLayerEl || !cursorIconEl || !cursorUseEl) return;
+  if (!touchMode || !cursorVisible || gameState == null || images.length === 0) {
+    cursorLayerEl.style.display = 'none';
+    return;
+  }
+
+  var now = Date.now();
+  updateCursorOffset(now);
+
+  var isHand = hoveredIsLink;
+  var baseSize = getCursorBaseSize();
+  var dragScale = cursorDragging ? 1.07 : 1.0;
+  var tapScale = now < cursorTapUntil ? 0.90 : 1.0;
+  var iconSize = Math.round(baseSize * dragScale * tapScale);
+  var anchor = getCursorAnchorPx();
+  var hotspot = getCursorHotspot(iconSize, isHand);
+  var left = Math.round(anchor.x + cursorOffsetX - hotspot.x);
+  var top = Math.round(anchor.y + cursorOffsetY - hotspot.y);
+
+  var fillColor = getNeutralCursorFill();
+  if (isHand && hoveredColorIndex >= 0 && hoveredColorIndex < colorPalette.length) {
+    fillColor = colorPalette[hoveredColorIndex];
+  }
+  var strokeColor = getContrastingStroke(fillColor);
+
+  cursorUseEl.setAttribute('href', isHand ? '#icon-cursor-hand' : '#icon-cursor-arrow');
+  cursorIconEl.style.left = left + 'px';
+  cursorIconEl.style.top = top + 'px';
+  cursorIconEl.style.width = iconSize + 'px';
+  cursorIconEl.style.height = iconSize + 'px';
+  cursorIconEl.style.setProperty('--cursor-fill', fillColor);
+  cursorIconEl.style.setProperty('--cursor-stroke', strokeColor);
+  cursorLayerEl.style.display = 'block';
 }
 
 function updateCursorHover() {
@@ -1152,6 +1331,9 @@ function touchStart(e) {
   touchStartTime = Date.now();
   lastTouchX = touch.clientX;
   lastTouchY = touch.clientY;
+  cursorDragging = false;
+  maybeStartOcclusionOffset(touch);
+  renderTouchCursorOverlay();
 }
 
 function touchMove(e) {
@@ -1173,6 +1355,9 @@ function touchMove(e) {
   var deltaY = touch.clientY - lastTouchY;
   lastTouchX = touch.clientX;
   lastTouchY = touch.clientY;
+  if (Math.abs(deltaX) + Math.abs(deltaY) > 1) {
+    cursorDragging = true;
+  }
 
   // Convert to game-pixel delta
   var gameDeltaX = (deltaX / zoom) * POINTER_SPEED;
@@ -1184,7 +1369,6 @@ function touchMove(e) {
   cursorX = Math.max(0, Math.min(gw - 1, cursorX + gameDeltaX));
   cursorY = Math.max(0, Math.min(gh - 1, cursorY + gameDeltaY));
 
-  updateDpad(touch.clientX - touchStartX, touch.clientY - touchStartY);
   updateCursorHover();
   redraw();
 }
@@ -1205,13 +1389,18 @@ function touchEnd(e) {
 
   activeTouchId = null;
   lastTouchTime = Date.now();
-  resetDpad();
+  cursorDragging = false;
+  setCursorOffsetTarget(0, 0, 110);
 
   // Tap detection
   var totalMove = Math.abs(touch.clientX - touchStartX) + Math.abs(touch.clientY - touchStartY);
   var elapsed = Date.now() - touchStartTime;
 
   if (totalMove < TAP_THRESHOLD && elapsed < TAP_TIME_THRESHOLD) {
+    cursorTapUntil = Date.now() + 120;
+    startCursorOverlayAnimation();
+    var anchor = getCursorAnchorPx();
+    emitTapRipple(anchor.x, anchor.y);
     // It's a tap — activate hovered link
     if (hoveredIsLink && !animating) {
       var gw = getGameWidth();
@@ -1277,8 +1466,10 @@ function redraw(){
     } else {
       mainCanvasCtx.drawImage(curCanvasToDraw,0,0,gw,gh,dx,dy,gw*zoom,gh*zoom);
     }
-    drawCursor();
-  } else {    
+    renderTouchCursorOverlay();
+  } else {
+    renderTouchCursorOverlay();
+    
     mainCanvasCtx.fillStyle="#ff0000";
     mainCanvasCtx.fillRect(0,0,mainCanvas.width/2,mainCanvas.height/2);
     mainCanvasCtx.fillStyle="#00ff00";
@@ -1545,8 +1736,9 @@ function redraw(){
       if (Date.now() - lastTouchTime > 500) {
         touchMode = false;
         cursorVisible = false;
+        cursorDragging = false;
         mainCanvas.style.cursor = 'default';
-        if (dpadHint) dpadHint.style.display = 'none';
+        if (cursorLayerEl) cursorLayerEl.style.display = 'none';
       }
     }
 
@@ -1611,10 +1803,12 @@ function get_page_data() {
       
             var hacklink = document.getElementById("hackLink");
             if (hacklink) {
-                var id = getParameterByName("p").replace(/[\\\/]/, "");
-                var url = "index.html?p=" + id;
-                url = qualifyURL(url);
-                hacklink.href = url;
+                if (isLocalTestMode()) {
+                    hacklink.href = qualifyURL("index.html?test");
+                } else {
+                    var id = getParameterByName("p").replace(/[\\\/]/, "");
+                    hacklink.href = qualifyURL("index.html?p=" + id);
+                }
                 hacklink.innerHTML = "&sdotb; edit";
             }
             
@@ -1632,6 +1826,11 @@ function get_page_data() {
             }
             
             renderImages();
+        }
+        ,
+        onError: function(message) {
+            console.error(message);
+            alert(message);
         }
     });
 }
@@ -1657,17 +1856,17 @@ function init(){
   mainCanvas.addEventListener('touchcancel', function(e) {
     activeTouchId = null;
     lastTouchTime = Date.now();
+    cursorDragging = false;
+    setCursorOffsetTarget(0, 0, 110);
   }, false);
 
-  dpadHint = document.getElementById('dpad-hint');
-  dpadInner = document.getElementById('dpad-inner');
+  initTouchCursorOverlay();
 
   var hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
   if (hasTouch) {
     touchMode = true;
     cursorVisible = true;
     mainCanvas.style.cursor = 'none';
-    if (dpadHint) dpadHint.style.display = 'block';
   }
 
   redraw();
@@ -1752,12 +1951,29 @@ document.addEventListener("keydown", goFullscreen);
 </script>
 </head>
 <body onload="init()" onkeydown="goFullscreen(event);">
+<svg id="touch-cursor-symbols" xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true" focusable="false">
+  <symbol id="icon-cursor-arrow" viewBox="0 0 16 16">
+    <g transform="translate(16,0) scale(-1,1)">
+      <path fill="var(--cursor-fill, #ffffff)" d="M2.25 8.184l3.897 1.67a.5.5 0 0 1 .262.263l1.67 3.897L12.743 3.52z"/>
+      <path fill="var(--cursor-stroke, #000000)" d="M14.082 2.182a.5.5 0 0 1 .103.557L8.528 15.467a.5.5 0 0 1-.917-.007L5.57 10.694.803 8.652a.5.5 0 0 1-.006-.916l12.728-5.657a.5.5 0 0 1 .556.103zM2.25 8.184l3.897 1.67a.5.5 0 0 1 .262.263l1.67 3.897L12.743 3.52z"/>
+    </g>
+  </symbol>
+  <symbol id="icon-cursor-hand" viewBox="0 0 16 16">
+    <path fill="var(--cursor-fill, #ffffff)" d="M8.5 4.466V1.75a1.75 1.75 0 1 0-3.5 0v5.34l-1.2.24a1.5 1.5 0 0 0-1.196 1.636l.345 3.106a2.5 2.5 0 0 0 .405 1.11l1.433 2.15A1.5 1.5 0 0 0 6.035 16h6.385a1.5 1.5 0 0 0 1.302-.756l1.395-2.441a3.5 3.5 0 0 0 .444-1.389l.271-2.715a2 2 0 0 0-1.99-2.199h-.581a5 5 0 0 0-.195-.248c-.191-.229-.51-.568-.88-.716-.364-.146-.846-.132-1.158-.108l-.132.012a1.26 1.26 0 0 0-.56-.642 2.6 2.6 0 0 0-.738-.288c-.31-.062-.739-.058-1.05-.046zm2.094 2.025"/>
+    <path fill="var(--cursor-stroke, #000000)" d="M6.75 1a.75.75 0 0 1 .75.75V8a.5.5 0 0 0 1 0V5.467l.086-.004c.317-.012.637-.008.816.027.134.027.294.096.448.182.077.042.15.147.15.314V8a.5.5 0 1 0 1 0V6.435l.106-.01c.316-.024.584-.01.708.04.118.046.3.207.486.43.081.096.15.19.2.259V8.5a.5.5 0 0 0 1 0v-1h.342a1 1 0 0 1 .995 1.1l-.271 2.715a2.5 2.5 0 0 1-.317.991l-1.395 2.442a.5.5 0 0 1-.434.252H6.035a.5.5 0 0 1-.416-.223l-1.433-2.15a1.5 1.5 0 0 1-.243-.666l-.345-3.105a.5.5 0 0 1 .399-.546L5 8.11V9a.5.5 0 0 0 1 0V1.75A.75.75 0 0 1 6.75 1M8.5 4.466V1.75a1.75 1.75 0 1 0-3.5 0v5.34l-1.2.24a1.5 1.5 0 0 0-1.196 1.636l.345 3.106a2.5 2.5 0 0 0 .405 1.11l1.433 2.15A1.5 1.5 0 0 0 6.035 16h6.385a1.5 1.5 0 0 0 1.302-.756l1.395-2.441a3.5 3.5 0 0 0 .444-1.389l.271-2.715a2 2 0 0 0-1.99-2.199h-.581a5 5 0 0 0-.195-.248c-.191-.229-.51-.568-.88-.716-.364-.146-.846-.132-1.158-.108l-.132.012a1.26 1.26 0 0 0-.56-.642 2.6 2.6 0 0 0-.738-.288c-.31-.062-.739-.058-1.05-.046zm2.094 2.025"/>
+  </symbol>
+</svg>
 <div id="header">
 </div>
 <p>
 <div id="content">
 <canvas id="mainCanvas"></canvas>
-<div id="dpad-hint"><div id="dpad-outer"></div><div id="dpad-inner"></div></div>
+<div id="touch-cursor-layer" aria-hidden="true">
+  <svg id="touch-cursor-icon" viewBox="0 0 16 16">
+    <use id="touch-cursor-use" href="#icon-cursor-arrow"></use>
+  </svg>
+  <div id="touch-ripple-layer"></div>
+</div>
 </div>
 <p>
 <div id="footer">
