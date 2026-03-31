@@ -1535,12 +1535,60 @@ function layoutDragTutorialBox() {
   var margin = 10;
   var desiredW = Math.min(520, Math.max(280, Math.round(cw * 0.78)));
   var desiredH = Math.min(260, Math.max(150, Math.round(ch * 0.28)));
+  if (tutorialMode === 'tap') {
+    // Keep tap stage compact so it can usually fit just below the drawn game.
+    desiredW = Math.min(340, Math.max(220, Math.round(cw * 0.62)));
+    desiredH = Math.min(132, Math.max(96, Math.round(ch * 0.18)));
+  }
 
   var left = Math.round((cw - desiredW) * 0.5);
   var top = Math.round(ch - margin - desiredH);
-  if (top < margin) top = margin;
-  if (left < margin) left = margin;
-  if (left + desiredW > cw - margin) left = cw - margin - desiredW;
+  var placement = 'containerBottom';
+  var anchorX = null;
+  var anchorY = null;
+
+  // Tap tutorial should sit just below the drawn game canvas (not container bottom),
+  // and move above the game only when there isn't enough room below.
+  if (tutorialMode === 'tap') {
+    updateZoom();
+    var gameLeft = dx;
+    var gameTop = dy;
+    var gameW = getGameWidth() * zoom;
+    var gameH = getGameHeight() * zoom;
+    anchorX = gameLeft + gameW * 0.5;
+    anchorY = gameTop + gameH;
+    var gap = 8;
+    left = Math.round(anchorX - desiredW * 0.5);
+    top = Math.round(anchorY + gap);
+    placement = 'belowGame';
+    if (top + desiredH > ch - margin) {
+      top = Math.round(anchorY - gap - desiredH);
+      placement = 'aboveGameFallback';
+    }
+  }
+
+  var rawLeft = left;
+  var rawTop = top;
+  var clampedTop = false;
+  var clampedBottom = false;
+  var clampedLeftMin = false;
+  var clampedLeftMax = false;
+  if (top < margin) {
+    top = margin;
+    clampedTop = true;
+  }
+  if (top + desiredH > ch - margin) {
+    top = ch - margin - desiredH;
+    clampedBottom = true;
+  }
+  if (left < margin) {
+    left = margin;
+    clampedLeftMin = true;
+  }
+  if (left + desiredW > cw - margin) {
+    left = cw - margin - desiredW;
+    clampedLeftMax = true;
+  }
 
   tutorialEl.style.left = left + 'px';
   tutorialEl.style.top = top + 'px';
@@ -1593,7 +1641,7 @@ function startTutorialTapAnimation() {
   var hand = tutorialEl.querySelector('.tutorial-hand');
   if (!hand) return;
   tutorialTapStartTs = performance.now();
-  hand.style.setProperty('--handSize', '104px');
+  hand.style.setProperty('--handSize', '96px');
 
   function tick(now) {
     tutorialAnimRaf = 0;
@@ -1606,6 +1654,19 @@ function startTutorialTapAnimation() {
     var localH = rect.height;
     var cx = localW * 0.50;
     var cy = localH * 0.62;
+
+    // Keep tap hand fully visible inside the stage across portrait/landscape.
+    var fitHandSize = Math.max(56, Math.min(104, Math.round(localH * 0.72)));
+    hand.style.setProperty('--handSize', fitHandSize + 'px');
+    var hsyForFit = fitHandSize * 1.5 / 16;
+    var minCy = hsyForFit + 4;
+    var maxCy = localH - fitHandSize + hsyForFit - 4;
+    if (maxCy < minCy) {
+      cy = localH * 0.5;
+    } else {
+      if (cy < minCy) cy = minCy;
+      if (cy > maxCy) cy = maxCy;
+    }
 
     // Faster tap loop; tap occurs ~100ms after showing.
     var cycleMs = 650;
