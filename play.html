@@ -1483,6 +1483,9 @@ var tutorialAnimRaf = 0;
 var tutorialLastDotTs = 0;
 var tutorialDragStartTs = 0;
 var tutorialTapStartTs = 0;
+/** Last box size from layoutDragTutorialBox; used when getBoundingClientRect is still 0 before first layout flush. */
+var tutorialLayoutW = 0;
+var tutorialLayoutH = 0;
 
 function stopTutorialAnimation() {
   if (tutorialAnimRaf) {
@@ -1492,6 +1495,8 @@ function stopTutorialAnimation() {
   tutorialLastDotTs = 0;
   tutorialDragStartTs = 0;
   tutorialTapStartTs = 0;
+  tutorialLayoutW = 0;
+  tutorialLayoutH = 0;
 }
 
 function tutorialHandSvgHtml() {
@@ -1543,7 +1548,9 @@ function layoutDragTutorialBox() {
   if (!tutorialEl || !mainCanvasContainer) return;
   var cw = mainCanvasContainer.clientWidth || 0;
   var ch = mainCanvasContainer.clientHeight || 0;
-  if (cw <= 0 || ch <= 0) return;
+  if (cw <= 0 || ch <= 0) {
+    return;
+  }
 
   // Large, centered at bottom-middle; clamp upward if it would clip.
   var margin = 10;
@@ -1608,6 +1615,8 @@ function layoutDragTutorialBox() {
   tutorialEl.style.top = top + 'px';
   tutorialEl.style.width = desiredW + 'px';
   tutorialEl.style.height = desiredH + 'px';
+  tutorialLayoutW = desiredW;
+  tutorialLayoutH = desiredH;
 }
 
 function startTutorialDragAnimation() {
@@ -1626,8 +1635,8 @@ function startTutorialDragAnimation() {
     layoutDragTutorialBox();
 
     var rect = tutorialEl.getBoundingClientRect();
-    var localW = rect.width;
-    var localH = rect.height;
+    var localW = rect.width > 0.5 ? rect.width : tutorialLayoutW;
+    var localH = rect.height > 0.5 ? rect.height : tutorialLayoutH;
     // Large motion centered in the stage, biased slightly downward.
     var cx = localW * 0.50;
     var cy = localH * 0.62;
@@ -1664,8 +1673,8 @@ function startTutorialTapAnimation() {
     layoutDragTutorialBox();
 
     var rect = tutorialEl.getBoundingClientRect();
-    var localW = rect.width;
-    var localH = rect.height;
+    var localW = rect.width > 0.5 ? rect.width : tutorialLayoutW;
+    var localH = rect.height > 0.5 ? rect.height : tutorialLayoutH;
     var cx = localW * 0.50;
     var cy = localH * 0.62;
 
