@@ -1186,6 +1186,18 @@ var POINTER_SPEED = 1.0;
 var TAP_THRESHOLD = 10;
 var TAP_TIME_THRESHOLD = 300;
 var DARK_LUMINANCE = 0.3;
+var TOUCH_CURSOR_CALIBRATION = {
+  arrow: {
+    // SVG viewBox-space hotspot (0..16) for where this icon should point.
+    hotspot: { x: 2.5, y: 2.5 },
+    // Extra visual nudge (also in 0..16 units). Keep at 0 unless tuning.
+    nudge: { x: 0, y: 0 }
+  },
+  hand: {
+    hotspot: { x: 7.5, y: 2.5 },
+    nudge: { x: -1.0, y: -1.0 }
+  }
+};
 
 // Touch cursor state
 var touchMode = false;
@@ -1302,10 +1314,12 @@ function commitCursorOffsetToPosition() {
 }
 
 function getCursorHotspot(iconSize, isHand) {
+  var iconType = isHand ? 'hand' : 'arrow';
+  var calibration = TOUCH_CURSOR_CALIBRATION[iconType] || TOUCH_CURSOR_CALIBRATION.arrow;
   var iconScale = iconSize / 16;
   return {
-    x: (isHand ? 6.5 : 1.5) * iconScale,
-    y: 1.5 * iconScale
+    x: (calibration.hotspot.x + calibration.nudge.x) * iconScale,
+    y: (calibration.hotspot.y + calibration.nudge.y) * iconScale
   };
 }
 
