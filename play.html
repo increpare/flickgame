@@ -1,5 +1,7 @@
 <html>
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" 
       type="image/png" 
       href="favicon.png">
@@ -20,7 +22,7 @@
   left:0px;
   right:0px;
   top:0px;
-  height:40px;
+  height:5px;
   background-color: var(--background-color);
   color:var(--foreground-color);
   text-align: center;
@@ -35,7 +37,7 @@ a {
 
 #content {
   position: absolute;
-  top:40px;
+  top:5px;
   bottom:30px;
   left:0px;
   right:0px;
@@ -59,7 +61,7 @@ a {
  image-rendering: -o-crisp-edges;
  image-rendering: pixelated;
  -ms-interpolation-mode: nearest-neighbor;
-  touch-action: manipulation;
+  touch-action: none;
 }
 #hackLink {
   position: absolute;
@@ -83,6 +85,188 @@ a {
   text-align: center;
   padding: 0;
   line-height: 30px;
+  font-size: clamp(16px, 3.4vw, 20px);
+}
+#touch-cursor-layer {
+  display: none;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+#touch-cursor-icon {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  overflow: visible;
+  transform-origin: 0 0;
+  --cursor-fill: #ffffff;
+  --cursor-stroke: #000000;
+}
+#touch-cursor-icon use {
+  display: block;
+}
+#touch-ripple-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+#touch-tutorial {
+  position: absolute;
+  max-width: 260px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  font-size: 15px;
+  line-height: 1.3;
+  text-align: left;
+  pointer-events: none;
+  z-index: 11;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 180ms ease-out, visibility 0s linear 180ms;
+}
+#touch-tutorial.visible {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 120ms ease-out;
+}
+#touch-tutorial.fading {
+  opacity: 0;
+  transition: opacity 220ms ease-out;
+}
+.touch-tutorial-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 44px;
+}
+#touch-tutorial.tutorial-drag {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  max-width: none;
+}
+#touch-tutorial.tutorial-bottom {
+  right: auto !important;
+  transform: none;
+  text-align: center;
+}
+#touch-tutorial.tutorial-anchored {
+  transform: none;
+}
+.tutorial-hand {
+  position: relative;
+  --handSize: 44px;
+  width: var(--handSize);
+  height: var(--handSize);
+  flex: 0 0 auto;
+  opacity: 0.5;
+  filter: drop-shadow(0 10px 18px rgba(0,0,0,0.55));
+  /* Make (left, top) be fingertip hotspot. */
+  --hsx: calc(var(--handSize) * 6.5 / 16);
+  --hsy: calc(var(--handSize) * 1.5 / 16);
+  transform: translate(calc(-1 * var(--hsx)), calc(-1 * var(--hsy)));
+}
+.tutorial-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.tutorial-centerMark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 3px;
+  height: 3px;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+  opacity: 0.0;
+}
+.tutorial-hand path{
+  fill: rgba(255,255,255,0.92);
+  stroke: rgba(0,0,0,0.92);
+  stroke-width: 0.9;
+  paint-order: stroke fill;
+  stroke-linejoin: round;
+}
+.tutorial-trailDot{
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.55) 45%, rgba(255,255,255,0.0) 72%);
+  transform: translate(-50%,-50%);
+  pointer-events: none;
+  opacity: 0.0;
+  animation: tutorial-dotFade 700ms ease-out forwards;
+}
+@keyframes tutorial-dotFade{
+  0% { opacity: 0.70; filter: blur(0px); }
+  100% { opacity: 0.0; filter: blur(0.6px); }
+}
+.tutorial-ripple{
+  position:absolute;
+  left: -9999px;
+  top: -9999px;
+  border-radius: 999px;
+  transform: translate(-50%,-50%) scale(0.2);
+  opacity: 0;
+  border: 2px solid rgba(255,255,255,0.92);
+  animation: tutorial-ripplePop 520ms ease-out forwards;
+}
+.tutorial-ripple.secondary{
+  border-width: 1px;
+}
+@keyframes tutorial-ripplePop{
+  0% { opacity: 0; transform: translate(-50%,-50%) scale(0.2); }
+  10% { opacity: 0.95; }
+  100% { opacity: 0; transform: translate(-50%,-50%) scale(2.6); }
+}
+.touch-ripple {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.9);
+  transform: translate(-50%, -50%) scale(0.25);
+  opacity: 0.95;
+  animation: touch-ripple-expand 280ms ease-out forwards;
+}
+.touch-ripple.secondary {
+  border-width: 1px;
+  opacity: 0.7;
+  animation-duration: 320ms;
+}
+@keyframes touch-ripple-expand {
+  0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0.95; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+}
+.touch-color-burst {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.touch-color-dot {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+@keyframes color-burst-ring {
+  0% { transform: translate(-50%, -50%) scale(0.1); opacity: var(--burst-opacity, 0.85); }
+  40% { opacity: var(--burst-opacity, 0.85); }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+}
+@keyframes color-burst-dot {
+  0% { transform: translate(-50%, -50%) translate(0px, 0px) scale(1); opacity: 0.9; }
+  20% { opacity: 1; }
+  100% { transform: translate(-50%, -50%) translate(var(--dot-tx), var(--dot-ty)) scale(0); opacity: 0; }
 }
 </style>
 <script id="flickgame_base.js">
@@ -97,6 +281,52 @@ function getParameterByName(name) {
     var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
         results = regex.exec(location.search);
     return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+}
+
+/** True when play.html is opened with ?test (loads testgame.txt from same folder). */
+function isLocalTestMode() {
+    try {
+        return new URLSearchParams(location.search).has("test");
+    } catch (e) {
+        return /[?&]test(?:&|$|=)/.test(location.search);
+    }
+}
+
+function decodeGzipArrayBufferToText(arrayBuffer) {
+    if (typeof DecompressionStream === "undefined") {
+        return Promise.reject(new Error("This browser cannot decode .gz local test files."));
+    }
+    var ds = new DecompressionStream("gzip");
+    var stream = new Blob([arrayBuffer]).stream().pipeThrough(ds);
+    return new Response(stream).text();
+}
+
+function loadLocalTestGame(onSuccess, onError) {
+    var candidates = ["testgame.txt", "testgame.txt.gz"];
+    var index = 0;
+
+    function tryNext() {
+        if (index >= candidates.length) {
+            onError("Could not find testgame.txt (or testgame.txt.gz) in this directory.");
+            return;
+        }
+        var fileName = candidates[index++];
+        fetch(qualifyURL(fileName)).then(function(response) {
+            if (!response.ok) {
+                throw new Error("HTTP " + response.status);
+            }
+            if (fileName.slice(-3) === ".gz") {
+                return response.arrayBuffer().then(decodeGzipArrayBufferToText);
+            }
+            return response.text();
+        }).then(function(text) {
+            onSuccess(text);
+        }).catch(function() {
+            tryNext();
+        });
+    }
+
+    tryNext();
 }
 
 // Helper function to strip http/https from URLs
@@ -138,6 +368,12 @@ function getData(options) {
     if (typeof embeddedDat !== 'undefined' && embeddedDat[0] !== '_') {
         embeddedDat = decodeURI(embeddedDat);
         onEmbedded(embeddedDat);
+        return true;
+    }
+
+    // Local test mode: bypass gist loading and read testgame.txt from this directory.
+    if (isLocalTestMode()) {
+        loadLocalTestGame(onSuccess, onError);
         return true;
     }
 
@@ -846,8 +1082,14 @@ function getData(options) {
 
   
 // Load state function
+function getGameWidth() { return gameState ? (gameState.width || 160) : 160; }
+function getGameHeight() { return gameState ? (gameState.height || 100) : 100; }
+
 function loadState(code) {
   gameState = JSON.parse(code);
+  if (gameState.width === undefined) gameState.width = 160;
+  if (gameState.height === undefined) gameState.height = 100;
+  if (typeof cursorX !== 'undefined') { cursorX = gameState.width / 2; cursorY = gameState.height / 2; }
   if (gameState.palette_name === undefined) {
       console.log("palette_name not defined, setting to dawnbringer-16");
       gameState.palette_name = "dawnbringer-16";
@@ -884,9 +1126,9 @@ function loadState(code) {
 </script>
 <script>
 
-<!--__EmbedBegin__-->
+//<!--__EmbedBegin__-->
 var embeddedDat="__EMBED__";
-<!--__EmbedEnd__-->
+//<!--__EmbedEnd__-->
 
 function getUrlVars() {
     var vars = {};
@@ -916,16 +1158,1035 @@ if(urlVars["a"]==="1"){
 }
 var showAnimation = frameCount>1;
 
+// Localizable UI strings
+var i18nStrings = {
+  en: {
+    tutorial_move_cursor: "Drag anywhere to move the cursor. Can you find a link?",
+    tutorial_tap_link: "Tap to go to the hovered link!",
+    edit_link_label_html: "&sdotb; edit"
+  },
+  de: {
+    tutorial_move_cursor: "Zieh herum, um den Cursor zu bewegen. Kannst du einen Link finden?",
+    tutorial_tap_link: "Tappen, um einem Link zu folgen!",
+    edit_link_label_html: "&sdotb; bearbeiten"
+  }
+};
+function resolveI18nLocale() {
+  var requested = getParameterByName("lang");
+  if (!requested && typeof navigator !== "undefined" && navigator.language) {
+    requested = navigator.language;
+  }
+  if (!requested) return "en";
+
+  requested = String(requested).replace("_", "-").toLowerCase();
+  if (Object.prototype.hasOwnProperty.call(i18nStrings, requested)) {
+    return requested;
+  }
+
+  var base = requested.split("-")[0];
+  if (Object.prototype.hasOwnProperty.call(i18nStrings, base)) {
+    return base;
+  }
+  return "en";
+}
+var i18nLocale = resolveI18nLocale();
+
+function t(key) {
+  var localeDict = i18nStrings[i18nLocale] || i18nStrings.en;
+  return (localeDict && localeDict[key] !== undefined) ? localeDict[key] : key;
+}
+
 
 var animating=false;
 var zoom=1;
 var currentIndex=0;
+
+// Touch cursor constants
+var POINTER_SPEED = 1.0;
+var TAP_THRESHOLD = 10;
+var TAP_TIME_THRESHOLD = 300;
+var DARK_LUMINANCE = 0.3;
+var TOUCH_CURSOR_CALIBRATION = {
+  arrow: {
+    // SVG viewBox-space hotspot (0..16) for where this icon should point.
+    hotspot: { x: 2.5, y: 2.5 },
+    // Extra visual nudge (also in 0..16 units). Keep at 0 unless tuning.
+    nudge: { x: 0, y: 0 }
+  },
+  hand: {
+    hotspot: { x: 7.5, y: 2.5 },
+    nudge: { x: -1.0, y: -1.0 }
+  }
+};
+
+// Touch cursor state
+var touchMode = false;
+var cursorX = 80.0;
+var cursorY = 50.0;
+var cursorVisible = false;
+var hoveredIsLink = false;
+var hoveredColorIndex = -1;
+var lastTouchTime = 0;
+var activeTouchId = null;
+var touchStartX = 0;
+var touchStartY = 0;
+var touchStartTime = 0;
+var tapSavedCursorX = 0;
+var tapSavedCursorY = 0;
+var lastTouchX = 0;
+var lastTouchY = 0;
+
+// Letterbox offsets (promoted from local vars in redraw/mouseMove)
+var dx = 0;
+var dy = 0;
+
+// Touch cursor overlay refs/state
+var cursorLayerEl = null;
+var cursorIconEl = null;
+var cursorUseEl = null;
+var rippleLayerEl = null;
+var tutorialEl = null;
+var tutorialTimeoutId = 0;
+var tutorialPendingDuration = 0;
+var tutorialCountdownEnabled = false;
+var tutorialHasMoved = false;
+/** After first movement, true once cursor has been off a link pixel (non-clickable area). Required before tap hint; avoids tap when "started" on a link. */
+var tutorialWasOffLinkAfterMove = false;
+/** After user follows any link once, never show the tap hint again (this session). */
+var tutorialTapHintDisabled = false;
+var wasHoverLink = false;
+var cursorDragging = false;
+var cursorTapUntil = 0;
+var cursorOffsetX = 0;
+var cursorOffsetY = 0;
+var cursorOffsetStartX = 0;
+var cursorOffsetStartY = 0;
+var cursorOffsetTargetX = 0;
+var cursorOffsetTargetY = 0;
+var cursorOffsetStartTs = 0;
+var cursorOffsetDuration = 0;
+var cursorOverlayRaf = 0;
+
+function initTouchCursorOverlay() {
+  cursorLayerEl = document.getElementById('touch-cursor-layer');
+  cursorIconEl = document.getElementById('touch-cursor-icon');
+  cursorUseEl = document.getElementById('touch-cursor-use');
+  rippleLayerEl = document.getElementById('touch-ripple-layer');
+  tutorialEl = document.getElementById('touch-tutorial');
+}
+
+function hexToRgb(hex) {
+  var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : {r: 0, g: 0, b: 0};
+}
+
+function getCursorBaseSize() {
+  return Math.max(44, Math.min(92, Math.round(zoom * 18)));
+}
+
+function getCursorAnchorPx() {
+  var px = Math.floor(cursorX);
+  var py = Math.floor(cursorY);
+  return {
+    x: dx + px * zoom + zoom * 0.5,
+    y: dy + py * zoom + zoom * 0.5
+  };
+}
+
+function getEffectiveCursorGamePos() {
+  var gw = getGameWidth();
+  var gh = getGameHeight();
+  var z = (zoom && zoom > 0) ? zoom : 1;
+  var gx = cursorX + (cursorOffsetX / z);
+  var gy = cursorY + (cursorOffsetY / z);
+  if (gx < 0) gx = 0;
+  if (gy < 0) gy = 0;
+  if (gx > gw - 1) gx = gw - 1;
+  if (gy > gh - 1) gy = gh - 1;
+  return { x: gx, y: gy };
+}
+
+/** Same link test as updateCursorHover, for a specific floored game cell (used before cursor jumps). */
+function isLinkAtGameCell(px, py) {
+  if (!gameState || !gameState.imageDats || !gameState.imageDats[currentIndex]) return false;
+  var gw = getGameWidth();
+  var gh = getGameHeight();
+  if (px < 0 || py < 0 || px >= gw || py >= gh) return false;
+  var ch = gameState.imageDats[currentIndex][px + gw * py];
+  var colIndex = parseInt(ch, 16);
+  return gameState.hyperlinks[currentIndex][colIndex] !== 0;
+}
+
+function resetCursorOffset() {
+  cursorOffsetX = 0;
+  cursorOffsetY = 0;
+  cursorOffsetStartX = 0;
+  cursorOffsetStartY = 0;
+  cursorOffsetTargetX = 0;
+  cursorOffsetTargetY = 0;
+  cursorOffsetDuration = 0;
+}
+
+function commitCursorOffsetToPosition() {
+  if (Math.abs(cursorOffsetX) < 0.01 && Math.abs(cursorOffsetY) < 0.01) return;
+  var effective = getEffectiveCursorGamePos();
+  cursorX = effective.x;
+  cursorY = effective.y;
+  resetCursorOffset();
+}
+
+function getCursorHotspot(iconSize, isHand) {
+  var iconType = isHand ? 'hand' : 'arrow';
+  var calibration = TOUCH_CURSOR_CALIBRATION[iconType] || TOUCH_CURSOR_CALIBRATION.arrow;
+  var iconScale = iconSize / 16;
+  return {
+    x: (calibration.hotspot.x + calibration.nudge.x) * iconScale,
+    y: (calibration.hotspot.y + calibration.nudge.y) * iconScale
+  };
+}
+
+function getContrastingStroke(fillHex) {
+  var rgb = hexToRgb(fillHex);
+  var luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
+  return luminance < DARK_LUMINANCE ? '#ffffff' : '#000000';
+}
+
+function distanceSqRgb(a, b) {
+  var dr = a.r - b.r;
+  var dg = a.g - b.g;
+  var db = a.b - b.b;
+  return dr * dr + dg * dg + db * db;
+}
+
+function chooseClosestBlackOrWhite(hex) {
+  var c = hexToRgb(hex);
+  var white = { r: 255, g: 255, b: 255 };
+  var black = { r: 0, g: 0, b: 0 };
+  var dWhite = distanceSqRgb(c, white);
+  var dBlack = distanceSqRgb(c, black);
+  return dBlack <= dWhite ? '#000000' : '#ffffff';
+}
+
+function getCursorReferenceBackgroundColor(isHand) {
+  if (isHand && hoveredIsLink && hoveredColorIndex >= 0 && hoveredColorIndex < colorPalette.length) {
+    return colorPalette[hoveredColorIndex];
+  }
+  return (gameState && gameState.background_color) ? gameState.background_color : '#000000';
+}
+
+function setCursorOffsetTarget(tx, ty, durationMs) {
+  cursorOffsetStartX = cursorOffsetX;
+  cursorOffsetStartY = cursorOffsetY;
+  cursorOffsetTargetX = tx;
+  cursorOffsetTargetY = ty;
+  cursorOffsetStartTs = Date.now();
+  cursorOffsetDuration = durationMs;
+  if (durationMs > 0) {
+    startCursorOverlayAnimation();
+  }
+}
+
+function updateCursorOffset(now) {
+  if (cursorOffsetDuration <= 0) {
+    cursorOffsetX = cursorOffsetTargetX;
+    cursorOffsetY = cursorOffsetTargetY;
+    return;
+  }
+  var t = (now - cursorOffsetStartTs) / cursorOffsetDuration;
+  if (t >= 1) {
+    cursorOffsetX = cursorOffsetTargetX;
+    cursorOffsetY = cursorOffsetTargetY;
+    cursorOffsetDuration = 0;
+    return;
+  }
+  if (t < 0) t = 0;
+  var eased = 1 - Math.pow(1 - t, 3);
+  cursorOffsetX = cursorOffsetStartX + (cursorOffsetTargetX - cursorOffsetStartX) * eased;
+  cursorOffsetY = cursorOffsetStartY + (cursorOffsetTargetY - cursorOffsetStartY) * eased;
+}
+
+function needsCursorOverlayAnimation(now) {
+  return cursorOffsetDuration > 0 || now < cursorTapUntil;
+}
+
+function startCursorOverlayAnimation() {
+  if (cursorOverlayRaf) return;
+  function tick() {
+    cursorOverlayRaf = 0;
+    renderTouchCursorOverlay();
+    if (!touchMode) return;
+    if (needsCursorOverlayAnimation(Date.now())) {
+      cursorOverlayRaf = requestAnimationFrame(tick);
+    }
+  }
+  cursorOverlayRaf = requestAnimationFrame(tick);
+}
+
+function chooseCursorOffset(anchorX, anchorY, iconSize, hotspot) {
+  var choices = [
+    { x: -56, y: -56 },
+    { x: -60, y: 0 },
+    { x: 0, y: -80 },
+    { x: 90, y: 0 },
+    { x: 0, y: 90 }
+  ];
+  updateZoom();
+  var gw = getGameWidth();
+  var gh = getGameHeight();
+  var margin = 6;
+  var canvasLeft = dx + margin;
+  var canvasTop = dy + margin;
+  var canvasRight = dx + gw * zoom - margin;
+  var canvasBottom = dy + gh * zoom - margin;
+
+  for (var i = 0; i < choices.length; i++) {
+    var c = choices[i];
+    var left = anchorX + c.x - hotspot.x;
+    var top = anchorY + c.y - hotspot.y;
+    var right = left + iconSize;
+    var bottom = top + iconSize;
+    if (left >= canvasLeft && top >= canvasTop && right <= canvasRight && bottom <= canvasBottom) {
+      return c;
+    }
+  }
+  return { x: 0, y: 0 };
+}
+
+var tutorialFadeTimeoutId = 0;
+
+function cancelTutorialFadeOut() {
+  if (tutorialFadeTimeoutId) {
+    clearTimeout(tutorialFadeTimeoutId);
+    tutorialFadeTimeoutId = 0;
+  }
+  if (tutorialEl) tutorialEl.classList.remove('fading');
+}
+
+function hideTutorialMessage() {
+  if (tutorialTimeoutId) {
+    clearTimeout(tutorialTimeoutId);
+    tutorialTimeoutId = 0;
+  }
+  tutorialPendingDuration = 0;
+  cancelTutorialFadeOut();
+  stopTutorialAnimation();
+  tutorialMode = '';
+  if (tutorialEl) tutorialEl.classList.remove('visible', 'fading');
+}
+
+function fadeOutTutorialMessage() {
+  if (!tutorialEl) return;
+  if (!tutorialEl.classList.contains('visible')) return;
+  // Stop generating new animation artifacts immediately; let existing dots fade naturally.
+  stopTutorialAnimation();
+  cancelTutorialFadeOut();
+  tutorialEl.classList.add('fading');
+  tutorialFadeTimeoutId = setTimeout(function() {
+    tutorialFadeTimeoutId = 0;
+    if (!tutorialEl) return;
+    tutorialEl.classList.remove('visible', 'fading');
+  }, 240);
+}
+
+function startTutorialTimeout(durationMs) {
+  if (!durationMs || durationMs <= 0) return;
+  if (tutorialTimeoutId) {
+    clearTimeout(tutorialTimeoutId);
+  }
+  tutorialTimeoutId = setTimeout(function() {
+    tutorialTimeoutId = 0;
+    if (tutorialEl) tutorialEl.classList.remove('visible');
+  }, durationMs);
+}
+
+var tutorialMode = '';
+var tutorialAnimRaf = 0;
+var tutorialLastDotTs = 0;
+var tutorialDragStartTs = 0;
+var tutorialTapStartTs = 0;
+/** Last box size from layoutDragTutorialBox; used when getBoundingClientRect is still 0 before first layout flush. */
+var tutorialLayoutW = 0;
+var tutorialLayoutH = 0;
+
+function stopTutorialAnimation() {
+  if (tutorialAnimRaf) {
+    cancelAnimationFrame(tutorialAnimRaf);
+    tutorialAnimRaf = 0;
+  }
+  tutorialLastDotTs = 0;
+  tutorialDragStartTs = 0;
+  tutorialTapStartTs = 0;
+  tutorialLayoutW = 0;
+  tutorialLayoutH = 0;
+}
+
+function tutorialHandSvgHtml() {
+  // hand.svg path (single path) with CSS stroke outline.
+  return '<svg class="tutorial-hand" viewBox="0 0 16 16" aria-hidden="true" focusable="false" shape-rendering="geometricPrecision">' +
+    '<path d="M6.75 1a.75.75 0 0 1 .75.75V8a.5.5 0 0 0 1 0V5.467l.086-.004c.317-.012.637-.008.816.027.134.027.294.096.448.182.077.042.15.147.15.314V8a.5.5 0 1 0 1 0V6.435l.106-.01c.316-.024.584-.01.708.04.118.046.3.207.486.43.081.096.15.19.2.259V8.5a.5.5 0 0 0 1 0v-1h.342a1 1 0 0 1 .995 1.1l-.271 2.715a2.5 2.5 0 0 1-.317.991l-1.395 2.442a.5.5 0 0 1-.434.252H6.035a.5.5 0 0 1-.416-.223l-1.433-2.15a1.5 1.5 0 0 1-.243-.666l-.345-3.105a.5.5 0 0 1 .399-.546L5 8.11V9a.5.5 0 0 0 1 0V1.75A.75.75 0 0 1 6.75 1M8.5 4.466V1.75a1.75 1.75 0 1 0-3.5 0v5.34l-1.2.24a1.5 1.5 0 0 0-1.196 1.636l.345 3.106a2.5 2.5 0 0 0 .405 1.11l1.433 2.15A1.5 1.5 0 0 0 6.035 16h6.385a1.5 1.5 0 0 0 1.302-.756l1.395-2.441a3.5 3.5 0 0 0 .444-1.389l.271-2.715a2 2 0 0 0-1.99-2.199h-.581a5 5 0 0 0-.195-.248c-.191-.229-.51-.568-.88-.716-.364-.146-.846-.132-1.158-.108l-.132.012a1.26 1.26 0 0 0-.56-.642 2.6 2.6 0 0 0-.738-.288c-.31-.062-.739-.058-1.05-.046zm2.094 2.025"/>' +
+    '</svg>';
+}
+
+function setTutorialMode(mode) {
+  if (!tutorialEl) return;
+  if (tutorialMode === mode && tutorialEl.classList.contains('visible')) return;
+  cancelTutorialFadeOut();
+  tutorialMode = mode || '';
+  stopTutorialAnimation();
+  tutorialEl.classList.remove('tutorial-bottom', 'tutorial-anchored', 'tutorial-drag');
+  tutorialEl.innerHTML = '';
+
+  if (mode === 'drag') {
+    tutorialEl.classList.add('tutorial-drag');
+    tutorialEl.classList.add('tutorial-bottom');
+    tutorialEl.innerHTML = '<div class="tutorial-stage" aria-hidden="true">' + tutorialHandSvgHtml() + '</div>';
+    startTutorialDragAnimation();
+  } else if (mode === 'tap') {
+    tutorialEl.classList.add('tutorial-drag');
+    tutorialEl.classList.add('tutorial-bottom');
+    tutorialEl.innerHTML = '<div class="tutorial-stage" aria-hidden="true">' + tutorialHandSvgHtml() + '</div>';
+    startTutorialTapAnimation();
+  }
+}
+
+function fig8Point(t, cx, cy, a, b) {
+  var s = Math.sin(t);
+  var c = Math.cos(t);
+  return { x: cx + a * s, y: cy + b * s * c };
+}
+
+function spawnTutorialTrailDot(x, y) {
+  if (!tutorialEl) return;
+  var d = document.createElement('div');
+  d.className = 'tutorial-trailDot';
+  d.style.left = x + 'px';
+  d.style.top = y + 'px';
+  tutorialEl.appendChild(d);
+  setTimeout(function(){ if (d.parentNode) d.parentNode.removeChild(d); }, 800);
+}
+
+function layoutDragTutorialBox() {
+  if (!tutorialEl || !mainCanvasContainer) return;
+  var cw = mainCanvasContainer.clientWidth || 0;
+  var ch = mainCanvasContainer.clientHeight || 0;
+  if (cw <= 0 || ch <= 0) {
+    return;
+  }
+
+  // Large, centered at bottom-middle; clamp upward if it would clip.
+  var margin = 10;
+  var desiredW = Math.min(520, Math.max(280, Math.round(cw * 0.78)));
+  var desiredH = Math.min(260, Math.max(150, Math.round(ch * 0.28)));
+  if (tutorialMode === 'tap') {
+    // Keep tap stage compact so it can usually fit just below the drawn game.
+    desiredW = Math.min(340, Math.max(220, Math.round(cw * 0.62)));
+    desiredH = Math.min(132, Math.max(96, Math.round(ch * 0.18)));
+  }
+
+  var left = Math.round((cw - desiredW) * 0.5);
+  var top = Math.round(ch - margin - desiredH);
+  var placement = 'containerBottom';
+  var anchorX = null;
+  var anchorY = null;
+
+  // Tap tutorial should sit just below the drawn game canvas (not container bottom),
+  // and move above the game only when there isn't enough room below.
+  if (tutorialMode === 'tap') {
+    updateZoom();
+    var gameLeft = dx;
+    var gameTop = dy;
+    var gameW = getGameWidth() * zoom;
+    var gameH = getGameHeight() * zoom;
+    anchorX = gameLeft + gameW * 0.5;
+    anchorY = gameTop + gameH;
+    var gap = 8;
+    left = Math.round(anchorX - desiredW * 0.5);
+    top = Math.round(anchorY + gap);
+    placement = 'belowGame';
+    if (top + desiredH > ch - margin) {
+      top = Math.round(anchorY - gap - desiredH);
+      placement = 'aboveGameFallback';
+    }
+  }
+
+  var rawLeft = left;
+  var rawTop = top;
+  var clampedTop = false;
+  var clampedBottom = false;
+  var clampedLeftMin = false;
+  var clampedLeftMax = false;
+  if (top < margin) {
+    top = margin;
+    clampedTop = true;
+  }
+  if (top + desiredH > ch - margin) {
+    top = ch - margin - desiredH;
+    clampedBottom = true;
+  }
+  if (left < margin) {
+    left = margin;
+    clampedLeftMin = true;
+  }
+  if (left + desiredW > cw - margin) {
+    left = cw - margin - desiredW;
+    clampedLeftMax = true;
+  }
+
+  tutorialEl.style.left = left + 'px';
+  tutorialEl.style.top = top + 'px';
+  tutorialEl.style.width = desiredW + 'px';
+  tutorialEl.style.height = desiredH + 'px';
+  tutorialLayoutW = desiredW;
+  tutorialLayoutH = desiredH;
+}
+
+function startTutorialDragAnimation() {
+  if (!tutorialEl) return;
+  var hand = tutorialEl.querySelector('.tutorial-hand');
+  if (!hand) return;
+  tutorialDragStartTs = performance.now();
+
+  // Make the drag tutorial hand significantly larger.
+  hand.style.setProperty('--handSize', '96px');
+
+  function tick(now) {
+    tutorialAnimRaf = 0;
+    if (!tutorialEl || !tutorialEl.classList.contains('visible') || tutorialMode !== 'drag') return;
+
+    layoutDragTutorialBox();
+
+    var rect = tutorialEl.getBoundingClientRect();
+    var localW = rect.width > 0.5 ? rect.width : tutorialLayoutW;
+    var localH = rect.height > 0.5 ? rect.height : tutorialLayoutH;
+    // Large motion centered in the stage, biased slightly downward.
+    var cx = localW * 0.50;
+    var cy = localH * 0.62;
+    var a = Math.max(70, Math.min(170, localW * 0.28));
+    var b = Math.max(42, Math.min(120, localH * 0.34));
+    var t = ((now - tutorialDragStartTs) / 1900) * Math.PI * 2;
+    var p = fig8Point(t, cx, cy, a, b);
+
+    // Place hand such that its fingertip hotspot is at p.
+    hand.style.position = 'absolute';
+    hand.style.left = p.x + 'px';
+    hand.style.top = p.y + 'px';
+
+    tutorialAnimRaf = requestAnimationFrame(tick);
+  }
+  tutorialAnimRaf = requestAnimationFrame(tick);
+}
+
+function startTutorialTapAnimation() {
+  if (!tutorialEl) return;
+  var hand = tutorialEl.querySelector('.tutorial-hand');
+  if (!hand) return;
+  tutorialTapStartTs = performance.now();
+  hand.style.setProperty('--handSize', '96px');
+
+  function tick(now) {
+    tutorialAnimRaf = 0;
+    if (!tutorialEl || !tutorialEl.classList.contains('visible') || tutorialMode !== 'tap') return;
+
+    layoutDragTutorialBox();
+
+    var rect = tutorialEl.getBoundingClientRect();
+    var localW = rect.width > 0.5 ? rect.width : tutorialLayoutW;
+    var localH = rect.height > 0.5 ? rect.height : tutorialLayoutH;
+    var cx = localW * 0.50;
+    var cy = localH * 0.62;
+
+    // Keep tap hand fully visible inside the stage across portrait/landscape.
+    var fitHandSize = Math.max(56, Math.min(104, Math.round(localH * 0.72)));
+    hand.style.setProperty('--handSize', fitHandSize + 'px');
+    var hsyForFit = fitHandSize * 1.5 / 16;
+    var minCy = hsyForFit + 4;
+    var maxCy = localH - fitHandSize + hsyForFit - 4;
+    if (maxCy < minCy) {
+      cy = localH * 0.5;
+    } else {
+      if (cy < minCy) cy = minCy;
+      if (cy > maxCy) cy = maxCy;
+    }
+
+    // Faster tap loop; tap occurs ~100ms after showing.
+    var cycleMs = 650;
+    var elapsed = now - tutorialTapStartTs;
+    var phase = (elapsed % cycleMs) / cycleMs;
+    var scale = 1;
+    // Press between ~80ms..160ms.
+    if (phase > 0.12 && phase < 0.25) {
+      var k = (phase - 0.12) / (0.25 - 0.12);
+      scale = 1 - 0.12 * Math.sin(k * Math.PI);
+    }
+
+    hand.style.position = 'absolute';
+    hand.style.left = cx + 'px';
+    hand.style.top = cy + 'px';
+    hand.style.transform = 'translate(calc(-1 * var(--hsx)), calc(-1 * var(--hsy))) scale(' + scale.toFixed(3) + ')';
+
+    // Fire ripple right after ~100ms.
+    var isTapMoment = phase > 0.15 && phase < 0.17;
+    if (isTapMoment && !hand.__tapArmed) {
+      hand.__tapArmed = true;
+      emitTutorialTapRipplesAt(cx, cy);
+      setTimeout(function(){ hand.__tapArmed = false; }, 180);
+    }
+
+    tutorialAnimRaf = requestAnimationFrame(tick);
+  }
+  tutorialAnimRaf = requestAnimationFrame(tick);
+}
+
+function emitTutorialTapRipplesAt(x, y) {
+  if (!tutorialEl) return;
+  var rings = [
+    { cls: 'tutorial-ripple', size: 14, color: 'rgba(255,255,255,0.92)', dur: 520, delay: 0 },
+    { cls: 'tutorial-ripple secondary', size: 22, color: 'rgba(0,0,0,0.95)', dur: 600, delay: 25 },
+    { cls: 'tutorial-ripple secondary', size: 30, color: 'rgba(255,255,255,0.85)', dur: 680, delay: 45 }
+  ];
+  for (var i = 0; i < rings.length; i++) {
+    (function(ring){
+      var el = document.createElement('div');
+      el.className = ring.cls;
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+      el.style.width = ring.size + 'px';
+      el.style.height = ring.size + 'px';
+      el.style.borderColor = ring.color;
+      el.style.animation = 'tutorial-ripplePop ' + ring.dur + 'ms ease-out forwards';
+      el.style.animationDelay = ring.delay + 'ms';
+      tutorialEl.appendChild(el);
+      setTimeout(function(){ if (el.parentNode) el.parentNode.removeChild(el); }, ring.dur + ring.delay + 80);
+    })(rings[i]);
+  }
+}
+
+function armTutorialCountdown() {
+  if (tutorialCountdownEnabled) return;
+  tutorialCountdownEnabled = true;
+  if (tutorialEl && tutorialEl.classList.contains('visible') && tutorialPendingDuration > 0) {
+    startTutorialTimeout(tutorialPendingDuration);
+    tutorialPendingDuration = 0;
+  }
+}
+
+function showTutorialMessage(text, durationMs) {
+  if (!tutorialEl) return;
+  if (tutorialTimeoutId) {
+    clearTimeout(tutorialTimeoutId);
+    tutorialTimeoutId = 0;
+  }
+  tutorialPendingDuration = 0;
+  tutorialEl.textContent = text;
+  tutorialEl.classList.add('visible');
+  if (durationMs && durationMs > 0) {
+    if (tutorialCountdownEnabled) {
+      startTutorialTimeout(durationMs);
+    } else {
+      tutorialPendingDuration = durationMs;
+    }
+  }
+}
+
+function positionTutorial(anchorX, anchorY) {
+  if (!tutorialEl || !tutorialEl.classList.contains('visible') || !mainCanvasContainer) return;
+  if (tutorialEl.classList.contains('tutorial-bottom')) return;
+  var containerW = mainCanvasContainer.clientWidth;
+  var containerH = mainCanvasContainer.clientHeight;
+  var bubbleW = tutorialEl.offsetWidth || 220;
+  var bubbleH = tutorialEl.offsetHeight || 48;
+  var x = anchorX + 16;
+  var y = anchorY - bubbleH - 18;
+  if (x + bubbleW > containerW - 8) x = containerW - bubbleW - 8;
+  if (x < 8) x = 8;
+  if (y < 8) y = anchorY + 18;
+  if (y + bubbleH > containerH - 8) y = containerH - bubbleH - 8;
+  tutorialEl.style.left = Math.round(x) + 'px';
+  tutorialEl.style.top = Math.round(y) + 'px';
+}
+
+function maybeStartOcclusionOffset(touch) {
+  if (!mainCanvasContainer) {
+    setCursorOffsetTarget(0, 0, 110);
+    return;
+  }
+  var rect = mainCanvasContainer.getBoundingClientRect();
+  var localTouchX = touch.clientX - rect.left;
+  var localTouchY = touch.clientY - rect.top;
+  var anchor = getCursorAnchorPx();
+  var iconSize = getCursorBaseSize();
+  var hotspot = getCursorHotspot(iconSize, hoveredIsLink);
+  var iconLeft = anchor.x + cursorOffsetX - hotspot.x;
+  var iconTop = anchor.y + cursorOffsetY - hotspot.y;
+  var iconCx = iconLeft + iconSize * 0.5;
+  var iconCy = iconTop + iconSize * 0.5;
+  var dxTouch = localTouchX - iconCx;
+  var dyTouch = localTouchY - iconCy;
+  var radius = iconSize * 0.95;
+  if (dxTouch * dxTouch + dyTouch * dyTouch <= radius * radius) {
+    // Displace relative to finger position, not cursor anchor, so the cursor
+    // dodges away from where the finger actually is
+    var fingerDx = localTouchX - anchor.x;
+    var fingerDy = localTouchY - anchor.y;
+    var offset = chooseCursorOffset(localTouchX, localTouchY, iconSize, hotspot);
+    setCursorOffsetTarget(offset.x + fingerDx, offset.y + fingerDy, 300);
+  } else {
+    setCursorOffsetTarget(0, 0, 110);
+  }
+}
+
+function emitTapRipple(localX, localY) {
+  if (!rippleLayerEl) return;
+  var rings = [
+    { cls: 'touch-ripple', size: 34, color: 'rgba(255,255,255,0.95)', ttl: 340 },
+    { cls: 'touch-ripple secondary', size: 50, color: 'rgba(0,0,0,0.95)', ttl: 360 },
+    { cls: 'touch-ripple secondary', size: 66, color: 'rgba(255,255,255,0.85)', ttl: 390 }
+  ];
+  for (var i = 0; i < rings.length; i++) {
+    (function(ring) {
+      var el = document.createElement('div');
+      el.className = ring.cls;
+      el.style.left = localX + 'px';
+      el.style.top = localY + 'px';
+      el.style.width = ring.size + 'px';
+      el.style.height = ring.size + 'px';
+      el.style.borderColor = ring.color;
+      rippleLayerEl.appendChild(el);
+      setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, ring.ttl);
+    })(rings[i]);
+  }
+}
+
+function emitColorBurst(localX, localY, hexColor) {
+  if (!rippleLayerEl) return;
+
+  var rgb = hexToRgb(hexColor);
+  var r = rgb.r, g = rgb.g, b = rgb.b;
+
+  // Expanding colour rings — staggered sizes and delays
+  var rings = [
+    { size: 60,  border: 3,   opacity: 0.9,  delay: 0,   duration: 420 },
+    { size: 90,  border: 2.5, opacity: 0.75, delay: 50,  duration: 480 },
+    { size: 130, border: 2,   opacity: 0.6,  delay: 110, duration: 540 },
+    { size: 170, border: 1.5, opacity: 0.4,  delay: 180, duration: 600 },
+  ];
+  for (var i = 0; i < rings.length; i++) {
+    (function(ring) {
+      var el = document.createElement('div');
+      el.className = 'touch-color-burst';
+      el.style.left = localX + 'px';
+      el.style.top = localY + 'px';
+      el.style.width = ring.size + 'px';
+      el.style.height = ring.size + 'px';
+      el.style.border = ring.border + 'px solid rgba(' + r + ',' + g + ',' + b + ',' + ring.opacity + ')';
+      el.style.setProperty('--burst-opacity', String(ring.opacity));
+      el.style.animation = 'color-burst-ring ' + ring.duration + 'ms ease-out ' + ring.delay + 'ms forwards';
+      rippleLayerEl.appendChild(el);
+      setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, ring.delay + ring.duration + 50);
+    })(rings[i]);
+  }
+
+  // Radiating dots/particles flying outward
+  var dotCount = 10;
+  for (var j = 0; j < dotCount; j++) {
+    (function(idx) {
+      var angle = (Math.PI * 2 * idx / dotCount) + (Math.random() - 0.5) * 0.4;
+      var dist = 35 + Math.random() * 40;
+      var tx = Math.cos(angle) * dist;
+      var ty = Math.sin(angle) * dist;
+      var dotSize = 3 + Math.random() * 3;
+      var duration = 350 + Math.random() * 200;
+      var delay = Math.random() * 80;
+
+      var el = document.createElement('div');
+      el.className = 'touch-color-dot';
+      el.style.left = localX + 'px';
+      el.style.top = localY + 'px';
+      el.style.width = dotSize + 'px';
+      el.style.height = dotSize + 'px';
+      el.style.backgroundColor = 'rgba(' + r + ',' + g + ',' + b + ',0.95)';
+      el.style.setProperty('--dot-tx', tx + 'px');
+      el.style.setProperty('--dot-ty', ty + 'px');
+      el.style.animation = 'color-burst-dot ' + duration + 'ms ease-out ' + delay + 'ms forwards';
+      rippleLayerEl.appendChild(el);
+      setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, delay + duration + 50);
+    })(j);
+  }
+
+  // Central flash — a brief filled circle
+  var flash = document.createElement('div');
+  flash.className = 'touch-color-burst';
+  flash.style.left = localX + 'px';
+  flash.style.top = localY + 'px';
+  flash.style.width = '20px';
+  flash.style.height = '20px';
+  flash.style.backgroundColor = 'rgba(' + r + ',' + g + ',' + b + ',0.7)';
+  flash.style.animation = 'color-burst-ring 300ms ease-out forwards';
+  flash.style.setProperty('--burst-opacity', '0.7');
+  rippleLayerEl.appendChild(flash);
+  setTimeout(function() { if (flash.parentNode) flash.parentNode.removeChild(flash); }, 350);
+}
+
+function renderTouchCursorOverlay() {
+  if (!cursorLayerEl || !cursorIconEl || !cursorUseEl) return;
+  if (!touchMode || !cursorVisible || gameState == null || images.length === 0) {
+    cursorLayerEl.style.display = 'none';
+    return;
+  }
+
+  var now = Date.now();
+  updateCursorOffset(now);
+  updateCursorHover();
+
+  var isHand = hoveredIsLink;
+  var baseSize = getCursorBaseSize();
+  var dragScale = cursorDragging ? 1.07 : 1.0;
+  var tapScale = now < cursorTapUntil ? 0.90 : 1.0;
+  var iconSize = Math.round(baseSize * dragScale * tapScale);
+  var anchor = getCursorAnchorPx();
+  var hotspot = getCursorHotspot(iconSize, isHand);
+  var left = Math.round(anchor.x + cursorOffsetX - hotspot.x);
+  var top = Math.round(anchor.y + cursorOffsetY - hotspot.y);
+
+  var referenceColor = getCursorReferenceBackgroundColor(isHand);
+  var fillColor = chooseClosestBlackOrWhite(referenceColor);
+  if (isHand && hoveredIsLink && hoveredColorIndex >= 0 && hoveredColorIndex < colorPalette.length) {
+    fillColor = colorPalette[hoveredColorIndex];
+  }
+  var strokeColor = getContrastingStroke(fillColor);
+
+  cursorUseEl.setAttribute('href', isHand ? '#icon-cursor-hand' : '#icon-cursor-arrow');
+  cursorIconEl.style.left = left + 'px';
+  cursorIconEl.style.top = top + 'px';
+  cursorIconEl.style.width = iconSize + 'px';
+  cursorIconEl.style.height = iconSize + 'px';
+  cursorIconEl.style.setProperty('--cursor-fill', fillColor);
+  cursorIconEl.style.setProperty('--cursor-stroke', strokeColor);
+  cursorLayerEl.style.display = 'block';
+  positionTutorial(anchor.x + cursorOffsetX, anchor.y + cursorOffsetY);
+}
+
+function updateCursorHover() {
+  var effective = getEffectiveCursorGamePos();
+  var px = Math.floor(effective.x);
+  var py = Math.floor(effective.y);
+  var gw = getGameWidth();
+  var gh = getGameHeight();
+  if (gameState && gameState.imageDats && px >= 0 && px < gw && py >= 0 && py < gh) {
+    var ch = gameState.imageDats[currentIndex][px + gw * py];
+    hoveredColorIndex = parseInt(ch, 16);
+    hoveredIsLink = gameState.hyperlinks[currentIndex][hoveredColorIndex] !== 0;
+  } else {
+    hoveredColorIndex = -1;
+    hoveredIsLink = false;
+  }
+
+  // Tap hint: only after user has been off-link at least once since first movement (re-entry rule).
+  // While over a link: show tap; when leaving: fade. Navigating clears state in activateLink.
+  if (touchMode && tutorialHasMoved && !hoveredIsLink) {
+    tutorialWasOffLinkAfterMove = true;
+  }
+  if (touchMode && tutorialHasMoved && tutorialWasOffLinkAfterMove && hoveredIsLink && !tutorialTapHintDisabled) {
+    if (tutorialMode !== 'tap' || !tutorialEl.classList.contains('visible')) {
+      setTutorialMode('tap');
+      tutorialEl.classList.add('visible');
+      cancelTutorialFadeOut();
+    }
+  } else if (touchMode && tutorialMode === 'tap' && tutorialEl && tutorialEl.classList.contains('visible') && !hoveredIsLink) {
+    fadeOutTutorialMessage();
+  }
+  wasHoverLink = hoveredIsLink;
+}
+
+function touchStart(e) {
+  if (gameState == null || images.length === 0) return;
+  e.preventDefault();
+
+  // Only track the first finger
+  if (activeTouchId !== null) return;
+  var touch = e.changedTouches[0];
+  activeTouchId = touch.identifier;
+
+  // Enter touch mode
+  if (!touchMode) {
+    touchMode = true;
+    mainCanvas.style.cursor = 'none';
+    tutorialCountdownEnabled = false;
+    tutorialHasMoved = false;
+  }
+
+  // Show cursor at center if not yet visible
+  if (!cursorVisible) {
+    var gw = getGameWidth();
+    var gh = getGameHeight();
+    cursorX = gw / 2;
+    cursorY = gh / 2;
+    cursorVisible = true;
+    updateCursorHover();
+    redraw();
+  }
+
+  // Record for tap detection
+  touchStartX = touch.clientX;
+  touchStartY = touch.clientY;
+  touchStartTime = Date.now();
+  lastTouchX = touch.clientX;
+  lastTouchY = touch.clientY;
+  cursorDragging = false;
+  // Save cursor position before occlusion offset moves it, so taps activate the original spot
+  var preTap = getEffectiveCursorGamePos();
+  tapSavedCursorX = preTap.x;
+  tapSavedCursorY = preTap.y;
+  maybeStartOcclusionOffset(touch);
+  renderTouchCursorOverlay();
+}
+
+function findTrackedTouch(e) {
+  for (var i = 0; i < e.changedTouches.length; i++) {
+    if (e.changedTouches[i].identifier === activeTouchId) {
+      return e.changedTouches[i];
+    }
+  }
+  return null;
+}
+
+function updateZoom() {
+  var gw = getGameWidth();
+  var gh = getGameHeight();
+  var w = mainCanvas.width;
+  var h = mainCanvas.height;
+  var wd = w / gw;
+  var hd = h / gh;
+  zoom = (wd < hd) ? wd : hd;
+  if (zoom < 1) zoom = 1;
+  dx = (w - gw * zoom) / 2;
+  dy = (h - gh * zoom) / 2;
+}
+
+function activateLink(linkTarget) {
+  tutorialTapHintDisabled = true;
+  if (tutorialMode === 'tap' && tutorialEl && tutorialEl.classList.contains('visible')) {
+    fadeOutTutorialMessage();
+  }
+  tutorialWasOffLinkAfterMove = false;
+
+  if (showAnimation) {
+    transition(currentIndex, linkTarget - 1);
+    currentIndex = linkTarget - 1;
+    doAnimation();
+  } else {
+    currentIndex = linkTarget - 1;
+    redraw();
+  }
+}
+
+function touchMove(e) {
+  if (gameState == null || images.length === 0) return;
+  e.preventDefault();
+
+  var touch = findTrackedTouch(e);
+  if (!touch) return;
+
+  // Merge occlusion offset into cursor before applying drag delta so movement tracks the
+  // visible hotspot (otherwise cursorX/Y and offset fight and the bottom row can become unreachable).
+  updateCursorOffset(Date.now());
+
+  // Snapshot cell before this move: a fast stroke can jump non-link→link in one event with no
+  // intermediate frame, so tutorialWasOffLinkAfterMove would stay false until a wiggle.
+  var preMove = getEffectiveCursorGamePos();
+  commitCursorOffsetToPosition();
+  var oldPx = Math.floor(preMove.x);
+  var oldPy = Math.floor(preMove.y);
+
+  // Calculate delta in screen pixels
+  var deltaX = touch.clientX - lastTouchX;
+  var deltaY = touch.clientY - lastTouchY;
+  lastTouchX = touch.clientX;
+  lastTouchY = touch.clientY;
+  if (Math.abs(deltaX) + Math.abs(deltaY) > 1) {
+    cursorDragging = true;
+    tutorialHasMoved = true;
+    armTutorialCountdown();
+  }
+
+  // Convert to game-pixel delta
+  var gameDeltaX = (deltaX / zoom) * POINTER_SPEED;
+  var gameDeltaY = (deltaY / zoom) * POINTER_SPEED;
+
+  // Update cursor position (float)
+  var gw = getGameWidth();
+  var gh = getGameHeight();
+  cursorX = Math.max(0, Math.min(gw - 1, cursorX + gameDeltaX));
+  cursorY = Math.max(0, Math.min(gh - 1, cursorY + gameDeltaY));
+
+  if (touchMode && tutorialHasMoved && !isLinkAtGameCell(oldPx, oldPy)) {
+    tutorialWasOffLinkAfterMove = true;
+  }
+
+  updateCursorHover();
+  // Drag hint: stay until user leaves a link if they "started" on one; otherwise fade once movement counts.
+  if (tutorialHasMoved && tutorialMode === 'drag') {
+    if (!hoveredIsLink || tutorialWasOffLinkAfterMove) {
+      fadeOutTutorialMessage();
+    }
+  }
+  redraw();
+}
+
+function touchEnd(e) {
+  if (gameState == null || images.length === 0) return;
+  e.preventDefault();
+
+  var touch = findTrackedTouch(e);
+  if (!touch) return;
+
+  activeTouchId = null;
+  lastTouchTime = Date.now();
+  cursorDragging = false;
+
+  // Tap detection
+  var totalMove = Math.abs(touch.clientX - touchStartX) + Math.abs(touch.clientY - touchStartY);
+  var elapsed = Date.now() - touchStartTime;
+
+  if (totalMove < TAP_THRESHOLD && elapsed < TAP_TIME_THRESHOLD) {
+    // Snap cursor back to pre-offset position so the tap activates
+    // what was under the cursor before occlusion moved it
+    cursorX = tapSavedCursorX;
+    cursorY = tapSavedCursorY;
+    resetCursorOffset();
+    updateCursorHover();
+    cursorTapUntil = Date.now() + 120;
+    startCursorOverlayAnimation();
+    var anchor = getCursorAnchorPx();
+    emitTapRipple(anchor.x, anchor.y);
+    // It's a tap — activate hovered link; emit a colour burst for feedback
+    if (hoveredIsLink && !animating && hoveredColorIndex >= 0) {
+      if (hoveredColorIndex < colorPalette.length) {
+        emitColorBurst(anchor.x, anchor.y, colorPalette[hoveredColorIndex]);
+      }
+      var linkTarget = gameState.hyperlinks[currentIndex][hoveredColorIndex];
+      if (linkTarget > 0) {
+        activateLink(linkTarget);
+        updateCursorHover();
+      }
+    }
+  } else {
+    commitCursorOffsetToPosition();
+    updateCursorHover();
+  }
+}
+
 function redraw(){
-  console.log("resized "+window.innerWidth +"x"+window.innerHeight);  
-  mainCanvas.width=mainCanvasContainer.clientWidth;
-  mainCanvas.height=mainCanvasContainer.clientHeight;
-  mainCanvasCtx.width=mainCanvasContainer.clientWidth;
-  mainCanvasCtx.height=mainCanvasContainer.clientHeight;
+  var cw = mainCanvasContainer.clientWidth;
+  var ch = mainCanvasContainer.clientHeight;
+  if (mainCanvas.width !== cw || mainCanvas.height !== ch) {
+    mainCanvas.width = cw;
+    mainCanvas.height = ch;
+  }
 
   if (images.length>0){
 
@@ -935,29 +2196,20 @@ function redraw(){
     mainCanvasCtx.webkitImageSmoothingEnabled = false;
     mainCanvasCtx.msImageSmoothingEnabled = false;
 
-    var w = mainCanvasCtx.width;
-    var h = mainCanvasCtx.height;
-    var wd = w/160.0;
-    var hd = h/100.0;
-    zoom=1;
-    if (wd<hd){
-      zoom=wd;//Math.floor(wd);
-    } else {
-      zoom=hd;//Math.floor(hd);
-    }
-    if(zoom<1){
-      zoom=1;
-    }
-    var dx=(w-160*zoom)/2;
-    var dy=(h-100*zoom)/2;
+    var gw = getGameWidth();
+    var gh = getGameHeight();
+    updateZoom();
     mainCanvasCtx.fillStyle=gameState.background_color;
-    mainCanvasCtx.fillRect(0,0,w,h);
+    mainCanvasCtx.fillRect(0,0,mainCanvas.width,mainCanvas.height);
     if (curCanvasToDraw===null){
-      mainCanvasCtx.drawImage(images[currentIndex],0,0,160,100,dx,dy,160*zoom,100*zoom);
+      mainCanvasCtx.drawImage(images[currentIndex],0,0,gw,gh,dx,dy,gw*zoom,gh*zoom);
     } else {
-      mainCanvasCtx.drawImage(curCanvasToDraw,0,0,160,100,dx,dy,160*zoom,100*zoom);
+      mainCanvasCtx.drawImage(curCanvasToDraw,0,0,gw,gh,dx,dy,gw*zoom,gh*zoom);
     }
-  } else {    
+    renderTouchCursorOverlay();
+  } else {
+    renderTouchCursorOverlay();
+    
     mainCanvasCtx.fillStyle="#ff0000";
     mainCanvasCtx.fillRect(0,0,mainCanvas.width/2,mainCanvas.height/2);
     mainCanvasCtx.fillStyle="#00ff00";
@@ -987,9 +2239,11 @@ function redraw(){
   var target=0;
 
   function printNonZeros(a,stack){
+    var gw = getGameWidth();
+    var gh = getGameHeight();
     var count=0;
-    for (var i=0;i<160;i++){
-      for (var j=0;j<100;j++){
+    for (var i=0;i<gw;i++){
+      for (var j=0;j<gh;j++){
         if (a[j][i]!==null)
           count++;
       }
@@ -1001,14 +2255,16 @@ function redraw(){
   var hex=['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f']
 
   function calcHeatmap(cal,col,fromCal){
+    var gw = getGameWidth();
+    var gh = getGameHeight();
     var map = []
     var stack = []
     var c = hex[col]
 
     //initialize
-    for (var j=0;j<100;j++){
-      for (var i=0;i<160;i++){
-        if (cal[i+160*j]===c){
+    for (var j=0;j<gh;j++){
+      for (var i=0;i<gw;i++){
+        if (cal[i+gw*j]===c){
           var entry = [0,i,j]
           map.push([0,i,j])
           stack.push([i,j,0,i,j])
@@ -1023,9 +2279,9 @@ function redraw(){
       var cx=0;
       var cy=0;
       var count=0;
-      for (var i=0;i<160;i++){
-        for (var j=0;j<100;j++){
-          if (fromCal[i+160*j]===c){
+      for (var i=0;i<gw;i++){
+        for (var j=0;j<gh;j++){
+          if (fromCal[i+gw*j]===c){
             cx+=i;
             cy+=j;
             count++;
@@ -1035,17 +2291,18 @@ function redraw(){
       if (count>0){
         cx=Math.round(cx/count);
         cy=Math.round(cy/count);
-        for (var j=0;j<100;j++){
-          for (var i=0;i<160;i++){
-            map[i+160*j]=[0,cx,cy];
+        for (var j=0;j<gh;j++){
+          for (var i=0;i<gw;i++){
+            map[i+gw*j]=[0,cx,cy];
           }
         }
       }
     }
 
     //propagate
-    while(stack.length>0){
-      var entry = stack.shift();
+    var head = 0;
+    while(head<stack.length){
+      var entry = stack[head++];
       //[fromx,fromy,dist,tox,toy]
       var x0=entry[0];
       var y0=entry[1];
@@ -1058,12 +2315,12 @@ function redraw(){
         var n = neighbours[i];
         var nx=n[0];
         var ny=n[1];
-        if (nx<0||ny<0||nx>=160||ny>=100){
+        if (nx<0||ny<0||nx>=gw||ny>=gh){
           continue;
         }
-        var existing = map[nx+160*ny];
+        var existing = map[nx+gw*ny];
         if (existing===null||d1<existing[0]){
-          map[nx+160*ny]=[d1,xtarget,ytarget]
+          map[nx+gw*ny]=[d1,xtarget,ytarget]
           stack.push([nx,ny,d1,xtarget,ytarget])
         }
       }
@@ -1073,31 +2330,20 @@ function redraw(){
   }
 
   function generateParticleMotions(sourceCanvas,targetHeatMap,colIndex,particles,reverse){
-    if (reverse){
-      var c = hex[colIndex];
-      for (var i=0;i<160;i++){
-        for (var j=0;j<100;j++){
-          var pixel = sourceCanvas[i+160*j];
-          if (pixel===c){
-            //[d,tx,ty]
-            var target = targetHeatMap[i+160*j];
-            var tx = target[1];
-            var ty = target[2];
+    var gw = getGameWidth();
+    var gh = getGameHeight();
+    var c = hex[colIndex];
+    for (var i=0;i<gw;i++){
+      for (var j=0;j<gh;j++){
+        var pixel = sourceCanvas[i+gw*j];
+        if (pixel===c){
+          var target = targetHeatMap[i+gw*j];
+          var tx = target[1];
+          var ty = target[2];
+          if (reverse){
             if (i!==tx||j!==ty)
               particles.push([tx,ty,i,j])
-          }
-        }
-      }
-    } else {
-      var c = hex[colIndex];
-      for (var i=0;i<160;i++){
-        for (var j=0;j<100;j++){
-          var pixel = sourceCanvas[i+160*j];
-          if (pixel===c){
-            //[d,tx,ty]
-            var target = targetHeatMap[i+160*j];
-            var tx = target[1];
-            var ty = target[2];
+          } else {
             particles.push([i,j,tx,ty])
           }
         }
@@ -1106,12 +2352,9 @@ function redraw(){
   }
 
   function generateFrame(sourceImage,particleMap,progress){
-    var frame = [];
-    for (var j=0;j<100;j++){
-      for (var i=0;i<160;i++){
-        frame.push(sourceImage[i+160*j]);
-      }
-    }
+    var gw = getGameWidth();
+    var gh = getGameHeight();
+    var frame = sourceImage.split('');
 
     for (var cIndex=0;cIndex<particleMap.length;cIndex++){      
       var c = hex[cIndex]
@@ -1129,7 +2372,7 @@ function redraw(){
 //          var yt = Math.round(y0+progress*dy+Math.random()*0.5-0.25)
           var xt = Math.round(x0+progress*dx)
           var yt = Math.round(y0+progress*dy)
-          frame[xt+160*yt]=c;
+          frame[xt+gw*yt]=c;
         }
       }
     }
@@ -1141,14 +2384,10 @@ function redraw(){
     var particleMaps = []
     for (var i=0;i<16;i++){
       var forwardHeatmap = calcHeatmap(newCanvas,i,oldCanvas);
-      window.console.log("generated forward"+i);
       var backwardHeatmap = calcHeatmap(oldCanvas,i,newCanvas);
-      window.console.log("generated backward"+i);
       var particles=[]
-      var particleMotionsForward = generateParticleMotions(oldCanvas,forwardHeatmap,i,particles,false);
-      window.console.log("generated forward particles"+i);
-      var particleMotionsBackward = generateParticleMotions(newCanvas,backwardHeatmap,i,particles,true);
-      window.console.log("generated backwards particles"+i);
+      generateParticleMotions(oldCanvas,forwardHeatmap,i,particles,false);
+      generateParticleMotions(newCanvas,backwardHeatmap,i,particles,true);
       particleMaps.push(particles);      
     }
     var frames=[];
@@ -1172,7 +2411,10 @@ function redraw(){
   }
 
   function drawNextFrame(){
-      curCanvasToDraw=printCanvas(curAnimationFrames[animationIndex])[0];
+      var result = printCanvas(curAnimationFrames[animationIndex], _animScratchCanvas);
+      _animScratchCanvas = result[0];
+      _animScratchCtx = result[1];
+      curCanvasToDraw = _animScratchCanvas;
       redraw();
       animationIndex++;
       if (animationIndex<curAnimationFrames.length){
@@ -1191,53 +2433,45 @@ function redraw(){
   function mouseDown(e){
     mouseMove(e);
     if (target>0){
-      if (showAnimation){
-        transition(currentIndex,target-1);
-        currentIndex=target-1;
-        doAnimation();
-      } else {
-        currentIndex=target-1;
-        redraw();        
-      }
+      activateLink(target);
       mouseMove(e);
-    } 
+    }
   }
   function mouseMove(e){
 
     if (gameState==null){
       return;
     }
+
+    // Switch back from touch mode if real mouse detected
+    if (touchMode && (e.movementX !== 0 || e.movementY !== 0)) {
+      if (Date.now() - lastTouchTime > 500) {
+        touchMode = false;
+        cursorVisible = false;
+        cursorDragging = false;
+        mainCanvas.style.cursor = 'default';
+        if (cursorLayerEl) cursorLayerEl.style.display = 'none';
+        hideTutorialMessage();
+      }
+    }
+
+    // Skip mouse cursor style changes while in touch mode
+    if (touchMode) return;
+
     var coords = getCoords(e);
 
-    var w = mainCanvasCtx.width;
-    var h = mainCanvasCtx.height;
-    var wd = w/160.0;
-    var hd = h/100.0;
-    zoom=1;
-    if (wd<hd){
-      zoom=wd;//Math.floor(wd);
-    } else {
-      zoom=hd;//Math.floor(hd);
-    }
-    if(zoom<1){
-      zoom=1;
-    }
-    var dx=(w-160*zoom)/2;
-    var dy=(h-100*zoom)/2;
+    var gw = getGameWidth();
+    var gh = getGameHeight();
+    updateZoom();
 
     var x=Math.floor((coords[0]-dx)/zoom);
     var y=Math.floor((coords[1]-dy)/zoom);
     target=0;
-    if(x>=0&&x<160&&y>=0&&y<100) {
-      var ch = gameState.imageDats[currentIndex][x+160*y];
+    if(x>=0&&x<gw&&y>=0&&y<gh) {
+      var ch = gameState.imageDats[currentIndex][x+gw*y];
       var colIndex = parseInt(ch,16);
       target=gameState.hyperlinks[currentIndex][colIndex];
-
-      if (gameState.hyperlinks[currentIndex][colIndex]!=0) {
-        mainCanvas.style.cursor="pointer";        
-      } else {
-        mainCanvas.style.cursor="default";        
-      }
+      mainCanvas.style.cursor = target !== 0 ? "pointer" : "default";
 
     } else {
       mainCanvas.style.cursor="default";
@@ -1250,24 +2484,16 @@ function get_page_data() {
     return getData({
         onSuccess: function(code) {
             loadState(code);
-            
-            var homepage = gameState.gameLink;
-            var homepageLink = document.getElementById("homeLink");
-            if (homepageLink) {
-                homepageLink.innerHTML = strip_http(homepage);
-                if (!homepage.match(/^https?:\/\//)) {
-                    homepage = "http://" + homepage;
-                }
-                homepageLink.href = homepage;
-            }
-      
+
             var hacklink = document.getElementById("hackLink");
             if (hacklink) {
-                var id = getParameterByName("p").replace(/[\\\/]/, "");
-                var url = "index.html?p=" + id;
-                url = qualifyURL(url);
-                hacklink.href = url;
-                hacklink.innerHTML = "&sdotb; edit";
+                if (isLocalTestMode()) {
+                    hacklink.href = qualifyURL("index.html?test");
+                } else {
+                    var id = getParameterByName("p").replace(/[\\\/]/, "");
+                    hacklink.href = qualifyURL("index.html?p=" + id);
+                }
+                hacklink.innerHTML = t("edit_link_label_html");
             }
             
             // Call renderImages if it exists
@@ -1284,6 +2510,11 @@ function get_page_data() {
             }
             
             renderImages();
+        }
+        ,
+        onError: function(message) {
+            console.error(message);
+            alert(message);
         }
     });
 }
@@ -1303,6 +2534,32 @@ function init(){
   mainCanvas.addEventListener('mousemove', mouseMove,false);
   mainCanvas.addEventListener('mousedown', mouseDown,false);
 
+  mainCanvas.addEventListener('touchstart', touchStart, {passive: false});
+  mainCanvas.addEventListener('touchmove', touchMove, {passive: false});
+  mainCanvas.addEventListener('touchend', touchEnd, {passive: false});
+  mainCanvas.addEventListener('touchcancel', function(e) {
+    activeTouchId = null;
+    lastTouchTime = Date.now();
+    cursorDragging = false;
+    commitCursorOffsetToPosition();
+    updateCursorHover();
+    redraw();
+  }, false);
+
+  initTouchCursorOverlay();
+
+  var hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
+  if (hasTouch) {
+    touchMode = true;
+    cursorVisible = true;
+    mainCanvas.style.cursor = 'none';
+    tutorialCountdownEnabled = false;
+    tutorialHasMoved = false;
+    setTutorialMode('drag');
+    tutorialEl.classList.add('visible');
+    // Persist until first movement; fade out when tutorialHasMoved becomes true.
+  }
+
   redraw();
 
   get_page_data();
@@ -1320,20 +2577,47 @@ function init(){
 
 var images = new Array();
 var imageCtxts = new Array();
+var _animScratchCanvas = null;
+var _animScratchCtx = null;
 
-function printCanvas(descriptionString){
-    var canvas = document.createElement('canvas');
-    canvas.width="160";
-    canvas.height="100";
-    var ctx=canvas.getContext("2d");
-    for (var j=0;j<descriptionString.length;j++){
-      var x = j%160;
-      var y = Math.floor(j/160);
-      var ch=descriptionString[j];
-      var colIndex = parseInt(ch,16);
-      ctx.fillStyle=colorPalette[colIndex];
-      ctx.fillRect(x,y,1,1);
+var _paletteRgba = null;
+function getPaletteRgba() {
+  if (_paletteRgba && _paletteRgba.palette === colorPalette) return _paletteRgba.data;
+  var data = new Array(16);
+  for (var i = 0; i < 16; i++) {
+    var rgb = hexToRgb(colorPalette[i] || '#000000');
+    data[i] = [rgb.r, rgb.g, rgb.b, 255];
+  }
+  _paletteRgba = { palette: colorPalette, data: data };
+  return data;
+}
+
+function printCanvas(descriptionString, reuseCanvas){
+    var gw = getGameWidth();
+    var gh = getGameHeight();
+    var canvas, ctx;
+    if (reuseCanvas && reuseCanvas.width === gw && reuseCanvas.height === gh) {
+      canvas = reuseCanvas;
+      ctx = canvas.getContext("2d");
+    } else {
+      canvas = document.createElement('canvas');
+      canvas.width = gw;
+      canvas.height = gh;
+      ctx = canvas.getContext("2d");
     }
+    var imgData = ctx.createImageData(gw, gh);
+    var pixels = imgData.data;
+    var rgba = getPaletteRgba();
+    for (var j=0;j<descriptionString.length;j++){
+      var colIndex = parseInt(descriptionString[j],16);
+      var c = rgba[colIndex];
+      var off = j * 4;
+      pixels[off]   = c[0];
+      pixels[off+1] = c[1];
+      pixels[off+2] = c[2];
+      pixels[off+3] = 255;
+    }
+    ctx.putImageData(imgData, 0, 0);
     return [canvas,ctx];
 }
 
@@ -1370,16 +2654,34 @@ function goFullscreen(evt){
     }
   }
 }
-document.addEventListener("keydown", goFullscreen);
 
 </script>
 </head>
 <body onload="init()" onkeydown="goFullscreen(event);">
+<svg id="touch-cursor-symbols" xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true" focusable="false">
+  <symbol id="icon-cursor-arrow" viewBox="0 0 16 16">
+    <g transform="translate(16,0) scale(-1,1)">
+      <path fill="var(--cursor-fill, #ffffff)" d="M2.25 8.184l3.897 1.67a.5.5 0 0 1 .262.263l1.67 3.897L12.743 3.52z"/>
+      <path fill="var(--cursor-stroke, #000000)" d="M14.082 2.182a.5.5 0 0 1 .103.557L8.528 15.467a.5.5 0 0 1-.917-.007L5.57 10.694.803 8.652a.5.5 0 0 1-.006-.916l12.728-5.657a.5.5 0 0 1 .556.103zM2.25 8.184l3.897 1.67a.5.5 0 0 1 .262.263l1.67 3.897L12.743 3.52z"/>
+    </g>
+  </symbol>
+  <symbol id="icon-cursor-hand" viewBox="0 0 16 16">
+    <path fill="var(--cursor-fill, #ffffff)" d="M8.5 4.466V1.75a1.75 1.75 0 1 0-3.5 0v5.34l-1.2.24a1.5 1.5 0 0 0-1.196 1.636l.345 3.106a2.5 2.5 0 0 0 .405 1.11l1.433 2.15A1.5 1.5 0 0 0 6.035 16h6.385a1.5 1.5 0 0 0 1.302-.756l1.395-2.441a3.5 3.5 0 0 0 .444-1.389l.271-2.715a2 2 0 0 0-1.99-2.199h-.581a5 5 0 0 0-.195-.248c-.191-.229-.51-.568-.88-.716-.364-.146-.846-.132-1.158-.108l-.132.012a1.26 1.26 0 0 0-.56-.642 2.6 2.6 0 0 0-.738-.288c-.31-.062-.739-.058-1.05-.046zm2.094 2.025"/>
+    <path fill="var(--cursor-stroke, #000000)" d="M6.75 1a.75.75 0 0 1 .75.75V8a.5.5 0 0 0 1 0V5.467l.086-.004c.317-.012.637-.008.816.027.134.027.294.096.448.182.077.042.15.147.15.314V8a.5.5 0 1 0 1 0V6.435l.106-.01c.316-.024.584-.01.708.04.118.046.3.207.486.43.081.096.15.19.2.259V8.5a.5.5 0 0 0 1 0v-1h.342a1 1 0 0 1 .995 1.1l-.271 2.715a2.5 2.5 0 0 1-.317.991l-1.395 2.442a.5.5 0 0 1-.434.252H6.035a.5.5 0 0 1-.416-.223l-1.433-2.15a1.5 1.5 0 0 1-.243-.666l-.345-3.105a.5.5 0 0 1 .399-.546L5 8.11V9a.5.5 0 0 0 1 0V1.75A.75.75 0 0 1 6.75 1M8.5 4.466V1.75a1.75 1.75 0 1 0-3.5 0v5.34l-1.2.24a1.5 1.5 0 0 0-1.196 1.636l.345 3.106a2.5 2.5 0 0 0 .405 1.11l1.433 2.15A1.5 1.5 0 0 0 6.035 16h6.385a1.5 1.5 0 0 0 1.302-.756l1.395-2.441a3.5 3.5 0 0 0 .444-1.389l.271-2.715a2 2 0 0 0-1.99-2.199h-.581a5 5 0 0 0-.195-.248c-.191-.229-.51-.568-.88-.716-.364-.146-.846-.132-1.158-.108l-.132.012a1.26 1.26 0 0 0-.56-.642 2.6 2.6 0 0 0-.738-.288c-.31-.062-.739-.058-1.05-.046zm2.094 2.025"/>
+  </symbol>
+</svg>
 <div id="header">
 </div>
 <p>
 <div id="content">
 <canvas id="mainCanvas"></canvas>
+<div id="touch-cursor-layer" aria-hidden="true">
+  <svg id="touch-cursor-icon" viewBox="0 0 16 16">
+    <use id="touch-cursor-use" href="#icon-cursor-arrow"></use>
+  </svg>
+  <div id="touch-ripple-layer"></div>
+  <div id="touch-tutorial"></div>
+</div>
 </div>
 <p>
 <div id="footer">
