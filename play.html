@@ -1833,7 +1833,7 @@ function maybeStartOcclusionOffset(touch) {
     var fingerDx = localTouchX - anchor.x;
     var fingerDy = localTouchY - anchor.y;
     var offset = chooseCursorOffset(localTouchX, localTouchY, iconSize, hotspot);
-    setCursorOffsetTarget(offset.x + fingerDx, offset.y + fingerDy, 120);
+    setCursorOffsetTarget(offset.x + fingerDx, offset.y + fingerDy, 300);
   } else {
     setCursorOffsetTarget(0, 0, 110);
   }
