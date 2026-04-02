@@ -789,8 +789,10 @@
         var newScale = Math.max(VIEW_MIN_SCALE, Math.min(VIEW_MAX_SCALE, viewScale * factor));
         if (newScale !== viewScale) {
           var canvasRect = visibleCanvas.getBoundingClientRect();
-          var anchorX = (evt.clientX - canvasRect.left) / viewScale;
-          var anchorY = (evt.clientY - canvasRect.top) / viewScale;
+          var ow = visibleCanvas.offsetWidth;
+          var oh = visibleCanvas.offsetHeight;
+          var anchorX = canvasRect.width > 0 ? (evt.clientX - canvasRect.left) / canvasRect.width * ow : 0;
+          var anchorY = canvasRect.height > 0 ? (evt.clientY - canvasRect.top) / canvasRect.height * oh : 0;
           viewOffsetX = viewOffsetX + anchorX * (viewScale - newScale);
           viewOffsetY = viewOffsetY + anchorY * (viewScale - newScale);
           viewScale = newScale;
@@ -2211,7 +2213,8 @@
 
     function applyViewTransform() {
       if (!visibleCanvas) return;
-      if (viewScale === 1 && viewOffsetX === 0 && viewOffsetY === 0) {
+      var identity = viewScale === 1 && viewOffsetX === 0 && viewOffsetY === 0;
+      if (identity) {
         visibleCanvas.style.transform = '';
         visibleCanvas.style.transformOrigin = '';
         visibleCanvas.style.imageRendering = '';
@@ -2226,18 +2229,26 @@
       viewScale = 1;
       viewOffsetX = 0;
       viewOffsetY = 0;
+      clampViewOffset();
       applyViewTransform();
     }
 
     function clampViewOffset() {
       if (!visibleCanvas) return;
-      var cw = visibleCanvas.width * viewScale;
-      var ch = visibleCanvas.height * viewScale;
       var container = visibleCanvas.parentElement;
       if (!container) return;
-      var rect = container.getBoundingClientRect();
-      var pw = rect.width;
-      var ph = rect.height;
+      /* Layout px only: client/offset sizes match each other; container getBoundingClientRect mixed with bitmap cw and broke clamp under #desktop-editor-inner scale. */
+      var cw = visibleCanvas.offsetWidth * viewScale;
+      var ch = visibleCanvas.offsetHeight * viewScale;
+      var pw = container.clientWidth;
+      var ph = container.clientHeight;
+      if (pw <= 0 || ph <= 0 || cw <= 0 || ch <= 0) {
+        cw = visibleCanvas.width * viewScale;
+        ch = visibleCanvas.height * viewScale;
+        var rectFb = container.getBoundingClientRect();
+        pw = rectFb.width;
+        ph = rectFb.height;
+      }
 
       if (cw <= pw) {
         viewOffsetX = (pw - cw) / 2;
@@ -2284,8 +2295,10 @@
           pinchStartOffsetX = viewOffsetX;
           pinchStartOffsetY = viewOffsetY;
           var canvasRect = visibleCanvas.getBoundingClientRect();
-          pinchAnchorX = (pinchStartCenterX - canvasRect.left) / viewScale;
-          pinchAnchorY = (pinchStartCenterY - canvasRect.top) / viewScale;
+          var owp = visibleCanvas.offsetWidth;
+          var ohp = visibleCanvas.offsetHeight;
+          pinchAnchorX = canvasRect.width > 0 ? (pinchStartCenterX - canvasRect.left) / canvasRect.width * owp : 0;
+          pinchAnchorY = canvasRect.height > 0 ? (pinchStartCenterY - canvasRect.top) / canvasRect.height * ohp : 0;
         }
         e.preventDefault();
       }
