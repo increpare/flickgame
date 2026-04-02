@@ -213,24 +213,6 @@ a {
   0% { opacity: 0.70; filter: blur(0px); }
   100% { opacity: 0.0; filter: blur(0.6px); }
 }
-.tutorial-ripple{
-  position:absolute;
-  left: -9999px;
-  top: -9999px;
-  border-radius: 999px;
-  transform: translate(-50%,-50%) scale(0.2);
-  opacity: 0;
-  border: 2px solid rgba(255,255,255,0.92);
-  animation: tutorial-ripplePop 520ms ease-out forwards;
-}
-.tutorial-ripple.secondary{
-  border-width: 1px;
-}
-@keyframes tutorial-ripplePop{
-  0% { opacity: 0; transform: translate(-50%,-50%) scale(0.2); }
-  10% { opacity: 0.95; }
-  100% { opacity: 0; transform: translate(-50%,-50%) scale(2.6); }
-}
 .touch-ripple {
   position: absolute;
   border-radius: 50%;
@@ -1675,6 +1657,10 @@ function startTutorialDragAnimation() {
     hand.style.left = p.x + 'px';
     hand.style.top = p.y + 'px';
 
+    if (!tutorialLastDotTs || (now - tutorialLastDotTs) > 45) {
+      tutorialLastDotTs = now;
+      spawnTutorialTrailDot(p.x, p.y);
+    }
     tutorialAnimRaf = requestAnimationFrame(tick);
   }
   tutorialAnimRaf = requestAnimationFrame(tick);
@@ -1728,41 +1714,9 @@ function startTutorialTapAnimation() {
     hand.style.top = cy + 'px';
     hand.style.transform = 'translate(calc(-1 * var(--hsx)), calc(-1 * var(--hsy))) scale(' + scale.toFixed(3) + ')';
 
-    // Fire ripple right after ~100ms.
-    var isTapMoment = phase > 0.15 && phase < 0.17;
-    if (isTapMoment && !hand.__tapArmed) {
-      hand.__tapArmed = true;
-      emitTutorialTapRipplesAt(cx, cy);
-      setTimeout(function(){ hand.__tapArmed = false; }, 180);
-    }
-
     tutorialAnimRaf = requestAnimationFrame(tick);
   }
   tutorialAnimRaf = requestAnimationFrame(tick);
-}
-
-function emitTutorialTapRipplesAt(x, y) {
-  if (!tutorialEl) return;
-  var rings = [
-    { cls: 'tutorial-ripple', size: 14, color: 'rgba(255,255,255,0.92)', dur: 520, delay: 0 },
-    { cls: 'tutorial-ripple secondary', size: 22, color: 'rgba(0,0,0,0.95)', dur: 600, delay: 25 },
-    { cls: 'tutorial-ripple secondary', size: 30, color: 'rgba(255,255,255,0.85)', dur: 680, delay: 45 }
-  ];
-  for (var i = 0; i < rings.length; i++) {
-    (function(ring){
-      var el = document.createElement('div');
-      el.className = ring.cls;
-      el.style.left = x + 'px';
-      el.style.top = y + 'px';
-      el.style.width = ring.size + 'px';
-      el.style.height = ring.size + 'px';
-      el.style.borderColor = ring.color;
-      el.style.animation = 'tutorial-ripplePop ' + ring.dur + 'ms ease-out forwards';
-      el.style.animationDelay = ring.delay + 'ms';
-      tutorialEl.appendChild(el);
-      setTimeout(function(){ if (el.parentNode) el.parentNode.removeChild(el); }, ring.dur + ring.delay + 80);
-    })(rings[i]);
-  }
 }
 
 function armTutorialCountdown() {
