@@ -1827,6 +1827,8 @@
 
       var fileUploader = document.getElementById("my_file");
       fileUploader.addEventListener('change', readFile, false);
+      document.body.addEventListener('dragover', handleBodyDragOver, false);
+      document.body.addEventListener('drop', handleBodyDrop, false);
 
       window.addEventListener('mouseup', mouseUp, false);
 
@@ -1931,31 +1933,71 @@
       requestAnimationFrame(function() { updateDesktopScale(); });
     }
 
-    function readFile(evt) {
-      closeBurgerDialog();
-      var f = evt.target.files[0];
-
-      if (f) {
-        var r = new FileReader();
-        r.onload = function (e) {
-          var contents = e.target.result;
-          var fromToken = "<!--__EmbedBegin__-->";
-          var endToken = "<!--__EmbedEnd__-->";
-          var fromIndex = contents.indexOf(fromToken);
-          var endIndex = contents.indexOf(endToken);
-          var ss1 = contents.substr(fromIndex + fromToken.length, endIndex - fromIndex - fromToken.length);
-          var ss2 = ss1.substr(ss1.indexOf("\"") + 1);
-          var left_removed = decodeURI(ss2);
-          // we want to find the location of the *final* double-quote, and to remove
-          // everything after that.
-          var final_quote_index = left_removed.lastIndexOf("\"");
-          var left_right_removed = left_removed.substring(0, final_quote_index);
-          loadAndDisplayState(left_right_removed);
-        }
-        r.readAsText(f);
-      } else {
-        alert("Failed to load file");
+    function parseEmbeddedStateFromHtml(contents) {
+      var fromToken = "<!--__EmbedBegin__-->";
+      var endToken = "<!--__EmbedEnd__-->";
+      var fromIndex = contents.indexOf(fromToken);
+      var endIndex = contents.indexOf(endToken);
+      if (fromIndex < 0 || endIndex < 0 || endIndex <= fromIndex) {
+        throw new Error("Couldn't find embedded flickgame data in this HTML file.");
       }
+      var ss1 = contents.substr(fromIndex + fromToken.length, endIndex - fromIndex - fromToken.length);
+      var firstQuoteIndex = ss1.indexOf("\"");
+      if (firstQuoteIndex < 0) {
+        throw new Error("Embedded flickgame data is malformed.");
+      }
+      var ss2 = ss1.substr(firstQuoteIndex + 1);
+      var left_removed = decodeURI(ss2);
+      // we want to find the location of the *final* double-quote, and to remove
+      // everything after that.
+      var final_quote_index = left_removed.lastIndexOf("\"");
+      if (final_quote_index < 0) {
+        throw new Error("Embedded flickgame data is malformed.");
+      }
+      return left_removed.substring(0, final_quote_index);
+    }
+
+    function loadFlickgameFile(file) {
+      closeBurgerDialog();
+      if (!file) {
+        alert("Failed to load file");
+        return;
+      }
+      var r = new FileReader();
+      r.onload = function (e) {
+        try {
+          var contents = e.target.result;
+          var state = parseEmbeddedStateFromHtml(contents);
+          loadAndDisplayState(state);
+        } catch (err) {
+          alert(err && err.message ? err.message : "Failed to load file");
+        }
+      };
+      r.onerror = function() {
+        alert("Failed to load file");
+      };
+      r.readAsText(file);
+    }
+
+    function readFile(evt) {
+      var f = evt.target.files[0];
+      loadFlickgameFile(f);
+      evt.target.value = '';
+    }
+
+    function handleBodyDragOver(evt) {
+      if (!evt.dataTransfer) return;
+      if (evt.dataTransfer.types && Array.prototype.indexOf.call(evt.dataTransfer.types, 'Files') === -1) return;
+      evt.preventDefault();
+      evt.dataTransfer.dropEffect = 'copy';
+    }
+
+    function handleBodyDrop(evt) {
+      if (!evt.dataTransfer) return;
+      var files = evt.dataTransfer.files;
+      if (!files || files.length === 0) return;
+      evt.preventDefault();
+      loadFlickgameFile(files[0]);
     }
 
     function loadAndDisplayState(code) {
@@ -3970,7 +4012,7 @@
   </title>
 </head>
 
-<body data-layout="desktop" onload="init();" ondragstart="return false;" ondrop="return false;">
+<body data-layout="desktop" onload="init();" ondragstart="return false;">
   <div id="desktop-editor-wrapper">
   <div id="desktop-editor-inner">
   <center>
