@@ -1142,6 +1142,8 @@
       for (var i = 0; i < 16; i++) {
         var item = framePickerEl.children[i];
         if (!item) continue;
+        if (i === canvasIndex) item.classList.add('current-page');
+        else item.classList.remove('current-page');
         item.classList.remove('frame-picker-item-empty', 'frame-picker-item-unreachable');
         var empty = isCanvasEmpty(i);
         var unreachable = !empty && !reachable.has(i);
@@ -1271,6 +1273,11 @@
       var currentTarget = hyperlinks[canvasIndex][colorIdx];
       var reachable = getReachableFromStart();
       for (var i = 0; i < 16; i++) {
+        if (i === canvasIndex) {
+          items[i].classList.add('current-page');
+        } else {
+          items[i].classList.remove('current-page');
+        }
         if (currentTarget > 0 && i === currentTarget - 1) {
           items[i].classList.add('current-target');
         } else {
@@ -2237,6 +2244,7 @@
       if (!visibleCanvas) return;
       var container = visibleCanvas.parentElement;
       if (!container) return;
+      var centeredByLayout = isMobileLayout();
       /* Layout px only: client/offset sizes match each other; container getBoundingClientRect mixed with bitmap cw and broke clamp under #desktop-editor-inner scale. */
       var cw = visibleCanvas.offsetWidth * viewScale;
       var ch = visibleCanvas.offsetHeight * viewScale;
@@ -2251,13 +2259,13 @@
       }
 
       if (cw <= pw) {
-        viewOffsetX = (pw - cw) / 2;
+        viewOffsetX = centeredByLayout ? 0 : (pw - cw) / 2;
       } else {
         if (viewOffsetX > 0) viewOffsetX = 0;
         if (viewOffsetX < pw - cw) viewOffsetX = pw - cw;
       }
       if (ch <= ph) {
-        viewOffsetY = (ph - ch) / 2;
+        viewOffsetY = centeredByLayout ? 0 : (ph - ch) / 2;
       } else {
         if (viewOffsetY > 0) viewOffsetY = 0;
         if (viewOffsetY < ph - ch) viewOffsetY = ph - ch;
@@ -3183,6 +3191,28 @@
       background: rgba(255,255,255,0.15);
     }
 
+    .page-picker-item.current-page {
+      background:
+        repeating-linear-gradient(
+          -45deg,
+          rgba(255,255,255,0.10) 0 3px,
+          rgba(255,255,255,0.03) 3px 6px
+        );
+      border-style: dotted;
+      border-color: rgba(255,255,255,0.7);
+    }
+
+    .page-picker-item.current-page.current-target {
+      background:
+        repeating-linear-gradient(
+          -45deg,
+          rgba(255,255,255,0.20) 0 3px,
+          rgba(255,255,255,0.10) 3px 6px
+        );
+      border-style: solid;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.35);
+    }
+
     .page-picker-item canvas {
       width: 48px;
       height: 24px;
@@ -3783,6 +3813,16 @@
     .frame-picker-item:hover, .frame-picker-item:focus {
       background: rgba(255,255,255,0.1);
       border-color: #888;
+    }
+    .frame-picker-item.current-page {
+      background:
+        repeating-linear-gradient(
+          -45deg,
+          rgba(255,255,255,0.10) 0 3px,
+          rgba(255,255,255,0.03) 3px 6px
+        );
+      border-style: dotted;
+      border-color: rgba(255,255,255,0.7);
     }
     .frame-picker-item canvas {
       width: 48px;
