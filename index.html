@@ -441,7 +441,7 @@
           var id = result.id;
           var url = qualifyURL("play.html?p=" + id);
           var shareHtml = "<a target=\"_blank\" href=\"" + url + "\">&#8627;" + id + "</a> " +
-            '(<a onclick="githubLogOut();"  href="javascript:void(0);">log out of GitHub</a>)';
+            '<span class="share-inline-meta">(<a onclick="githubLogOut();" href="javascript:void(0);">log out of GitHub</a>)</span>';
           var shareLink = document.getElementById("shareLink");
           if (shareLink) { shareLink.innerHTML = shareHtml; shareLinkInner = shareLink.childNodes[0]; }
           var burgerShare = document.getElementById("burger-share-result");
@@ -3812,11 +3812,15 @@
     .burger-share-result {
       margin: 6px 0;
       padding: 6px 0;
-      word-break: break-all;
+      overflow-wrap: anywhere;
+      word-break: normal;
       font-size: var(--burger-menu-font-size);
     }
     .burger-share-result a {
       color: #7af;
+    }
+    .share-inline-meta {
+      white-space: nowrap;
     }
     .burger-dialog-content .burger-link-input {
       width: 100%;
