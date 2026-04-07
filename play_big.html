@@ -845,6 +845,11 @@ var palettes_compatibility_v1 = {
 };
 
 
+function upgrade_v1_to_v2(state){
+    // https://github.com/increpare/flickgame/issues/82
+    state.version = "2";
+    return state;
+}
 
 // Load state function
 function loadState(code) {

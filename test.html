@@ -890,6 +890,13 @@ function getData(options) {
 function getGameWidth() { return gameState ? (gameState.width || 160) : 160; }
 function getGameHeight() { return gameState ? (gameState.height || 100) : 100; }
 
+
+function upgrade_v1_to_v2(state){
+    // https://github.com/increpare/flickgame/issues/82
+    state.version = "2";
+    return state;
+}
+
 function loadState(code) {
   gameState = JSON.parse(code);
   if (gameState.width === undefined) gameState.width = 160;

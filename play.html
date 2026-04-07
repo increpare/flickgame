@@ -1063,6 +1063,12 @@ function getData(options) {
 };
 
   
+function upgrade_v1_to_v2(state){
+    // https://github.com/increpare/flickgame/issues/82
+    state.version = "2";
+    return state;
+}
+
 // Load state function
 function getGameWidth() { return gameState ? (gameState.width || 160) : 160; }
 function getGameHeight() { return gameState ? (gameState.height || 100) : 100; }
