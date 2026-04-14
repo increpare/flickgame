@@ -6,3 +6,7 @@ compressed
 /.claude
 /docs/superpowers
 CLAUDE.md
+
+# iOS: synced web bundle (rebuilt by Xcode Run Script or ios/scripts/sync-web-assets.sh)
+ios/FlickgameShell/FlickgameShell/www/*
+!ios/FlickgameShell/FlickgameShell/www/.gitkeep
