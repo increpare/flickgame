@@ -1709,6 +1709,9 @@
     var bgColorSelectOptions=[];
     var burgerBgSelectOptions=[];
     function init() {
+      if (window.FLICKGAME_IOS_APP) {
+        document.body.setAttribute('data-host', 'ios-app');
+      }
       updatePaletteRGB();
       for (var i = 0; i < 16; i++) {
         paletteContrastColors[i] = contrastTextColor(colorPalette[i]);
