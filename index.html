@@ -1987,7 +1987,8 @@
           closeBurgerDialog();
           requestAnimationFrame(function() {
             requestAnimationFrame(function() {
-              updateMobileCanvasSize();
+              if (isProjectBlank()) newFlickgame(true);
+              else updateMobileCanvasSize();
               updateMobileToolbarBottomScale();
             });
           });
@@ -2002,7 +2003,8 @@
           hideFramePicker();
           closeBurgerDialog();
           requestAnimationFrame(function() {
-            updateDesktopScale();
+            if (isProjectBlank()) newFlickgame(true);
+            else updateDesktopScale();
             updateMobileToolbarBottomScale();
           });
         }
