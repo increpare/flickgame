@@ -3614,6 +3614,11 @@
       padding-bottom: var(--sa-bottom);
       padding-left: var(--sa-left);
     }
+    body[data-host="ios-app"][data-layout="mobile-portrait"] #mobile-editor-wrapper {
+      padding-left: max(var(--sa-left), 6px);
+      padding-right: max(var(--sa-right), 6px);
+      padding-bottom: max(var(--sa-bottom), 4px);
+    }
 
     /* Landscape mobile: left toolbar (vertical) | canvas | vertical palette | 4x4 colour grid */
     body[data-layout="mobile-landscape"] #mobile-editor-wrapper {
