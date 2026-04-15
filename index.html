@@ -744,10 +744,15 @@
     function newFlickgame(keepPalette) {
       closeBurgerDialog();
       resetViewTransform();
-      // Keep canonical project dimensions independent of current orientation.
-      // Orientation-specific dimensions make the canvas appear "rotated" or skewed after device rotation.
-      var w = 160;
-      var h = 100;
+      var w, h;
+      if (isMobileLayout()) {
+        mobileFillCanvasSize();
+        w = width;
+        h = height;
+      } else {
+        w = 160;
+        h = 100;
+      }
       var emptyCanvasRle = [w * h, "0"];
       var chosenPalette, chosenBg, chosenFg;
       if (keepPalette) {
