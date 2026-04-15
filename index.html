@@ -2123,6 +2123,7 @@
     var TOUCH_DRAW_DELAY = 80;
     var touchDrawTimer = null;
     var touchDrawEvent = null;
+    var touchDrawDownEvent = null;
 
     function getCoords(e) {
       var target = e.target || e.srcElement;
@@ -2424,6 +2425,7 @@
         clearTimeout(touchDrawTimer);
         touchDrawTimer = null;
         touchDrawEvent = null;
+        touchDrawDownEvent = null;
       }
     }
 
@@ -2459,10 +2461,12 @@
       if (e.pointerType === 'touch') {
         cancelPendingTouchDraw();
         touchDrawEvent = e;
+        touchDrawDownEvent = e;
         touchDrawTimer = setTimeout(function() {
           var evt = touchDrawEvent;
           touchDrawTimer = null;
           touchDrawEvent = null;
+          touchDrawDownEvent = null;
           if (evt && !pinchActive && !pinchTouched) {
             beginDrawStroke(evt);
           }
@@ -2599,7 +2603,7 @@
     function mouseMove(e) {
       e = e || window.event;
 
-      if (pinchActive || pinchTouched || touchDrawTimer) {
+      if (pinchActive || pinchTouched) {
         e.preventDefault();
         return !1;
       }
@@ -2614,6 +2618,17 @@
       updateLastButton(e);
 
       updateCursor(e);
+
+      // For touch input, start drawing as soon as the finger moves (don't wait for TOUCH_DRAW_DELAY),
+      // while still allowing a tap (no move) to register on touchend.
+      if (touchDrawTimer && e.pointerType === 'touch') {
+        var downEvt = touchDrawDownEvent || touchDrawEvent;
+        cancelPendingTouchDraw();
+        if (downEvt && !pinchActive && !pinchTouched) {
+          beginDrawStroke(downEvt);
+        }
+        // continue processing this move event as part of the stroke
+      }
 
       if (drawing === 0)
         return;
@@ -4216,6 +4231,8 @@
       <button type="button" class="burger-dialog-btn" onclick="openPaletteSelector(event);">🎨 Select colour palette</button>
       <hr>
       <button type="button" class="burger-dialog-btn" onclick="confirmNewFlickgame();">🆕 New Flickgame</button>
+      <button type="button" class="burger-dialog-btn" onclick="saveCurrentToGallery();">💾 Save to Gallery</button>
+      <button type="button" class="burger-dialog-btn" onclick="openGallery();">🖼️ Gallery</button>
       <button type="button" class="burger-dialog-btn" onclick="clearPalette();">🗑️ Clear page</button>
       <button type="button" class="burger-dialog-btn" onclick="shareClick();">📤 Share</button>
       <div id="burger-share-result" class="burger-share-result"></div>
@@ -4224,6 +4241,8 @@
       <button type="button" class="burger-dialog-btn" onclick="window.open('help.html','_blank');">📖 Help</button>
     </div>
   </div>
+  <script src="gallery_store.js"></script>
+  <script src="gallery_ui.js"></script>
 </body>
 
 </html>
