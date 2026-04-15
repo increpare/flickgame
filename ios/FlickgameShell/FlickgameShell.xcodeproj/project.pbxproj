@@ -10,12 +10,14 @@
 		8752afd728f5cc6015265d1e /* FlickgameShellApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 747e5c568212f5b8447760a2 /* FlickgameShellApp.swift */; };
 		885b028ec5281f9e297716d2 /* FlickWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 944ae5735b177417571a3737 /* FlickWebView.swift */; };
 		9ca7c803b803e3c417790511 /* www in Resources */ = {isa = PBXBuildFile; fileRef = fad1f5b32922edf4a72ef4ba /* www */; };
+		b4e5d6c708295c3bb1f2e3d4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = c3f4e5d609184b2aa0f1e2d3 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		2a9821e8f1184964a06d0a4f /* FlickgameShell.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FlickgameShell.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		747e5c568212f5b8447760a2 /* FlickgameShellApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlickgameShellApp.swift; sourceTree = "<group>"; };
 		944ae5735b177417571a3737 /* FlickWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlickWebView.swift; sourceTree = "<group>"; };
+		c3f4e5d609184b2aa0f1e2d3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		fad1f5b32922edf4a72ef4ba /* www */ = {isa = PBXFileReference; lastKnownFileType = folder; path = www; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -49,6 +51,7 @@
 		842d2abbe102fba9a2bd0ade /* FlickgameShell */ = {
 			isa = PBXGroup;
 			children = (
+				c3f4e5d609184b2aa0f1e2d3 /* Assets.xcassets */,
 				747e5c568212f5b8447760a2 /* FlickgameShellApp.swift */,
 				944ae5735b177417571a3737 /* FlickWebView.swift */,
 				fad1f5b32922edf4a72ef4ba /* www */,
@@ -115,6 +118,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				b4e5d6c708295c3bb1f2e3d4 /* Assets.xcassets in Resources */,
 				9ca7c803b803e3c417790511 /* www in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -158,17 +162,19 @@
 		0f8ad607fa7a5a2519e08191 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 75426EQC98;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Flickgame;
+				INFOPLIST_KEY_UIPrerenderedIcon = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -241,17 +247,19 @@
 		93f9f5a68419a78e72d60faa /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 75426EQC98;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Flickgame;
+				INFOPLIST_KEY_UIPrerenderedIcon = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

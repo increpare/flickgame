@@ -5,15 +5,28 @@
   <title>FlickGame Help</title>
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="stylesheet" href="help.css">
+  <script>
+    (function () {
+      try {
+        if (typeof window !== 'undefined' && (window.FLICKGAME_IOS_APP || window.FLICKGAME_HOST === 'ios-app')) {
+          document.documentElement.classList.add('help-ios-app');
+        }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
+  <nav class="help-topbar">
+    <a class="help-back-btn" href="index.html">← Back to editor</a>
+  </nav>
+
   <h1>FlickGame: How To</h1>
   
   <p>
     <img src="helpimage.png" alt="FlickGame interface">
   </p>
   
-  <p>
+  <p class="help-hide-in-ios-app">
     <a href="http://www.flickgame.org/play.html?p=b595632967f638a1c0d3">Try this example game →</a>
   </p>
 
@@ -31,6 +44,7 @@
     <b>F</b> : Go fullscreen
   </p>
 
+  <div class="help-hide-in-ios-app">
   <h2>Discover FlickGames</h2>
   <p>
     <a href="http://flickgamegallery.tumblr.com/">Browse the FlickGame Gallery</a>
@@ -50,18 +64,24 @@
     <li>Load it as <code>mygame.html?a=1</code>, or</li>
     <li>Edit the exported HTML file with a text editor, find <code>if(urlVars["a"]==="1"){</code> and change it to <code>if (true){</code></li>
   </ol>
+  </div>
 
-  <h2>Feedback & Support</h2>
-  <p>
+  <h2 class="help-show-in-ios-app">Feedback</h2>
+  <p class="help-show-in-ios-app">
+    You can reach the author at analytic@gmail.com
+  </p>
+
+  <h2 class="help-hide-in-ios-app">Feedback & Support</h2>
+  <p class="help-hide-in-ios-app">
     Drop me a line at <a href="mailto:analytic@gmail.com">analytic@gmail.com</a>, tweet to <a href="http://www.x.com/increpare">@increpare</a>, or post a <a href="https://github.com/increpare/flickgame/issues/new">bug report on GitHub</a>.
   </p>
 
-  <h2>Source Code</h2>
-  <p>
+  <h2 class="help-hide-in-ios-app">Source Code</h2>
+  <p class="help-hide-in-ios-app">
     <a href="https://github.com/increpare/flickgame">View on GitHub</a>
   </p>
 
-  <div class="flickgame-family">
+  <div class="flickgame-family help-hide-in-ios-app">
     <h2>The FlickGame Family</h2>
     <ul>
       <li><a href="index.html">FlickGame</a> - the original!</li>
@@ -73,13 +93,17 @@
   </div>
 
 
-  <footer class="credits">
+  <footer class="credits help-hide-in-ios-app">
     <p>
       Made by <a href="http://www.increpare.com">increpare</a>. Support my work on 
       <a href="https://www.patreon.com/increpare">Patreon</a> | 
       <a href="https://github.com/sponsors/increpare">GitHub Sponsors</a> | 
       <a href="https://www.paypal.com/paypalme/increparegames">PayPal</a>
     </p>
+  </footer>
+
+  <footer class="credits help-show-in-ios-app">
+    <p>FlickGame by increpare</p>
   </footer>
 </body>
 </html>

@@ -9,6 +9,7 @@ flickgame_vanilla.js
 colorNames.js
 gallery_store.js
 gallery_ui.js
+ios_burger_menu.js
 favicon.png
 undo2.svg
 clipboard_paste.svg

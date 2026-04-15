@@ -11,6 +11,45 @@
     max-width: 800px;
     margin: 0 auto;
   }
+
+  .help-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: #0b1220;
+    border-bottom: 2px solid #334155;
+    margin: -20px -20px 18px -20px;
+    padding: 14px 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  }
+
+  .help-back-btn {
+    display: inline-block;
+    padding: 10px 16px;
+    background: #1e293b;
+    color: #e2e8f0;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    border: 1px solid #475569;
+  }
+
+  .help-back-btn:hover {
+    background: #334155;
+    color: #fff;
+  }
+
+  .help-show-in-ios-app {
+    display: none;
+  }
+
+  html.help-ios-app .help-hide-in-ios-app {
+    display: none !important;
+  }
+
+  html.help-ios-app .help-show-in-ios-app {
+    display: block;
+  }
    select {
     background-color: #1e293b;
     color: white;

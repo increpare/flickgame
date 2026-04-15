@@ -1,7 +1,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="Description" CONTENT="Draw and share simple games with your mouse or fingers!">
 
   <link rel="icon" type="image/png" href="favicon.png">
@@ -502,6 +502,13 @@
       if (visibleCanvas) {
         visibleCanvas.width = width * zoomFactor;
         visibleCanvas.height = height * zoomFactor;
+        /* Mobile: flex + max-width/max-height + width/height auto can pick a transient layout box
+           whose aspect does not match the bitmap during rotation. Pin logical aspect to game pixels. */
+        if (typeof isMobileLayout === 'function' && isMobileLayout()) {
+          visibleCanvas.style.aspectRatio = width + ' / ' + height;
+        } else {
+          visibleCanvas.style.aspectRatio = '';
+        }
       }
       for (var i = 0; i < 16; i++) {
         if (thumbnailCanvas[i]) {
@@ -561,12 +568,41 @@
       content.style.setProperty('--mobile-toolbar-bottom-scale', scale);
     }
 
-    function updateMobileCanvasSize() {
+    var mobileCanvasSettleToken = 0;
+
+    function scheduleMobileCanvasSizeSettle() {
+      var token = ++mobileCanvasSettleToken;
+      var maxFrames = 14;
+      var frames = 0;
+      function step() {
+        if (token !== mobileCanvasSettleToken) return;
+        if (frames++ >= maxFrames) return;
+        updateMobileCanvasSize(true);
+        var c = document.getElementById('mobile-canvas-container');
+        if (!c || !visibleCanvas) return;
+        var r = c.getBoundingClientRect();
+        var vvW = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+        var vvH = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        var stillOversized = r.width > 0 && r.height > 0 && ((r.width > vvW * 1.15) || (r.height > vvH * 1.15));
+        if (stillOversized) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    function updateMobileCanvasSize(fromSettle) {
+      if (fromSettle === undefined) fromSettle = false;
       if (!isMobileLayout()) return;
       var container = document.getElementById('mobile-canvas-container');
       if (!container || !visibleCanvas) return;
       var rect = container.getBoundingClientRect();
       if (rect.width <= 0 || rect.height <= 0) return;
+      var vvW = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+      var vvH = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      var oversized = (rect.width > vvW * 1.15) || (rect.height > vvH * 1.15);
+      if (oversized) {
+        if (!fromSettle) scheduleMobileCanvasSizeSettle();
+        return;
+      }
       var scaleW = rect.width / width;
       var scaleH = rect.height / height;
       var newZoom = Math.min(scaleW, scaleH);
@@ -592,7 +628,7 @@
       setVisuals(true);
     }
 
-    function stringToState(str) {
+    function stringToState(str, sourceTag) {
       var state = JSON.parse(str);
       var stateWidth = state.width !== undefined ? state.width : 160;
       var stateHeight = state.height !== undefined ? state.height : 100;
@@ -708,15 +744,10 @@
     function newFlickgame(keepPalette) {
       closeBurgerDialog();
       resetViewTransform();
-      var w, h;
-      if (isMobileLayout()) {
-        mobileFillCanvasSize();
-        w = width;
-        h = height;
-      } else {
-        w = 160;
-        h = 100;
-      }
+      // Keep canonical project dimensions independent of current orientation.
+      // Orientation-specific dimensions make the canvas appear "rotated" or skewed after device rotation.
+      var w = 160;
+      var h = 100;
       var emptyCanvasRle = [w * h, "0"];
       var chosenPalette, chosenBg, chosenFg;
       if (keepPalette) {
@@ -741,7 +772,7 @@
         version: version,
         hyperlinks: Array.from({length: 16}, function() { return new Array(16).fill(0); })
       };
-      stringToState(JSON.stringify(emptyState));
+      stringToState(JSON.stringify(emptyState), 'new-flickgame');
       setVisuals(true);
       setLayer(1);
       setDropdowns();
@@ -846,11 +877,37 @@
           shareLinkInner.style.color = "gray";
         }
       }
+  }
+
+    function copyLayerImageToSystemClipboard() {
+      if (!visibleCanvas || !visibleCanvas.width || !navigator.clipboard || typeof ClipboardItem === 'undefined') {
+        return;
+      }
+      drawCanvasFast();
+      var out = document.createElement('canvas');
+      out.width = width;
+      out.height = height;
+      var octx = out.getContext('2d');
+      if (!octx) return;
+      octx.imageSmoothingEnabled = false;
+      octx.drawImage(visibleCanvas, 0, 0, visibleCanvas.width, visibleCanvas.height, 0, 0, width, height);
+      // Safari: clipboard.write must run in the same user-gesture turn as the click, not inside
+      // toBlob's callback (NotAllowedError). Pass Promise<Blob> into ClipboardItem so write() is sync.
+      try {
+        var pngPromise = new Promise(function(resolve, reject) {
+          out.toBlob(function(blob) {
+            if (!blob) reject(new Error('toBlob failed'));
+            else resolve(blob);
+          }, 'image/png');
+        });
+        navigator.clipboard.write([new ClipboardItem({ 'image/png': pngPromise })]).catch(function() {});
+      } catch (e) {}
     }
 
     function doCopy() {
       copyImage = JSON.stringify(canvasses[canvasIndex])
       copyLinks = JSON.stringify(hyperlinks[canvasIndex])
+      copyLayerImageToSystemClipboard();
       showCopyFeedback();
       updatePasteButtonState();
     }
@@ -1396,13 +1453,29 @@
     // Layout: desktop | mobile-portrait | mobile-landscape. Tablets (Surface, iPad) get desktop via viewport threshold.
     var layoutMode = 'desktop';
     var hasTouch = false;
+
     function updateLayoutMode() {
       var touch = ('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
       hasTouch = touch;
       var smallViewport = Math.min(window.innerWidth, window.innerHeight) < 768;
-      var portrait = window.matchMedia('(orientation: portrait)').matches;
+      var portrait;
+      var vvWidth = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+      var vvHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      if (Math.abs(vvHeight - vvWidth) > 1) {
+        // Prefer actual viewport aspect ratio first; orientation APIs can lag during iOS rotate transitions.
+        portrait = vvHeight > vvWidth;
+      } else if (screen.orientation && typeof screen.orientation.angle === 'number') {
+        // Prefer explicit orientation angle when available (more stable than matchMedia during iOS rotation transitions).
+        portrait = (Math.abs(screen.orientation.angle) % 180) === 0;
+      } else if (typeof window.orientation === 'number') {
+        // Legacy iOS orientation signal.
+        portrait = (Math.abs(window.orientation) % 180) === 0;
+      } else {
+        portrait = window.matchMedia('(orientation: portrait)').matches;
+      }
       var next = (touch && smallViewport) ? (portrait ? 'mobile-portrait' : 'mobile-landscape') : 'desktop';
       if (next !== layoutMode) {
+        var prev = layoutMode;
         layoutMode = next;
         document.body.setAttribute('data-layout', layoutMode);
         if (typeof onLayoutModeChange === 'function') onLayoutModeChange();
@@ -1647,6 +1720,14 @@
         if (layoutMode === 'desktop') updateDesktopScale();
         else updateMobileCanvasSize();
         updateMobileToolbarBottomScale();
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() {
+            updateLayoutMode();
+            if (layoutMode === 'desktop') updateDesktopScale();
+            else updateMobileCanvasSize();
+            updateMobileToolbarBottomScale();
+          });
+        });
       });
 
       // Populate background color dropdown
@@ -1862,7 +1943,7 @@
         var saved = loadFlickgameState();
         if (saved) {
           try {
-            stringToState(saved);
+            stringToState(saved, 'storage');
             setVisuals(true);
             setLayer(canvasIndex + 1);
             setDropdowns();
@@ -1901,8 +1982,7 @@
           closeBurgerDialog();
           requestAnimationFrame(function() {
             requestAnimationFrame(function() {
-              if (isProjectBlank()) newFlickgame(true);
-              else updateMobileCanvasSize();
+              updateMobileCanvasSize();
               updateMobileToolbarBottomScale();
             });
           });
@@ -1917,8 +1997,7 @@
           hideFramePicker();
           closeBurgerDialog();
           requestAnimationFrame(function() {
-            if (isProjectBlank()) newFlickgame(true);
-            else updateDesktopScale();
+            updateDesktopScale();
             updateMobileToolbarBottomScale();
           });
         }
@@ -1928,6 +2007,7 @@
           else pointerModeBtn.classList.remove('selected');
         }
         updateBrushButtonsUI();
+        if (isMobileLayout()) updateMobileCanvasSize();
       };
       window.onLayoutModeChange();
       requestAnimationFrame(function() { updateDesktopScale(); });
@@ -2001,7 +2081,7 @@
     }
 
     function loadAndDisplayState(code) {
-      stringToState(code);
+      stringToState(code, 'file-import');
       setVisuals(true);
       setLayer(canvasIndex + 1);
       setDropdowns();
@@ -2837,6 +2917,11 @@
     --muted-foreground: rgba(255, 255, 255, 0.5);
     --burger-menu-font-size: 16px;
     --toolbar-gap: 4px;
+    --safe-ui-gutter: 8px;
+    --sa-top: env(safe-area-inset-top, 0px);
+    --sa-right: env(safe-area-inset-right, 0px);
+    --sa-bottom: env(safe-area-inset-bottom, 0px);
+    --sa-left: env(safe-area-inset-left, 0px);
 
     --col0:#140c1c;
     --col1:#442434;
@@ -2876,6 +2961,8 @@
   body {
     overscroll-behavior: none;
     font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    margin: 0;
+    padding: 0;
 }
     #mainCanvas {
       cursor: crosshair;
@@ -3499,16 +3586,23 @@
     body[data-layout="mobile-landscape"] #mobile-editor-wrapper {
       display: flex;
       flex-direction: column;
-      min-height: 100vh;
-      min-height: 100dvh;
-      max-height: 100vh;
-      max-height: 100dvh;
+      position: fixed;
+      inset: 0;
       overflow: hidden;
       touch-action: none;
-      padding-top: env(safe-area-inset-top, 0);
-      padding-bottom: env(safe-area-inset-bottom, 0);
-      padding-left: env(safe-area-inset-left, 0);
-      padding-right: env(safe-area-inset-right, 0);
+      box-sizing: border-box;
+      width: 100%;
+      /* During iOS rotation, layout viewport height can lag (fixed + inset:0 may briefly match
+         the large viewport height while inner/visual are already landscape). Clamp to the
+         small viewport so flex children do not get portrait-tall space in landscape. */
+      max-width: 100vw;
+      max-width: 100svw;
+      max-height: 100vh;
+      max-height: 100svh;
+      padding-top: var(--sa-top);
+      padding-right: var(--sa-right);
+      padding-bottom: var(--sa-bottom);
+      padding-left: var(--sa-left);
     }
 
     /* Landscape mobile: left toolbar (vertical) | canvas | vertical palette | 4x4 colour grid */
@@ -3520,8 +3614,8 @@
       flex-direction: column;
       justify-content: flex-start;
       align-items: center;
-      padding: 6px 4px;
-      gap: 6px;
+      padding: calc(var(--safe-ui-gutter) - 2px) calc(var(--safe-ui-gutter) / 2);
+      gap: calc(var(--safe-ui-gutter) - 2px);
       flex-shrink: 0;
       width: 56px;
       min-width: 56px;
@@ -3578,16 +3672,16 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 8px;
+      padding: var(--safe-ui-gutter);
       flex-shrink: 0;
     }
     .mobile-toolbar-top-inner {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: var(--safe-ui-gutter);
       flex-wrap: wrap;
       background: var(--toolbar-color);
-      padding: 8px;
+      padding: var(--safe-ui-gutter);
       border-radius: 8px;
     }
     .mobile-toolbar-bottom {
@@ -3761,6 +3855,7 @@
       touch-action: none;
     }
     #mobile-canvas-container canvas {
+      display: block;
       max-width: 100%;
       max-height: 100%;
       width: auto;
@@ -3904,7 +3999,7 @@
       color: #c00;
     }
     .mobile-swatch-grid {
-      padding: 8px 0px;
+      padding: var(--safe-ui-gutter) 0px;
       margin: 0 auto;
       flex: 0 1 auto;
       min-height: 0;
@@ -4231,8 +4326,8 @@
       <button type="button" class="burger-dialog-btn" onclick="openPaletteSelector(event);">🎨 Select colour palette</button>
       <hr>
       <button type="button" class="burger-dialog-btn" onclick="confirmNewFlickgame();">🆕 New Flickgame</button>
-      <button type="button" class="burger-dialog-btn" onclick="saveCurrentToGallery();">💾 Save to Gallery</button>
-      <button type="button" class="burger-dialog-btn" onclick="openGallery();">🖼️ Gallery</button>
+      <button type="button" id="burger-btn-save-gallery" class="burger-dialog-btn" onclick="saveCurrentToGallery();">💾 Save to Gallery</button>
+      <button type="button" id="burger-btn-open-gallery" class="burger-dialog-btn" onclick="openGallery();">🖼️ Gallery</button>
       <button type="button" class="burger-dialog-btn" onclick="clearPalette();">🗑️ Clear page</button>
       <button type="button" class="burger-dialog-btn" onclick="shareClick();">📤 Share</button>
       <div id="burger-share-result" class="burger-share-result"></div>
@@ -4243,6 +4338,7 @@
   </div>
   <script src="gallery_store.js"></script>
   <script src="gallery_ui.js"></script>
+  <script src="ios_burger_menu.js"></script>
 </body>
 
 </html>

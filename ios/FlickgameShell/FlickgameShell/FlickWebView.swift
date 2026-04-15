@@ -11,6 +11,14 @@ struct FlickWebViewRepresentable: UIViewRepresentable {
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         config.preferences.javaScriptCanOpenWindowsAutomatically = true
+        let contentController = WKUserContentController()
+        let hostFlag = """
+        window.FLICKGAME_HOST = 'ios-app';
+        window.FLICKGAME_IOS_APP = true;
+        """
+        let hostScript = WKUserScript(source: hostFlag, injectionTime: .atDocumentStart, forMainFrameOnly: true)
+        contentController.addUserScript(hostScript)
+        config.userContentController = contentController
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
