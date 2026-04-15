@@ -1506,6 +1506,13 @@
       inner.style.setProperty('--desktop-scale', String(scale));
     }
 
+    function refreshLayoutScale() {
+      if (isProjectBlank()) newFlickgame(true);
+      else if (isMobileLayout()) updateMobileCanvasSize();
+      else updateDesktopScale();
+      updateMobileToolbarBottomScale();
+    }
+
     var lastX = -1;
     var lastY = -1;
     var lastButton = -1
@@ -1990,9 +1997,7 @@
           closeBurgerDialog();
           requestAnimationFrame(function() {
             requestAnimationFrame(function() {
-              if (isProjectBlank()) newFlickgame(true);
-              else updateMobileCanvasSize();
-              updateMobileToolbarBottomScale();
+              refreshLayoutScale();
             });
           });
         } else {
@@ -2006,9 +2011,7 @@
           hideFramePicker();
           closeBurgerDialog();
           requestAnimationFrame(function() {
-            if (isProjectBlank()) newFlickgame(true);
-            else updateDesktopScale();
-            updateMobileToolbarBottomScale();
+            refreshLayoutScale();
           });
         }
         pointerModeBtn = isMobileLayout() ? document.getElementById('mobile-pointer-btn') : document.getElementById('pointer_mode_btn');
