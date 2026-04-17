@@ -45,6 +45,26 @@
 
   function getThumbDataUrl() {
     try {
+      if (typeof canvasses !== 'undefined' && canvasses && canvasses[0] && typeof width === 'number' && typeof height === 'number') {
+        var previewCanvas = document.createElement('canvas');
+        previewCanvas.width = width;
+        previewCanvas.height = height;
+        var previewContext = previewCanvas.getContext('2d');
+        if (!previewContext) return '';
+        var imageData = previewContext.createImageData(width, height);
+        var data = imageData.data;
+        var source = canvasses[0];
+        for (var i = 0; i < source.length; i++) {
+          var rgb = hexToRgb((colorPalette && colorPalette[source[i]]) || '#000000') || { r: 0, g: 0, b: 0 };
+          var off = i << 2;
+          data[off] = rgb.r;
+          data[off + 1] = rgb.g;
+          data[off + 2] = rgb.b;
+          data[off + 3] = 255;
+        }
+        previewContext.putImageData(imageData, 0, 0);
+        return previewCanvas.toDataURL('image/png');
+      }
       if (typeof thumbnailCanvas !== 'undefined' && thumbnailCanvas && thumbnailCanvas[0]) {
         return thumbnailCanvas[0].toDataURL('image/png');
       }
@@ -125,6 +145,22 @@
     return 'flickgame #' + i;
   }
 
+  function resolveUniqueTitle(rawInput, items, currentId) {
+    var trimmed = (rawInput || '').trim();
+    if (trimmed.length === 0) return nextDefaultTitle(items);
+    var base = trimmed.replace(/\s+\d+$/, '').trim();
+    if (base.length === 0) return nextDefaultTitle(items);
+    var usedTitles = {};
+    (items || []).forEach(function (p) {
+      if (!p || p.id === currentId) return;
+      if (typeof p.title === 'string') usedTitles[p.title] = true;
+    });
+    if (!usedTitles[base]) return base;
+    var n = 2;
+    while (usedTitles[base + ' ' + n]) n += 1;
+    return base + ' ' + n;
+  }
+
   function saveToExistingProject(project, opts) {
     opts = opts || {};
     var stateStr;
@@ -173,7 +209,7 @@
   function openProjectById(id, opts) {
     opts = opts || {};
     return window.FlickGalleryStore.getProject(id).then(function (full) {
-      if (!full || !full.state) throw new Error('Missing project data');
+      if (!full || typeof full.state !== 'string') throw new Error('Missing project data');
       loadProjectStateString(full.state);
       setCurrentProjectIdentity(full.id, full.state);
       if (opts.closeGallery && typeof closeGallery === 'function') closeGallery();
@@ -189,7 +225,7 @@
       var byId = {};
       items.forEach(function (p) { byId[p.id] = p; });
       if (currentProjectId && byId[currentProjectId]) {
-        currentSavedStateString = byId[currentProjectId].state || currentSavedStateString;
+        if (typeof byId[currentProjectId].state === 'string') currentSavedStateString = byId[currentProjectId].state;
         return byId[currentProjectId];
       }
       var nowState = '';
@@ -418,25 +454,9 @@
 
   function renderListInto(containerEl, items, opts) {
     opts = opts || {};
-    var iosMenuMode = !!opts.iosMenuMode;
     containerEl.innerHTML = '';
     if (!items || items.length === 0) items = [];
     var grid = el('div', { class: 'gallery-grid' });
-
-    if (iosMenuMode) {
-      var newTile = el('button', { type: 'button', class: 'gallery-card gallery-new-tile' }, [
-        el('div', { class: 'gallery-new-plus', text: '+' })
-      ]);
-      newTile.addEventListener('click', function (e) {
-        stop(e);
-        startNewFlickgameForIos().then(function () {
-          return window.FlickGalleryStore.listProjects();
-        }).then(function (nextItems) {
-          renderListInto(containerEl, nextItems, opts);
-        });
-      });
-      grid.appendChild(newTile);
-    }
 
     items.forEach(function (p) {
       var classes = ['gallery-card'];
@@ -470,37 +490,33 @@
         });
       });
 
-      var actions = [btnOpen];
-      if (!iosMenuMode) {
-        var btnRename = el('button', { class: 'gallery-btn', text: 'Rename' });
-        btnRename.addEventListener('click', function (e) {
-          stop(e);
-          var t = prompt('Rename project:', p.title || 'Untitled');
-          if (t == null) return;
-          window.FlickGalleryStore.getProject(p.id).then(function (full) {
-            if (!full) throw new Error('Missing project data');
-            full.title = (t || '').trim() || 'Untitled';
-            return window.FlickGalleryStore.putProject(full);
-          }).then(refreshEmbedded).catch(function (err) {
-            safeAlert(err && err.message ? err.message : 'Failed to rename');
-          });
+      var btnRename = el('button', { class: 'gallery-btn', text: 'Rename' });
+      btnRename.addEventListener('click', function (e) {
+        stop(e);
+        var t = prompt('Rename project:', p.title || 'Untitled');
+        if (t == null) return;
+        window.FlickGalleryStore.getProject(p.id).then(function (full) {
+          if (!full) throw new Error('Missing project data');
+          full.title = resolveUniqueTitle(t, items, p.id);
+          return window.FlickGalleryStore.putProject(full);
+        }).then(refreshEmbedded).catch(function (err) {
+          safeAlert(err && err.message ? err.message : 'Failed to rename');
         });
-        var btnDup = el('button', { class: 'gallery-btn', text: 'Duplicate' });
-        btnDup.addEventListener('click', function (e) {
-          stop(e);
-          window.FlickGalleryStore.getProject(p.id).then(function (full) {
-            if (!full || !full.state) throw new Error('Missing project data');
-            return window.FlickGalleryStore.putProject({
-              title: (full.title || 'Untitled') + ' (copy)',
-              state: full.state,
-              thumb: full.thumb || ''
-            });
-          }).then(refreshEmbedded).catch(function (err) {
-            safeAlert(err && err.message ? err.message : 'Failed to duplicate');
+      });
+      var btnDup = el('button', { class: 'gallery-btn', text: 'Duplicate' });
+      btnDup.addEventListener('click', function (e) {
+        stop(e);
+        window.FlickGalleryStore.getProject(p.id).then(function (full) {
+          if (!full || typeof full.state !== 'string') throw new Error('Missing project data');
+          return window.FlickGalleryStore.putProject({
+            title: resolveUniqueTitle((full.title || 'Untitled') + ' copy', items, null),
+            state: full.state,
+            thumb: full.thumb || ''
           });
+        }).then(refreshEmbedded).catch(function (err) {
+          safeAlert(err && err.message ? err.message : 'Failed to duplicate');
         });
-        actions.push(btnRename, btnDup);
-      }
+      });
 
       var btnDel = el('button', { class: 'gallery-btn', text: 'Delete' });
       btnDel.addEventListener('click', function (e) {
@@ -512,13 +528,11 @@
           safeAlert(err && err.message ? err.message : 'Failed to delete');
         });
       });
-      actions.push(btnDel);
-
-      var card = el('div', { class: classes.join(' ') }, [img, meta, el('div', { class: 'gallery-card-actions' }, actions)]);
+      var card = el('div', { class: classes.join(' ') }, [img, meta, el('div', { class: 'gallery-card-actions' }, [btnOpen, btnRename, btnDup, btnDel])]);
       grid.appendChild(card);
     });
 
-    if (items.length === 0 && !iosMenuMode) {
+    if (items.length === 0) {
       containerEl.appendChild(el('div', { class: 'gallery-empty', text: 'No saved Flickgames yet.' }));
       return;
     }
@@ -579,7 +593,12 @@
   window._maybePromptToMigrateDraft = maybePromptToMigrateDraft;
   window.FlickGalleryUI = {
     renderEmbedded: renderEmbedded,
-    isDirty: isDirtyAgainstSavedSnapshot
+    isDirty: isDirtyAgainstSavedSnapshot,
+    resolveUniqueTitle: resolveUniqueTitle,
+    nextDefaultTitle: nextDefaultTitle,
+    openProjectById: openProjectById,
+    createProjectFromCurrentState: createProjectFromCurrentState,
+    ensureIosActiveProjectEntry: ensureIosActiveProjectEntry
   };
 
   window.addEventListener('load', function () {

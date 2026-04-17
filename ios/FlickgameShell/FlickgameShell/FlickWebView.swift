@@ -25,8 +25,9 @@ struct FlickWebViewRepresentable: UIViewRepresentable {
         webView.isOpaque = false
         webView.backgroundColor = .black
         webView.scrollView.backgroundColor = .black
+        webView.allowsBackForwardNavigationGestures = true
 
-        if let url = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "www") {
+        if let url = Bundle.main.url(forResource: "gallery", withExtension: "html", subdirectory: "www") {
             let dir = url.deletingLastPathComponent()
             webView.loadFileURL(url, allowingReadAccessTo: dir)
         } else {

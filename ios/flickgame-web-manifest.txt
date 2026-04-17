@@ -1,15 +1,18 @@
-# Static assets for flickgame editor (index.html) + player (play.html).
+# Static assets for flickgame editor, gallery, and player.
 # Paths are relative to the repository root. One path per line; # comments allowed.
 
 index.html
+gallery.html
 play.html
 FileSaver.js
 flickgame_base.js
 flickgame_vanilla.js
+flickgame_share.js
 colorNames.js
 gallery_store.js
 gallery_ui.js
-ios_burger_menu.js
+gallery_page.js
+ios_editor_menu.js
 favicon.png
 undo2.svg
 clipboard_paste.svg

@@ -2,72 +2,103 @@
 
 ## Problem
 
-The iOS Flickgame app currently mirrors the browser version: it boots into the editor and hides everything else (gallery, import/export, help) inside a burger menu. For phone use this is backwards — on a phone, the natural home is a gallery of the user's games, with the editor and player as sub-views you enter from there.
+The iOS Flickgame app currently mirrors the browser version: it boots into the editor and hides everything else inside the burger menu. On a phone this is backwards. The natural home is a gallery of the user's games, with the editor and player as sub-views entered from there.
 
 We want to flip iOS to gallery-first while keeping the browser version unchanged and keeping a single shared codebase.
 
 ## Architecture
 
-Add a new top-level page `gallery.html` alongside `index.html` (editor) and `play.html` (player). The iOS shell loads `gallery.html` as its entry point. Browsers continue to load `index.html`. All three pages share the same bundle and the same `FlickGalleryStore` (IndexedDB).
+Add a new top-level page `gallery.html` alongside `index.html` (editor) and `play.html` (player). The iOS shell loads `gallery.html` as its entry point. Browsers continue to load `index.html`.
 
-State passing between pages is by **project ID in the URL query**, with the actual state read from IndexedDB:
+Project state lives in IndexedDB (`FlickGalleryStore`) and is addressed by project ID. The URL is the navigation contract; IndexedDB is the source of truth.
 
-| Hop                   | URL                             |
-| --------------------- | ------------------------------- |
-| Gallery → Editor      | `index.html?id=<projectId>`     |
-| Gallery → Player      | `play.html?id=<projectId>`      |
-| Editor → Gallery      | `gallery.html`                  |
+Canonical routes:
 
-The existing `?p=<gistId>` Gist-share path and the download-standalone-HTML path (`embeddedDat` string replacement in `play.html`) are untouched. The new `id` param is non-overlapping.
+| Hop | URL |
+| --- | --- |
+| Gallery -> Existing project in editor | `index.html?id=<projectId>` |
+| Gallery -> New project bootstrap | `index.html?new=1` |
+| Gallery -> Player | `play.html?id=<projectId>` |
+| Editor -> Gallery | `gallery.html` |
 
-Host detection continues to use `window.FLICKGAME_IOS_APP` / `window.FLICKGAME_HOST === 'ios-app'` injected by the Swift shell at document-start; `gallery.html` reads the same flag.
+The existing `?p=<gistId>` Gist-share path and standalone-export `embeddedDat` path remain unchanged. The new `id` and `new` params are local-only and non-overlapping.
 
-**Browser behaviour is unchanged**: `index.html` still boots into the editor with the existing gallery *overlay* available from the burger. `gallery.html` works if visited directly in a browser but is not surfaced in browser chrome. Future extension if desired.
+Host detection continues to use `window.FLICKGAME_IOS_APP` / `window.FLICKGAME_HOST === 'ios-app'` injected by the Swift shell at document start.
+
+## Boot rules
+
+### Editor boot (`index.html`)
+
+- If `?id=<projectId>` is present, load that exact project from IndexedDB into the editor and bind that same ID as the active iOS project identity for future Save / dirty tracking.
+- If `?new=1` is present, start a blank flickgame, create a fresh IndexedDB project from that blank state, bind it active, then `history.replaceState(...)` to the canonical `index.html?id=<newId>` URL.
+- If neither param is present, keep today's behavior for the browser. On iOS this path is only a defensive fallback.
+
+The important constraint is that explicit `?id=` loads must bind the exact project record, and `?new=1` must create a fresh record directly rather than matching by state.
+
+### Player boot (`play.html`)
+
+`play.html` gains a small inline IndexedDB loader for `?id=<projectId>`, using the same IndexedDB database and store names as `gallery_store.js`, but without adding external `<script src>` dependencies. This preserves standalone-export behavior.
+
+Precedence in `play.html` remains:
+
+1. `embeddedDat`
+2. `?id=<projectId>`
+3. `?p=<gistId>`
 
 ## Files
 
 ### New
 
-- **`gallery.html`** — top-level gallery page. Minimal HTML loading the shared theme CSS, `gallery_store.js`, and the new `gallery_page.js`.
-- **`gallery_page.js`** — controller for `gallery.html`. Builds the card grid, handles Play / Edit / Share / Delete, the `+` and Import tiles, and the Share action sheet.
-- **`ios_editor_menu.js`** — replaces `ios_burger_menu.js`. Renders the new editor-side burger (Name / Background / Palette grid, then Save, Clear page, Help, Back to Gallery).
+- `gallery.html` — top-level gallery page.
+- `gallery_page.js` — controller for `gallery.html`.
+- `ios_editor_menu.js` — new iOS-only editor burger.
+- `flickgame_share.js` — shared standalone-export, share-link, and import-parsing helpers used by both the editor and gallery.
 
 ### Modified
 
-- **`gallery_ui.js`** — slim down. Keep `FlickGalleryStore` integration helpers (save current, load by id, dirty tracking, `ensureIosActiveProjectEntry`, rename-with-uniqueness). Keep the desktop overlay rendering for browser use. Remove the embedded iOS burger-list rendering (the burger no longer contains the list).
-- **`index.html`** — on load, if `?id=<projectId>` is present, load that project from IndexedDB and set it active before normal editor init. Replace the `ios_burger_menu.js` include with `ios_editor_menu.js`. Minor CSS tweaks to move Background and Palette rows into the new burger layout when on iOS.
-- **`play.html`** — add IndexedDB ingestion: if `?id=<projectId>` is present, load state from IndexedDB before the existing runtime init. `embeddedDat` and `?p=<gistId>` paths unchanged.
-- **`ios/FlickgameShell/FlickgameShell/FlickWebView.swift`** — load `gallery.html` on launch instead of `index.html`. Enable `allowsBackForwardNavigationGestures` so swipe-back works naturally between gallery ↔ editor ↔ player.
-- **`ios/flickgame-web-manifest.txt`** — add `gallery.html`, `gallery_page.js`, `ios_editor_menu.js`; remove `ios_burger_menu.js`.
+- `gallery_ui.js` — keep editor/gallery-store integration helpers, expose editor-facing helpers needed for exact-project load and fresh-project creation, and remove the old embedded iOS gallery menu path.
+- `index.html` — add `?id=` / `?new=1` editor bootstrap logic, use `flickgame_share.js` for export/share/import plumbing, replace `ios_burger_menu.js` with `ios_editor_menu.js`.
+- `play.html` — add inline IndexedDB ingestion for `?id=<projectId>`.
+- `ios/FlickgameShell/FlickgameShell/FlickWebView.swift` — load `gallery.html` on launch and enable swipe-back.
+- `ios/flickgame-web-manifest.txt` — add new files and remove `ios_burger_menu.js`.
 
-### Unchanged
+### Unchanged in principle
 
-`gallery_store.js`, `flickgame_base.js`, `flickgame_vanilla.js`, `colorNames.js`, `FileSaver.js`, palette data, the editor's drawing surface, and the browser-side editor UX.
+`gallery_store.js`, `flickgame_vanilla.js`, palette data, the drawing surface, and the browser-side editor UX all stay conceptually the same.
 
-## Gallery page (`gallery.html`)
+## Gallery Page (`gallery.html`)
 
 ### Header
 
-A slim title bar reading "Flickgames". No action buttons — Import is a tile (see below); Export is gone (handled per-card via Share → Save HTML to Files).
+A slim title bar reading "Flickgames". No action buttons.
 
 ### Tile grid
 
 Rendered top-left to bottom-right:
 
-1. **`+` New tile** — creates a blank project in IndexedDB using `nextDefaultTitle(items)`, navigates to `index.html?id=<newId>`.
-2. **Import… tile** — opens a hidden `<input type="file">`. On file selected, parses as the current export/import format, creates a new project via `putProject({ title, state })`, navigates to the editor for that new project.
-3. **Saved project cards**, most-recently-updated first.
+1. `+` New tile -> navigates to `index.html?new=1`.
+2. Import tile -> opens a hidden file input and imports using the same standalone-file parsing rules as the editor.
+3. Saved project cards, most-recently-updated first.
+
+### Import format
+
+The import path should accept the format the app already exports today:
+
+- Standalone exported `.html` files containing embedded state.
+- Raw state JSON may optionally be accepted as a convenience, but standalone HTML is the primary supported format.
+
+On successful import, create a new project with a unique resolved title and navigate to `index.html?id=<newId>`.
 
 ### Card anatomy
 
 Each saved project card contains:
 
-- **Thumbnail** — tap anywhere on the thumbnail navigates to `play.html?id=<projectId>`.
-- **Title line** (resolved title as stored).
-- **Modified timestamp**.
-- **Action row**: `Edit` · `Share` · `Delete`.
+- Thumbnail — tap navigates to `play.html?id=<projectId>`.
+- Title line.
+- Modified timestamp.
+- Action row: `Edit` · `Share` · `Delete`.
 
-Taps on the action row must not bubble to the thumbnail's play handler.
+Action-row taps must not bubble to the thumbnail play handler.
 
 ### Empty state
 
@@ -75,119 +106,93 @@ Only the `+` and Import tiles are shown. No prose.
 
 ### Share action sheet
 
-An in-page modal overlay (not the native iOS sheet), with two primary actions and a cancel row:
+An in-page modal overlay with:
 
-- **Share Link** — run the existing Gist upload flow for the project's state; on success call `navigator.share({ url })`; on failure toast the error and offer clipboard copy.
-- **Save HTML to Files** — run the existing standalone-HTML export for the project. On iOS, `FileSaver.js`'s download triggers WKWebView's default file-download handling, which surfaces the iOS Save-to-Files UI.
-- **Cancel** — close the sheet.
+- `Share Link` — upload the project's state through the existing Gist flow; on success call `navigator.share({ url })`; if sharing is unavailable or cancelled after upload, offer clipboard copy.
+- `Save HTML to Files` — generate the existing standalone HTML export and hand it off through `FileSaver.js`.
+- `Cancel` — close the sheet.
 
 ### Delete
 
-Confirm dialog. On confirm, `FlickGalleryStore.deleteProject(id)` then re-render the grid.
+Confirm dialog. On confirm, delete the project and re-render the grid.
 
-## Editor burger (iOS only — `ios_editor_menu.js`)
+## Editor Burger (`ios_editor_menu.js`)
 
-Replaces today's iOS burger contents. Desktop/browser burger is unchanged.
+Desktop/browser burger stays unchanged. The iOS burger is replaced entirely.
 
 ### Layout
 
-A two-column label→value grid:
+A two-column label/value grid:
 
-- **Name** → text input (live-reflects the current project's title)
-- **Background** → existing `bgColorSelect` element, reparented into the grid
-- **Palette** → button whose label is the current palette name; tapping it opens the existing palette-selector UI. The palette's external credit link is hidden on iOS.
+- Name -> text input
+- Background -> existing `bgColorSelect` element, reparented into the grid
+- Palette -> button labeled with the current palette name; tapping opens the existing palette selector
 
-Followed by stacked full-width buttons in this order:
+Then four stacked full-width buttons in order:
 
-1. **Save**
-2. **Clear page**
-3. **Help**
-4. **◀ Back to Gallery**
+1. Save
+2. Clear page
+3. Help
+4. Back to Gallery
 
-No section headings, no wrapper panels.
+### Name input
 
-### Name input (rename algorithm)
+On blur or Enter:
 
-On `blur` or Enter:
-
-1. Trim the input. If empty → use `nextDefaultTitle(items)` and return.
-2. Strip a trailing ` \d+` from the input (e.g. `"Space Game 3"` → `"Space Game"`).
-3. Build the set of titles across all *other* projects (excluding the current one) from `listProjects()`.
-4. If the bare name is not in that set → resolved title = bare name.
-5. Else find the smallest integer `N ≥ 2` such that `"<base> <N>"` is not in the set → resolved title = `"<base> <N>"`.
-6. Persist via `FlickGalleryStore.putProject({ ...current, title: resolved })`.
-7. Write the resolved title back into the input so the user sees any applied suffix.
-
-Suffix separator is a single space (e.g. `"Space Game"`, `"Space Game 2"`). Consistent with the intent of human-typed names; distinct from the `#N`-style default `"flickgame #1"` which is only a default and will be stripped-and-renumbered on any subsequent rename collision.
+1. Trim the input.
+2. If empty, fall back to `nextDefaultTitle(items)`.
+3. Strip one trailing ` <digits>` suffix from the user-entered name.
+4. Resolve collisions against all other project titles by appending the smallest ` N` where `N >= 2`.
+5. Persist the resolved title and write it back into the input.
 
 ### Save
 
-Calls `saveCurrentToGallery({ silent: false })` (existing function), closes the burger on success.
+Calls `saveCurrentToGallery({ silent: false })` and closes the burger on success.
 
 ### Clear page
 
-Fills *only the current frame* with the current background colour (`bgColorSelect.value`), using the existing single-frame clear code path triggered by the toolbar's clear icon. Not `newFlickgame()`.
-
-Shows a confirmation: "Clear this page? This cannot be undone." (Editor undo does still cover it; the confirm is a seatbelt because the action looks irreversible.)
+Uses the existing single-frame clear path. It clears only the current frame, not the whole flickgame, and asks for confirmation first.
 
 ### Help
 
-`window.location.href = 'help.html'`. Same as today.
+Navigates to `help.html`.
 
 ### Back to Gallery
 
-1. Check dirty via `FlickGalleryUI.isDirty()`.
-2. If dirty → prompt "Save changes before returning to the gallery?" with Save / Discard / Cancel.
-3. On Save (after save resolves) or Discard → `window.location.href = 'gallery.html'`. On Cancel → stay in the editor.
-4. If not dirty → navigate immediately.
+If the current project is dirty, show a custom three-action confirmation UI:
 
-## Swift shell changes (`FlickWebView.swift`)
+- `Save` -> save, then navigate to `gallery.html`
+- `Discard` -> navigate without saving
+- `Cancel` -> stay in the editor
 
-```swift
-if let url = Bundle.main.url(forResource: "gallery", withExtension: "html", subdirectory: "www") {
-    let dir = url.deletingLastPathComponent()
-    webView.loadFileURL(url, allowingReadAccessTo: dir)
-}
-```
+If the project is not dirty, navigate immediately.
 
-And:
+## Edge Cases
 
-```swift
-webView.allowsBackForwardNavigationGestures = true
-```
+- Stale deep link: `index.html?id=<missing>` or `play.html?id=<missing>` alerts/toasts "Project not found" and redirects to `gallery.html`.
+- New-project bootstrap: `index.html?new=1` always creates a fresh project entry and rewrites the URL to `?id=<newId>`.
+- Import failure: malformed files show an error and do not create a project.
+- Share failure: keep the share sheet open and surface the error.
+- Delete current project from the editor remains unreachable; delete happens from the gallery.
 
-No other Swift changes. The existing `FLICKGAME_HOST` user-script is `atDocumentStart` and applies to every same-origin navigation, so editor and player pages still see the flag.
+## Out of Scope
 
-## Edge cases
-
-- **Stale deep link** (`index.html?id=<missing>`): editor toasts "Project not found" and redirects to `gallery.html`.
-- **Rapid taps** on a card while transitioning: card-level busy flag gates Edit / Share / Delete.
-- **Gist upload failure** in Share Link: toast the error, leave the sheet open.
-- **Malformed Import file**: toast the error, do not create a project.
-- **Back-gesture** from player: WKWebView history handles it; no custom code needed.
-- **Delete the project currently being edited** is no longer reachable from the editor — you delete from the gallery, and by then the editor is not mounted.
-
-## Out of scope
-
-- A default/template project on first launch (noted as a future concern).
-- Browser adopting `gallery.html` as its home.
-- Additional landscape polish for the gallery or player chrome beyond what existing CSS covers.
-- Gallery-level rename (rename happens in the editor name input; gallery-level rename can be added later if wanted).
-- A Swift-side `UIActivityViewController` bridge. `navigator.share({ url })` is sufficient.
+- Making the browser app gallery-first.
+- Additional gallery-level rename UX.
+- Swift-native share-sheet bridging.
+- Major visual redesign outside the new gallery page and iOS burger.
 
 ## Testing
 
-Build with `make sync-ios` (or equivalent) and run in Xcode.
-
-1. **Launch target**: iOS opens to `gallery.html`; browser opens to `index.html`.
-2. **Zero state**: fresh install shows only `+` and Import tiles; `+` navigates to the editor with a blank project.
-3. **Tap-to-play**: tapping a thumbnail navigates to `play.html?id=`; swipe-back returns to the gallery.
-4. **Edit round-trip**: Edit → modify → burger Save → Back to Gallery → card shows fresh thumbnail and updated timestamp.
-5. **Dirty Back-to-Gallery**: modify → Back to Gallery → prompt appears; verify Save / Discard / Cancel branches.
-6. **Rename collision**: two projects exist; rename the second to the first's name → resolves to `"<name> 2"`.
-7. **Rename strip**: rename an existing project to `"Space Game 3"` with no collision → resolves to `"Space Game"`.
-8. **Delete from gallery**: card disappears; remaining cards render; `+` tile remains.
-9. **Share Link**: Share → Share Link → Gist URL reaches the iOS share sheet via `navigator.share`.
-10. **Save HTML to Files**: Share → Save HTML to Files → iOS Save-to-Files surfaces the standalone HTML.
-11. **Import**: Import tile → pick a valid export file → new project appears in the gallery and opens in the editor.
-12. **Browser unchanged**: load `index.html` in a desktop browser → existing editor + overlay work as today.
+1. Launch target: iOS opens `gallery.html`; browser still opens `index.html`.
+2. Zero state: fresh install shows only `+` and Import.
+3. New bootstrap: tapping `+` opens the editor, immediately creates a fresh project, and canonicalizes the URL to `index.html?id=<newId>`.
+4. Exact-project edit: opening an existing card in the editor saves back into that same project record.
+5. Dirty back flow: verify Save / Discard / Cancel all behave distinctly.
+6. Tap-to-play: tapping a card thumbnail opens `play.html?id=<projectId>` and swipe-back returns to the gallery.
+7. Rename collision: duplicate names resolve to `<name> 2`, `<name> 3`, etc.
+8. Rename strip: `"Space Game 3"` resolves to `"Space Game"` when there is no collision.
+9. Share Link: Gist upload succeeds and `navigator.share` receives the final play URL.
+10. Save HTML to Files: standalone HTML export still downloads and plays correctly.
+11. Import: importing a standalone exported HTML file creates a new project and opens it in the editor.
+12. Browser unchanged: desktop editor, overlay gallery, share, import, and download still work as before.

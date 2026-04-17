@@ -16,7 +16,9 @@
       "Bash(git commit:*)",
       "Bash(/Users/stephenlavelle/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.6/skills/brainstorming/scripts/start-server.sh --project-dir /Users/stephenlavelle/Documents/4x4)",
       "Bash(plutil -lint ios/FlickgameShell/FlickgameShell.xcodeproj/Info.plist)",
-      "Bash(plutil -lint ios/FlickgameShell/FlickgameShell.xcodeproj/project.pbxproj)"
+      "Bash(plutil -lint ios/FlickgameShell/FlickgameShell.xcodeproj/project.pbxproj)",
+      "Bash(/Users/stephenlavelle/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/skills/brainstorming/scripts/start-server.sh:*)",
+      "Bash(/Users/stephenlavelle/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/skills/brainstorming/scripts/stop-server.sh /Users/stephenlavelle/Documents/4x4/.superpowers/brainstorm/59127-1776460612)"
     ]
   }
 }

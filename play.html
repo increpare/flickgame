@@ -1,7 +1,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <link rel="icon" 
       type="image/png" 
       href="favicon.png">
@@ -10,6 +10,31 @@
 :root {
     --background-color: #000000;
     --foreground-color: #ffffff;
+    --footer-height: 30px;
+    --footer-font-size: clamp(16px, 3.4vw, 20px);
+    --footer-button-font-size: clamp(12px, 2.8vw, 15px);
+    --footer-button-padding-y: 3px;
+    --footer-button-padding-x: 10px;
+    --footer-side-space: 220px;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+  background-color: var(--background-color);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+body {
+  position: fixed;
+  inset: 0;
 }
 
 #header h1 {
@@ -33,12 +58,13 @@
 
 a {
   color:var(--foreground-color);
+  -webkit-user-drag: none;
 }
 
 #content {
   position: absolute;
   top:5px;
-  bottom:30px;
+  bottom: var(--footer-height);
   left:0px;
   right:0px;
   background-color: var(--background-color);
@@ -63,29 +89,75 @@ a {
  -ms-interpolation-mode: nearest-neighbor;
   touch-action: none;
 }
+#galleryLink,
 #hackLink {
   position: absolute;
-  right:10px;
-  float: right;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
-#homelink {
-  float: center;
+#galleryLink {
+  left: 10px;
+}
+
+#hackLink {
+  right: 10px;
+}
+
+#galleryLink,
+#hackLink {
+  display: inline-block;
+  padding: var(--footer-button-padding-y) var(--footer-button-padding-x);
+  border: 1px solid var(--foreground-color);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  color: var(--foreground-color);
+  text-decoration: none;
+  line-height: 1.2;
+  font-size: var(--footer-button-font-size);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+}
+
+#homeLink {
+  display: inline-block;
+  max-width: calc(100% - var(--footer-side-space));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 #footer {
   position:absolute;
   left:0px;
   right:0px;
   bottom:0px;
-  height:30px;
+  height: var(--footer-height);
   margin:0;
   padding:0;
   background-color: var(--background-color);
   color:var(--foreground-color);
   text-align: center;
   padding: 0;
-  line-height: 30px;
-  font-size: clamp(16px, 3.4vw, 20px);
+  line-height: var(--footer-height);
+  font-size: var(--footer-font-size);
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+body[data-host="ios-app"] {
+  --footer-height: 52px;
+  --footer-font-size: clamp(18px, 4.6vw, 24px);
+  --footer-button-font-size: clamp(15px, 3.8vw, 19px);
+  --footer-button-padding-y: 7px;
+  --footer-button-padding-x: 14px;
+  --footer-side-space: 290px;
 }
 #touch-cursor-layer {
   display: none;
@@ -324,6 +396,120 @@ function qualifyURL(url) {
     return aurl.href;
 }
 
+function isIosAppHost() {
+    try {
+        return !!(window && (window.FLICKGAME_HOST === 'ios-app' || window.FLICKGAME_IOS_APP));
+    } catch (e) {
+        return false;
+    }
+}
+
+function shouldShowTouchTutorial() {
+    return !isIosAppHost();
+}
+
+function preventPageGesture(e) {
+    if (e && typeof e.preventDefault === 'function') {
+        e.preventDefault();
+    }
+}
+
+function disableElementDrag(id) {
+    var node = document.getElementById(id);
+    if (!node) return;
+    node.setAttribute('draggable', 'false');
+    node.addEventListener('dragstart', preventPageGesture);
+    node.addEventListener('selectstart', preventPageGesture);
+}
+
+function updateFooterLinks() {
+    var galleryLink = document.getElementById("galleryLink");
+    var hacklink = document.getElementById("hackLink");
+    var homepageLink = document.getElementById("homeLink");
+    var homepage = gameState && gameState.gameLink ? gameState.gameLink : '';
+
+    if (galleryLink) {
+        if (isIosAppHost()) {
+            galleryLink.innerHTML = t("return_gallery_link_label_html");
+            galleryLink.href = 'gallery.html';
+            galleryLink.style.display = '';
+        } else {
+            galleryLink.style.display = 'none';
+            galleryLink.removeAttribute('href');
+        }
+    }
+
+    if (hacklink) {
+        if (isIosAppHost()) {
+            hacklink.innerHTML = t("edit_link_label_html");
+            hacklink.style.display = '';
+        } else {
+            hacklink.style.display = '';
+        }
+    }
+
+    if (!homepageLink) return;
+    homepageLink.textContent = strip_http(homepage || '');
+    if (isIosAppHost()) {
+        homepageLink.removeAttribute('href');
+        homepageLink.style.pointerEvents = 'none';
+        homepageLink.style.cursor = 'default';
+        homepageLink.style.textDecoration = 'none';
+        return;
+    }
+    homepageLink.style.pointerEvents = '';
+    homepageLink.style.cursor = '';
+    homepageLink.style.textDecoration = '';
+    if (homepage && !homepage.match(/^https?:\/\//)) {
+        homepage = "http://" + homepage;
+    }
+    homepageLink.href = homepage;
+}
+
+var LOCAL_GALLERY_DB_NAME = 'flickgame';
+var LOCAL_GALLERY_DB_VERSION = 1;
+var LOCAL_GALLERY_STORE = 'projects';
+
+function openLocalGalleryDb() {
+    return new Promise(function(resolve, reject) {
+        if (typeof indexedDB === 'undefined') {
+            reject(new Error('IndexedDB not available'));
+            return;
+        }
+        var req = indexedDB.open(LOCAL_GALLERY_DB_NAME, LOCAL_GALLERY_DB_VERSION);
+        req.onupgradeneeded = function() {
+            var db = req.result;
+            if (!db.objectStoreNames.contains(LOCAL_GALLERY_STORE)) {
+                var store = db.createObjectStore(LOCAL_GALLERY_STORE, { keyPath: 'id' });
+                store.createIndex('updatedAt', 'updatedAt', { unique: false });
+                store.createIndex('createdAt', 'createdAt', { unique: false });
+            }
+        };
+        req.onerror = function() { reject(req.error || new Error('Failed to open IndexedDB')); };
+        req.onsuccess = function() { resolve(req.result); };
+    });
+}
+
+function getLocalGalleryProject(id) {
+    return openLocalGalleryDb().then(function(db) {
+        return new Promise(function(resolve, reject) {
+            var tx;
+            var store;
+            var req;
+            try {
+                tx = db.transaction(LOCAL_GALLERY_STORE, 'readonly');
+                store = tx.objectStore(LOCAL_GALLERY_STORE);
+                req = store.get(id);
+            } catch (e) {
+                reject(e);
+                return;
+            }
+            req.onerror = function() { reject(req.error || new Error('IndexedDB request failed')); };
+            req.onsuccess = function() { resolve(req.result); };
+        });
+    });
+}
+
 // RLE decode function
 function RLE_decode(encoded) {
     var output = "";
@@ -350,6 +536,20 @@ function getData(options) {
     if (typeof embeddedDat !== 'undefined' && embeddedDat[0] !== '_') {
         embeddedDat = decodeURI(embeddedDat);
         onEmbedded(embeddedDat);
+        return true;
+    }
+
+    var localId = getParameterByName("id");
+    if (localId && localId.length > 0) {
+        getLocalGalleryProject(localId).then(function(project) {
+            if (!project || typeof project.state !== 'string') {
+                onError("Project not found");
+                return;
+            }
+            onSuccess(project.state);
+        }).catch(function(err) {
+            onError(err && err.message ? err.message : "Failed to load project");
+        });
         return true;
     }
 
@@ -1102,14 +1302,7 @@ function loadState(code) {
   document.documentElement.style.setProperty('--foreground-color', gameState.foreground_color);
 
   var homepage = gameState.gameLink;
-  var homepageLink = document.getElementById("homeLink");
-  if (homepageLink) {
-      homepageLink.innerHTML = strip_http(homepage);
-      if (!homepage.match(/^https?:\/\//)) {
-          homepage = "http://" + homepage;
-      }
-      homepageLink.href = homepage;
-  }
+  updateFooterLinks();
 }
 </script>
 <script>
@@ -1151,12 +1344,14 @@ var i18nStrings = {
   en: {
     tutorial_move_cursor: "Drag anywhere to move the cursor. Can you find a link?",
     tutorial_tap_link: "Tap to go to the hovered link!",
-    edit_link_label_html: "&sdotb; edit"
+    edit_link_label_html: "&sdotb; edit",
+    return_gallery_link_label_html: "&lt;&lt; Gallery"
   },
   de: {
     tutorial_move_cursor: "Zieh herum, um den Cursor zu bewegen. Kannst du einen Link finden?",
     tutorial_tap_link: "Tappen, um einem Link zu folgen!",
-    edit_link_label_html: "&sdotb; bearbeiten"
+    edit_link_label_html: "&sdotb; bearbeiten",
+    return_gallery_link_label_html: "&lt;&lt; Galerie"
   }
 };
 function resolveI18nLocale() {
@@ -1521,6 +1716,13 @@ function tutorialHandSvgHtml() {
 
 function setTutorialMode(mode) {
   if (!tutorialEl) return;
+  if (!shouldShowTouchTutorial()) {
+    tutorialMode = '';
+    stopTutorialAnimation();
+    tutorialEl.classList.remove('visible', 'fading', 'tutorial-bottom', 'tutorial-anchored', 'tutorial-drag');
+    tutorialEl.innerHTML = '';
+    return;
+  }
   if (tutorialMode === mode && tutorialEl.classList.contains('visible')) return;
   cancelTutorialFadeOut();
   tutorialMode = mode || '';
@@ -1736,6 +1938,7 @@ function armTutorialCountdown() {
 
 function showTutorialMessage(text, durationMs) {
   if (!tutorialEl) return;
+  if (!shouldShowTouchTutorial()) return;
   if (tutorialTimeoutId) {
     clearTimeout(tutorialTimeoutId);
     tutorialTimeoutId = 0;
@@ -1950,7 +2153,7 @@ function updateCursorHover() {
   if (touchMode && tutorialHasMoved && !hoveredIsLink) {
     tutorialWasOffLinkAfterMove = true;
   }
-  if (touchMode && tutorialHasMoved && tutorialWasOffLinkAfterMove && hoveredIsLink && !tutorialTapHintDisabled) {
+  if (shouldShowTouchTutorial() && touchMode && tutorialHasMoved && tutorialWasOffLinkAfterMove && hoveredIsLink && !tutorialTapHintDisabled) {
     if (tutorialMode !== 'tap' || !tutorialEl.classList.contains('visible')) {
       setTutorialMode('tap');
       tutorialEl.classList.add('visible');
@@ -2449,12 +2652,15 @@ function get_page_data() {
             if (hacklink) {
                 if (isLocalTestMode()) {
                     hacklink.href = qualifyURL("index.html?test");
+                } else if (getParameterByName("id")) {
+                    hacklink.href = qualifyURL("index.html?id=" + getParameterByName("id"));
                 } else {
                     var id = getParameterByName("p").replace(/[\\\/]/, "");
                     hacklink.href = qualifyURL("index.html?p=" + id);
                 }
                 hacklink.innerHTML = t("edit_link_label_html");
             }
+            updateFooterLinks();
             
             // Call renderImages if it exists
             if (typeof renderImages === 'function') {
@@ -2463,11 +2669,7 @@ function get_page_data() {
         },
         onEmbedded: function(code) {
             loadState(code);
-            
-            var homepageLink = document.getElementById("homeLink");
-            if (homepageLink) {
-                homepageLink.textContent = gameState.gameLink;
-            }
+            updateFooterLinks();
             
             renderImages();
         }
@@ -2475,6 +2677,9 @@ function get_page_data() {
         onError: function(message) {
             console.error(message);
             alert(message);
+            if (getParameterByName("id")) {
+                window.location.href = 'gallery.html';
+            }
         }
     });
 }
@@ -2484,7 +2689,19 @@ var mainCanvas;
 var mainCanvasCtx;
 var mainCanvasContainer;
 function init(){
+  if (isIosAppHost()) {
+    document.body.setAttribute('data-host', 'ios-app');
+  }
   window.addEventListener('resize', redraw, false);
+  document.addEventListener('touchmove', preventPageGesture, {passive: false});
+  document.addEventListener('gesturestart', preventPageGesture, {passive: false});
+  document.addEventListener('gesturechange', preventPageGesture, {passive: false});
+  document.addEventListener('gestureend', preventPageGesture, {passive: false});
+  document.addEventListener('dragstart', preventPageGesture);
+  document.addEventListener('selectstart', preventPageGesture);
+  disableElementDrag('galleryLink');
+  disableElementDrag('hackLink');
+  disableElementDrag('homeLink');
 
 
   mainCanvas=document.getElementById("mainCanvas");
@@ -2515,9 +2732,11 @@ function init(){
     mainCanvas.style.cursor = 'none';
     tutorialCountdownEnabled = false;
     tutorialHasMoved = false;
-    setTutorialMode('drag');
-    tutorialEl.classList.add('visible');
-    // Persist until first movement; fade out when tutorialHasMoved becomes true.
+    if (shouldShowTouchTutorial()) {
+      setTutorialMode('drag');
+      tutorialEl.classList.add('visible');
+      // Persist until first movement; fade out when tutorialHasMoved becomes true.
+    }
   }
 
   redraw();
@@ -2632,7 +2851,6 @@ function goFullscreen(evt){
 </svg>
 <div id="header">
 </div>
-<p>
 <div id="content">
 <canvas id="mainCanvas"></canvas>
 <div id="touch-cursor-layer" aria-hidden="true">
@@ -2643,9 +2861,8 @@ function goFullscreen(evt){
   <div id="touch-tutorial"></div>
 </div>
 </div>
-<p>
 <div id="footer">
- <a href="http://www.flickgame.org" id="hackLink"></a> <a  id="homeLink" href="http://www.flickgame.org"></a> 
+ <a href="gallery.html" id="galleryLink"></a> <a href="http://www.flickgame.org" id="hackLink"></a> <a id="homeLink" href="http://www.flickgame.org"></a> 
 </div>
 </body>
 </html>

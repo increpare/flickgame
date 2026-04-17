@@ -9,6 +9,7 @@
   <script src="flickgame_base.js"></script>
   <script src="flickgame_vanilla.js"></script>
   <script src="colorNames.js"></script>
+  <script src="flickgame_share.js"></script>
   <script type="text/javascript">
 
     const version = "2";
@@ -324,53 +325,15 @@
     var pagePickerEl = null;
     var pagePickerColorIdx = -1;
 
-    var standalone_HTML_String = "";
-
-    var clientStandaloneRequest = new XMLHttpRequest();
-
-    clientStandaloneRequest.open('GET', 'play.html');
-    clientStandaloneRequest.onreadystatechange = function () {
-
-      if (clientStandaloneRequest.readyState != 4) {
-        return;
-      }
-      standalone_HTML_String = clientStandaloneRequest.responseText;
-    }
-    clientStandaloneRequest.send();
-
-    function buildStandalone(sourceCode) {
-      if (standalone_HTML_String.length === 0) {
-        alert("Can't export yet - still downloading html template.", true);
-        return;
-      }
-      sourceCode = encodeURI(sourceCode);
-      var htmlString = "<!--Save as html file-->\n " + standalone_HTML_String;
-      htmlString = htmlString.replace(/__EMBED__/g, sourceCode);
-      var blob = new Blob([htmlString], { type: "text/html;charset=utf-8" });
-      saveAs(blob, "flickgame.html");
-    }
-
     function exportClick() {
       closeBurgerDialog();
-      var embedDat = stateToString();
-      buildStandalone(embedDat);
+      FlickgameShare.downloadStandaloneHtml(stateToString(), 'flickgame.html').catch(function (err) {
+        alert(err && err.message ? err.message : 'Failed to build download');
+      });
     }
 
-
-    OAUTH_CLIENT_ID = "eb2aad12c63aec0136b1";
-
     function getAuthURL() {
-      var randomState = window.btoa(Array.prototype.map.call(
-        window.crypto.getRandomValues(new Uint8Array(24)),
-        function (x) { return String.fromCharCode(x); }).join(""));
-
-      var authUrl = "https://github.com/login/oauth/authorize"
-        + "?client_id=" + OAUTH_CLIENT_ID
-        + "&scope=gist"
-        + "&state=" + randomState
-        + "&allow_signup=true";
-
-      return authUrl;
+      return FlickgameShare.getAuthUrl();
     }
 
     function printUnauthorized() {
@@ -397,61 +360,19 @@
     }
 
     function shareClick() {
-      var oauthAccessToken = window.localStorage.getItem("oauth_access_token");
-      if (typeof oauthAccessToken !== "string") {
-        // Generates 32 letters of random data, like "liVsr/e+luK9tC02fUob75zEKaL4VpQn".
-        printUnauthorized();
-        return;
-      }
-
-      var str = stateToString();
-
-      var gistToCreate = {
-        "description": "flickgame",
-        "public": true,
-        "files": {
-          "readme.txt": {
-            "content": "A game made with www.flickgame.org.  You can import game.txt there to play the game.  Uh, too lazy to describe - HMU at analytic@gmail.com if you want to know how (basically just use the gist ID in the url like other flickgames do...) "
-          },
-          "game.txt": {
-            "content": str
-          }
-        }
-      };
-
-      var githubURL = 'https://api.github.com/gists';
-      var githubHTTPClient = new XMLHttpRequest();
-      githubHTTPClient.open('POST', githubURL);
-      githubHTTPClient.onreadystatechange = function () {
-        if (githubHTTPClient.readyState != 4) {
-          return;
-        }
-        var result = JSON.parse(githubHTTPClient.responseText);
-        if (githubHTTPClient.status === 403) {
-          alert(result.message);
-        } else if (githubHTTPClient.status !== 200 && githubHTTPClient.status !== 201) {
-          if (githubHTTPClient.statusText === "Unauthorized") {
-            alert("Authorization check failed.  You have to log back into GitHub (or give it permission again or something).");
-            window.localStorage.removeItem("oauth_access_token");
-          } else {
-            alert("HTTP Error " + githubHTTPClient.status + ' - ' + githubHTTPClient.statusText);
-          }
-          printUnauthorized();
-        } else {
-          var id = result.id;
-          var url = qualifyURL("play.html?p=" + id);
-          var shareHtml = "<a target=\"_blank\" href=\"" + url + "\">&#8627;" + id + "</a> " +
+      FlickgameShare.shareStateAsGist(stateToString(), {
+        onUnauthorized: printUnauthorized,
+        onError: function (msg) { alert(msg); },
+        onSuccess: function (result) {
+          var url = FlickgameShare.resolvePlayUrl(result.playUrl);
+          var shareHtml = "<a target=\"_blank\" href=\"" + url + "\">&#8627;" + result.id + "</a> " +
             '<span class="share-inline-meta">(<a onclick="githubLogOut();" href="javascript:void(0);">log out of GitHub</a>)</span>';
           var shareLink = document.getElementById("shareLink");
           if (shareLink) { shareLink.innerHTML = shareHtml; shareLinkInner = shareLink.childNodes[0]; }
           var burgerShare = document.getElementById("burger-share-result");
           if (burgerShare) burgerShare.innerHTML = shareHtml;
         }
-      }
-      githubHTTPClient.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-      githubHTTPClient.setRequestHeader("Authorization", "token " + oauthAccessToken);
-      var stringifiedGist = JSON.stringify(gistToCreate);
-      githubHTTPClient.send(stringifiedGist);
+      });
       lastDownTarget = canvas;
     }
 
@@ -2026,30 +1947,6 @@
       requestAnimationFrame(function() { updateDesktopScale(); });
     }
 
-    function parseEmbeddedStateFromHtml(contents) {
-      var fromToken = "<!--__EmbedBegin__-->";
-      var endToken = "<!--__EmbedEnd__-->";
-      var fromIndex = contents.indexOf(fromToken);
-      var endIndex = contents.indexOf(endToken);
-      if (fromIndex < 0 || endIndex < 0 || endIndex <= fromIndex) {
-        throw new Error("Couldn't find embedded flickgame data in this HTML file.");
-      }
-      var ss1 = contents.substr(fromIndex + fromToken.length, endIndex - fromIndex - fromToken.length);
-      var firstQuoteIndex = ss1.indexOf("\"");
-      if (firstQuoteIndex < 0) {
-        throw new Error("Embedded flickgame data is malformed.");
-      }
-      var ss2 = ss1.substr(firstQuoteIndex + 1);
-      var left_removed = decodeURI(ss2);
-      // we want to find the location of the *final* double-quote, and to remove
-      // everything after that.
-      var final_quote_index = left_removed.lastIndexOf("\"");
-      if (final_quote_index < 0) {
-        throw new Error("Embedded flickgame data is malformed.");
-      }
-      return left_removed.substring(0, final_quote_index);
-    }
-
     function loadFlickgameFile(file) {
       closeBurgerDialog();
       if (!file) {
@@ -2060,7 +1957,7 @@
       r.onload = function (e) {
         try {
           var contents = e.target.result;
-          var state = parseEmbeddedStateFromHtml(contents);
+          var state = FlickgameShare.extractStateFromImportText(contents);
           loadAndDisplayState(state);
         } catch (err) {
           alert(err && err.message ? err.message : "Failed to load file");
@@ -2105,12 +2002,53 @@
       });
     }
 
-    function getDataIndex() {
+    function redirectToGalleryWithMessage(message) {
+      alert(message);
+      window.location.href = 'gallery.html';
+    }
+
+    function bootstrapEditorRoute() {
+      var params;
+      try {
+        params = new URLSearchParams(window.location.search);
+      } catch (e) {
+        params = null;
+      }
+      var localId = params ? params.get('id') : null;
+      if (localId) {
+        if (!window.FlickGalleryUI || typeof window.FlickGalleryUI.openProjectById !== 'function') {
+          redirectToGalleryWithMessage('Project loading is unavailable.');
+          return true;
+        }
+        window.FlickGalleryUI.openProjectById(localId).catch(function (err) {
+          redirectToGalleryWithMessage(err && err.message ? err.message : 'Project not found');
+        });
+        return true;
+      }
+      var wantsNew = params ? params.get('new') : null;
+      if (wantsNew === '1') {
+        newFlickgame();
+        if (!window.FlickGalleryUI || typeof window.FlickGalleryUI.createProjectFromCurrentState !== 'function') {
+          redirectToGalleryWithMessage('Project creation is unavailable.');
+          return true;
+        }
+        window.FlickGalleryUI.createProjectFromCurrentState().then(function (saved) {
+          if (!saved || !saved.id) throw new Error('Failed to create project');
+          history.replaceState(null, '', 'index.html?id=' + encodeURIComponent(saved.id));
+        }).catch(function (err) {
+          redirectToGalleryWithMessage(err && err.message ? err.message : 'Failed to create project');
+        });
+        return true;
+      }
       return getData({
         onSuccess: loadAndDisplayState,
         onError: function(message) { alert(message); },
         onEmbedded: loadAndDisplayState
       });
+    }
+
+    function getDataIndex() {
+      return bootstrapEditorRoute();
     }
 
     function drawThumbnail(n) {
@@ -4225,7 +4163,7 @@
                       <a href="#" onclick="exportClick();return false;">&sdotb; export</a><br />
                       <a href="#" onclick="document.getElementById('my_file').click();return false;">&sdotb;
                         import</a><br />
-                      <input type="file" accept=".html" id="my_file" style="display: none;" />
+                      <input type="file" accept=".html,.json,.txt,text/plain" id="my_file" style="display: none;" />
                       <a href="help.html" target="_blank" title="blah">? help</a>
                       <br />
                       <br />
@@ -4356,7 +4294,7 @@
   </div>
   <script src="gallery_store.js"></script>
   <script src="gallery_ui.js"></script>
-  <script src="ios_burger_menu.js"></script>
+  <script src="ios_editor_menu.js"></script>
 </body>
 
 </html>
