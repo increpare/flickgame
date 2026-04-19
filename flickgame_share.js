@@ -7,6 +7,21 @@
 
   function getPlayTemplate() {
     if (templatePromise) return templatePromise;
+    if (typeof window.FLICKGAME_STANDALONE_PLAY_HTML_B64 === 'string' && window.FLICKGAME_STANDALONE_PLAY_HTML_B64.length > 0) {
+      templatePromise = new Promise(function (resolve, reject) {
+        try {
+          var b64bin = atob(window.FLICKGAME_STANDALONE_PLAY_HTML_B64);
+          var b64bytes = new Uint8Array(b64bin.length);
+          for (var i = 0; i < b64bin.length; i++) {
+            b64bytes[i] = b64bin.charCodeAt(i) & 0xff;
+          }
+          resolve(new TextDecoder('utf-8').decode(b64bytes));
+        } catch (e) {
+          reject(e);
+        }
+      });
+      return templatePromise;
+    }
     templatePromise = new Promise(function (resolve, reject) {
       var req = new XMLHttpRequest();
       req.open('GET', 'play.html');
@@ -32,6 +47,19 @@
 
   function downloadStandaloneHtml(stateString, filename) {
     return buildStandaloneHtmlString(stateString).then(function (html) {
+      if (window.FLICKGAME_IOS_APP && window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.flickExport) {
+        var enc = new TextEncoder();
+        var u8 = enc.encode(html);
+        var bin = '';
+        for (var j = 0; j < u8.length; j++) {
+          bin += String.fromCharCode(u8[j]);
+        }
+        window.webkit.messageHandlers.flickExport.postMessage({
+          filename: filename || 'flickgame.html',
+          dataBase64: btoa(bin)
+        });
+        return true;
+      }
       var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
       if (typeof saveAs !== 'function') throw new Error('FileSaver (saveAs) not available');
       saveAs(blob, filename || 'flickgame.html');
