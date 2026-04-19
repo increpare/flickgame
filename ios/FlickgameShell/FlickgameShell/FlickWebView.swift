@@ -18,8 +18,11 @@ struct FlickWebViewRepresentable: UIViewRepresentable {
         """
         let hostScript = WKUserScript(source: hostFlag, injectionTime: .atDocumentStart, forMainFrameOnly: true)
         contentController.addUserScript(hostScript)
+        Self.addStandaloneTemplateUserScript(to: contentController)
+        contentController.add(context.coordinator, name: "flickExport")
         config.userContentController = contentController
         let webView = WKWebView(frame: .zero, configuration: config)
+        context.coordinator.shareAnchorWebView = webView
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
         webView.isOpaque = false
@@ -37,7 +40,25 @@ struct FlickWebViewRepresentable: UIViewRepresentable {
 
     func updateUIView(_ uiView: WKWebView, context: Context) {}
 
-    final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
+    /// WKWebView does not allow `XMLHttpRequest` from `file://` pages to sibling files.
+    /// Export reads `play.html` as a string; inject it at document start so the web bundle matches the site.
+    private static func addStandaloneTemplateUserScript(to contentController: WKUserContentController) {
+        guard let url = Bundle.main.url(forResource: "play", withExtension: "html", subdirectory: "www"),
+              let data = try? Data(contentsOf: url),
+              !data.isEmpty
+        else {
+            return
+        }
+        let b64 = data.base64EncodedString()
+        let source = "window.FLICKGAME_STANDALONE_PLAY_HTML_B64='\(b64)';"
+        let script = WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true)
+        contentController.addUserScript(script)
+    }
+
+    final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler {
+        /// Used as `popoverPresentationController` anchor for export share sheet on iPad.
+        weak var shareAnchorWebView: WKWebView?
+
         /// `target=_blank` / `window.open` — load in the same web view.
         func webView(
             _ webView: WKWebView,
@@ -49,6 +70,38 @@ struct FlickWebViewRepresentable: UIViewRepresentable {
                 webView.load(navigationAction.request)
             }
             return nil
+        }
+
+        func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+            guard message.name == "flickExport" else { return }
+            guard let body = message.body as? [String: Any],
+                  let b64 = body["dataBase64"] as? String,
+                  let filename = body["filename"] as? String,
+                  let data = Data(base64Encoded: b64)
+            else {
+                return
+            }
+            let safeName = (filename as NSString).lastPathComponent
+            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + "-" + safeName)
+            do {
+                try data.write(to: tempURL)
+            } catch {
+                return
+            }
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                guard let vc = self.topViewController() else { return }
+                let av = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
+                av.completionWithItemsHandler = { _, _, _, _ in
+                    try? FileManager.default.removeItem(at: tempURL)
+                }
+                if let pop = av.popoverPresentationController, let anchor = self.shareAnchorWebView {
+                    pop.sourceView = anchor
+                    pop.sourceRect = CGRect(x: anchor.bounds.midX, y: anchor.bounds.midY, width: 1, height: 1)
+                    pop.permittedArrowDirections = []
+                }
+                vc.present(av, animated: true)
+            }
         }
 
         private func topViewController() -> UIViewController? {

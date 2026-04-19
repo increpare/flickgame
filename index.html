@@ -326,34 +326,127 @@
 
     var standalone_HTML_String = "";
 
-    var clientStandaloneRequest = new XMLHttpRequest();
-
-    clientStandaloneRequest.open('GET', 'play.html');
-    clientStandaloneRequest.onreadystatechange = function () {
-
-      if (clientStandaloneRequest.readyState != 4) {
-        return;
+    if (typeof window.FLICKGAME_STANDALONE_PLAY_HTML_B64 === "string" && window.FLICKGAME_STANDALONE_PLAY_HTML_B64.length > 0) {
+      try {
+        var b64bin = atob(window.FLICKGAME_STANDALONE_PLAY_HTML_B64);
+        var b64bytes = new Uint8Array(b64bin.length);
+        for (var b64i = 0; b64i < b64bin.length; b64i++) {
+          b64bytes[b64i] = b64bin.charCodeAt(b64i) & 0xff;
+        }
+        standalone_HTML_String = new TextDecoder("utf-8").decode(b64bytes);
+      } catch (b64e) {
+        standalone_HTML_String = "";
       }
-      standalone_HTML_String = clientStandaloneRequest.responseText;
     }
-    clientStandaloneRequest.send();
+
+    if (standalone_HTML_String.length === 0) {
+      var clientStandaloneRequest = new XMLHttpRequest();
+
+      clientStandaloneRequest.open('GET', 'play.html');
+      clientStandaloneRequest.onreadystatechange = function () {
+
+        if (clientStandaloneRequest.readyState != 4) {
+          return;
+        }
+        standalone_HTML_String = clientStandaloneRequest.responseText;
+        // #region agent log
+        try {
+          fetch('http://127.0.0.1:7598/ingest/f4d4293f-dff4-4eba-a4de-5f4cea9ea9ea', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'd02520' }, body: JSON.stringify({ sessionId: 'd02520', runId: 'pre-fix', hypothesisId: 'A', location: 'index.html:xhr:readyState4', message: 'XHR play.html finished', data: { status: clientStandaloneRequest.status, responseLen: typeof standalone_HTML_String === "string" ? standalone_HTML_String.length : -1 }, timestamp: Date.now() }) }).catch(function () { });
+        } catch (_e) { }
+        // #endregion
+      }
+      clientStandaloneRequest.send();
+    }
+
+    // #region agent log
+    (function () {
+      try {
+        var _hadB64 = typeof window.FLICKGAME_STANDALONE_PLAY_HTML_B64 === "string";
+        fetch('http://127.0.0.1:7598/ingest/f4d4293f-dff4-4eba-a4de-5f4cea9ea9ea', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'd02520' }, body: JSON.stringify({ sessionId: 'd02520', runId: 'pre-fix', hypothesisId: 'A,E', location: 'index.html:templateInit', message: 'standalone template state after sync init', data: { standaloneLen: standalone_HTML_String.length, hadB64Key: _hadB64, b64KeyLen: _hadB64 ? window.FLICKGAME_STANDALONE_PLAY_HTML_B64.length : 0, xhrScheduled: standalone_HTML_String.length === 0 }, timestamp: Date.now() }) }).catch(function () { });
+      } catch (_e) { }
+    })();
+    // #endregion
 
     function buildStandalone(sourceCode) {
+      // #region agent log
+      try {
+        fetch('http://127.0.0.1:7598/ingest/f4d4293f-dff4-4eba-a4de-5f4cea9ea9ea', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'd02520' }, body: JSON.stringify({ sessionId: 'd02520', runId: 'pre-fix', hypothesisId: 'A,D', location: 'index.html:buildStandalone:entry', message: 'buildStandalone called', data: { standaloneLen: standalone_HTML_String.length, sourceCodeLen: typeof sourceCode === "string" ? sourceCode.length : -1 }, timestamp: Date.now() }) }).catch(function () { });
+      } catch (_e) { }
+      // #endregion
       if (standalone_HTML_String.length === 0) {
+        // #region agent log
+        try {
+          fetch('http://127.0.0.1:7598/ingest/f4d4293f-dff4-4eba-a4de-5f4cea9ea9ea', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'd02520' }, body: JSON.stringify({ sessionId: 'd02520', runId: 'pre-fix', hypothesisId: 'A', location: 'index.html:buildStandalone:earlyReturn', message: 'empty template branch', data: {}, timestamp: Date.now() }) }).catch(function () { });
+        } catch (_e2) { }
+        // #endregion
         alert("Can't export yet - still downloading html template.", true);
         return;
       }
       sourceCode = encodeURI(sourceCode);
       var htmlString = "<!--Save as html file-->\n " + standalone_HTML_String;
       htmlString = htmlString.replace(/__EMBED__/g, sourceCode);
+      if (window.FLICKGAME_IOS_APP && window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.flickExport) {
+        var _enc = new TextEncoder();
+        var _u8 = _enc.encode(htmlString);
+        var _bin = "";
+        for (var _ji = 0; _ji < _u8.length; _ji++) {
+          _bin += String.fromCharCode(_u8[_ji]);
+        }
+        var _expB64 = btoa(_bin);
+        window.webkit.messageHandlers.flickExport.postMessage({ filename: "flickgame.html", dataBase64: _expB64 });
+        // #region agent log
+        try {
+          fetch('http://127.0.0.1:7598/ingest/f4d4293f-dff4-4eba-a4de-5f4cea9ea9ea', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'd02520' }, body: JSON.stringify({ sessionId: 'd02520', runId: 'post-fix', hypothesisId: 'B', location: 'index.html:buildStandalone:nativeExport', message: 'posted flickExport to native', data: { htmlStringLen: htmlString.length, b64Len: _expB64.length }, timestamp: Date.now() }) }).catch(function () { });
+        } catch (_en) { }
+        // #endregion
+        return;
+      }
       var blob = new Blob([htmlString], { type: "text/html;charset=utf-8" });
-      saveAs(blob, "flickgame.html");
+      // #region agent log
+      try {
+        var _probeA = document.createElement('a');
+        var _hasDl = 'download' in _probeA;
+        fetch('http://127.0.0.1:7598/ingest/f4d4293f-dff4-4eba-a4de-5f4cea9ea9ea', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'd02520' }, body: JSON.stringify({ sessionId: 'd02520', runId: 'pre-fix', hypothesisId: 'B,D', location: 'index.html:buildStandalone:preSaveAs', message: 'about to saveAs', data: { htmlStringLen: htmlString.length, blobSize: blob.size, hasDownloadAttr: _hasDl, saveAsType: typeof saveAs }, timestamp: Date.now() }) }).catch(function () { });
+      } catch (_e3) { }
+      // #endregion
+      try {
+        saveAs(blob, "flickgame.html");
+        // #region agent log
+        try {
+          fetch('http://127.0.0.1:7598/ingest/f4d4293f-dff4-4eba-a4de-5f4cea9ea9ea', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'd02520' }, body: JSON.stringify({ sessionId: 'd02520', runId: 'pre-fix', hypothesisId: 'B', location: 'index.html:buildStandalone:postSaveAs', message: 'saveAs returned (sync)', data: {}, timestamp: Date.now() }) }).catch(function () { });
+        } catch (_e4) { }
+        // #endregion
+      } catch (saveErr) {
+        // #region agent log
+        try {
+          fetch('http://127.0.0.1:7598/ingest/f4d4293f-dff4-4eba-a4de-5f4cea9ea9ea', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'd02520' }, body: JSON.stringify({ sessionId: 'd02520', runId: 'pre-fix', hypothesisId: 'B', location: 'index.html:buildStandalone:saveAsThrow', message: 'saveAs threw', data: { errName: saveErr && saveErr.name, errMsg: saveErr && String(saveErr.message).slice(0, 200) }, timestamp: Date.now() }) }).catch(function () { });
+        } catch (_e5) { }
+        // #endregion
+      }
     }
 
     function exportClick() {
-      closeBurgerDialog();
-      var embedDat = stateToString();
-      buildStandalone(embedDat);
+      // #region agent log
+      try {
+        fetch('http://127.0.0.1:7598/ingest/f4d4293f-dff4-4eba-a4de-5f4cea9ea9ea', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'd02520' }, body: JSON.stringify({ sessionId: 'd02520', runId: 'pre-fix', hypothesisId: 'C', location: 'index.html:exportClick:entry', message: 'exportClick start', data: {}, timestamp: Date.now() }) }).catch(function () { });
+      } catch (_e) { }
+      // #endregion
+      try {
+        closeBurgerDialog();
+        var embedDat = stateToString();
+        // #region agent log
+        try {
+          fetch('http://127.0.0.1:7598/ingest/f4d4293f-dff4-4eba-a4de-5f4cea9ea9ea', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'd02520' }, body: JSON.stringify({ sessionId: 'd02520', runId: 'pre-fix', hypothesisId: 'C,D', location: 'index.html:exportClick:preBuild', message: 'after stateToString', data: { embedDatLen: typeof embedDat === "string" ? embedDat.length : -1 }, timestamp: Date.now() }) }).catch(function () { });
+        } catch (_e2) { }
+        // #endregion
+        buildStandalone(embedDat);
+      } catch (ex) {
+        // #region agent log
+        try {
+          fetch('http://127.0.0.1:7598/ingest/f4d4293f-dff4-4eba-a4de-5f4cea9ea9ea', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'd02520' }, body: JSON.stringify({ sessionId: 'd02520', runId: 'pre-fix', hypothesisId: 'C', location: 'index.html:exportClick:catch', message: 'exportClick threw', data: { errName: ex && ex.name, errMsg: ex && String(ex.message).slice(0, 200) }, timestamp: Date.now() }) }).catch(function () { });
+        } catch (_e3) { }
+        // #endregion
+      }
     }
 
 
