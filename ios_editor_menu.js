@@ -37,7 +37,7 @@
       '#burger-dialog .ios-editor-action{display:block;width:100%;margin-top:8px;}',
       '#burger-dialog .ios-editor-palette-btn{text-align:left;}',
       '#burger-dialog .palette-credit-link, #burger-dialog .palette-name-link, #burger-dialog #palette-credit-link{display:none !important;}',
-      '.ios-choice-overlay{position:fixed;inset:0;z-index:55;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,0.72);}',
+      '.ios-choice-overlay{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,0.72);}',
       '.ios-choice-box{width:min(360px,100%);background:#111;border:2px solid var(--muted-foreground);border-radius:12px;padding:14px;box-sizing:border-box;}',
       '.ios-choice-title{margin:0 0 12px;font-size:16px;font-weight:600;color:#fff;}',
       '.ios-choice-btn{display:block;width:100%;margin-top:8px;padding:10px 12px;border:2px solid var(--muted-foreground);border-radius:8px;background:#1a1a1a;color:#fff;font-size:14px;text-align:left;}'

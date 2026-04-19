@@ -2372,15 +2372,8 @@ function redraw(){
     renderTouchCursorOverlay();
   } else {
     renderTouchCursorOverlay();
-    
-    mainCanvasCtx.fillStyle="#ff0000";
-    mainCanvasCtx.fillRect(0,0,mainCanvas.width/2,mainCanvas.height/2);
-    mainCanvasCtx.fillStyle="#00ff00";
-    mainCanvasCtx.fillRect(mainCanvas.width/2,0,mainCanvas.width/2,mainCanvas.height/2);
-    mainCanvasCtx.fillStyle="#ff00ff";
-    mainCanvasCtx.fillRect(0,mainCanvas.height/2,mainCanvas.width/2,mainCanvas.height/2);
-    mainCanvasCtx.fillStyle="#00ffff";
-    mainCanvasCtx.fillRect(mainCanvas.width/2,mainCanvas.height/2,mainCanvas.width/2,mainCanvas.height/2);
+    mainCanvasCtx.fillStyle = "#000000";
+    mainCanvasCtx.fillRect(0,0,mainCanvas.width,mainCanvas.height);
   }
 }
 
