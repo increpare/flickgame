@@ -92,8 +92,18 @@
     return out;
   }
 
+  function contrastingInk(hex) {
+    var m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '');
+    if (!m) return '#ffffff';
+    var r = parseInt(m[1], 16);
+    var g = parseInt(m[2], 16);
+    var b = parseInt(m[3], 16);
+    var lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return lum < 0.5 ? '#ffffff' : '#000000';
+  }
+
   function renderPreviewFromState(stateString) {
-    if (typeof stateString !== 'string' || !stateString) return '';
+    if (typeof stateString !== 'string' || !stateString) return null;
     var parsed = JSON.parse(stateString);
     if (parsed.palette_name === undefined) parsed.palette_name = 'dawnbringer-16';
     if (parsed.background_color === undefined) parsed.background_color = '#000000';
@@ -104,15 +114,15 @@
     var previewWidth = parsed.width !== undefined ? parsed.width : 160;
     var previewHeight = parsed.height !== undefined ? parsed.height : 100;
     var sourceFrames = parsed.canvasses || [];
-    if (!sourceFrames.length) return '';
+    if (!sourceFrames.length) return null;
     var palette = (typeof palettes !== 'undefined' && palettes && palettes[parsed.palette_name]) || (typeof palettes !== 'undefined' && palettes && palettes['dawnbringer-16']) || null;
-    if (!palette) return '';
+    if (!palette) return null;
     var pixels = decodeRleCanvas(sourceFrames[0], previewWidth * previewHeight);
     var canvas = document.createElement('canvas');
     canvas.width = previewWidth;
     canvas.height = previewHeight;
     var ctx = canvas.getContext('2d');
-    if (!ctx) return '';
+    if (!ctx) return null;
     var imageData = ctx.createImageData(previewWidth, previewHeight);
     var data = imageData.data;
     for (var i = 0; i < pixels.length; i++) {
@@ -125,20 +135,23 @@
       data[off + 3] = 255;
     }
     ctx.putImageData(imageData, 0, 0);
-    return canvas.toDataURL('image/png');
+    return { src: canvas.toDataURL('image/png'), bg: parsed.background_color };
   }
 
   function previewSrcForProject(project) {
     var cacheKey = (project.id || 'project') + ':' + (project.updatedAt || 0);
     if (previewCache[cacheKey]) return previewCache[cacheKey];
+    var entry = null;
     try {
       if (typeof project.state === 'string' && project.state) {
-        previewCache[cacheKey] = renderPreviewFromState(project.state);
-        if (previewCache[cacheKey]) return previewCache[cacheKey];
+        entry = renderPreviewFromState(project.state);
       }
     } catch (e) {}
-    previewCache[cacheKey] = project.thumb || '';
-    return previewCache[cacheKey];
+    if (!entry) {
+      entry = { src: project.thumb || '', bg: '#000000' };
+    }
+    previewCache[cacheKey] = entry;
+    return entry;
   }
 
   function setBusy(projectId) {
@@ -335,7 +348,8 @@
         var title = resolveUniqueTitle(baseName, items, null);
         var thumb = '';
         try {
-          thumb = renderPreviewFromState(state);
+          var previewEntry = renderPreviewFromState(state);
+          thumb = previewEntry ? previewEntry.src : '';
         } catch (e) {}
         return window.FlickGalleryStore.putProject({
           title: title,
