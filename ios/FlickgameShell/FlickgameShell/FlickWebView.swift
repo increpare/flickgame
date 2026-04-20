@@ -28,6 +28,7 @@ struct FlickWebViewRepresentable: UIViewRepresentable {
         webView.isOpaque = false
         webView.backgroundColor = .black
         webView.scrollView.backgroundColor = .black
+        context.coordinator.normalizeScrollGeometry(for: webView)
         webView.allowsBackForwardNavigationGestures = true
 
         if let url = Bundle.main.url(forResource: "gallery", withExtension: "html", subdirectory: "www") {
@@ -59,6 +60,34 @@ struct FlickWebViewRepresentable: UIViewRepresentable {
     final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler {
         /// Used as `popoverPresentationController` anchor for export share sheet on iPad.
         weak var shareAnchorWebView: WKWebView?
+
+        func normalizeScrollGeometry(for webView: WKWebView) {
+            let scrollView = webView.scrollView
+            scrollView.contentInsetAdjustmentBehavior = .never
+            scrollView.contentInset = .zero
+            scrollView.scrollIndicatorInsets = .zero
+            scrollView.insetsLayoutMarginsFromSafeArea = false
+            if #available(iOS 13.0, *) {
+                scrollView.automaticallyAdjustsScrollIndicatorInsets = false
+                scrollView.verticalScrollIndicatorInsets = .zero
+                scrollView.horizontalScrollIndicatorInsets = .zero
+            }
+        }
+
+        func dispatchViewportSettleEvents(on webView: WKWebView) {
+            let script = """
+            (function () {
+              function fire() {
+                try { window.dispatchEvent(new Event('resize')); } catch (e) {}
+                try { window.dispatchEvent(new Event('orientationchange')); } catch (e) {}
+              }
+              fire();
+              requestAnimationFrame(fire);
+              setTimeout(fire, 180);
+            })();
+            """
+            webView.evaluateJavaScript(script, completionHandler: nil)
+        }
 
         /// `target=_blank` / `window.open` — load in the same web view.
         func webView(
@@ -102,6 +131,14 @@ struct FlickWebViewRepresentable: UIViewRepresentable {
                     pop.permittedArrowDirections = []
                 }
                 vc.present(av, animated: true)
+            }
+        }
+
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            normalizeScrollGeometry(for: webView)
+            DispatchQueue.main.async { [weak self, weak webView] in
+                guard let self, let webView else { return }
+                self.dispatchViewportSettleEvents(on: webView)
             }
         }
 

@@ -12,3 +12,4 @@ CLAUDE.md
 ios/FlickgameShell/FlickgameShell/www/*
 !ios/FlickgameShell/FlickgameShell/www/.gitkeep
 .DS_Store
+ios/FlickgameShell/FlickgameShell.xcodeproj/project.xcworkspace/xcuserdata/stephenlavelle.xcuserdatad/UserInterfaceState.xcuserstate
