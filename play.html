@@ -2696,11 +2696,83 @@ function get_page_data() {
 var mainCanvas;
 var mainCanvasCtx;
 var mainCanvasContainer;
+var viewportSettleRaf = 0;
+var viewportSettleTimeout = 0;
+
+function cancelViewportSettleRedraw() {
+  if (viewportSettleRaf) {
+    cancelAnimationFrame(viewportSettleRaf);
+    viewportSettleRaf = 0;
+  }
+  if (viewportSettleTimeout) {
+    clearTimeout(viewportSettleTimeout);
+    viewportSettleTimeout = 0;
+  }
+}
+
+function getViewportMetrics() {
+  var vv = window.visualViewport;
+  return {
+    width: Math.round((vv && vv.width) ? vv.width : (window.innerWidth || 0)),
+    height: Math.round((vv && vv.height) ? vv.height : (window.innerHeight || 0))
+  };
+}
+
+function getCanvasContainerMetrics() {
+  if (!mainCanvasContainer) {
+    return { width: 0, height: 0 };
+  }
+  var rect = mainCanvasContainer.getBoundingClientRect();
+  return {
+    width: Math.round(rect.width || mainCanvasContainer.clientWidth || 0),
+    height: Math.round(rect.height || mainCanvasContainer.clientHeight || 0)
+  };
+}
+
+function settleViewportRedraw(attempt) {
+  viewportSettleRaf = 0;
+  redraw();
+  if (!isIosAppHost() || !mainCanvasContainer) return;
+
+  var viewport = getViewportMetrics();
+  var container = getCanvasContainerMetrics();
+  var tooEarly = (
+    container.width <= 0 ||
+    container.height <= 0 ||
+    container.width > viewport.width + 2 ||
+    container.height > viewport.height + 2
+  );
+
+  if (attempt >= 5) return;
+  if (tooEarly || attempt < 2) {
+    viewportSettleRaf = requestAnimationFrame(function () {
+      settleViewportRedraw(attempt + 1);
+    });
+  }
+}
+
+function handleViewportChange() {
+  if (!isIosAppHost()) {
+    redraw();
+    return;
+  }
+  cancelViewportSettleRedraw();
+  settleViewportRedraw(0);
+  viewportSettleTimeout = setTimeout(function () {
+    viewportSettleTimeout = 0;
+    settleViewportRedraw(0);
+  }, 180);
+}
+
 function init(){
   if (isIosAppHost()) {
     document.body.setAttribute('data-host', 'ios-app');
   }
-  window.addEventListener('resize', redraw, false);
+  window.addEventListener('resize', handleViewportChange, false);
+  window.addEventListener('orientationchange', handleViewportChange, false);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', handleViewportChange, false);
+  }
   document.addEventListener('touchmove', preventPageGesture, {passive: false});
   document.addEventListener('gesturestart', preventPageGesture, {passive: false});
   document.addEventListener('gesturechange', preventPageGesture, {passive: false});
