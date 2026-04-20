@@ -18,7 +18,12 @@
       "Bash(plutil -lint ios/FlickgameShell/FlickgameShell.xcodeproj/Info.plist)",
       "Bash(plutil -lint ios/FlickgameShell/FlickgameShell.xcodeproj/project.pbxproj)",
       "Bash(/Users/stephenlavelle/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/skills/brainstorming/scripts/start-server.sh:*)",
-      "Bash(/Users/stephenlavelle/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/skills/brainstorming/scripts/stop-server.sh /Users/stephenlavelle/Documents/4x4/.superpowers/brainstorm/59127-1776460612)"
+      "Bash(/Users/stephenlavelle/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/skills/brainstorming/scripts/stop-server.sh /Users/stephenlavelle/Documents/4x4/.superpowers/brainstorm/59127-1776460612)",
+      "Bash(git check-ignore:*)",
+      "Bash(git worktree:*)",
+      "Bash(git checkout:*)",
+      "Bash(git merge --no-ff feature/gallery-visual-refresh -m 'Merge branch '\\\\''feature/gallery-visual-refresh'\\\\'':*)",
+      "Bash(git branch:*)"
     ]
   }
 }
