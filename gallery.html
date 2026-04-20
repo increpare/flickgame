@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>Flickgames</title>
   <link rel="icon" type="image/png" href="favicon.png">
+  <script>
+    (function () {
+      try {
+        if (window.FLICKGAME_HOST === 'ios-app' || window.FLICKGAME_IOS_APP) {
+          document.documentElement.setAttribute('data-ios-app', 'true');
+        }
+      } catch (e) {}
+    })();
+  </script>
   <style>
     :root {
       --muted-foreground: #666;
@@ -17,9 +26,11 @@
       margin: 0;
       padding: 0;
       min-height: 100vh;
+      min-height: 100dvh;
       background: var(--bg);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow-x: hidden;
     }
     .gallery-page-header {
       position: sticky;
@@ -74,6 +85,10 @@
       color: #888;
       border: 1px dashed #444;
       min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
     }
     .gallery-thumb-wrap {
       position: relative;
@@ -253,6 +268,45 @@
     }
     .gallery-page-header-row .gallery-btn {
       flex: 0 0 auto;
+    }
+
+    html[data-ios-app="true"] {
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+    html[data-ios-app="true"] .gallery-page-header {
+      padding-left: max(16px, env(safe-area-inset-left));
+      padding-right: max(16px, env(safe-area-inset-right));
+    }
+    html[data-ios-app="true"] .gallery-page-body {
+      padding-left: max(16px, env(safe-area-inset-left));
+      padding-right: max(16px, env(safe-area-inset-right));
+    }
+    html[data-ios-app="true"] .gallery-grid {
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    }
+    html[data-ios-app="true"] .gallery-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 8px;
+    }
+    html[data-ios-app="true"] .gallery-ibtn {
+      width: 44px;
+      height: 44px;
+      flex: 0 0 44px;
+      aspect-ratio: auto;
+    }
+    html[data-ios-app="true"][data-gallery-orientation="landscape"] .gallery-grid {
+      grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+    }
+    html[data-ios-app="true"] .gallery-share-overlay {
+      padding:
+        max(16px, env(safe-area-inset-top))
+        max(16px, env(safe-area-inset-right))
+        max(16px, env(safe-area-inset-bottom))
+        max(16px, env(safe-area-inset-left));
+      box-sizing: border-box;
     }
   </style>
 </head>

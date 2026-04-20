@@ -12,6 +12,24 @@
   var importBtn = null;
   var previewCache = {};
 
+  function isIosApp() {
+    try {
+      return !!(window && (window.FLICKGAME_HOST === 'ios-app' || window.FLICKGAME_IOS_APP));
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function syncIosViewportState() {
+    if (!isIosApp()) return;
+    var root = document.documentElement;
+    var vv = window.visualViewport;
+    var width = vv && vv.width ? vv.width : (window.innerWidth || root.clientWidth || 0);
+    var height = vv && vv.height ? vv.height : (window.innerHeight || root.clientHeight || 0);
+    root.setAttribute('data-ios-app', 'true');
+    root.setAttribute('data-gallery-orientation', width > height ? 'landscape' : 'portrait');
+  }
+
   function el(tag, attrs, children) {
     var n = document.createElement(tag);
     if (attrs) {
@@ -402,6 +420,7 @@
     importBtn = document.getElementById('gallery-import-btn');
     shareOverlay = document.getElementById('gallery-share-overlay');
     shareSheet = document.getElementById('gallery-share-sheet');
+    syncIosViewportState();
 
     if (shareOverlay) {
       shareOverlay.addEventListener('click', function (e) {
@@ -419,6 +438,16 @@
         e.target.value = '';
         handleImportFile(file);
       });
+    }
+    if (isIosApp()) {
+      window.addEventListener('resize', syncIosViewportState);
+      window.addEventListener('orientationchange', function () {
+        syncIosViewportState();
+        requestAnimationFrame(syncIosViewportState);
+      });
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', syncIosViewportState);
+      }
     }
     renderGrid();
   }
