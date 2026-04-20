@@ -157,18 +157,39 @@ body[data-host="ios-app"] {
 }
 @media (orientation: portrait) {
   body[data-host="ios-app"] {
-    --footer-height: 60px;
+    --footer-height: 82px;
+  }
+  body[data-host="ios-app"] #footer {
+    display: grid;
+    grid-template-columns: 66px 1fr 66px;
+    gap: 12px;
+    padding: 0 12px;
+    align-items: center;
   }
   body[data-host="ios-app"] #galleryLink,
   body[data-host="ios-app"] #hackLink {
-    width: 44px;
-    height: 44px;
+    width: 66px;
+    height: 66px;
     padding: 0;
-    border-radius: 10px;
+    border-radius: 14px;
+  }
+  body[data-host="ios-app"] #galleryLink {
+    grid-column: 1;
+    justify-self: start;
+  }
+  body[data-host="ios-app"] #homeLink {
+    grid-column: 2;
+    min-width: 0;
+  }
+  body[data-host="ios-app"] #hackLink {
+    grid-column: 3;
+    justify-self: end;
   }
   body[data-host="ios-app"] #galleryLink .label-icon,
   body[data-host="ios-app"] #hackLink .label-icon {
     display: block;
+    width: 33px;
+    height: 33px;
   }
   body[data-host="ios-app"] #galleryLink .label-text,
   body[data-host="ios-app"] #hackLink .label-text {
