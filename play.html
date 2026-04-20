@@ -15,7 +15,6 @@
     --footer-button-font-size: clamp(12px, 2.8vw, 15px);
     --footer-button-padding-y: 3px;
     --footer-button-padding-x: 10px;
-    --footer-side-space: 220px;
 }
 
 html, body {
@@ -91,22 +90,10 @@ a {
 }
 #galleryLink,
 #hackLink {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-#galleryLink {
-  left: 10px;
-}
-
-#hackLink {
-  right: 10px;
-}
-
-#galleryLink,
-#hackLink {
-  display: inline-block;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: var(--footer-button-padding-y) var(--footer-button-padding-x);
   border: 1px solid var(--foreground-color);
   border-radius: 999px;
@@ -115,19 +102,28 @@ a {
   text-decoration: none;
   line-height: 1.2;
   font-size: var(--footer-button-font-size);
+  box-sizing: border-box;
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
   -webkit-user-drag: none;
 }
 
+#galleryLink .label-icon,
+#hackLink .label-icon {
+  display: none;
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+
 #homeLink {
-  display: inline-block;
-  max-width: calc(100% - var(--footer-side-space));
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  vertical-align: middle;
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
@@ -139,12 +135,13 @@ a {
   bottom:0px;
   height: var(--footer-height);
   margin:0;
-  padding:0;
   background-color: var(--background-color);
   color:var(--foreground-color);
-  text-align: center;
-  padding: 0;
-  line-height: var(--footer-height);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  box-sizing: border-box;
   font-size: var(--footer-font-size);
   touch-action: none;
   -webkit-user-select: none;
@@ -157,7 +154,26 @@ body[data-host="ios-app"] {
   --footer-button-font-size: clamp(15px, 3.8vw, 19px);
   --footer-button-padding-y: 7px;
   --footer-button-padding-x: 14px;
-  --footer-side-space: 290px;
+}
+@media (orientation: portrait) {
+  body[data-host="ios-app"] {
+    --footer-height: 60px;
+  }
+  body[data-host="ios-app"] #galleryLink,
+  body[data-host="ios-app"] #hackLink {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: 10px;
+  }
+  body[data-host="ios-app"] #galleryLink .label-icon,
+  body[data-host="ios-app"] #hackLink .label-icon {
+    display: block;
+  }
+  body[data-host="ios-app"] #galleryLink .label-text,
+  body[data-host="ios-app"] #hackLink .label-text {
+    display: none;
+  }
 }
 #touch-cursor-layer {
   display: none;
@@ -429,8 +445,9 @@ function updateFooterLinks() {
     var homepage = gameState && gameState.gameLink ? gameState.gameLink : '';
 
     if (galleryLink) {
+        var galleryText = galleryLink.querySelector('.label-text');
         if (isIosAppHost()) {
-            galleryLink.innerHTML = t("return_gallery_link_label_html");
+            if (galleryText) galleryText.innerHTML = t("return_gallery_link_label_html");
             galleryLink.href = 'gallery.html';
             galleryLink.style.display = '';
         } else {
@@ -440,12 +457,9 @@ function updateFooterLinks() {
     }
 
     if (hacklink) {
-        if (isIosAppHost()) {
-            hacklink.innerHTML = t("edit_link_label_html");
-            hacklink.style.display = '';
-        } else {
-            hacklink.style.display = '';
-        }
+        var hackText = hacklink.querySelector('.label-text');
+        if (hackText) hackText.innerHTML = t("edit_link_label_html");
+        hacklink.style.display = '';
     }
 
     if (!homepageLink) return;
@@ -2651,7 +2665,8 @@ function get_page_data() {
                     var id = getParameterByName("p").replace(/[\\\/]/, "");
                     hacklink.href = qualifyURL("index.html?p=" + id);
                 }
-                hacklink.innerHTML = t("edit_link_label_html");
+                var hackText2 = hacklink.querySelector('.label-text');
+                if (hackText2) hackText2.innerHTML = t("edit_link_label_html");
             }
             updateFooterLinks();
             
@@ -2855,7 +2870,7 @@ function goFullscreen(evt){
 </div>
 </div>
 <div id="footer">
- <a href="gallery.html" id="galleryLink"></a> <a href="http://www.flickgame.org" id="hackLink"></a> <a id="homeLink" href="http://www.flickgame.org"></a> 
+ <a href="gallery.html" id="galleryLink" aria-label="Gallery"><svg class="label-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2v2H2V2zm1 12v-2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1m0-5V7a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1m0-5V2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1m5 10v-2a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1m0-5V7a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1m0-5V2a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1M9 2v2H7V2zm5 0v2h-2V2zM4 7v2H2V7zm5 0v2H7V7zm5 0h-2v2h2zM4 12v2H2v-2zm5 0v2H7v-2zm5 0v2h-2v-2zM12 1a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zm-1 6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1zm1 4a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1z"/></svg><span class="label-text"></span></a> <a href="http://www.flickgame.org" id="hackLink" aria-label="Edit"><svg class="label-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/></svg><span class="label-text"></span></a> <a id="homeLink" href="http://www.flickgame.org"></a>
 </div>
 </body>
 </html>
