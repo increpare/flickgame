@@ -135,7 +135,7 @@
       data[off + 3] = 255;
     }
     ctx.putImageData(imageData, 0, 0);
-    return { src: canvas.toDataURL('image/png'), bg: parsed.background_color };
+    return { src: canvas.toDataURL('image/png'), bg: parsed.background_color, w: previewWidth, h: previewHeight };
   }
 
   function previewSrcForProject(project) {
@@ -148,7 +148,7 @@
       }
     } catch (e) {}
     if (!entry) {
-      entry = { src: project.thumb || '', bg: '#000000' };
+      entry = { src: project.thumb || '', bg: '#000000', w: 160, h: 100 };
     }
     previewCache[cacheKey] = entry;
     return entry;
@@ -252,9 +252,12 @@
     card.style.setProperty('--ink', ink);
 
     var thumbWrap = el('div', { class: 'gallery-thumb-wrap' });
+    var thumbFrame = el('div', { class: 'gallery-thumb-frame' });
+    thumbFrame.style.aspectRatio = (appearance.w || 160) + ' / ' + (appearance.h || 100);
     var thumb = el('img', { class: 'gallery-thumb', alt: 'thumbnail for ' + (project.title || 'project') });
     if (appearance.src) thumb.src = appearance.src;
-    thumbWrap.appendChild(thumb);
+    thumbFrame.appendChild(thumb);
+    thumbWrap.appendChild(thumbFrame);
 
     var playOverlay = el('span', { class: 'gallery-play', 'aria-hidden': 'true' });
     playOverlay.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20" fill="currentColor"/></svg>';
