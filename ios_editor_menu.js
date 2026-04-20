@@ -172,6 +172,7 @@
       class: 'burger-dialog-btn ios-editor-action ios-editor-palette-btn'
     }, [typeof palette_name === 'string' ? palette_name : 'Palette']);
     paletteBtn.addEventListener('click', function (evt) {
+      evt.stopPropagation();
       if (typeof openPaletteSelector === 'function') openPaletteSelector(evt);
     });
 

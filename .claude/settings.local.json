@@ -23,7 +23,8 @@
       "Bash(git worktree:*)",
       "Bash(git checkout:*)",
       "Bash(git merge --no-ff feature/gallery-visual-refresh -m 'Merge branch '\\\\''feature/gallery-visual-refresh'\\\\'':*)",
-      "Bash(git branch:*)"
+      "Bash(git branch:*)",
+      "WebFetch(domain:icons.getbootstrap.com)"
     ]
   }
 }
