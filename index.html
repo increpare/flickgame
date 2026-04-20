@@ -180,6 +180,12 @@
       }
     }
 
+    function applyPaletteModalNameStyle(nameDiv, name, isSelected) {
+      if (!nameDiv) return;
+      nameDiv.textContent = isSelected ? "[ " + name + " ]" : name;
+      nameDiv.classList.toggle('palette-modal-name-selected', !!isSelected);
+    }
+
     function set_modal_panel_selected_item(from_name, to_name){
       if (modal===null){
         return;
@@ -189,10 +195,8 @@
 
       let old_name_div = document.getElementById('palette_name_' + old_palette_index);
       let new_name_div = document.getElementById('palette_name_' + new_palette_index);
-      old_name_div.textContent = from_name;
-      old_name_div.style.color = 'var(--muted-foreground)';
-      new_name_div.textContent = "[ "+to_name+" ]";
-      new_name_div.style.color = 'white';
+      applyPaletteModalNameStyle(old_name_div, from_name, false);
+      applyPaletteModalNameStyle(new_name_div, to_name, true);
 
     }
 
@@ -232,15 +236,9 @@
 
         // Add palette name
         let nameDiv = document.createElement('div');
-        if (currently_selected){
-          nameDiv.textContent = "[ "+paletteName+" ]";
-          nameDiv.style.color = 'white';
-        } else {
-          nameDiv.textContent = paletteName;
-        }
-        nameDiv.style.marginBottom = '5px';
-        nameDiv.style.textAlign = 'center';
+        nameDiv.className = 'palette-modal-name';
         nameDiv.id = 'palette_name_' + Object.keys(palettes).indexOf(paletteName);
+        applyPaletteModalNameStyle(nameDiv, paletteName, currently_selected);
         paletteDiv.appendChild(nameDiv);
 
         // Add color previews
@@ -2938,6 +2936,22 @@
       border: 2px solid var(--muted-foreground);
       padding: 25px;
       z-index: 1000;
+    }
+    .palette-modal-name {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      margin-bottom: 5px;
+      text-align: center;
+      color: var(--muted-foreground);
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .palette-modal-name-selected {
+      color: var(--foreground-color);
+      font-weight: 500;
     }
 
     select {
