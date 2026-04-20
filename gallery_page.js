@@ -92,8 +92,18 @@
     return out;
   }
 
+  function contrastingInk(hex) {
+    var m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '');
+    if (!m) return '#ffffff';
+    var r = parseInt(m[1], 16);
+    var g = parseInt(m[2], 16);
+    var b = parseInt(m[3], 16);
+    var lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return lum < 0.5 ? '#ffffff' : '#000000';
+  }
+
   function renderPreviewFromState(stateString) {
-    if (typeof stateString !== 'string' || !stateString) return '';
+    if (typeof stateString !== 'string' || !stateString) return null;
     var parsed = JSON.parse(stateString);
     if (parsed.palette_name === undefined) parsed.palette_name = 'dawnbringer-16';
     if (parsed.background_color === undefined) parsed.background_color = '#000000';
@@ -104,15 +114,15 @@
     var previewWidth = parsed.width !== undefined ? parsed.width : 160;
     var previewHeight = parsed.height !== undefined ? parsed.height : 100;
     var sourceFrames = parsed.canvasses || [];
-    if (!sourceFrames.length) return '';
+    if (!sourceFrames.length) return null;
     var palette = (typeof palettes !== 'undefined' && palettes && palettes[parsed.palette_name]) || (typeof palettes !== 'undefined' && palettes && palettes['dawnbringer-16']) || null;
-    if (!palette) return '';
+    if (!palette) return null;
     var pixels = decodeRleCanvas(sourceFrames[0], previewWidth * previewHeight);
     var canvas = document.createElement('canvas');
     canvas.width = previewWidth;
     canvas.height = previewHeight;
     var ctx = canvas.getContext('2d');
-    if (!ctx) return '';
+    if (!ctx) return null;
     var imageData = ctx.createImageData(previewWidth, previewHeight);
     var data = imageData.data;
     for (var i = 0; i < pixels.length; i++) {
@@ -125,20 +135,23 @@
       data[off + 3] = 255;
     }
     ctx.putImageData(imageData, 0, 0);
-    return canvas.toDataURL('image/png');
+    return { src: canvas.toDataURL('image/png'), bg: parsed.background_color };
   }
 
   function previewSrcForProject(project) {
     var cacheKey = (project.id || 'project') + ':' + (project.updatedAt || 0);
     if (previewCache[cacheKey]) return previewCache[cacheKey];
+    var entry = null;
     try {
       if (typeof project.state === 'string' && project.state) {
-        previewCache[cacheKey] = renderPreviewFromState(project.state);
-        if (previewCache[cacheKey]) return previewCache[cacheKey];
+        entry = renderPreviewFromState(project.state);
       }
     } catch (e) {}
-    previewCache[cacheKey] = project.thumb || '';
-    return previewCache[cacheKey];
+    if (!entry) {
+      entry = { src: project.thumb || '', bg: '#000000' };
+    }
+    previewCache[cacheKey] = entry;
+    return entry;
   }
 
   function setBusy(projectId) {
@@ -230,41 +243,29 @@
   }
 
   function renderProjectCard(project) {
+    var appearance = previewSrcForProject(project);
+    var bg = appearance.bg || '#000000';
+    var ink = contrastingInk(bg);
+
     var card = el('div', { class: 'gallery-card' });
+    card.style.setProperty('--bg', bg);
+    card.style.setProperty('--ink', ink);
+
+    var thumbWrap = el('div', { class: 'gallery-thumb-wrap' });
     var thumb = el('img', { class: 'gallery-thumb', alt: 'thumbnail for ' + (project.title || 'project') });
-    var previewSrc = previewSrcForProject(project);
-    if (previewSrc) thumb.src = previewSrc;
-    thumb.addEventListener('click', function () {
+    if (appearance.src) thumb.src = appearance.src;
+    thumbWrap.appendChild(thumb);
+
+    var playOverlay = el('span', { class: 'gallery-play', 'aria-hidden': 'true' });
+    playOverlay.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20" fill="currentColor"/></svg>';
+    thumbWrap.appendChild(playOverlay);
+
+    var xBtn = el('button', { type: 'button', class: 'gallery-x', 'aria-label': 'Delete' }, ['\u00d7']);
+    xBtn.disabled = isBusy(project.id);
+    xBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
       if (isBusy(project.id)) return;
-      navigate('play.html?id=' + encodeURIComponent(project.id));
-    });
-    var title = el('div', { class: 'gallery-title', text: project.title || 'Untitled' });
-    var time = el('div', { class: 'gallery-time', text: 'Modified: ' + formatTime(project.updatedAt || project.createdAt || 0) });
-    var actions = el('div', { class: 'gallery-actions' });
-
-    function addAction(label, handler) {
-      var btn = el('button', {
-        type: 'button',
-        class: 'gallery-btn',
-        text: label
-      });
-      btn.disabled = isBusy(project.id);
-      btn.addEventListener('click', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        if (isBusy(project.id)) return;
-        handler();
-      });
-      actions.appendChild(btn);
-    }
-
-    addAction('Edit', function () {
-      navigate('index.html?id=' + encodeURIComponent(project.id));
-    });
-    addAction('Share', function () {
-      openShareSheet(project);
-    });
-    addAction('Delete', function () {
       if (!confirm('Delete "' + (project.title || 'Untitled') + '"? This cannot be undone.')) return;
       setBusy(project.id);
       window.FlickGalleryStore.deleteProject(project.id).then(function () {
@@ -276,8 +277,44 @@
         setBusy(null);
       });
     });
+    thumbWrap.appendChild(xBtn);
 
-    card.appendChild(thumb);
+    thumbWrap.addEventListener('click', function () {
+      if (isBusy(project.id)) return;
+      navigate('play.html?id=' + encodeURIComponent(project.id));
+    });
+
+    var title = el('div', { class: 'gallery-title', text: project.title || 'Untitled' });
+    var time = el('div', { class: 'gallery-time', text: 'Modified: ' + formatTime(project.updatedAt || project.createdAt || 0) });
+
+    var PENCIL_SVG = '<svg viewBox="0 0 16 16"><path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/></svg>';
+    var SHARE_SVG = '<svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5"/><path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0z"/></svg>';
+
+    var editBtn = el('button', { type: 'button', class: 'gallery-ibtn', 'aria-label': 'Edit' });
+    editBtn.innerHTML = PENCIL_SVG;
+    editBtn.disabled = isBusy(project.id);
+    editBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (isBusy(project.id)) return;
+      navigate('index.html?id=' + encodeURIComponent(project.id));
+    });
+
+    var shareBtn = el('button', { type: 'button', class: 'gallery-ibtn', 'aria-label': 'Share' });
+    shareBtn.innerHTML = SHARE_SVG;
+    shareBtn.disabled = isBusy(project.id);
+    shareBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (isBusy(project.id)) return;
+      openShareSheet(project);
+    });
+
+    var actions = el('div', { class: 'gallery-actions' });
+    actions.appendChild(editBtn);
+    actions.appendChild(shareBtn);
+
+    card.appendChild(thumbWrap);
     card.appendChild(title);
     card.appendChild(time);
     card.appendChild(actions);
@@ -335,7 +372,8 @@
         var title = resolveUniqueTitle(baseName, items, null);
         var thumb = '';
         try {
-          thumb = renderPreviewFromState(state);
+          var previewEntry = renderPreviewFromState(state);
+          thumb = previewEntry ? previewEntry.src : '';
         } catch (e) {}
         return window.FlickGalleryStore.putProject({
           title: title,
