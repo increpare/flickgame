@@ -137,10 +137,9 @@
     if (!dialog || !content) return;
     ensureStyles();
 
-    var bgSelect = document.getElementById('burger-bg-select') || document.getElementById('bgColorSelect');
-    var desktopBgSelect = document.getElementById('bgColorSelect');
-    if (bgSelect && desktopBgSelect) {
-      bgSelect.value = desktopBgSelect.value;
+    var bgControl = document.getElementById('burger-bg-picker-control') || document.getElementById('bgColorPickerControl') || document.getElementById('burger-bg-select') || document.getElementById('bgColorSelect');
+    if (typeof syncBackgroundColorControls === 'function') {
+      syncBackgroundColorControls();
     }
 
     while (content.firstChild) content.removeChild(content.firstChild);
@@ -180,7 +179,7 @@
       el('div', { class: 'ios-editor-label', text: 'Name' }),
       nameInput,
       el('div', { class: 'ios-editor-label', text: 'Background' }),
-      bgSelect || el('div', { text: '(missing)' }),
+      bgControl || el('div', { text: '(missing)' }),
       el('div', { class: 'ios-editor-label', text: 'Palette' }),
       paletteBtn
     ]);

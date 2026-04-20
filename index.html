@@ -34,6 +34,7 @@
       d.classList.remove('visible');
       d.setAttribute('aria-hidden', 'true');
       closePaletteSelector();
+      closeBackgroundColorPicker();
     }
 
     var FLICKGAME_STORAGE_KEY = "flickgame_editor_state";
@@ -1000,9 +1001,127 @@
 
     function setDropdowns() {
       renderSwatches();
-      //set background dropdown
+      syncBackgroundColorControls();
+    }
+
+    var backgroundColorPickerEl = null;
+    var backgroundColorPickerTriggerEl = null;
+
+    function ensureBackgroundColorTrigger(controlId) {
+      var control = document.getElementById(controlId);
+      if (!control || control.querySelector('.background-color-trigger')) return;
+      var trigger = document.createElement('button');
+      trigger.type = 'button';
+      trigger.className = 'background-color-trigger';
+      trigger.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        openBackgroundColorPicker(e);
+      });
+      control.insertBefore(trigger, control.firstChild);
+    }
+
+    function updateBackgroundColorTrigger(controlId, idx) {
+      var control = document.getElementById(controlId);
+      var trigger = control ? control.querySelector('.background-color-trigger') : null;
+      if (!trigger || idx < 0 || idx >= colorPalette.length) return;
+      trigger.textContent = colorNames[palette_name][idx];
+      trigger.style.backgroundColor = colorPalette[idx];
+      trigger.style.color = paletteContrastColors[idx];
+      trigger.setAttribute('aria-label', 'Background: ' + colorNames[palette_name][idx]);
+      trigger.title = colorNames[palette_name][idx];
+    }
+
+    function syncBackgroundColorControls() {
       var bg_color_idx = nearest_color_index_in_palette(colorPalette, background_color);
-      bgColorSelect.value = bg_color_idx;
+      var bgSelectEl = document.getElementById('bgColorSelect');
+      var burgerBgSelectEl = document.getElementById('burger-bg-select');
+      if (bgSelectEl) bgSelectEl.value = String(bg_color_idx);
+      if (burgerBgSelectEl) burgerBgSelectEl.value = String(bg_color_idx);
+      updateBackgroundColorTrigger('bgColorPickerControl', bg_color_idx);
+      updateBackgroundColorTrigger('burger-bg-picker-control', bg_color_idx);
+    }
+
+    function selectBackgroundColorByIndex(idx, preserver_undo_state) {
+      var bgSelectEl = document.getElementById('bgColorSelect');
+      var burgerBgSelectEl = document.getElementById('burger-bg-select');
+      if (bgSelectEl) bgSelectEl.value = String(idx);
+      if (burgerBgSelectEl) burgerBgSelectEl.value = String(idx);
+      changeBackgroundColor(colorPalette[idx], !!preserver_undo_state);
+      syncBackgroundColorControls();
+      if (preserver_undo_state) {
+        saveFlickgameState();
+      }
+    }
+
+    function closeBackgroundColorPicker() {
+      if (backgroundColorPickerEl && backgroundColorPickerEl.parentNode) {
+        backgroundColorPickerEl.parentNode.removeChild(backgroundColorPickerEl);
+      }
+      if (backgroundColorPickerTriggerEl) {
+        backgroundColorPickerTriggerEl.classList.remove('active');
+      }
+      backgroundColorPickerEl = null;
+      backgroundColorPickerTriggerEl = null;
+    }
+
+    function openBackgroundColorPicker(evt) {
+      var trigger = evt && evt.currentTarget ? evt.currentTarget : null;
+      if (!trigger) return;
+      if (backgroundColorPickerEl !== null) {
+        if (backgroundColorPickerTriggerEl === trigger) {
+          closeBackgroundColorPicker();
+          return;
+        }
+        closeBackgroundColorPicker();
+      }
+
+      var bg_color_idx = nearest_color_index_in_palette(colorPalette, background_color);
+      var picker = document.createElement('div');
+      picker.className = 'background-color-picker';
+
+      for (var i = 0; i < colorPalette.length; i++) {
+        var item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'background-color-picker-item';
+        if (i === bg_color_idx) item.classList.add('selected');
+        item.style.backgroundColor = colorPalette[i];
+        item.setAttribute('aria-label', 'Background: ' + colorNames[palette_name][i]);
+        item.title = colorNames[palette_name][i];
+        (function(idx) {
+          item.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            selectBackgroundColorByIndex(idx, true);
+            closeBackgroundColorPicker();
+          });
+        })(i);
+        picker.appendChild(item);
+      }
+
+      document.body.appendChild(picker);
+      var pad = 8;
+      var rect = trigger.getBoundingClientRect();
+      var pw = picker.offsetWidth;
+      var ph = picker.offsetHeight;
+      var winW = window.innerWidth;
+      var winH = window.innerHeight;
+      var left = Math.min(rect.left, winW - pad - pw);
+      if (left < pad) left = pad;
+      var top = rect.bottom + 4;
+      if (top + ph > winH - pad) {
+        top = rect.top - ph - 4;
+        if (top < pad) top = pad;
+      }
+      if (top + ph > winH - pad) {
+        picker.style.maxHeight = (winH - pad - top) + 'px';
+      }
+      picker.style.left = left + 'px';
+      picker.style.top = top + 'px';
+
+      backgroundColorPickerEl = picker;
+      backgroundColorPickerTriggerEl = trigger;
+      trigger.classList.add('active');
     }
 
     function createGenericPicker(type, onItemClick, options) {
@@ -1677,6 +1796,9 @@
       }
       // Set initial background color
       bgColorSelect.value = "0";
+      ensureBackgroundColorTrigger('bgColorPickerControl');
+      ensureBackgroundColorTrigger('burger-bg-picker-control');
+      syncBackgroundColorControls();
 
       linkInput = document.getElementById("linkInput");
       linkInput.value = gameLink;
@@ -1765,6 +1887,9 @@
         }
         if (modal && !modal.contains(e.target) && e.target.id !== 'palette_button' && !e.target.closest('[onclick*="openPaletteSelector"]')) {
           closePaletteSelector();
+        }
+        if (backgroundColorPickerEl && !backgroundColorPickerEl.contains(e.target) && !e.target.closest('.background-color-trigger')) {
+          closeBackgroundColorPicker();
         }
       }
       document.addEventListener('pointerdown', dismissPopupsOutside);
@@ -2995,26 +3120,69 @@
       padding-bottom: 3px;
       display: inline;
     }
-    #bgColorSelect {
-      background-color: var(--background-color);
+    #bgColorPickerControl,
+    #burger-bg-picker-control {
+      display: inline-block;
+      vertical-align: middle;
+    }
+    #bgColorSelect,
+    #burger-bg-select {
+      display: none;
+    }
+    .background-color-trigger {
+      display: inline-block;
+      min-width: 100px;
+      padding: 2px 8px;
+      border: 2px solid var(--muted-foreground);
+      background: var(--background-color);
       color: var(--foreground-color);
-      display: inline;
-      width: 100px;
-      padding: 2px 0px;
       text-align: left;
+      cursor: pointer;
+      box-sizing: border-box;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .background-color-trigger.active {
+      border-color: var(--foreground-color);
+    }
+    .background-color-picker {
+      position: fixed;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      width: max-content;
+      padding: 8px;
+      background: var(--toolbar-color);
+      border: 2px solid var(--muted-foreground);
+      z-index: 1000;
+    }
+    .background-color-picker-item {
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      border: 1px solid var(--muted-foreground);
+      background: transparent;
+      cursor: pointer;
+      box-sizing: border-box;
+    }
+    .background-color-picker-item.selected {
+      border-color: var(--foreground-color);
+      box-shadow: 0 0 0 1px var(--foreground-color);
     }
 
     option {
       text-align: center;
     }
-    #bgColorSelectContainer::before {
-      content: "background : ";
+    .bg-color-label {
       color: var(--foreground-color);
       text-align: right;
-      /*don't capture input!*/
-      pointer-events: none;
-      width:20px;
-      margin-left:10px;
+    }
+    #bgColorSelectContainer {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: 10px;
     }
 
     li {
@@ -4087,8 +4255,13 @@
       justify-self: center;
       align-self: center;
     }
-    #burger-bg-select {
-      height: 30px;
+    #burger-bg-picker-control {
+      display: block;
+      margin: 4px 0 8px 0;
+    }
+    #burger-bg-picker-control .background-color-trigger {
+      display: block;
+      width: 100%;
     }
   </style>
   <title>
@@ -4136,8 +4309,8 @@
                       <center>
                         <input width="640" style="border:2px solid var(--muted-foreground);" onkeydown="event.stopPropagation();"
                           value="www.flickgame.org" id="linkInput" oninput="linkChange(this.value)" />
-                          <span id="bgColorSelectContainer"><select id="bgColorSelect" class="toolbar"  style="border: 2px solid var(--muted-foreground);" onchange="changeBackgroundColor(colorPalette[this.value],true);saveFlickgameState();">
-                          </select></span>
+                          <span id="bgColorSelectContainer"><span class="bg-color-label">background :</span><span id="bgColorPickerControl"><select id="bgColorSelect" class="toolbar" onchange="changeBackgroundColor(colorPalette[this.value],true);saveFlickgameState();">
+                          </select></span></span>
                           &nbsp;
                         <span id="toolbarcontainer">
 
@@ -4291,7 +4464,7 @@
       <label for="burger-link-input">URL Link</label><br />
       <input type="text" id="burger-link-input" class="burger-link-input" placeholder="www.flickgame.org" oninput="linkChange(this.value); var li=document.getElementById('linkInput'); if(li) li.value=this.value;" />
       <span id="burger-bg-label">Background:</span>
-      <select id="burger-bg-select" class="toolbar" style="border: 2px solid var(--muted-foreground);" onchange="changeBackgroundColor(colorPalette[this.value],true); var b=document.getElementById('bgColorSelect'); if(b) b.value=this.value; saveFlickgameState();"></select>
+      <div id="burger-bg-picker-control"><select id="burger-bg-select" class="toolbar" onchange="changeBackgroundColor(colorPalette[this.value],true); var b=document.getElementById('bgColorSelect'); if(b) b.value=this.value; saveFlickgameState();"></select></div>
       <p>
       <button type="button" class="burger-dialog-btn" onclick="openPaletteSelector(event);">🎨 Select colour palette</button>
       <hr>
