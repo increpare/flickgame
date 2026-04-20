@@ -2,6 +2,8 @@
 (function () {
   'use strict';
 
+  var saveButtonRefreshTimer = 0;
+
   function isIosApp() {
     try {
       return !!(window && (window.FLICKGAME_HOST === 'ios-app' || window.FLICKGAME_IOS_APP));
@@ -31,11 +33,15 @@
   function ensureStyles() {
     if (document.getElementById('ios-editor-menu-styles')) return;
     var css = [
-      '#burger-dialog .ios-editor-grid{display:grid;grid-template-columns:auto 1fr;gap:12px 10px;align-items:center;margin-bottom:14px;}',
-      '#burger-dialog .ios-editor-label{font-size:13px;color:#ddd;}',
-      '#burger-dialog .ios-editor-input{width:100%;box-sizing:border-box;padding:8px 10px;background:#111;color:#fff;border:1px solid #333;border-radius:8px;font-size:14px;}',
-      '#burger-dialog .ios-editor-action{display:block;width:100%;margin-top:8px;}',
-      '#burger-dialog .ios-editor-palette-btn{text-align:left;}',
+      '#burger-dialog .burger-dialog-content{padding-top:56px;}',
+      '#burger-dialog .burger-dialog-content{--ios-editor-control-height:44px;--ios-editor-font-size:var(--burger-menu-font-size);}',
+      '#burger-dialog .ios-editor-grid{display:grid;grid-template-columns:auto 1fr;gap:12px 10px;align-items:center;margin-bottom:18px;}',
+      '#burger-dialog .ios-editor-label{font-size:var(--ios-editor-font-size);font-weight:500;color:var(--foreground-color);}',
+      '#burger-dialog .ios-editor-input{width:100%;height:var(--ios-editor-control-height);box-sizing:border-box;padding:0 10px;background:transparent;color:var(--foreground-color);border:1px solid var(--muted-foreground);border-radius:0;font-size:var(--ios-editor-font-size);line-height:calc(var(--ios-editor-control-height) - 2px);cursor:text;-webkit-appearance:none;appearance:none;}',
+      '#burger-dialog .ios-editor-action{display:flex;width:100%;height:var(--ios-editor-control-height);margin-top:10px;box-sizing:border-box;font-size:var(--ios-editor-font-size);line-height:calc(var(--ios-editor-control-height) - 4px);align-items:center;justify-content:center;text-align:center;padding:0 12px;}',
+      '#burger-dialog .ios-editor-palette-btn{display:flex;align-items:center;justify-content:center;text-align:center;padding:0 12px;font-size:var(--ios-editor-font-size);}',
+      '#burger-dialog #burger-bg-picker-control, #burger-dialog #bgColorPickerControl{display:block;width:100%;min-width:0;}',
+      '#burger-dialog #burger-bg-picker-control .background-color-trigger, #burger-dialog #bgColorPickerControl .background-color-trigger{display:flex;align-items:center;justify-content:center;width:100%;min-width:0;height:var(--ios-editor-control-height);padding:0 12px;border-width:2px;border-radius:4px;box-sizing:border-box;text-align:center;font-size:var(--ios-editor-font-size);}',
       '#burger-dialog .palette-credit-link, #burger-dialog .palette-name-link, #burger-dialog #palette-credit-link{display:none !important;}',
       '.ios-choice-overlay{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,0.72);}',
       '.ios-choice-box{width:min(360px,100%);background:#111;border:2px solid var(--muted-foreground);border-radius:12px;padding:14px;box-sizing:border-box;}',
@@ -43,6 +49,37 @@
       '.ios-choice-btn{display:block;width:100%;margin-top:8px;padding:10px 12px;border:2px solid var(--muted-foreground);border-radius:8px;background:#1a1a1a;color:#fff;font-size:14px;text-align:left;}'
     ].join('\n');
     document.head.appendChild(el('style', { id: 'ios-editor-menu-styles', text: css }));
+  }
+
+  function clearSaveButtonRefreshTimer() {
+    if (saveButtonRefreshTimer) {
+      clearInterval(saveButtonRefreshTimer);
+      saveButtonRefreshTimer = 0;
+    }
+  }
+
+  function currentSaveButtonText() {
+    var dirty = window.FlickGalleryUI && window.FlickGalleryUI.isDirty ? window.FlickGalleryUI.isDirty() : false;
+    return dirty ? '💾 Save*' : '💾 Save';
+  }
+
+  function refreshSaveButtonText() {
+    var saveBtn = document.getElementById('ios-editor-save-btn');
+    if (!saveBtn) return;
+    saveBtn.textContent = currentSaveButtonText();
+  }
+
+  function startSaveButtonRefreshLoop() {
+    clearSaveButtonRefreshTimer();
+    refreshSaveButtonText();
+    saveButtonRefreshTimer = setInterval(function () {
+      var dialog = document.getElementById('burger-dialog');
+      if (!dialog || !dialog.classList.contains('visible')) {
+        clearSaveButtonRefreshTimer();
+        return;
+      }
+      refreshSaveButtonText();
+    }, 250);
   }
 
   function currentProjectId() {
@@ -184,27 +221,27 @@
       paletteBtn
     ]);
 
-    var saveBtn = el('button', { type: 'button', class: 'burger-dialog-btn ios-editor-action', text: 'Save' });
+    var saveBtn = el('button', { type: 'button', id: 'ios-editor-save-btn', class: 'burger-dialog-btn ios-editor-action', text: currentSaveButtonText() });
     saveBtn.addEventListener('click', function () {
       if (typeof saveCurrentToGallery !== 'function') return;
       saveCurrentToGallery({ silent: false }).then(function (ok) {
-        if (ok) closeBurgerDialog();
+        if (ok) refreshSaveButtonText();
       });
     });
 
-    var clearBtn = el('button', { type: 'button', class: 'burger-dialog-btn ios-editor-action', text: 'Clear page' });
+    var clearBtn = el('button', { type: 'button', class: 'burger-dialog-btn ios-editor-action', text: '🗑️ Clear page' });
     clearBtn.addEventListener('click', function () {
       if (!confirm('Clear this page? This cannot be undone.')) return;
       if (typeof clearPalette === 'function') clearPalette();
     });
 
-    var helpBtn = el('button', { type: 'button', class: 'burger-dialog-btn ios-editor-action', text: 'Help' });
+    var helpBtn = el('button', { type: 'button', class: 'burger-dialog-btn ios-editor-action', text: '📖 Help' });
     helpBtn.addEventListener('click', function () {
       closeBurgerDialog();
       window.location.href = 'help.html';
     });
 
-    var backBtn = el('button', { type: 'button', class: 'burger-dialog-btn ios-editor-action', text: '< Back to Gallery' });
+    var backBtn = el('button', { type: 'button', class: 'burger-dialog-btn ios-editor-action', text: '⬅️ Back to Gallery' });
     backBtn.addEventListener('click', handleBackToGallery);
 
     content.appendChild(closeBtn);
@@ -217,6 +254,7 @@
     getCurrentProject().then(function (project) {
       if (project && typeof project.title === 'string') nameInput.value = project.title;
     }).catch(function () {});
+    startSaveButtonRefreshLoop();
   }
 
   function init() {
