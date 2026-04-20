@@ -78,21 +78,19 @@
     .gallery-thumb-wrap {
       position: relative;
       aspect-ratio: 16 / 10;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       background: var(--bg);
+      border: 1px solid color-mix(in srgb, var(--ink) 40%, transparent);
       border-radius: 6px;
       overflow: hidden;
       cursor: pointer;
+      box-sizing: border-box;
     }
     .gallery-thumb {
-      max-width: 100%;
-      max-height: 100%;
       display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
       image-rendering: pixelated;
-      border: 1px solid color-mix(in srgb, var(--ink) 40%, transparent);
-      box-sizing: border-box;
     }
     .gallery-play {
       position: absolute;
