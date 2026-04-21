@@ -542,8 +542,21 @@
       if (!container) return;
       var rect = container.getBoundingClientRect();
       if (rect.width <= 0 || rect.height <= 0) return;
-      var fillHeight = Math.max(50, Math.min(300, Math.floor(rect.height / (rect.width / 160))));
-      resizeCanvassesTo(160, fillHeight);
+      var MAX_DIM = 160;
+      var w, h;
+      if (rect.width >= rect.height) {
+        // Landscape container: width is the longest dimension
+        w = MAX_DIM;
+        h = Math.floor(MAX_DIM * (rect.height / rect.width));
+      } else {
+        // Portrait container: height is the longest dimension
+        h = MAX_DIM;
+        w = Math.floor(MAX_DIM * (rect.width / rect.height));
+      }
+      // Keep things drawable even for extreme aspect ratios
+      w = Math.max(50, w);
+      h = Math.max(50, h);
+      resizeCanvassesTo(w, h);
       applyEditorDimensions();
       setVisuals(true);
     }
