@@ -614,6 +614,11 @@
         canvasses.push(ar);
       }
       hyperlinks = state.hyperlinks;
+      // Normalize untrusted/corrupt hyperlinks so malformed imports/shares can't throw during rendering.
+      if (!Array.isArray(hyperlinks)) hyperlinks = [];
+      for (var hn = 0; hn < 16; hn++) {
+        if (!Array.isArray(hyperlinks[hn])) hyperlinks[hn] = new Array(16).fill(0);
+      }
 
       // Clear undo so we don't restore pre-load state (e.g. empty init) when undoing
       undoList.length = 0;
@@ -2176,10 +2181,17 @@
         });
         return true;
       }
+      function safeLoadAndDisplayState(code) {
+        try {
+          loadAndDisplayState(code);
+        } catch (err) {
+          alert(err && err.message ? err.message : 'Failed to load game');
+        }
+      }
       return getData({
-        onSuccess: loadAndDisplayState,
+        onSuccess: safeLoadAndDisplayState,
         onError: function(message) { alert(message); },
-        onEmbedded: loadAndDisplayState
+        onEmbedded: safeLoadAndDisplayState
       });
     }
 

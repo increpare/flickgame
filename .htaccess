@@ -1,4 +1,14 @@
-RewriteEngine on 
-RewriteCond %{HTTP:Accept-Encoding} gzip 
-RewriteCond %{REQUEST_FILENAME}.gz -f 
-RewriteRule ^(.*)$ $1.gz [L] 
+RewriteEngine on
+RewriteCond %{HTTP:Accept-Encoding} gzip
+RewriteCond %{REQUEST_FILENAME}.gz -f
+RewriteRule ^(.*)$ $1.gz [L]
+
+# Security headers for the hosted site. Wrapped in IfModule so a server without
+# mod_headers serves normally instead of returning 500. (These do not apply to
+# standalone games a user downloads and re-opens from file:// or another host.)
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set Referrer-Policy "no-referrer-when-downgrade"
+  Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://ded.increpare.com https://api.github.com; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
+</IfModule>

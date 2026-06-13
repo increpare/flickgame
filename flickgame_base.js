@@ -8,7 +8,12 @@ var gameState;
 function getParameterByName(name) {
     var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
         results = regex.exec(location.search);
-    return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+    if (results == null) return "";
+    try {
+        return decodeURIComponent(results[1].replace(/\+/g, " "));
+    } catch (e) {
+        return "";
+    }
 }
 
 // Helper function to strip http/https from URLs
@@ -107,7 +112,7 @@ function getData(options) {
     }
 
     // Get ID from URL parameter
-    var id = getParameterByName("p").replace(/[\\\/]/, "");
+    var id = getParameterByName("p").replace(/[\\\/]/g, "");
     if (id === null || id.length === 0) {
         // onError("No ID specified in URL.");
         return false;

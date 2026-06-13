@@ -358,7 +358,7 @@ function loadState(code) {
   var homepage = gameState.gameLink;
   var homepageLink = document.getElementById("homeLink");
   if (homepageLink) {
-      homepageLink.innerHTML = strip_http(homepage);
+      homepageLink.textContent = strip_http(homepage);
       if (!homepage.match(/^https?:\/\//)) {
           homepage = "http://" + homepage;
       }

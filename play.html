@@ -360,6 +360,10 @@ body[data-host="ios-app"] {
   100% { transform: translate(-50%, -50%) translate(var(--dot-tx), var(--dot-ty)) scale(0); opacity: 0; }
 }
 </style>
+<!-- NOTE: The two scripts below (id="flickgame_base.js" and id="flickgame_vanilla.js") are
+     inlined copies of the repo-root files of the same name, so an exported standalone game is
+     self-contained. There is no build step that syncs them: if you change flickgame_base.js or
+     flickgame_vanilla.js at the repo root, mirror the change here by hand. -->
 <script id="flickgame_base.js">
   // Flick Game JavaScript Library
 // Extracted shared functions from HTML files
@@ -371,7 +375,12 @@ var gameState;
 function getParameterByName(name) {
     var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
         results = regex.exec(location.search);
-    return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+    if (results == null) return "";
+    try {
+        return decodeURIComponent(results[1].replace(/\+/g, " "));
+    } catch (e) {
+        return "";
+    }
 }
 
 /** True when play.html is opened with ?test (loads testgame.txt from same folder). */
@@ -595,7 +604,7 @@ function getData(options) {
     }
 
     // Get ID from URL parameter
-    var id = getParameterByName("p").replace(/[\\\/]/, "");
+    var id = getParameterByName("p").replace(/[\\\/]/g, "");
     if (id === null || id.length === 0) {
         // onError("No ID specified in URL.");
         return false;
@@ -1330,13 +1339,19 @@ function loadState(code) {
     upgrade_v1_to_v2(gameState);
   }
 
-  colorPalette = palettes[gameState.palette_name];
+  // Normalize untrusted/corrupt state so a malformed shared game can't crash rendering or interaction.
+  if (!Array.isArray(gameState.canvasses)) gameState.canvasses = [];
+  if (!Array.isArray(gameState.hyperlinks)) gameState.hyperlinks = [];
+  for (var _ni = 0; _ni < 16; _ni++) {
+    if (!Array.isArray(gameState.hyperlinks[_ni])) gameState.hyperlinks[_ni] = new Array(16).fill(0);
+  }
+
+  colorPalette = palettes[gameState.palette_name] || palettes['dawnbringer-16'];
 
   // Set background color
   document.documentElement.style.setProperty('--background-color', gameState.background_color);
   document.documentElement.style.setProperty('--foreground-color', gameState.foreground_color);
 
-  var homepage = gameState.gameLink;
   updateFooterLinks();
 }
 </script>
@@ -2683,7 +2698,7 @@ function get_page_data() {
                 } else if (getParameterByName("id")) {
                     hacklink.href = qualifyURL("index.html?id=" + getParameterByName("id"));
                 } else {
-                    var id = getParameterByName("p").replace(/[\\\/]/, "");
+                    var id = getParameterByName("p").replace(/[\\\/]/g, "");
                     hacklink.href = qualifyURL("index.html?p=" + id);
                 }
                 var hackText2 = hacklink.querySelector('.label-text');
@@ -2906,6 +2921,7 @@ function renderImages(){
 
   for (var i=0;i<16;i++){
     var descriptionArray = gameState.canvasses[i];
+    if (!Array.isArray(descriptionArray)) descriptionArray = [getGameWidth() * getGameHeight(), "0"];
     var descriptionString = RLE_decode(descriptionArray);
 
     var canvas_context=printCanvas(descriptionString);

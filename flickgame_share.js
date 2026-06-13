@@ -119,10 +119,14 @@
   }
 
   function getAuthUrl() {
-    var randomState = window.btoa(Array.prototype.map.call(
-      window.crypto.getRandomValues(new Uint8Array(24)),
-      function (x) { return String.fromCharCode(x); }
-    ).join(''));
+    // URL-safe hex state, persisted so the OAuth callback (auth.html) can verify it (CSRF protection).
+    var bytes = window.crypto.getRandomValues(new Uint8Array(24));
+    var randomState = Array.prototype.map.call(bytes, function (x) {
+      return ('0' + x.toString(16)).slice(-2);
+    }).join('');
+    try {
+      window.localStorage.setItem('oauth_state', randomState);
+    } catch (e) {}
     return 'https://github.com/login/oauth/authorize'
       + '?client_id=' + OAUTH_CLIENT_ID
       + '&scope=gist'
