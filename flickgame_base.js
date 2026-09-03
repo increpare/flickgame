@@ -82,16 +82,25 @@ function contrastTextColor(hex) {
     return dw > db ? "#ffffff" : "#000000";
 }
 
-// RLE decode function
-function RLE_decode(encoded) {
+// RLE decode function.
+// Run counts come straight from an untrusted game file, so targetLength (when given)
+// bounds the output and pads it out: an oversized count used to build an enormous
+// string and lock the tab up for minutes.
+function RLE_decode(encoded, targetLength) {
+    if (!encoded || typeof encoded.length !== 'number') encoded = [];
+    var limit = (typeof targetLength === 'number' && targetLength >= 0) ? targetLength : Infinity;
     var output = "";
-    for (var i=0;i<encoded.length;i+=2) {
-      var count = encoded[i];
-      var ch = encoded[i+1];
+    for (var i=0;i+1<encoded.length && output.length<limit;i+=2) {
+      var count = Number(encoded[i]);
+      if (!isFinite(count) || count < 1) continue;
+      if (count > limit - output.length) count = limit - output.length;
+      var value = parseInt(encoded[i+1], 16);
+      var ch = (value >= 0 && value < 16) ? value.toString(16) : "0";
       for (var j=0;j<count;j++){
         output+=ch;
       }
     }
+    while (output.length < limit) output += "0";
     return output;
 }
 
