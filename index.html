@@ -749,6 +749,15 @@
     function press(evt) {
       evt = evt || window.event;
 
+      // Never run editor hotkeys while the user is typing. The desktop link box stops
+      // propagation itself, but the burger one does not - so typing a URL there was
+      // running c=copy, v=paste (overwriting the page!), z=undo, -/+ = brush size.
+      var focused = evt.target;
+      if (focused && (focused.tagName === 'INPUT' || focused.tagName === 'TEXTAREA' ||
+                      focused.tagName === 'SELECT' || focused.isContentEditable)) {
+        return;
+      }
+
       updateCursor(evt);
       if (evt.keyCode === 67) { //c
         doCopy();
