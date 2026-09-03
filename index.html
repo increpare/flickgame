@@ -724,6 +724,8 @@
         hyperlinks: Array.from({length: 16}, function() { return new Array(16).fill(0); })
       };
       stringToState(JSON.stringify(emptyState), 'new-flickgame');
+      //reset game link
+      linkChange(DEFAULT_GAME_LINK);
       setVisuals(true);
       setLayer(1);
       setDropdowns();
