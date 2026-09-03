@@ -41,7 +41,10 @@
   function buildStandaloneHtmlString(stateString) {
     return getPlayTemplate().then(function (template) {
       var encoded = encodeURI(stateString);
-      return '<!--Save as html file-->\n ' + template.replace(/__EMBED__/g, encoded);
+      // Function form, not a replacement string: encodeURI leaves $ and & alone, so a link
+      // containing $& / $` / $' / $1 would otherwise be read as a replacement pattern and
+      // splice __EMBED__ back into the exported game's own data.
+      return '<!--Save as html file-->\n ' + template.replace(/__EMBED__/g, function () { return encoded; });
     });
   }
 
