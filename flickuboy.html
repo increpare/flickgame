@@ -699,6 +699,16 @@ var copyImage = null;
 var savedString;
 function press(evt){
   evt = evt || window.event;
+
+  // Never run editor hotkeys while the user is typing. displayText and the verb
+  // inputs listen for keydown but don't stop propagation, so -/+ typed in them
+  // was resizing the brush. Guard here so the next text field added is safe too.
+  var focused = evt.target;
+  if (focused && (focused.tagName === 'INPUT' || focused.tagName === 'TEXTAREA' ||
+                  focused.tagName === 'SELECT' || focused.isContentEditable)) {
+    return;
+  }
+
   /*
   if (evt.keyCode==83){//S(ave)
     savedString = stateToString();
