@@ -568,8 +568,28 @@
       setVisuals(true);
     }
 
+    // Two independent guards on an untrusted file's dimensions - not a pair, and
+    // deliberately not CELLS = DIMENSION * DIMENSION.
+    //
+    // The per-side cap protects rendering: visibleCanvas is width * zoomFactor wide, so
+    // 2048 becomes an 8192px backing canvas at the desktop zoom of 4, safely inside every
+    // browser's limit. It also rejects degenerate shapes - a 1 x 1048576 canvas satisfies
+    // any area cap, but drawThumbnail blocks by floor(width/16) x floor(height/8), and
+    // floor(1/8) is 0, so the thumbnail silently renders as a single flat colour.
+    //
+    // The area cap protects memory, and is the one doing the real work: each cell costs
+    // 16 bytes of canvasses (16 pages) plus 64 bytes of ImageData per redraw, since
+    // drawCanvasFast allocates (w*4)*(h*4)*4 every frame. So 1024*1024 cells is already
+    // ~64MB per frame; raising it to 2048*2048 would make that ~256MB and leave the area
+    // check rejecting nothing the side check hadn't already caught.
+    //
+    // Both are enormous headroom. Neither editor ever puts more than 160 on a side:
+    // desktop is a fixed 160x100, and mobileFillCanvasSize pins the long side to 160 and
+    // derives the short one from the container's aspect ratio with a floor of 50. So games
+    // made here run 8000 (160x50) to 25600 (160x160) cells. The caps exist for imported
+    // and shared files, which can claim any dimensions at all.
     var MAX_CANVAS_DIMENSION = 2048;
-    var MAX_CANVAS_CELLS = 1048576;
+    var MAX_CANVAS_CELLS = 1024 * 1024;
 
     function readCanvasDimension(value, fallback) {
       if (value === undefined) return fallback;
