@@ -239,7 +239,7 @@
       setBusy(project.id);
       window.FlickGalleryStore.getProject(project.id).then(function (full) {
         if (!full || typeof full.state !== 'string') throw new Error('Project not found');
-        var safeName = ((full.title || 'flickgame').trim() || 'flickgame').replace(/[^a-z0-9_\-]+/gi, '_');
+        var safeName = FlickgameShare.sanitizeFilename(full.title, 'flickgame');
         return FlickgameShare.downloadStandaloneHtml(full.state, safeName + '.html');
       }).then(function () {
         closeShareSheet();

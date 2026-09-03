@@ -15,7 +15,8 @@
     const version = "2";
     //either 'centered' or 'split'
     var SWATCH_LAYOUT_VARIANT = 'split';
-    var gameLink = "www.flickgame.org"
+    const DEFAULT_GAME_LINK = "www.flickgame.org";
+    var gameLink = DEFAULT_GAME_LINK;
     var canvasIndex = 0;
     var palette_name = "dawnbringer-16";
     var background_color = "#000000";
@@ -326,7 +327,13 @@
 
     function exportClick() {
       closeBurgerDialog();
-      FlickgameShare.downloadStandaloneHtml(stateToString(), 'flickgame.html').catch(function (err) {
+      var game_name = ""
+      if (gameLink === DEFAULT_GAME_LINK) {
+        game_name = 'flickgame';
+      } else {
+        game_name = FlickgameShare.sanitizeFilename(gameLink, 'flickgame');
+      }
+      FlickgameShare.downloadStandaloneHtml(stateToString(), game_name + '.html').catch(function (err) {
         alert(err && err.message ? err.message : 'Failed to build download');
       });
     }
@@ -1578,6 +1585,10 @@
 
     function linkChange(newLink) {
       gameLink = newLink;
+      var linkEl = document.getElementById('linkInput');
+      var burgerLinkEl = document.getElementById('burger-link-input');
+      if (linkEl && linkEl.value !== newLink) linkEl.value = newLink;
+      if (burgerLinkEl && burgerLinkEl.value !== newLink) burgerLinkEl.value = newLink;
       saveFlickgameState();
     }
 
@@ -2292,6 +2303,8 @@
         updateMobileGridIconThumbnails(genAllThumbnails ? undefined : canvasIndex);
       }
       linkInput.value = gameLink;
+      var burgerLinkEl = document.getElementById('burger-link-input');
+      if (burgerLinkEl) burgerLinkEl.value = gameLink || '';
       if (!drawing) renderSwatches();
       drawPointerCursor();
       if (!isMobileLayout()) updateLayerItemNumberStyles();
