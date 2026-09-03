@@ -40,8 +40,9 @@
 
   function buildStandaloneHtmlString(stateString) {
     return getPlayTemplate().then(function (template) {
-      var encoded = encodeURI(stateString);
-      return '<!--Save as html file-->\n ' + template.replace(/__EMBED__/g, encoded);
+      var encodedState = encodeURI(stateString);
+      var html = template.split('__EMBED__').join(encodedState);
+      return '<!--Save as html file-->\n ' + html;
     });
   }
 
