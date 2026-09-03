@@ -705,7 +705,8 @@
         chosenBg = background_color;
         chosenFg = foreground_color;
       } else {
-        var palette_names = Object.keys(palettes);
+        // stay clear of assigning too-opinionated palettes as random defaults
+        var palette_names = ["antiquity16", "arq16","bubblegum-16","go-line","island-joy-16","microsoft-windows","pico-8","dawnbringer-16"];
         chosenPalette = palette_names[Math.floor(Math.random() * palette_names.length)];
         chosenBg = "#000000";
         chosenFg = "#ffffff";
