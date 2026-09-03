@@ -1643,6 +1643,7 @@
     function togglePointerMode() {
       pointerMode = !pointerMode;
       if (pointerMode) {
+        resetViewTransform();
         prevRadius = radius;
         if (pointerModeBtn) pointerModeBtn.classList.add("selected");
         bucketElem.setAttribute("class", "radius");
