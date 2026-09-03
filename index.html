@@ -568,26 +568,91 @@
       setVisuals(true);
     }
 
+    // Two independent guards on an untrusted file's dimensions - not a pair, and
+    // deliberately not CELLS = DIMENSION * DIMENSION.
+    //
+    // The per-side cap protects rendering: visibleCanvas is width * zoomFactor wide, so
+    // 2048 becomes an 8192px backing canvas at the desktop zoom of 4, safely inside every
+    // browser's limit. It also rejects degenerate shapes - a 1 x 1048576 canvas satisfies
+    // any area cap, but drawThumbnail blocks by floor(width/16) x floor(height/8), and
+    // floor(1/8) is 0, so the thumbnail silently renders as a single flat colour.
+    //
+    // The area cap protects memory, and is the one doing the real work: each cell costs
+    // 16 bytes of canvasses (16 pages) plus 64 bytes of ImageData per redraw, since
+    // drawCanvasFast allocates (w*4)*(h*4)*4 every frame. So 1024*1024 cells is already
+    // ~64MB per frame; raising it to 2048*2048 would make that ~256MB and leave the area
+    // check rejecting nothing the side check hadn't already caught.
+    //
+    // Both are enormous headroom. Neither editor ever puts more than 160 on a side:
+    // desktop is a fixed 160x100, and mobileFillCanvasSize pins the long side to 160 and
+    // derives the short one from the container's aspect ratio with a floor of 50. So games
+    // made here run 8000 (160x50) to 25600 (160x160) cells. The caps exist for imported
+    // and shared files, which can claim any dimensions at all.
+    var MAX_CANVAS_DIMENSION = 2048;
+    var MAX_CANVAS_CELLS = 1024 * 1024;
+
+    function readCanvasDimension(value, fallback) {
+      if (value === undefined) return fallback;
+      var n = Number(value);
+      if (!isFinite(n) || Math.floor(n) !== n || n < 1 || n > MAX_CANVAS_DIMENSION) {
+        throw new Error("This flickgame file has invalid dimensions.");
+      }
+      return n;
+    }
+
+    // Decode one run-length-encoded page into exactly cellCount entries. Counts come
+    // straight from an untrusted file, so each run is clamped to the space left in the
+    // page - an unbounded run used to lock the tab up for minutes.
+    function decodeCanvasRLE(pairs, cellCount) {
+      var ar = new Uint8Array(cellCount);
+      if (!pairs || typeof pairs.length !== 'number') return ar;
+      var index = 0;
+      for (var i = 0; i + 1 < pairs.length && index < cellCount; i += 2) {
+        var count = Number(pairs[i]);
+        if (!isFinite(count) || count < 1) continue;
+        if (count > cellCount - index) count = cellCount - index;
+        var value = parseInt(pairs[i + 1], 16);
+        if (!(value >= 0 && value < 16)) value = 0;
+        for (var j = 0; j < count; j++) {
+          ar[index] = value;
+          index++;
+        }
+      }
+      return ar;
+    }
+
+    function normalizeHyperlinkPage(page) {
+      var out = new Array(16).fill(0);
+      if (!page || typeof page.length !== 'number') return out;
+      for (var i = 0; i < 16; i++) {
+        var target = Number(page[i]);
+        if (isFinite(target) && target >= 1 && target <= 16) out[i] = Math.floor(target);
+      }
+      return out;
+    }
+
+    // Decode and validate the whole file into locals first, and only start writing the
+    // editor's globals once nothing left can fail. A load that threw half way used to
+    // leave the editor permanently broken - a short canvasses array, or an undefined
+    // colorPalette from an unknown palette name - with no way back but a reload.
     function stringToState(str, sourceTag) {
       var state = JSON.parse(str);
-      var stateWidth = state.width !== undefined ? state.width : 160;
-      var stateHeight = state.height !== undefined ? state.height : 100;
-      width = stateWidth;
-      height = stateHeight;
-
-      gameLink = state.gameLink;
-      if (state.activeIndex === undefined){
-        state.activeIndex = 0;
-      }
-      if (state.activeIndex >= 16){
-        state.activeIndex = 0;
+      if (!state || typeof state !== 'object' || Array.isArray(state)) {
+        throw new Error("This doesn't look like a flickgame file.");
       }
 
-      canvasIndex = state.activeIndex;
+      var stateWidth = readCanvasDimension(state.width, 160);
+      var stateHeight = readCanvasDimension(state.height, 100);
+      var cellCount = stateWidth * stateHeight;
+      if (cellCount > MAX_CANVAS_CELLS) {
+        throw new Error("This flickgame file has invalid dimensions.");
+      }
 
-      //if palette_name not defined, set it to dawnbringer-16
-      if (state.palette_name === undefined){
-        state.palette_name = "dawnbringer-16";
+      //if palette_name is missing or unknown, fall back to dawnbringer-16
+      var newPaletteName = state.palette_name;
+      if (typeof newPaletteName !== 'string' ||
+          !Object.prototype.hasOwnProperty.call(palettes, newPaletteName)) {
+        newPaletteName = "dawnbringer-16";
       }
 
       //if version not defined, then I need to do the pallette_fix
@@ -595,37 +660,47 @@
         upgrade_v1_to_v2(state);
       }
 
-      set_modal_panel_selected_item(palette_name,state.palette_name);
-      palette_name = state.palette_name;
+      // Always exactly 16 pages, whatever the file claims - a short list used to throw
+      // on the first thumbnail draw and strand the editor mid-load.
+      var rawCanvasses = Array.isArray(state.canvasses) ? state.canvasses : [];
+      var newCanvasses = new Array(16);
+      for (var k = 0; k < 16; k++) {
+        newCanvasses[k] = decodeCanvasRLE(rawCanvasses[k], cellCount);
+      }
+
+      var rawHyperlinks = Array.isArray(state.hyperlinks) ? state.hyperlinks : [];
+      var newHyperlinks = new Array(16);
+      for (var hn = 0; hn < 16; hn++) {
+        newHyperlinks[hn] = normalizeHyperlinkPage(rawHyperlinks[hn]);
+      }
+
+      var newGameLink = typeof state.gameLink === 'string' ? state.gameLink : DEFAULT_GAME_LINK;
+
+      var newActiveIndex = Number(state.activeIndex);
+      if (!isFinite(newActiveIndex) || newActiveIndex < 0 || newActiveIndex >= 16) newActiveIndex = 0;
+      newActiveIndex = Math.floor(newActiveIndex);
+
+      var newBackgroundColor = typeof state.background_color === 'string' ? state.background_color : undefined;
+      var newForegroundColor = typeof state.foreground_color === 'string' ? state.foreground_color : foreground_color;
+
+      // ---- nothing below here can throw, so it is safe to start writing globals ----
+
+      // Palette first, while the outgoing canvasses are still in place: set_color_palette
+      // remaps the live pixel data into the new palette, and that remap belongs to the
+      // outgoing game - the incoming one's indices are already in the new palette's space.
+      set_modal_panel_selected_item(palette_name, newPaletteName);
+      palette_name = newPaletteName;
       set_color_palette(palette_name);
 
-      foreground_color = state.foreground_color;
-      changeBackgroundColor(state.background_color);
+      foreground_color = newForegroundColor;
+      changeBackgroundColor(newBackgroundColor);
 
-      canvasses = new Array();
-      //trim state.canvasses to 16
-      state.canvasses = state.canvasses.slice(0, 16);
-
-      for (var k = 0; k < state.canvasses.length; k++) {
-        var s = state.canvasses[k];
-        var ar = new Uint8Array(stateWidth * stateHeight);
-        var index = 0;
-        for (var i = 0; i < s.length; i += 2) {
-          var count = s[i];
-          var ch = s[i + 1];
-          for (var j = 0; j < count; j++) {
-            ar[index] = parseInt(ch, 16);
-            index++;
-          }
-        }
-        canvasses.push(ar);
-      }
-      hyperlinks = state.hyperlinks;
-      // Normalize untrusted/corrupt hyperlinks so malformed imports/shares can't throw during rendering.
-      if (!Array.isArray(hyperlinks)) hyperlinks = [];
-      for (var hn = 0; hn < 16; hn++) {
-        if (!Array.isArray(hyperlinks[hn])) hyperlinks[hn] = new Array(16).fill(0);
-      }
+      width = stateWidth;
+      height = stateHeight;
+      gameLink = newGameLink;
+      canvasIndex = newActiveIndex;
+      canvasses = newCanvasses;
+      hyperlinks = newHyperlinks;
 
       // Clear undo so we don't restore pre-load state (e.g. empty init) when undoing
       undoList.length = 0;
@@ -2012,8 +2087,6 @@
       document.body.addEventListener('dragover', handleBodyDragOver, false);
       document.body.addEventListener('drop', handleBodyDrop, false);
 
-      window.addEventListener('mouseup', mouseUp, false);
-
       // Pointer mode touch events
       visibleCanvas.addEventListener('touchstart', ptrTouchStart, {passive: false});
       visibleCanvas.addEventListener('touchmove', ptrTouchMove, {passive: false});
@@ -2323,6 +2396,10 @@
     }
 
     var drawing = 0;
+    // True between beginDrawStroke and the pointerup that ends it. mouseUp listens on the
+    // document (so a stroke released off-canvas still finishes), which means it also sees
+    // every other click on the page - and without a stroke to finish there is nothing to do.
+    var strokeActive = false;
     var drawingStartTime = 0;
     var PINCH_UNDO_THRESHOLD = 400;
     var TOUCH_DRAW_DELAY = 80;
@@ -2598,6 +2675,7 @@
 
     function beginDrawStroke(e) {
       drawing = 1;
+      strokeActive = true;
       drawingStartTime = Date.now();
       var coords = getCoords(e);
       if (coords === null) {
@@ -2697,6 +2775,10 @@
           beginDrawStroke(evt);
         }
       }
+
+      if (!strokeActive) return;
+      strokeActive = false;
+
       drawing = 0;
       lastX = -1;
       lastY = -1;
