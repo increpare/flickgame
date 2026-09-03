@@ -2001,8 +2001,6 @@
       document.body.addEventListener('dragover', handleBodyDragOver, false);
       document.body.addEventListener('drop', handleBodyDrop, false);
 
-      window.addEventListener('mouseup', mouseUp, false);
-
       // Pointer mode touch events
       visibleCanvas.addEventListener('touchstart', ptrTouchStart, {passive: false});
       visibleCanvas.addEventListener('touchmove', ptrTouchMove, {passive: false});
@@ -2312,6 +2310,10 @@
     }
 
     var drawing = 0;
+    // True between beginDrawStroke and the pointerup that ends it. mouseUp listens on the
+    // document (so a stroke released off-canvas still finishes), which means it also sees
+    // every other click on the page - and without a stroke to finish there is nothing to do.
+    var strokeActive = false;
     var drawingStartTime = 0;
     var PINCH_UNDO_THRESHOLD = 400;
     var TOUCH_DRAW_DELAY = 80;
@@ -2587,6 +2589,7 @@
 
     function beginDrawStroke(e) {
       drawing = 1;
+      strokeActive = true;
       drawingStartTime = Date.now();
       var coords = getCoords(e);
       if (coords === null) {
@@ -2686,6 +2689,10 @@
           beginDrawStroke(evt);
         }
       }
+
+      if (!strokeActive) return;
+      strokeActive = false;
+
       drawing = 0;
       lastX = -1;
       lastY = -1;
