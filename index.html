@@ -568,26 +568,71 @@
       setVisuals(true);
     }
 
+    var MAX_CANVAS_DIMENSION = 2048;
+    var MAX_CANVAS_CELLS = 1048576;
+
+    function readCanvasDimension(value, fallback) {
+      if (value === undefined) return fallback;
+      var n = Number(value);
+      if (!isFinite(n) || Math.floor(n) !== n || n < 1 || n > MAX_CANVAS_DIMENSION) {
+        throw new Error("This flickgame file has invalid dimensions.");
+      }
+      return n;
+    }
+
+    // Decode one run-length-encoded page into exactly cellCount entries. Counts come
+    // straight from an untrusted file, so each run is clamped to the space left in the
+    // page - an unbounded run used to lock the tab up for minutes.
+    function decodeCanvasRLE(pairs, cellCount) {
+      var ar = new Uint8Array(cellCount);
+      if (!pairs || typeof pairs.length !== 'number') return ar;
+      var index = 0;
+      for (var i = 0; i + 1 < pairs.length && index < cellCount; i += 2) {
+        var count = Number(pairs[i]);
+        if (!isFinite(count) || count < 1) continue;
+        if (count > cellCount - index) count = cellCount - index;
+        var value = parseInt(pairs[i + 1], 16);
+        if (!(value >= 0 && value < 16)) value = 0;
+        for (var j = 0; j < count; j++) {
+          ar[index] = value;
+          index++;
+        }
+      }
+      return ar;
+    }
+
+    function normalizeHyperlinkPage(page) {
+      var out = new Array(16).fill(0);
+      if (!page || typeof page.length !== 'number') return out;
+      for (var i = 0; i < 16; i++) {
+        var target = Number(page[i]);
+        if (isFinite(target) && target >= 1 && target <= 16) out[i] = Math.floor(target);
+      }
+      return out;
+    }
+
+    // Decode and validate the whole file into locals first, and only start writing the
+    // editor's globals once nothing left can fail. A load that threw half way used to
+    // leave the editor permanently broken - a short canvasses array, or an undefined
+    // colorPalette from an unknown palette name - with no way back but a reload.
     function stringToState(str, sourceTag) {
       var state = JSON.parse(str);
-      var stateWidth = state.width !== undefined ? state.width : 160;
-      var stateHeight = state.height !== undefined ? state.height : 100;
-      width = stateWidth;
-      height = stateHeight;
-
-      gameLink = state.gameLink;
-      if (state.activeIndex === undefined){
-        state.activeIndex = 0;
-      }
-      if (state.activeIndex >= 16){
-        state.activeIndex = 0;
+      if (!state || typeof state !== 'object' || Array.isArray(state)) {
+        throw new Error("This doesn't look like a flickgame file.");
       }
 
-      canvasIndex = state.activeIndex;
+      var stateWidth = readCanvasDimension(state.width, 160);
+      var stateHeight = readCanvasDimension(state.height, 100);
+      var cellCount = stateWidth * stateHeight;
+      if (cellCount > MAX_CANVAS_CELLS) {
+        throw new Error("This flickgame file has invalid dimensions.");
+      }
 
-      //if palette_name not defined, set it to dawnbringer-16
-      if (state.palette_name === undefined){
-        state.palette_name = "dawnbringer-16";
+      //if palette_name is missing or unknown, fall back to dawnbringer-16
+      var newPaletteName = state.palette_name;
+      if (typeof newPaletteName !== 'string' ||
+          !Object.prototype.hasOwnProperty.call(palettes, newPaletteName)) {
+        newPaletteName = "dawnbringer-16";
       }
 
       //if version not defined, then I need to do the pallette_fix
@@ -595,37 +640,47 @@
         upgrade_v1_to_v2(state);
       }
 
-      set_modal_panel_selected_item(palette_name,state.palette_name);
-      palette_name = state.palette_name;
+      // Always exactly 16 pages, whatever the file claims - a short list used to throw
+      // on the first thumbnail draw and strand the editor mid-load.
+      var rawCanvasses = Array.isArray(state.canvasses) ? state.canvasses : [];
+      var newCanvasses = new Array(16);
+      for (var k = 0; k < 16; k++) {
+        newCanvasses[k] = decodeCanvasRLE(rawCanvasses[k], cellCount);
+      }
+
+      var rawHyperlinks = Array.isArray(state.hyperlinks) ? state.hyperlinks : [];
+      var newHyperlinks = new Array(16);
+      for (var hn = 0; hn < 16; hn++) {
+        newHyperlinks[hn] = normalizeHyperlinkPage(rawHyperlinks[hn]);
+      }
+
+      var newGameLink = typeof state.gameLink === 'string' ? state.gameLink : DEFAULT_GAME_LINK;
+
+      var newActiveIndex = Number(state.activeIndex);
+      if (!isFinite(newActiveIndex) || newActiveIndex < 0 || newActiveIndex >= 16) newActiveIndex = 0;
+      newActiveIndex = Math.floor(newActiveIndex);
+
+      var newBackgroundColor = typeof state.background_color === 'string' ? state.background_color : undefined;
+      var newForegroundColor = typeof state.foreground_color === 'string' ? state.foreground_color : foreground_color;
+
+      // ---- nothing below here can throw, so it is safe to start writing globals ----
+
+      // Palette first, while the outgoing canvasses are still in place: set_color_palette
+      // remaps the live pixel data into the new palette, and that remap belongs to the
+      // outgoing game - the incoming one's indices are already in the new palette's space.
+      set_modal_panel_selected_item(palette_name, newPaletteName);
+      palette_name = newPaletteName;
       set_color_palette(palette_name);
 
-      foreground_color = state.foreground_color;
-      changeBackgroundColor(state.background_color);
+      foreground_color = newForegroundColor;
+      changeBackgroundColor(newBackgroundColor);
 
-      canvasses = new Array();
-      //trim state.canvasses to 16
-      state.canvasses = state.canvasses.slice(0, 16);
-
-      for (var k = 0; k < state.canvasses.length; k++) {
-        var s = state.canvasses[k];
-        var ar = new Uint8Array(stateWidth * stateHeight);
-        var index = 0;
-        for (var i = 0; i < s.length; i += 2) {
-          var count = s[i];
-          var ch = s[i + 1];
-          for (var j = 0; j < count; j++) {
-            ar[index] = parseInt(ch, 16);
-            index++;
-          }
-        }
-        canvasses.push(ar);
-      }
-      hyperlinks = state.hyperlinks;
-      // Normalize untrusted/corrupt hyperlinks so malformed imports/shares can't throw during rendering.
-      if (!Array.isArray(hyperlinks)) hyperlinks = [];
-      for (var hn = 0; hn < 16; hn++) {
-        if (!Array.isArray(hyperlinks[hn])) hyperlinks[hn] = new Array(16).fill(0);
-      }
+      width = stateWidth;
+      height = stateHeight;
+      gameLink = newGameLink;
+      canvasIndex = newActiveIndex;
+      canvasses = newCanvasses;
+      hyperlinks = newHyperlinks;
 
       // Clear undo so we don't restore pre-load state (e.g. empty init) when undoing
       undoList.length = 0;
