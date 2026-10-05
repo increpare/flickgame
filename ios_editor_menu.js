@@ -279,6 +279,9 @@
         render();
       }, { capture: true });
     }
+    // The web view's file chooser does not offer .flickgame files when filtered by extension.
+    var fileInput = document.getElementById('my_file');
+    if (fileInput) fileInput.removeAttribute('accept');
     var desktopHelp = document.querySelector('a[href="help.html"]');
     if (desktopHelp) {
       desktopHelp.addEventListener('click', function (e) {

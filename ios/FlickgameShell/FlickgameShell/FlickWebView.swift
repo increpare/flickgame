@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import UniformTypeIdentifiers
 import WebKit
 
 /// A game file opened from outside the app (AirDrop, Messages, Files). It waits here until the
@@ -12,7 +13,10 @@ final class IncomingGame {
     func open(_ url: URL) {
         let scoped = url.startAccessingSecurityScopedResource()
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-        guard let data = try? Data(contentsOf: url) else { return }
+        // The file is opened where it lives (Files, iCloud Drive), so read it through a coordinator.
+        var data: Data?
+        NSFileCoordinator().coordinate(readingItemAt: url, options: [], error: nil) { data = try? Data(contentsOf: $0) }
+        guard let data else { return }
         pending = (url.lastPathComponent, data)
         // Go (back) to the gallery, keeping any unsaved work in the editor first.
         let script = """
@@ -30,13 +34,18 @@ final class IncomingGame {
     }
 
     func deliver() {
-        guard let game = pending, let webView else { return }
+        guard let game = pending else { return }
         pending = nil
-        guard let nameJSON = try? JSONSerialization.data(withJSONObject: [game.name]),
+        importIntoGallery(name: game.name, data: game.data, thenOpen: "play.html")
+    }
+
+    /// Must be called while the gallery page is showing.
+    func importIntoGallery(name: String, data: Data, thenOpen page: String) {
+        guard let nameJSON = try? JSONSerialization.data(withJSONObject: [name]),
               let nameArray = String(data: nameJSON, encoding: .utf8)
         else { return }
-        let script = "window.FlickGalleryPage.importIncoming('\(game.data.base64EncodedString())', \(nameArray)[0]);"
-        webView.evaluateJavaScript(script, completionHandler: nil)
+        let script = "window.FlickGalleryPage.importIncoming('\(data.base64EncodedString())', \(nameArray)[0], '\(page)');"
+        webView?.evaluateJavaScript(script, completionHandler: nil)
     }
 }
 
@@ -60,6 +69,7 @@ struct FlickWebViewRepresentable: UIViewRepresentable {
         Self.addSystemIconsUserScript(to: contentController)
         contentController.add(context.coordinator, name: "flickExport")
         contentController.add(context.coordinator, name: "flickIncoming")
+        contentController.add(context.coordinator, name: "flickImport")
         contentController.add(context.coordinator, name: "flickSupporter")
         config.userContentController = contentController
         let webView = WKWebView(frame: .zero, configuration: config)
@@ -137,7 +147,7 @@ struct FlickWebViewRepresentable: UIViewRepresentable {
         contentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
     }
 
-    final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler {
+    final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler, UIDocumentPickerDelegate {
         /// Used as `popoverPresentationController` anchor for export share sheet on iPad.
         weak var shareAnchorWebView: WKWebView?
 
@@ -197,6 +207,13 @@ struct FlickWebViewRepresentable: UIViewRepresentable {
                 IncomingGame.shared.deliver()
                 return
             }
+            if message.name == "flickImport" {
+                let types: [UTType] = [UTType(exportedAs: "org.flickgame.game"), .html, .json, .plainText]
+                let picker = UIDocumentPickerViewController(forOpeningContentTypes: types, asCopy: true)
+                picker.delegate = self
+                topViewController()?.present(picker, animated: true)
+                return
+            }
             if message.name == "flickSupporter" {
                 let restoring = message.body as? String == "restore"
                 Task { restoring ? await Supporter.shared.restore() : await Supporter.shared.buy() }
@@ -238,6 +255,11 @@ struct FlickWebViewRepresentable: UIViewRepresentable {
 
         func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
             Supporter.shared.show()
+        }
+
+        func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+            guard let url = urls.first, let data = try? Data(contentsOf: url) else { return }
+            IncomingGame.shared.importIntoGallery(name: url.lastPathComponent, data: data, thenOpen: "play.html")
         }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {

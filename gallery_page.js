@@ -456,11 +456,11 @@
   }
 
   // iOS: a .flickgame file opened from outside the app (AirDrop, Messages, Files) goes straight to the player.
-  function importIncoming(base64, fileName) {
+  function importIncoming(base64, fileName, page) {
     var bin = atob(base64);
     var bytes = new Uint8Array(bin.length);
     for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    importText(new TextDecoder('utf-8').decode(bytes), fileName, 'play.html');
+    importText(new TextDecoder('utf-8').decode(bytes), fileName, page);
   }
 
   function init() {
@@ -479,6 +479,11 @@
     }
     if (importBtn) {
       importBtn.addEventListener('click', function () {
+        // iOS: the native file picker, which knows the .flickgame type.
+        if (isIosApp() && window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.flickImport) {
+          window.webkit.messageHandlers.flickImport.postMessage('pick');
+          return;
+        }
         if (importInput) importInput.click();
       });
     }

@@ -10,6 +10,7 @@
 		8752afd728f5cc6015265d1e /* FlickgameShellApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 747e5c568212f5b8447760a2 /* FlickgameShellApp.swift */; };
 		885b028ec5281f9e297716d2 /* FlickWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 944ae5735b177417571a3737 /* FlickWebView.swift */; };
 		5b1e0c7a9d3f4e2186a7c0d1 /* Supporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3c9a7e41b2d85f60e1a4b7c2 /* Supporter.swift */; };
+		7d2e9a1c4b6f4e0893a5c1d2 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 8e3f0b2d5c704f19a4b6d2e3 /* PrivacyInfo.xcprivacy */; };
 		9ca7c803b803e3c417790511 /* www in Resources */ = {isa = PBXBuildFile; fileRef = fad1f5b32922edf4a72ef4ba /* www */; };
 		b4e5d6c708295c3bb1f2e3d4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = c3f4e5d609184b2aa0f1e2d3 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
@@ -20,6 +21,7 @@
 		944ae5735b177417571a3737 /* FlickWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlickWebView.swift; sourceTree = "<group>"; };
 		3c9a7e41b2d85f60e1a4b7c2 /* Supporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Supporter.swift; sourceTree = "<group>"; };
 		c3f4e5d609184b2aa0f1e2d3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		8e3f0b2d5c704f19a4b6d2e3 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		fad1f5b32922edf4a72ef4ba /* www */ = {isa = PBXFileReference; lastKnownFileType = folder; path = www; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -57,6 +59,7 @@
 				747e5c568212f5b8447760a2 /* FlickgameShellApp.swift */,
 				944ae5735b177417571a3737 /* FlickWebView.swift */,
 				3c9a7e41b2d85f60e1a4b7c2 /* Supporter.swift */,
+				8e3f0b2d5c704f19a4b6d2e3 /* PrivacyInfo.xcprivacy */,
 				fad1f5b32922edf4a72ef4ba /* www */,
 			);
 			path = FlickgameShell;
@@ -122,6 +125,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				b4e5d6c708295c3bb1f2e3d4 /* Assets.xcassets in Resources */,
+				7d2e9a1c4b6f4e0893a5c1d2 /* PrivacyInfo.xcprivacy in Resources */,
 				9ca7c803b803e3c417790511 /* www in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
