@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="favicon.png">
+<title>flickgame compare</title>
+<script src="flickgame_base.js"></script>
+<script src="flickgame_vanilla.js"></script>
+<script src="flickgame_share.js"></script>
+<style>
+html, body {
+  margin: 0;
+  background: #111;
+  color: #bbb;
+  font: 12px/1.3 ui-monospace, Menlo, Consolas, monospace;
+}
+body {
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: 10px 12px 40px;
+}
+body.dragging {
+  outline: 2px dashed #4da3ff;
+  outline-offset: -6px;
+}
+button {
+  font: inherit;
+  color: #bbb;
+  background: #222;
+  border: 1px solid #3a3a3a;
+  border-radius: 3px;
+  padding: 3px 9px;
+  cursor: pointer;
+}
+button:hover { color: #fff; border-color: #666; }
+button.on { color: #111; background: #ddd; border-color: #ddd; }
+#bar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+#empty {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+  font-size: 18px;
+  pointer-events: none;
+}
+#empty[hidden] { display: none; }
+
+/* file list */
+#files { border-collapse: collapse; margin-bottom: 14px; }
+#files td, #files th { padding: 2px 14px 2px 0; white-space: nowrap; vertical-align: top; text-align: left; }
+#files th { color: #666; font-weight: normal; }
+#files tr { cursor: pointer; }
+#files tr:hover .name { color: #fff; }
+#files .head, #files .failed { cursor: default; }
+#files .failed { color: #ff5c5c; }
+#files .remove { padding: 0 5px; border: none; background: none; color: #666; }
+#files .remove:hover { color: #fff; }
+.num {
+  display: inline-block;
+  min-width: 1.4em;
+  padding: 0 2px;
+  border: 1px solid #555;
+  border-radius: 3px;
+  text-align: center;
+  font-weight: normal;
+}
+.ref .num { color: #111; background: #4da3ff; border-color: #4da3ff; }
+.swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 2px;
+  border: 1px solid #444;
+  vertical-align: middle;
+}
+.ticks { display: flex; gap: 1px; align-items: center; color: #5a5a5a; }
+.ticks i { width: 9px; height: 9px; background: currentColor; }
+.ticks i.empty { background: #1e1e1e; }
+.ticks i.empty.differs { background: none; box-shadow: inset 0 0 0 1px currentColor; }
+.ticks span { margin-left: 6px; color: #bbb; }
+
+/* page grid */
+.band {
+  display: grid;
+  gap: 6px;
+  justify-content: start;
+  align-items: start;
+  margin-bottom: 18px;
+}
+.plabel { color: #777; text-align: center; scroll-margin-top: 30px; }
+.by-file .plabel { text-align: right; }
+.flabel { display: flex; gap: 5px; white-space: nowrap; cursor: pointer; }
+.flabel:hover { color: #fff; }
+/* long names lose their start, not their end: the end is what tells the files apart */
+.flabel span { overflow: hidden; text-overflow: ellipsis; direction: rtl; text-align: left; }
+.by-file .flabel {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 4px 0;
+  background: #111;
+}
+.same { opacity: .4; }
+.cell:hover .same { opacity: 1; }
+.frame {
+  position: relative;
+  border: 2px solid #2a2a2a;
+}
+.frame canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+.smooth .frame canvas { image-rendering: auto; }
+.frame .diff { opacity: 0; }
+body.diffing .frame .diff, .frame:hover .diff { opacity: 1; }
+body.diffing .frame:hover .diff { opacity: 0; }
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  box-sizing: border-box;
+  min-height: 16px;
+  margin-top: 2px;
+  padding: 0 2px;
+}
+.links span {
+  box-sizing: border-box;
+  min-width: 14px;
+  height: 16px;
+  padding: 0 2px;
+  border-bottom: 3px solid transparent;
+  background-clip: padding-box;
+  font-size: 9px;
+  line-height: 13px;
+  text-align: center;
+}
+.links .gone { box-shadow: inset 0 0 0 1px currentColor, inset 0 0 0 2px rgba(255, 255, 255, .15); }
+</style>
+</head>
+<body>
+<div id="bar">
+  <button id="open">open</button>
+  <button id="flip">flip</button>
+  <button id="diff">diff</button>
+  <button id="changes">changes only</button>
+  <input id="size" type="range" min="0.25" max="4" step="0.25" value="1">
+  <button id="clear">clear</button>
+  <input id="picker" type="file" multiple hidden>
+</div>
+<table id="files"></table>
+<div id="grid"></div>
+<div id="empty">drop flickgames here</div>
+<script>
+// Side-by-side comparison of several saves of the same flickgame, to work out which
+// one is the latest. Loads anything the editor imports; files that hold the very same
+// game are shown as one. compare.html?f=a.html,b.txt loads files relative to this page.
+(function () {
+  'use strict';
+
+  // same caps as the editor's stringToState
+  var MAX_DIMENSION = 2048;
+  var MAX_CELLS = 1024 * 1024;
+
+  // One colour per alternative to what the reference save has. Whatever matches the
+  // reference is left grey, so that colour only ever means "not what the reference has".
+  var VARIANT_COLORS = ['#ff9933', '#ff4fd8', '#3ddc84', '#ffe14d', '#b28cff', '#35d0c6', '#ff5c5c', '#a8e03a', '#c98f5a', '#f0f0f0'];
+
+  var LABEL_WIDTH = 110;  // the file names down the side
+  var GUTTER_WIDTH = 30;  // the page numbers down the side, when flipped
+  var CELL_GAP = 10;      // band gap + frame border
+  var NO_LINKS = new Array(16).fill(0).join(',');
+  var LINK_WEIGHT = 0.1;  // what one link counts for, next to a whole page of pixels
+  var EXACT_CHAIN_LIMIT = 15;
+
+  var games = [];         // the distinct saves, likely newest first. Each lists the files it came in as
+  var loaded = 0;         // how many have ever been loaded, to keep same-dated files in the order they came
+  var failures = [];      // files that wouldn't load: {name, error}
+  var reference = null;   // the game the others are diffed against
+  var referencePicked = false;
+  var analysis = null;
+  var byFile = false;     // false: pages across, files down. true: the other way round
+  var changesOnly = false;
+  var scale = 1;
+  var scalePicked = false; // until the slider is touched, the zoom follows the window
+  var pagesPerBand = 0;
+
+  var filesTable = document.getElementById('files');
+  var grid = document.getElementById('grid');
+  var picker = document.getElementById('picker');
+  var sizeSlider = document.getElementById('size');
+
+  function el(tag, className, text) {
+    var node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+
+  // ImageData is RGBA bytes, so little-endian ABGR as a uint32
+  function pack(r, g, b) {
+    return (0xff000000 | (b << 16) | (g << 8) | r) >>> 0;
+  }
+
+  function packHex(hex) {
+    var c = hexToRgb(hex);
+    return pack(c.r, c.g, c.b);
+  }
+
+  // The colour to mark a game's version of something with, or '' where it has what the
+  // reference has. v is what variants() made of the thing.
+  function markOf(v, gi) {
+    return v && v[gi] ? VARIANT_COLORS[(v[gi] - 1) % VARIANT_COLORS.length] : '';
+  }
+
+  // ---- loading ----
+
+  function readDimension(value, fallback) {
+    if (value === undefined) return fallback;
+    var n = Number(value);
+    if (!isFinite(n) || Math.floor(n) !== n || n < 1 || n > MAX_DIMENSION) {
+      throw new Error('This flickgame file has invalid dimensions.');
+    }
+    return n;
+  }
+
+  function readLinks(page) {
+    var out = new Array(16).fill(0);
+    if (!page || typeof page.length !== 'number') return out;
+    for (var i = 0; i < 16; i++) {
+      var target = Number(page[i]);
+      if (isFinite(target) && target >= 1 && target <= 16) out[i] = Math.floor(target);
+    }
+    return out;
+  }
+
+  // Follows the editor's stringToState, so a file shows here as it would load there:
+  // same defaults, same caps, always 16 pages.
+  function parseGame(text) {
+    var state = JSON.parse(FlickgameShare.extractStateFromImportText(text));
+    if (!state || typeof state !== 'object' || Array.isArray(state)) {
+      throw new Error("This doesn't look like a flickgame file.");
+    }
+    var width = readDimension(state.width, 160);
+    var height = readDimension(state.height, 100);
+    if (width * height > MAX_CELLS) {
+      throw new Error('This flickgame file has invalid dimensions.');
+    }
+
+    var paletteName = state.palette_name;
+    if (typeof paletteName !== 'string' || !Object.prototype.hasOwnProperty.call(palettes, paletteName)) {
+      paletteName = 'dawnbringer-16';
+    }
+    var palette = palettes[paletteName];
+    var rgba = new Uint32Array(16);
+    var ghost = new Uint32Array(16);   // dim grey, for pixels the diff view isn't pointing at
+    for (var c = 0; c < 16; c++) {
+      var rgb = hexToRgb(palette[c]);
+      rgba[c] = pack(rgb.r, rgb.g, rgb.b);
+      var grey = Math.round((rgb.r * 0.3 + rgb.g * 0.59 + rgb.b * 0.11) * 0.3);
+      ghost[c] = pack(grey, grey, grey);
+    }
+
+    var rawCanvasses = Array.isArray(state.canvasses) ? state.canvasses : [];
+    var rawHyperlinks = Array.isArray(state.hyperlinks) ? state.hyperlinks : [];
+    var pages = [];
+    for (var p = 0; p < 16; p++) {
+      var pixels = RLE_decode(rawCanvasses[p], width * height);
+      var indices = new Uint8Array(pixels.length);
+      var counts = new Array(16).fill(0);
+      for (var i = 0; i < pixels.length; i++) {
+        var code = pixels.charCodeAt(i);
+        indices[i] = code < 58 ? code - 48 : code - 87;
+        counts[indices[i]]++;
+      }
+      // Keyed on the colours the page actually shows rather than the palette name, so a
+      // palette change only counts on the pages it visibly alters.
+      var shown = palette.map(function (hex, index) { return counts[index] ? hex : ''; });
+      var links = readLinks(rawHyperlinks[p]);
+      // how much of the page is anything other than its commonest colour
+      var ink = 1 - Math.max.apply(null, counts) / pixels.length;
+      pages.push({
+        indices: indices,
+        links: links,
+        imageKey: width + 'x' + height + '|' + shown.join(',') + '|' + pixels,
+        linksKey: links.join(','),
+        blank: ink === 0,
+        ink: ink
+      });
+    }
+
+    return {
+      width: width,
+      height: height,
+      paletteName: paletteName,
+      palette: palette,
+      rgba: rgba,
+      ghost: ghost,
+      gameLink: typeof state.gameLink === 'string' ? state.gameLink : 'www.flickgame.org',
+      background: typeof state.background_color === 'string' ? state.background_color : '#000000',
+      foreground: typeof state.foreground_color === 'string' ? state.foreground_color : '#ffffff',
+      pages: pages
+    };
+  }
+
+  // Whether two files hold the same save: nothing this page shows differs between them.
+  function sameGame(a, b) {
+    return a.gameLink === b.gameLink && a.paletteName === b.paletteName &&
+      a.background === b.background && a.foreground === b.foreground &&
+      a.pages.every(function (page, p) {
+        return page.imageKey === b.pages[p].imageKey && page.linksKey === b.pages[p].linksKey;
+      });
+  }
+
+  // When a save was made, as far as its files can say: the earliest date on any of them,
+  // since the save existed by then however many times it was copied afterwards.
+  function firstSeen(game) {
+    return game.files[0].modified;
+  }
+
+  function add(name, text, modified) {
+    try {
+      var parsed = parseGame(text);
+      var game = games.find(function (other) { return sameGame(parsed, other); });
+      if (!game) {
+        game = parsed;
+        game.files = [];
+        game.loaded = loaded++;
+        games.push(game);
+      }
+      game.files.push({ name: name, modified: modified || 0 });
+      // earliest first, undated last
+      game.files.sort(function (a, b) {
+        return (a.modified || Number.MAX_VALUE) - (b.modified || Number.MAX_VALUE);
+      });
+    } catch (e) {
+      failures.push({ name: name, error: e.message });
+    }
+  }
+
+  function readFiles(fileList) {
+    Promise.all(Array.prototype.map.call(fileList, function (file) {
+      return file.text().then(function (text) {
+        add(file.name, text, file.lastModified);
+      });
+    })).then(refresh);
+  }
+
+  function fetchFiles(paths) {
+    Promise.all(paths.map(function (path) {
+      return fetch(path).then(function (response) {
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        var modified = Date.parse(response.headers.get('Last-Modified'));
+        return response.text().then(function (text) {
+          add(path.split('/').pop(), text, modified);
+        });
+      }).catch(function (e) {
+        failures.push({ name: path, error: e.message });
+      });
+    })).then(refresh);
+  }
+
+  // ---- comparing ----
+
+  // A variant number per game for some property: 0 for whatever the reference has, then
+  // counting up in file order. null when every game agrees.
+  function variants(keyOf) {
+    var seen = new Map();
+    seen.set(keyOf(reference), 0);
+    var out = games.map(function (game) {
+      var key = keyOf(game);
+      if (!seen.has(key)) seen.set(key, seen.size);
+      return seen.get(key);
+    });
+    return seen.size > 1 ? out : null;
+  }
+
+  // How many pixels differ between two pages. Where the sizes don't match, everything
+  // outside the overlap counts.
+  function pixelsApart(gameA, pageA, gameB, pageB) {
+    if (pageA.imageKey === pageB.imageKey) return 0;
+    var width = Math.min(gameA.width, gameB.width);
+    var height = Math.min(gameA.height, gameB.height);
+    var count = gameA.width * gameA.height + gameB.width * gameB.height - 2 * width * height;
+    for (var y = 0; y < height; y++) {
+      var rowA = y * gameA.width;
+      var rowB = y * gameB.width;
+      for (var x = 0; x < width; x++) {
+        if (gameA.rgba[pageA.indices[rowA + x]] !== gameB.rgba[pageB.indices[rowB + x]]) count++;
+      }
+    }
+    return count;
+  }
+
+  // How far apart two saves are, in pages: the share of each page's pixels that differ,
+  // plus a little for every link that does.
+  function distance(a, b) {
+    var cells = Math.max(a.width * a.height, b.width * b.height);
+    var total = 0;
+    for (var p = 0; p < 16; p++) {
+      total += pixelsApart(a, a.pages[p], b, b.pages[p]) / cells;
+      for (var c = 0; c < 16; c++) {
+        if (a.pages[p].links[c] !== b.pages[p].links[c]) total += LINK_WEIGHT;
+      }
+    }
+    return total;
+  }
+
+  // How fleshed out a save is: pages with something on them, how much is drawn on each,
+  // and links.
+  function fullness(game) {
+    var total = 0;
+    game.pages.forEach(function (page) {
+      if (!page.blank) total += 1 + page.ink;
+      total += LINK_WEIGHT * page.links.filter(Boolean).length;
+    });
+    return total;
+  }
+
+  // The order that puts every save next to the ones it is most like - the shortest path
+  // through all of them, given the distances d. Successive saves of a game are nearly
+  // the same, so that path is the order they were made in, one way round or the other.
+  // Exact (Held-Karp) while that's affordable, greedy beyond.
+  function shortestChain(d) {
+    var n = d.length;
+    var chain = [];
+    var i, j;
+
+    if (n > EXACT_CHAIN_LIMIT) {
+      // Too many to weigh up every order. Join the nearest two saves, then the next
+      // nearest, and so on - skipping any pair where one is already in the middle of
+      // a chain or both are in the same one - until it is all a single chain.
+      var pairs = [];
+      for (i = 0; i < n; i++) {
+        for (j = 0; j < i; j++) pairs.push([i, j]);
+      }
+      pairs.sort(function (a, b) { return d[a[0]][a[1]] - d[b[0]][b[1]]; });
+      var joined = d.map(function () { return []; });
+      var chainOf = d.map(function (row, index) { return index; });
+      pairs.forEach(function (pair) {
+        var a = pair[0], b = pair[1];
+        if (joined[a].length > 1 || joined[b].length > 1 || chainOf[a] === chainOf[b]) return;
+        joined[a].push(b);
+        joined[b].push(a);
+        var absorbed = chainOf[b];
+        chainOf = chainOf.map(function (id) { return id === absorbed ? chainOf[a] : id; });
+      });
+      var cameFrom = -1;
+      var at = joined.findIndex(function (neighbours) { return neighbours.length === 1; });
+      while (at !== undefined) {
+        chain.push(at);
+        var onward = joined[at][0] === cameFrom ? joined[at][1] : joined[at][0];
+        cameFrom = at;
+        at = onward;
+      }
+      return chain;
+    }
+
+    // cost[set * n + last]: the shortest path through the saves in `set` ending at `last`
+    var full = (1 << n) - 1;
+    var cost = new Float64Array((full + 1) * n).fill(Infinity);
+    var previous = new Int8Array((full + 1) * n).fill(-1);
+    for (i = 0; i < n; i++) cost[(1 << i) * n + i] = 0;
+    for (var set = 1; set <= full; set++) {
+      for (var last = 0; last < n; last++) {
+        var soFar = cost[set * n + last];
+        if (soFar === Infinity) continue;
+        for (var next = 0; next < n; next++) {
+          if (set & (1 << next)) continue;
+          var to = (set | (1 << next)) * n + next;
+          if (soFar + d[last][next] < cost[to]) {
+            cost[to] = soFar + d[last][next];
+            previous[to] = last;
+          }
+        }
+      }
+    }
+    var end = 0;
+    for (i = 1; i < n; i++) {
+      if (cost[full * n + i] < cost[full * n + end]) end = i;
+    }
+    for (var remaining = full; end >= 0; ) {
+      chain.push(end);
+      var before = previous[remaining * n + end];
+      remaining &= ~(1 << end);
+      end = before;
+    }
+    return chain;
+  }
+
+  // Does `valueOf` rise (> 0) or fall (< 0) along a list of games?
+  function trend(list, valueOf) {
+    var total = 0;
+    list.forEach(function (game, index) {
+      total += (index - (list.length - 1) / 2) * valueOf(game);
+    });
+    return Math.abs(total) < 1e-9 ? 0 : total;
+  }
+
+  // Likely newest first. The chain gives the order; the fuller end is taken to be the
+  // newer one, with the file dates deciding only if the two ends are as full as each other.
+  function sortByContent() {
+    var d = games.map(function () { return new Array(games.length).fill(0); });
+    for (var i = 0; i < games.length; i++) {
+      for (var j = 0; j < i; j++) {
+        d[i][j] = d[j][i] = distance(games[i], games[j]);
+      }
+    }
+    var ordered = shortestChain(d).map(function (index) { return games[index]; });
+    var rising = trend(ordered, fullness) || trend(ordered, firstSeen);
+    if (rising > 0) ordered.reverse();
+    games = ordered;
+  }
+
+  function analyse() {
+    var result = {
+      image: [],
+      links: [],
+      size: variants(function (g) { return g.width + 'x' + g.height; }),
+      palette: variants(function (g) { return g.paletteName; }),
+      gameLink: variants(function (g) { return g.gameLink; }),
+      colors: variants(function (g) { return g.background + g.foreground; })
+    };
+    function pageVariants(p, key) {
+      return variants(function (g) { return g.pages[p][key]; });
+    }
+    for (var p = 0; p < 16; p++) {
+      result.image[p] = pageVariants(p, 'imageKey');
+      result.links[p] = pageVariants(p, 'linksKey');
+    }
+    return result;
+  }
+
+  // ---- drawing ----
+
+  function paint(className, width, height, colorAt) {
+    var canvas = el('canvas', className);
+    canvas.width = width;
+    canvas.height = height;
+    var ctx = canvas.getContext('2d');
+    var image = ctx.createImageData(width, height);
+    var out = new Uint32Array(image.data.buffer);
+    for (var i = 0; i < out.length; i++) out[i] = colorAt(i);
+    ctx.putImageData(image, 0, 0);
+    return canvas;
+  }
+
+  // The page with everything that matches the reference greyed out and everything that
+  // doesn't in `color`. Anything outside the reference's bounds counts as different.
+  function paintDiff(game, page, refPage, color) {
+    var mark = packHex(color);
+    var width = game.width;
+    var refWidth = reference.width;
+    var refHeight = reference.height;
+    return paint('diff', width, game.height, function (i) {
+      var x = i % width;
+      var y = (i - x) / width;
+      var own = page.indices[i];
+      if (x < refWidth && y < refHeight &&
+          game.rgba[own] === reference.rgba[refPage.indices[y * refWidth + x]]) {
+        return game.ghost[own];
+      }
+      return mark;
+    });
+  }
+
+  // A page's links: a chip per linked colour, with the page it leads to. Chips that
+  // aren't what the reference has are underlined, and a link the reference has but this
+  // save doesn't is left as an empty outline.
+  function linkStrip(gi, p) {
+    var game = games[gi];
+    var links = game.pages[p].links;
+    var refLinks = reference.pages[p].links;
+    var mark = markOf(analysis.links[p], gi);
+    var strip = el('div', 'links');
+    strip.style.width = game.width * scale + 4 + 'px';
+    if (!mark && game !== reference) strip.classList.add('same');
+    for (var c = 0; c < 16; c++) {
+      if (!links[c] && !refLinks[c]) continue;
+      var chip = el('span', links[c] ? '' : 'gone', links[c] ? String(links[c]) : '');
+      if (links[c]) {
+        chip.style.background = game.palette[c];
+        chip.style.color = contrastTextColor(game.palette[c]);
+      } else {
+        chip.style.color = game.palette[c];
+      }
+      if (links[c] !== refLinks[c]) {
+        chip.style.borderBottomColor = mark;
+        chip.title = (refLinks[c] || '-') + ' \u2192 ' + (links[c] || '-');
+      }
+      strip.appendChild(chip);
+    }
+    return strip;
+  }
+
+  // One page of one save. Faded where it is just what the reference has; framed in its
+  // variant colour where it isn't.
+  function cell(gi, p) {
+    var game = games[gi];
+    var page = game.pages[p];
+    var node = el('div', 'cell');
+
+    var frame = el('div', 'frame');
+    frame.style.width = game.width * scale + 'px';
+    frame.style.height = game.height * scale + 'px';
+    frame.appendChild(paint('', game.width, game.height, function (i) {
+      return game.rgba[page.indices[i]];
+    }));
+    var mark = markOf(analysis.image[p], gi);
+    if (mark) {
+      frame.style.borderColor = mark;
+      frame.appendChild(paintDiff(game, page, reference.pages[p], mark));
+      frame.title = pixelsApart(game, page, reference, reference.pages[p]) + 'px';
+    } else if (game !== reference) {
+      frame.classList.add('same');
+    }
+    node.appendChild(frame);
+    node.appendChild(linkStrip(gi, p));
+    return node;
+  }
+
+  function fileLabel(gi) {
+    var game = games[gi];
+    var label = el('div', 'flabel' + (game === reference ? ' ref' : ''));
+    label.appendChild(el('b', 'num', String(gi + 1)));
+    var names = game.files.map(function (file) { return file.name; });
+    if (names.length > 1) label.appendChild(document.createTextNode('\u00d7' + names.length));
+    // No extension, to leave room for the part that differs. The mark keeps the name
+    // reading left to right inside its right-to-left box.
+    label.appendChild(el('span', '', '\u200e' + names[0].replace(/\.[^.]+$/, '')));
+    label.title = names.join('\n');
+    label.style.width = (byFile ? game.width * scale + 4 : LABEL_WIDTH) + 'px';
+    label.onclick = function () { setReference(game); };
+    return label;
+  }
+
+  function pageLabel(p) {
+    var label = el('div', 'plabel', String(p + 1));
+    label.id = 'page-' + (p + 1);
+    return label;
+  }
+
+  function newBand(columns) {
+    var band = el('div', 'band');
+    band.style.gridTemplateColumns = 'auto repeat(' + columns + ', max-content)';
+    grid.appendChild(band);
+    return band;
+  }
+
+  function widestGame() {
+    return Math.max.apply(null, games.map(function (g) { return g.width; }));
+  }
+
+  // The zoom at which eight pages - or, flipped, every save - fit across the window.
+  // In quarters so the pixels stay even, and kept between a half and 1: any smaller
+  // and the pictures stop being readable, so a narrow window gets fewer across instead.
+  function fitScale() {
+    var across = byFile ? games.length : 8;
+    var room = (grid.clientWidth - (byFile ? GUTTER_WIDTH : LABEL_WIDTH)) / across - CELL_GAP;
+    var quarters = Math.floor(room / widestGame() * 4);
+    return Math.min(4, Math.max(2, quarters)) / 4;
+  }
+
+  // How many pages fit across the window. Kept to a divisor of 16 so the bands come
+  // out the same length.
+  function fitPagesPerBand() {
+    var widest = widestGame();
+    var fit = Math.floor((grid.clientWidth - LABEL_WIDTH) / (widest * scale + CELL_GAP));
+    var options = [16, 8, 4, 2];
+    for (var i = 0; i < options.length; i++) {
+      if (options[i] <= fit) return options[i];
+    }
+    return 1;
+  }
+
+  function renderGrid() {
+    grid.textContent = '';
+    if (!games.length) return;
+    if (!scalePicked) {
+      scale = fitScale();
+      sizeSlider.value = scale;
+    }
+    // shrunk below a screen pixel per game pixel, blending keeps thin lines that
+    // nearest-pixel scaling would drop
+    grid.classList.toggle('smooth', scale * window.devicePixelRatio < 1);
+    var shown = [];
+    for (var p = 0; p < 16; p++) {
+      if (!changesOnly || analysis.image[p] || analysis.links[p]) shown.push(p);
+    }
+
+    if (byFile) {
+      var table = newBand(games.length);
+      table.classList.add('by-file');
+      table.appendChild(el('div', 'flabel'));
+      games.forEach(function (game, gi) { table.appendChild(fileLabel(gi)); });
+      shown.forEach(function (page) {
+        table.appendChild(pageLabel(page));
+        games.forEach(function (game, gi) { table.appendChild(cell(gi, page)); });
+      });
+      return;
+    }
+
+    pagesPerBand = fitPagesPerBand();
+    for (var start = 0; start < shown.length; start += pagesPerBand) {
+      var pagesHere = shown.slice(start, start + pagesPerBand);
+      var band = newBand(pagesHere.length);
+      band.appendChild(el('div'));
+      pagesHere.forEach(function (page) { band.appendChild(pageLabel(page)); });
+      games.forEach(function (game, gi) {
+        band.appendChild(fileLabel(gi));
+        pagesHere.forEach(function (page) { band.appendChild(cell(gi, page)); });
+      });
+    }
+  }
+
+  function formatDate(ms) {
+    if (!ms) return '';
+    var d = new Date(ms);
+    function two(n) { return (n < 10 ? '0' : '') + n; }
+    return d.getFullYear() + '-' + two(d.getMonth() + 1) + '-' + two(d.getDate()) + ' ' +
+      two(d.getHours()) + ':' + two(d.getMinutes()) + ':' + two(d.getSeconds());
+  }
+
+  // A tick per page for one save, then a count: how many pages have a picture
+  // (kind 'image') or how many links there are (kind 'links'). A tick is dark where
+  // the save has nothing, grey where it has what the reference has, and coloured where
+  // it doesn't.
+  function ticks(gi, kind) {
+    var strip = el('div', 'ticks');
+    var count = 0;
+    games[gi].pages.forEach(function (page, p) {
+      var amount = kind === 'image' ? (page.blank ? 0 : 1) : page.links.filter(Boolean).length;
+      count += amount;
+      var tick = el('i', amount ? '' : 'empty');
+      var mark = markOf(analysis[kind][p], gi);
+      if (mark) {
+        tick.classList.add('differs');
+        tick.style.color = mark;
+      }
+      tick.onclick = function (e) {
+        e.stopPropagation();
+        var label = document.getElementById('page-' + (p + 1));
+        if (label) label.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+      strip.appendChild(tick);
+    });
+    strip.appendChild(el('span', '', String(count)));
+    return strip;
+  }
+
+  function renderFiles() {
+    filesTable.textContent = '';
+
+    function td(row, text, color) {
+      var node = el('td', '', text);
+      if (color) node.style.color = color;
+      row.appendChild(node);
+      return node;
+    }
+
+    // these are nearly always the same in every save, and only get a column when they aren't
+    var settings = [
+      { v: analysis && analysis.size, text: function (g) { return g.width + '\u00d7' + g.height; } },
+      { v: analysis && analysis.palette, text: function (g) { return g.paletteName; } },
+      { v: analysis && analysis.gameLink, text: function (g) { return g.gameLink; } }
+    ].filter(function (setting) { return setting.v; });
+    var colors = analysis && analysis.colors;
+
+    if (games.length) {
+      var head = el('tr', 'head');
+      head.appendChild(el('th')).colSpan = 3 + settings.length + (colors ? 1 : 0);
+      head.appendChild(el('th', '', 'pages'));
+      head.appendChild(el('th', '', 'links'));
+      filesTable.appendChild(head);
+    }
+
+    games.forEach(function (game, gi) {
+      var row = el('tr', game === reference ? 'ref' : '');
+      row.onclick = function () { setReference(game); };
+      td(row).appendChild(el('b', 'num', String(gi + 1)));
+      var names = td(row);
+      names.className = 'name';
+      var dates = td(row);
+      game.files.forEach(function (file) {
+        names.appendChild(el('div', '', file.name));
+        dates.appendChild(el('div', '', formatDate(file.modified) || '\u00a0'));
+      });
+      settings.forEach(function (setting) {
+        td(row, setting.text(game), markOf(setting.v, gi));
+      });
+      if (colors) {
+        var swatches = td(row);
+        [game.background, game.foreground].forEach(function (color) {
+          var swatch = el('span', 'swatch');
+          swatch.style.background = color;
+          swatch.style.borderColor = markOf(colors, gi);
+          swatches.appendChild(swatch);
+        });
+      }
+      td(row).appendChild(ticks(gi, 'image'));
+      td(row).appendChild(ticks(gi, 'links'));
+      var remove = el('button', 'remove', '\u00d7');
+      remove.onclick = function (e) {
+        e.stopPropagation();
+        games.splice(games.indexOf(game), 1);
+        refresh();
+      };
+      td(row).appendChild(remove);
+      filesTable.appendChild(row);
+    });
+
+    failures.forEach(function (failure) {
+      var row = el('tr', 'failed');
+      row.appendChild(el('td'));
+      row.appendChild(el('td', '', failure.name));
+      var message = el('td', '', failure.error);
+      message.colSpan = 7;
+      row.appendChild(message);
+      filesTable.appendChild(row);
+    });
+  }
+
+  // after the files change
+  function refresh() {
+    // by date first, so that the order doesn't hang on which file happened to be read first
+    games.sort(function (a, b) { return firstSeen(b) - firstSeen(a) || a.loaded - b.loaded; });
+    if (games.length > 1) sortByContent();
+    update();
+  }
+
+  function update() {
+    if (games.indexOf(reference) < 0) referencePicked = false;
+    if (!referencePicked) reference = games[0] || null;
+    analysis = games.length ? analyse() : null;
+    renderFiles();
+    renderGrid();
+    document.getElementById('empty').hidden = games.length + failures.length > 0;
+  }
+
+  function setReference(game) {
+    reference = game;
+    referencePicked = true;
+    update();
+  }
+
+  // ---- controls ----
+
+  document.getElementById('open').onclick = function () { picker.click(); };
+  picker.onchange = function () {
+    readFiles(picker.files);
+    picker.value = '';
+  };
+  document.getElementById('flip').onclick = function () {
+    byFile = !byFile;
+    this.classList.toggle('on', byFile);
+    renderGrid();
+  };
+  document.getElementById('diff').onclick = function () {
+    this.classList.toggle('on', document.body.classList.toggle('diffing'));
+  };
+  document.getElementById('changes').onclick = function () {
+    changesOnly = !changesOnly;
+    this.classList.toggle('on', changesOnly);
+    renderGrid();
+  };
+  sizeSlider.oninput = function () {
+    scale = Number(this.value);
+    scalePicked = true;
+    renderGrid();
+  };
+  document.getElementById('clear').onclick = function () {
+    games = [];
+    failures = [];
+    scalePicked = false;
+    refresh();
+  };
+
+  window.addEventListener('dragover', function (e) {
+    e.preventDefault();
+    document.body.classList.add('dragging');
+  });
+  window.addEventListener('dragleave', function (e) {
+    if (!e.relatedTarget) document.body.classList.remove('dragging');
+  });
+  window.addEventListener('drop', function (e) {
+    e.preventDefault();
+    document.body.classList.remove('dragging');
+    readFiles(e.dataTransfer.files);
+  });
+  window.addEventListener('resize', function () {
+    if (!games.length) return;
+    if ((!scalePicked && fitScale() !== scale) || (!byFile && fitPagesPerBand() !== pagesPerBand)) renderGrid();
+  });
+
+  var preload = getParameterByName('f').split(',').filter(Boolean);
+  if (preload.length) fetchFiles(preload);
+})();
+</script>
+</body>
+</html>
