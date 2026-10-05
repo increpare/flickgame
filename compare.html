@@ -151,9 +151,9 @@ body.diffing .frame:hover .diff { opacity: 0; }
 <body>
 <div id="bar">
   <button id="open">open</button>
-  <button id="flip">flip</button>
+  <button id="flip" class="on">flip</button>
   <button id="diff">diff</button>
-  <button id="changes">changes only</button>
+  <button id="changes" class="on">changes only</button>
   <input id="size" type="range" min="0.25" max="4" step="0.25" value="1">
   <button id="clear">clear</button>
   <input id="picker" type="file" multiple hidden>
@@ -189,8 +189,8 @@ body.diffing .frame:hover .diff { opacity: 0; }
   var reference = null;   // the game the others are diffed against
   var referencePicked = false;
   var analysis = null;
-  var byFile = false;     // false: pages across, files down. true: the other way round
-  var changesOnly = false;
+  var byFile = true;      // true: a column per save, pages down. false: the other way round
+  var changesOnly = true;
   var scale = 1;
   var scalePicked = false; // until the slider is touched, the zoom follows the window
   var pagesPerBand = 0;
@@ -697,6 +697,8 @@ body.diffing .frame:hover .diff { opacity: 0; }
     for (var p = 0; p < 16; p++) {
       if (!changesOnly || analysis.image[p] || analysis.links[p]) shown.push(p);
     }
+    // nothing differs (or there is only one save): show it all rather than nothing
+    if (!shown.length) shown = games[0].pages.map(function (page, index) { return index; });
 
     if (byFile) {
       var table = newBand(games.length);
