@@ -108,9 +108,13 @@
     return stem;
   }
 
-  function downloadStandaloneHtml(stateString, filename) {
+  function downloadStandaloneHtml(stateString, filename, previewDataUrl) {
     return buildStandaloneHtmlString(stateString).then(function (html) {
       if (window.FLICKGAME_IOS_APP && window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.flickExport) {
+        // The first picture, for the Quick Look preview shown when someone receives the file.
+        if (typeof previewDataUrl === 'string' && previewDataUrl.indexOf('data:image/png;base64,') === 0) {
+          html = '<!--flickgame-preview:' + previewDataUrl + '-->\n' + html;
+        }
         var enc = new TextEncoder();
         var u8 = enc.encode(html);
         var bin = '';

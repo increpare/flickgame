@@ -12,6 +12,9 @@
   var importBtn = null;
   var previewCache = {};
 
+  // Translations exist only in the iOS app (ios/i18n); everywhere else this is the English text.
+  var T = window.FlickT || function (s) { return s; };
+
   function isIosApp() {
     try {
       return !!(window && (window.FLICKGAME_HOST === 'ios-app' || window.FLICKGAME_IOS_APP));
@@ -204,9 +207,11 @@
     return window.FlickGalleryStore.getProject(project.id).then(function (full) {
       if (!full || typeof full.state !== 'string') throw new Error('Project not found');
       var safeName = FlickgameShare.sanitizeFilename(full.title, 'flickgame');
-      return FlickgameShare.downloadStandaloneHtml(full.state, safeName + '.html');
+      var preview = null;
+      try { preview = renderPreviewFromState(full.state).src; } catch (e) {}
+      return FlickgameShare.downloadStandaloneHtml(full.state, safeName + '.html', preview);
     }).catch(function (err) {
-      showToast(err && err.message ? err.message : 'Failed to export');
+      showToast(err && err.message ? err.message : T('Failed to export'));
     }).finally(function () {
       setBusy(null);
     });
@@ -286,19 +291,19 @@
     thumbFrame.appendChild(thumb);
     thumbWrap.appendChild(thumbFrame);
 
-    var xBtn = el('button', { type: 'button', class: 'gallery-x', 'aria-label': 'Delete' }, ['\u00d7']);
+    var xBtn = el('button', { type: 'button', class: 'gallery-x', 'aria-label': T('Delete') }, ['\u00d7']);
     xBtn.disabled = isBusy(project.id);
     xBtn.addEventListener('click', function (e) {
       e.preventDefault();
       e.stopPropagation();
       if (isBusy(project.id)) return;
-      if (!confirm('Delete "' + (project.title || 'Untitled') + '"? This cannot be undone.')) return;
+      if (!confirm(T('Delete “{name}”? This cannot be undone.').replace('{name}', project.title || T('Untitled')))) return;
       setBusy(project.id);
       window.FlickGalleryStore.deleteProject(project.id).then(function () {
         closeShareSheet();
         return renderGrid();
       }).catch(function (err) {
-        showToast(err && err.message ? err.message : 'Failed to delete');
+        showToast(err && err.message ? err.message : T('Failed to delete'));
       }).finally(function () {
         setBusy(null);
       });
@@ -309,15 +314,15 @@
       navigate('play.html?id=' + encodeURIComponent(project.id));
     });
 
-    var title = el('div', { class: 'gallery-title', text: project.title || 'Untitled' });
-    var time = el('div', { class: 'gallery-time', text: 'Modified: ' + formatTime(project.updatedAt || project.createdAt || 0) });
+    var title = el('div', { class: 'gallery-title', text: project.title || T('Untitled') });
+    var time = el('div', { class: 'gallery-time', text: T('Modified:') + ' ' + formatTime(project.updatedAt || project.createdAt || 0) });
 
     var PENCIL_SVG = '<svg viewBox="0 0 16 16"><path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/></svg>';
     var SHARE_SVG = '<svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5"/><path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0z"/></svg>';
 
     var PLAY_SVG = '<svg viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>';
 
-    var playBtn = el('button', { type: 'button', class: 'gallery-ibtn', 'data-icon': 'play', 'aria-label': 'Play' });
+    var playBtn = el('button', { type: 'button', class: 'gallery-ibtn', 'data-icon': 'play', 'aria-label': T('Play') });
     playBtn.innerHTML = PLAY_SVG;
     playBtn.disabled = isBusy(project.id);
     playBtn.addEventListener('click', function (e) {
@@ -327,7 +332,7 @@
       navigate('play.html?id=' + encodeURIComponent(project.id));
     });
 
-    var editBtn = el('button', { type: 'button', class: 'gallery-ibtn', 'data-icon': 'edit', 'aria-label': 'Edit' });
+    var editBtn = el('button', { type: 'button', class: 'gallery-ibtn', 'data-icon': 'edit', 'aria-label': T('Edit') });
     editBtn.innerHTML = PENCIL_SVG;
     editBtn.disabled = isBusy(project.id);
     editBtn.addEventListener('click', function (e) {
@@ -337,7 +342,7 @@
       navigate('index.html?id=' + encodeURIComponent(project.id));
     });
 
-    var shareBtn = el('button', { type: 'button', class: 'gallery-ibtn', 'data-icon': 'share', 'aria-label': 'Share' });
+    var shareBtn = el('button', { type: 'button', class: 'gallery-ibtn', 'data-icon': 'share', 'aria-label': T('Share') });
     shareBtn.innerHTML = SHARE_SVG;
     shareBtn.disabled = isBusy(project.id);
     shareBtn.addEventListener('click', function (e) {
@@ -380,7 +385,7 @@
   function renderGrid() {
     return window.FlickGalleryStore.listProjects().then(function (items) {
       grid.innerHTML = '';
-      grid.appendChild(renderTile('New', '+', function () {
+      grid.appendChild(renderTile(T('New'), '+', function () {
         navigate('index.html?new=1');
       }));
       items.forEach(function (project) {
@@ -389,7 +394,7 @@
       return items;
     }).catch(function (err) {
       grid.innerHTML = '';
-      showToast(err && err.message ? err.message : 'Failed to load gallery');
+      showToast(err && err.message ? err.message : T('Failed to load gallery'));
       return [];
     });
   }
@@ -399,7 +404,7 @@
     try {
       state = FlickgameShare.extractStateFromImportText(text);
     } catch (err) {
-      showToast(err && err.message ? err.message : 'Failed to import');
+      showToast(err && err.message ? err.message : T('Failed to import'));
       return;
     }
     window.FlickGalleryStore.listProjects().then(function (items) {
@@ -418,7 +423,7 @@
     }).then(function (saved) {
       navigate(page + '?id=' + encodeURIComponent(saved.id));
     }).catch(function (err) {
-      showToast(err && err.message ? err.message : 'Failed to import');
+      showToast(err && err.message ? err.message : T('Failed to import'));
     });
   }
 
@@ -450,7 +455,7 @@
       if (typeof state !== 'string') return;
       var thumb = '';
       try { thumb = renderPreviewFromState(state).src; } catch (e) {}
-      window.FlickGalleryStore.putProject({ title: 'example', state: state, thumb: thumb }).then(renderGrid);
+      window.FlickGalleryStore.putProject({ title: T('example'), state: state, thumb: thumb }).then(renderGrid);
     };
     document.head.appendChild(script);
   }
@@ -504,6 +509,9 @@
         window.visualViewport.addEventListener('resize', syncIosViewportState);
       }
     }
+    var pageTitle = document.querySelector('.gallery-page-title');
+    if (pageTitle) pageTitle.textContent = T('My Flickgames');
+    if (importBtn) importBtn.setAttribute('aria-label', T('Open'));
     renderGrid();
     if (isIosApp()) seedExampleGame();
     if (isIosApp() && window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.flickIncoming) {

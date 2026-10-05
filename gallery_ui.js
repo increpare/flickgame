@@ -9,6 +9,9 @@
   var listContainer = null;
   var headerTitle = null;
 
+  // Translations exist only in the iOS app (ios/i18n); everywhere else this is the English text.
+  var T = window.FlickT || function (s) { return s; };
+
   function isIosApp() {
     try {
       return !!(window && (window.FLICKGAME_HOST === 'ios-app' || window.FLICKGAME_IOS_APP));
@@ -179,7 +182,7 @@
     };
     return window.FlickGalleryStore.putProject(payload).then(function (saved) {
       setCurrentProjectIdentity(saved.id, saved.state);
-      if (!opts.silent) safeAlert('Saved.');
+      if (!opts.silent) safeAlert(T('Saved.'));
       return true;
     });
   }
@@ -271,14 +274,14 @@
         if (!opts.silent) safeAlert('Saved to Gallery.');
         return true;
       }).catch(function (err) {
-        safeAlert(err && err.message ? err.message : 'Failed to save');
+        safeAlert(err && err.message ? err.message : T('Failed to save'));
         return false;
       }).finally(function () { setBusy(false); });
     }
     return ensureIosActiveProjectEntry().then(function (active) {
       return saveToExistingProject(active, opts);
     }).catch(function (err) {
-      safeAlert(err && err.message ? err.message : 'Failed to save');
+      safeAlert(err && err.message ? err.message : T('Failed to save'));
       return false;
     }).finally(function () { setBusy(false); });
   }

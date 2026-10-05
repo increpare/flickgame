@@ -50,6 +50,20 @@ perl -0ne '
   }
 ' "${SCRIPT_DIR}/../example.flickgame" > "$DEST_WWW/example_game.js"
 
+# Translations: one JSON file per language in ios/i18n, keyed by the English text.
+{
+  echo 'window.FLICK_I18N = {'
+  for f in "${SCRIPT_DIR}"/../i18n/*.json; do
+    code="$(basename "$f" .json)"
+    case "$code" in _*) continue ;; esac
+    printf '"%s": ' "$code"
+    cat "$f"
+    echo ','
+  done
+  echo '};'
+  cat "${SCRIPT_DIR}/../i18n/runtime.js"
+} > "$DEST_WWW/i18n.js"
+
 # The app is local-only. Drop everything between ios-strip markers
 # (<!--ios-strip--> ... <!--/ios-strip--> or /*ios-strip*/ ... /*/ios-strip*/),
 # then refuse to build if any outside-world URL is still in the bundle.

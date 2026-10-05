@@ -79,44 +79,57 @@
 </head>
 <body>
   <nav>
-    <a href="index.html" onclick="if (window.parent !== window) { window.parent.postMessage('flick-help-close', '*'); return false; }">← Back</a>
+    <a href="index.html" onclick="if (window.parent !== window) { window.parent.postMessage('flick-help-close', '*'); return false; }">← <span data-t>Back</span></a>
   </nav>
   <main>
     <figure>
       <img src="help/play.gif" alt="">
-      <figcaption>A game is 16 pictures. Tap a colour to jump to another picture.</figcaption>
+      <figcaption data-t>A game is 16 pictures. Tap a colour to jump to another picture.</figcaption>
     </figure>
 
     <figure>
       <img src="help/link.gif" alt="">
-      <figcaption>To make a colour jump, tap it twice and choose a picture.</figcaption>
+      <figcaption data-t>To make a colour jump, tap it twice and choose a picture.</figcaption>
     </figure>
 
     <figure>
       <img src="help/pages.png" alt="">
-      <figcaption>The corner shows all 16 pictures.</figcaption>
+      <figcaption data-t>The corner shows all 16 pictures.</figcaption>
     </figure>
 
     <figure>
       <img src="help/zoom.gif" alt="">
-      <figcaption>Pinch to zoom. Two fingers to move around.</figcaption>
+      <figcaption data-t>Pinch to zoom. Two fingers to move around.</figcaption>
     </figure>
 
     <figure>
       <img src="help/pointer.gif" alt="">
-      <figcaption>When playing, drag anywhere to move the pointer and tap to press. A hand means it goes somewhere.</figcaption>
+      <figcaption data-t>When playing, drag anywhere to move the pointer and tap to press. A hand means it goes somewhere.</figcaption>
     </figure>
 
     <ul>
-      <li><img src="help/i_copy.png" alt=""><span>Copy a picture, paste it on another.</span></li>
-      <li><img src="help/i_play.png" alt=""><span>Try the game right here. Tap again to draw.</span></li>
-      <li><img src="help/i_menu.png" alt=""><span>Name, background, palette, save.</span></li>
-      <li><img src="help/i_share.png" alt=""><span>Send a game. It opens in Flickgame on another phone or tablet.</span></li>
-      <li><img src="help/i_open.png" alt=""><span>Open a game file.</span></li>
+      <li><img src="help/i_copy.png" alt=""><span data-t>Copy a picture, paste it on another.</span></li>
+      <li><img src="help/i_play.png" alt=""><span data-t>Try the game right here. Tap again to draw.</span></li>
+      <li><img src="help/i_menu.png" alt=""><span data-t>Name, background, palette, save.</span></li>
+      <li><img src="help/i_share.png" alt=""><span data-t>Send a game. It opens in Flickgame on another phone or tablet.</span></li>
+      <li><img src="help/i_open.png" alt=""><span data-t>Open a game file.</span></li>
     </ul>
 
-    <p class="small">Games are kept on this device only.<br>A .flickgame file renamed to .html plays in a browser on a computer.</p>
-    <p class="small"><a href="#" onclick="window.webkit.messageHandlers.flickSupporter.postMessage('restore'); return false;">Restore purchase</a> · analytic@gmail.com</p>
+    <p class="small"><span data-t>Games are kept on this device only.</span><br><span data-t>A .flickgame file renamed to .html plays in a browser on a computer.</span></p>
+    <p class="small"><a href="#" onclick="window.webkit.messageHandlers.flickSupporter.postMessage('restore'); return false;" data-t>Restore purchase</a> · analytic@gmail.com</p>
   </main>
+  <script>
+    (function () {
+      if (!window.FlickT) return;
+      if (window.FLICK_RTL) document.documentElement.dir = 'rtl';
+      var nodes = document.querySelectorAll('[data-t]');
+      for (var i = 0; i < nodes.length; i++) {
+        var text = window.FlickT(nodes[i].textContent);
+        // Keep ".flickgame" / ".html" reading left to right inside right-to-left sentences.
+        if (window.FLICK_RTL) text = text.replace(/\.(flickgame|html)/g, '\u2066.$1\u2069');
+        nodes[i].textContent = text;
+      }
+    })();
+  </script>
 </body>
 </html>

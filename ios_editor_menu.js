@@ -3,6 +3,8 @@
   'use strict';
 
   var saveButtonRefreshTimer = 0;
+  // Translations exist only in the iOS app (ios/i18n); everywhere else this is the English text.
+  var T = window.FlickT || function (s) { return s; };
 
   function isIosApp() {
     try {
@@ -62,7 +64,7 @@
 
   function currentSaveButtonText() {
     var dirty = window.FlickGalleryUI && window.FlickGalleryUI.isDirty ? window.FlickGalleryUI.isDirty() : false;
-    return dirty ? '💾 Save*' : '💾 Save';
+    return '💾 ' + T('Save') + (dirty ? '*' : '');
   }
 
   function refreshSaveButtonText() {
@@ -104,9 +106,9 @@
       var overlay = el('div', { class: 'ios-choice-overlay' });
       var box = el('div', { class: 'ios-choice-box' });
       var title = el('p', { class: 'ios-choice-title', text: message });
-      var saveBtn = el('button', { type: 'button', class: 'ios-choice-btn', text: 'Save' });
-      var discardBtn = el('button', { type: 'button', class: 'ios-choice-btn', text: 'Discard' });
-      var cancelBtn = el('button', { type: 'button', class: 'ios-choice-btn', text: 'Cancel' });
+      var saveBtn = el('button', { type: 'button', class: 'ios-choice-btn', text: T('Save') });
+      var discardBtn = el('button', { type: 'button', class: 'ios-choice-btn', text: T('Discard') });
+      var cancelBtn = el('button', { type: 'button', class: 'ios-choice-btn', text: T('Cancel') });
 
       function close(choice) {
         if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
@@ -168,7 +170,7 @@
       window.location.href = 'gallery.html';
       return;
     }
-    showChoiceDialog('Save changes before returning to the gallery?').then(function (choice) {
+    showChoiceDialog(T('Save changes before returning to the gallery?')).then(function (choice) {
       if (choice === 'cancel') return;
       if (choice === 'save') {
         if (typeof saveCurrentToGallery === 'function') {
@@ -227,11 +229,11 @@
     });
 
     var grid = el('div', { class: 'ios-editor-grid' }, [
-      el('div', { class: 'ios-editor-label', text: 'Name' }),
+      el('div', { class: 'ios-editor-label', text: T('Name') }),
       nameInput,
-      el('div', { class: 'ios-editor-label', text: 'Background' }),
+      el('div', { class: 'ios-editor-label', text: T('Background') }),
       bgControl || el('div', { text: '(missing)' }),
-      el('div', { class: 'ios-editor-label', text: 'Palette' }),
+      el('div', { class: 'ios-editor-label', text: T('Palette') }),
       paletteBtn
     ]);
 
@@ -243,19 +245,19 @@
       });
     });
 
-    var clearBtn = el('button', { type: 'button', class: 'burger-dialog-btn ios-editor-action', text: '🗑️ Clear page' });
+    var clearBtn = el('button', { type: 'button', class: 'burger-dialog-btn ios-editor-action', text: '🗑️ ' + T('Clear page') });
     clearBtn.addEventListener('click', function () {
-      if (!confirm('Clear this page? This cannot be undone.')) return;
+      if (!confirm(T('Clear this page? This cannot be undone.'))) return;
       if (typeof clearPalette === 'function') clearPalette();
     });
 
-    var helpBtn = el('button', { type: 'button', class: 'burger-dialog-btn ios-editor-action', text: '📖 Help' });
+    var helpBtn = el('button', { type: 'button', class: 'burger-dialog-btn ios-editor-action', text: '📖 ' + T('Help') });
     helpBtn.addEventListener('click', function () {
       closeBurgerDialog();
       openHelp();
     });
 
-    var backBtn = el('button', { type: 'button', class: 'burger-dialog-btn ios-editor-action', text: '⬅️ Back to Gallery' });
+    var backBtn = el('button', { type: 'button', class: 'burger-dialog-btn ios-editor-action', text: '⬅️ ' + T('Back to Gallery') });
     backBtn.addEventListener('click', handleBackToGallery);
 
     content.appendChild(closeBtn);
@@ -278,16 +280,6 @@
       btn.addEventListener('click', function () {
         render();
       }, { capture: true });
-    }
-    // The web view's file chooser does not offer .flickgame files when filtered by extension.
-    var fileInput = document.getElementById('my_file');
-    if (fileInput) fileInput.removeAttribute('accept');
-    var desktopHelp = document.querySelector('a[href="help.html"]');
-    if (desktopHelp) {
-      desktopHelp.addEventListener('click', function (e) {
-        e.preventDefault();
-        openHelp();
-      });
     }
     window.addEventListener('message', function (e) {
       if (e.data === 'flick-help-close') closeHelp();

@@ -13,7 +13,33 @@
 		7d2e9a1c4b6f4e0893a5c1d2 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 8e3f0b2d5c704f19a4b6d2e3 /* PrivacyInfo.xcprivacy */; };
 		9ca7c803b803e3c417790511 /* www in Resources */ = {isa = PBXBuildFile; fileRef = fad1f5b32922edf4a72ef4ba /* www */; };
 		b4e5d6c708295c3bb1f2e3d4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = c3f4e5d609184b2aa0f1e2d3 /* Assets.xcassets */; };
+		e1a000000000000000000004 /* PreviewProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = e1a000000000000000000001 /* PreviewProvider.m */; };
+		e1a000000000000000000005 /* FlickgamePreview.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = e1a000000000000000000003 /* FlickgamePreview.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		e1a00000000000000000000f /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8ecf0253dc698e8fd3d3046d /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = e1a00000000000000000000a;
+			remoteInfo = FlickgamePreview;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		e1a00000000000000000000e /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				e1a000000000000000000005 /* FlickgamePreview.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		2a9821e8f1184964a06d0a4f /* FlickgameShell.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FlickgameShell.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -23,10 +49,20 @@
 		c3f4e5d609184b2aa0f1e2d3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8e3f0b2d5c704f19a4b6d2e3 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		fad1f5b32922edf4a72ef4ba /* www */ = {isa = PBXFileReference; lastKnownFileType = folder; path = www; sourceTree = "<group>"; };
+		e1a000000000000000000001 /* PreviewProvider.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PreviewProvider.m; sourceTree = "<group>"; };
+		e1a000000000000000000002 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		e1a000000000000000000003 /* FlickgamePreview.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FlickgamePreview.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		47e65cffde17d912362d447d /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		e1a000000000000000000008 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -40,6 +76,7 @@
 			isa = PBXGroup;
 			children = (
 				842d2abbe102fba9a2bd0ade /* FlickgameShell */,
+				e1a000000000000000000006 /* FlickgamePreview */,
 				3de5169f1f4688c80fe3bbee /* Products */,
 			);
 			sourceTree = "<group>";
@@ -48,8 +85,18 @@
 			isa = PBXGroup;
 			children = (
 				2a9821e8f1184964a06d0a4f /* FlickgameShell.app */,
+				e1a000000000000000000003 /* FlickgamePreview.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		e1a000000000000000000006 /* FlickgamePreview */ = {
+			isa = PBXGroup;
+			children = (
+				e1a000000000000000000001 /* PreviewProvider.m */,
+				e1a000000000000000000002 /* Info.plist */,
+			);
+			path = FlickgamePreview;
 			sourceTree = "<group>";
 		};
 		842d2abbe102fba9a2bd0ade /* FlickgameShell */ = {
@@ -76,15 +123,34 @@
 				b818346cd72ae7a911d7efbd /* Sources */,
 				47e65cffde17d912362d447d /* Frameworks */,
 				b2e9d5df672ddabb2953ebd0 /* Resources */,
+				e1a00000000000000000000e /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				e1a000000000000000000010 /* PBXTargetDependency */,
 			);
 			name = FlickgameShell;
 			productName = FlickgameShell;
 			productReference = 2a9821e8f1184964a06d0a4f /* FlickgameShell.app */;
 			productType = "com.apple.product-type.application";
+		};
+		e1a00000000000000000000a /* FlickgamePreview */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = e1a00000000000000000000b /* Build configuration list for PBXNativeTarget "FlickgamePreview" */;
+			buildPhases = (
+				e1a000000000000000000007 /* Sources */,
+				e1a000000000000000000008 /* Frameworks */,
+				e1a000000000000000000009 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FlickgamePreview;
+			productName = FlickgamePreview;
+			productReference = e1a000000000000000000003 /* FlickgamePreview.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -97,6 +163,9 @@
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
 					aa949a4aa2baae19c9ed68e2 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+					e1a00000000000000000000a = {
 						CreatedOnToolsVersion = 15.0;
 					};
 				};
@@ -115,6 +184,7 @@
 			projectRoot = "";
 			targets = (
 				aa949a4aa2baae19c9ed68e2 /* FlickgameShell */,
+				e1a00000000000000000000a /* FlickgamePreview */,
 			);
 		};
 /* End PBXProject section */
@@ -127,6 +197,13 @@
 				b4e5d6c708295c3bb1f2e3d4 /* Assets.xcassets in Resources */,
 				7d2e9a1c4b6f4e0893a5c1d2 /* PrivacyInfo.xcprivacy in Resources */,
 				9ca7c803b803e3c417790511 /* www in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		e1a000000000000000000009 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -164,7 +241,23 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		e1a000000000000000000007 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				e1a000000000000000000004 /* PreviewProvider.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		e1a000000000000000000010 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = e1a00000000000000000000a /* FlickgamePreview */;
+			targetProxy = e1a00000000000000000000f /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		0f8ad607fa7a5a2519e08191 /* Release */ = {
@@ -348,6 +441,54 @@
 			};
 			name = Debug;
 		};
+		e1a00000000000000000000c /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 75426EQC98;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FlickgamePreview/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Flickgame;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.increpare.Flickgame.Preview;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		e1a00000000000000000000d /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 75426EQC98;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FlickgamePreview/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Flickgame;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.increpare.Flickgame.Preview;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -365,6 +506,15 @@
 			buildConfigurations = (
 				d80deb461340d128048dc605 /* Debug */,
 				641c10fae899e938db18ebdf /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		e1a00000000000000000000b /* Build configuration list for PBXNativeTarget "FlickgamePreview" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				e1a00000000000000000000c /* Debug */,
+				e1a00000000000000000000d /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

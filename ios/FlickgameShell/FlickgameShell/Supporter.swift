@@ -48,7 +48,7 @@ final class Supporter {
     }
 
     private func sayUnreachable() {
-        webView?.evaluateJavaScript("alert(\"Couldn't reach the App Store.\");", completionHandler: nil)
+        webView?.evaluateJavaScript("alert((window.FlickT || String)(\"Couldn't reach the App Store.\"));", completionHandler: nil)
     }
 
     private func refresh() async {

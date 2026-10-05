@@ -66,6 +66,7 @@ struct FlickWebViewRepresentable: UIViewRepresentable {
         let hostScript = WKUserScript(source: hostFlag, injectionTime: .atDocumentStart, forMainFrameOnly: false)
         contentController.addUserScript(hostScript)
         Self.addStandaloneTemplateUserScript(to: contentController)
+        Self.addTranslationsUserScript(to: contentController)
         Self.addSystemIconsUserScript(to: contentController)
         contentController.add(context.coordinator, name: "flickExport")
         contentController.add(context.coordinator, name: "flickIncoming")
@@ -115,6 +116,21 @@ struct FlickWebViewRepresentable: UIViewRepresentable {
 
     /// WKWebView does not allow `XMLHttpRequest` from `file://` pages to sibling files.
     /// Export reads `play.html` as a string; inject it at document start so the web bundle matches the site.
+    /// Translations (www/i18n.js, built from ios/i18n) are available to every page and frame before its own scripts run.
+    private static func addTranslationsUserScript(to contentController: WKUserContentController) {
+        guard let url = Bundle.main.url(forResource: "i18n", withExtension: "js", subdirectory: "www"),
+              let source = try? String(contentsOf: url, encoding: .utf8)
+        else {
+            return
+        }
+        contentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: false))
+    }
+
+    /// "OK" / "Cancel" in the device language, borrowed from UIKit.
+    static func systemString(_ key: String) -> String {
+        Bundle(for: UIApplication.self).localizedString(forKey: key, value: key, table: nil)
+    }
+
     private static func addStandaloneTemplateUserScript(to contentController: WKUserContentController) {
         guard let url = Bundle.main.url(forResource: "play", withExtension: "html", subdirectory: "www"),
               let data = try? Data(contentsOf: url),
@@ -291,7 +307,7 @@ struct FlickWebViewRepresentable: UIViewRepresentable {
             DispatchQueue.main.async {
                 guard let vc = self.topViewController() else { completionHandler(); return }
                 let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
-                alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in completionHandler() })
+                alert.addAction(UIAlertAction(title: FlickWebViewRepresentable.systemString("OK"), style: .default) { _ in completionHandler() })
                 vc.present(alert, animated: true, completion: nil)
             }
         }
@@ -303,8 +319,8 @@ struct FlickWebViewRepresentable: UIViewRepresentable {
             DispatchQueue.main.async {
                 guard let vc = self.topViewController() else { completionHandler(false); return }
                 let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
-                alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in completionHandler(false) })
-                alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in completionHandler(true) })
+                alert.addAction(UIAlertAction(title: FlickWebViewRepresentable.systemString("Cancel"), style: .cancel) { _ in completionHandler(false) })
+                alert.addAction(UIAlertAction(title: FlickWebViewRepresentable.systemString("OK"), style: .default) { _ in completionHandler(true) })
                 vc.present(alert, animated: true, completion: nil)
             }
         }
@@ -320,8 +336,8 @@ struct FlickWebViewRepresentable: UIViewRepresentable {
                 alert.addTextField { tf in
                     tf.text = defaultText
                 }
-                alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in completionHandler(nil) })
-                alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
+                alert.addAction(UIAlertAction(title: FlickWebViewRepresentable.systemString("Cancel"), style: .cancel) { _ in completionHandler(nil) })
+                alert.addAction(UIAlertAction(title: FlickWebViewRepresentable.systemString("OK"), style: .default) { _ in
                     completionHandler(alert.textFields?.first?.text)
                 })
                 vc.present(alert, animated: true, completion: nil)

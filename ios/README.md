@@ -40,9 +40,20 @@ The app never touches the network. The only way in or out is game files: share f
 - **URL guard.** After stripping, the sync script fails the build if any URL other than `flickgame.org` / `w3.org` / the FileSaver credit is left in `www/`. If it trips, wrap the offending code in strip markers.
 - **Runtime backstop.** `FlickWebView.swift` installs a content rule list that blocks all http(s)/ws/ftp loads and a navigation policy that only allows `file:` pages.
 
+## Translations
+
+The app's interface and help are translated; the website is English only.
+
+- `ios/i18n/<language>.json` holds one language each, keyed by the English text. `_source.json` lists every string with a note for translators. `en-us.json` only lists spellings that differ from the British source.
+- `sync-web-assets.sh` joins them with `ios/i18n/runtime.js` into `www/i18n.js`, which the shell injects into every page. Code calls `T('English text')` and gets the English back when there is no translation.
+- To add a string: use `T('…')` in the code (or `data-t` in `ios/help/help.html`), add it to `_source.json`, and add it to each language file. `node ios/i18n/check.js` reports files with missing or extra keys.
+- The languages are also listed under `CFBundleLocalizations` in `Info.plist`.
+- Arabic, Hebrew and Urdu get right-to-left text in help; the editor layout is not mirrored.
+
 ## Notes
 
 - Projects live in the app’s WebKit store (IndexedDB); deleting the app deletes them. Exported HTML files are the backup.
 - Help opens as an overlay inside the editor (`ios_editor_menu.js`) so unsaved work is not lost.
 - The app has its own help page, `ios/help/help.html` (pictures and GIFs made from simulator screenshots), shipped as `help.html`. The website's `help.html` is not bundled.
+- `FlickgamePreview` is a Quick Look extension: it shows a game's first picture when a `.flickgame` file is previewed (the screen AirDrop shows on receipt). The app writes that picture into the file on export as a `<!--flickgame-preview:…-->` comment; files without it have no preview.
 - A fresh install starts with one game in the gallery, taken from `ios/example.flickgame`. Replace that file with any exported game to change it.

@@ -158,6 +158,39 @@ body[data-host="ios-app"] {
   --footer-button-padding-y: 7px;
   --footer-button-padding-x: 14px;
 }
+/* Nudge the footer buttons inwards, clear of the screen's rounded corners. The corner radius is not
+   available to CSS, so use the largest safe-area inset: zero on square screens, big on rounded ones. */
+body[data-host="ios-app"] #footer {
+  --corner-inset: max(12px, env(safe-area-inset-left), env(safe-area-inset-right), env(safe-area-inset-bottom));
+  padding: 0 var(--corner-inset);
+}
+/* In the app the footer buttons are icons in both orientations: gallery on the left, edit on the right. */
+body[data-host="ios-app"] #galleryLink .label-text,
+body[data-host="ios-app"] #hackLink .label-text {
+  display: none;
+}
+body[data-host="ios-app"] #galleryLink .label-icon {
+  display: block;
+}
+/* Same paintbrush as the gallery's edit button: Apple's own, handed over by the shell */
+body[data-host="ios-app"] #hackLink::before {
+  content: '';
+  width: 26px;
+  height: 26px;
+  background: currentColor;
+  -webkit-mask: var(--ios-icon-edit) center / contain no-repeat;
+  mask: var(--ios-icon-edit) center / contain no-repeat;
+}
+body[data-host="ios-app"] #galleryLink,
+body[data-host="ios-app"] #hackLink {
+  border-radius: 10px;
+}
+body[data-host="ios-app"] #homeLink {
+  order: 2;
+}
+body[data-host="ios-app"] #hackLink {
+  order: 3;
+}
 @media (orientation: portrait) {
   body[data-host="ios-app"] {
     --footer-height: 82px;
@@ -166,7 +199,6 @@ body[data-host="ios-app"] {
     display: grid;
     grid-template-columns: 66px 1fr 66px;
     gap: 12px;
-    padding: 0 12px;
     align-items: center;
   }
   body[data-host="ios-app"] #galleryLink,
@@ -188,27 +220,13 @@ body[data-host="ios-app"] {
     grid-column: 3;
     justify-self: end;
   }
-  body[data-host="ios-app"] #galleryLink .label-icon,
-  body[data-host="ios-app"] #hackLink .label-icon {
-    display: block;
+  body[data-host="ios-app"] #galleryLink .label-icon {
     width: 33px;
     height: 33px;
   }
-  body[data-host="ios-app"] #galleryLink .label-text,
-  body[data-host="ios-app"] #hackLink .label-text {
-    display: none;
-  }
-  /* Same paintbrush as the gallery's edit button: Apple's own, handed over by the shell */
-  body[data-host="ios-app"] #hackLink .label-icon {
-    display: none;
-  }
   body[data-host="ios-app"] #hackLink::before {
-    content: '';
     width: 38px;
     height: 38px;
-    background: currentColor;
-    -webkit-mask: var(--ios-icon-edit) center / contain no-repeat;
-    mask: var(--ios-icon-edit) center / contain no-repeat;
   }
 }
 #touch-cursor-layer {

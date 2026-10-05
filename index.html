@@ -469,6 +469,11 @@
       height = newHeight;
     }
 
+    // Bigger than any phone held sideways: iPad, or a resizable window on a Mac.
+    function isRoomyScreen() {
+      return Math.min(window.innerWidth, window.innerHeight) >= 600;
+    }
+
     function updateMobileToolbarBottomScale() {
       var toolbar = document.querySelector('.mobile-toolbar-bottom');
       var content = document.querySelector('.mobile-toolbar-bottom-content');
@@ -477,6 +482,8 @@
       if (!toolbar || !content) return;
 
       content.style.setProperty('--mobile-toolbar-bottom-scale', '1');
+      if (isRoomyScreen()) document.body.setAttribute('data-roomy', 'true');
+      else document.body.removeAttribute('data-roomy');
 
       if (!isMobileLayout()) return;
 
@@ -494,6 +501,12 @@
       var scale = layoutMode === 'mobile-portrait'
         ? Math.min(maxScale, scaleByWidth)
         : Math.min(maxScale, scaleByWidth, scaleByHeight);
+      // Landscape: the strip is only as wide as its content, so scaleByWidth is always about 1 and the
+      // strip never grew. On a roomy screen (iPad, Mac window) size it by the height it has instead.
+      // Phones keep the formula above, so their layout is unchanged.
+      if (layoutMode === 'mobile-landscape' && isRoomyScreen()) {
+        scale = Math.max(1, Math.min(maxScale, scaleByHeight));
+      }
       content.style.setProperty('--mobile-toolbar-bottom-scale', scale);
     }
 
@@ -523,6 +536,7 @@
       if (!isMobileLayout()) return;
       var container = document.getElementById('mobile-canvas-container');
       if (!container || !visibleCanvas) return;
+      if (layoutMode === 'mobile-landscape' && isRoomyScreen()) updateMobileToolbarBottomScale();
       var rect = container.getBoundingClientRect();
       if (rect.width <= 0 || rect.height <= 0) return;
       var vvW = window.visualViewport ? window.visualViewport.width : window.innerWidth;
@@ -1307,7 +1321,7 @@
           updateLayerItemNumberStyles();
           saveFlickgameState();
         },
-        clearButtonText: '\u2715 clear link'
+        clearButtonText: '\u2715 ' + (window.FlickT ? window.FlickT('clear link') : 'clear link')
       });
     }
 
@@ -1630,7 +1644,9 @@
       } else {
         portrait = window.matchMedia('(orientation: portrait)').matches;
       }
-      var next = (touch && smallViewport) ? (portrait ? 'mobile-portrait' : 'mobile-landscape') : 'desktop';
+      // The iOS app never uses the desktop layout, even on a big iPad: only the mobile ones have the gallery.
+      var mobile = (touch && smallViewport) || !!window.FLICKGAME_IOS_APP;
+      var next = mobile ? (portrait ? 'mobile-portrait' : 'mobile-landscape') : 'desktop';
       if (next !== layoutMode) {
         var prev = layoutMode;
         layoutMode = next;
@@ -3919,6 +3935,24 @@
     body[data-layout="mobile-landscape"] .mobile-toolbar-top svg {
       width: 28px;
       height: 28px;
+    }
+    /* Roomy screens (iPad, Mac window): the same button sizes as portrait */
+    body[data-layout="mobile-landscape"][data-roomy] .mobile-toolbar-top {
+      width: 68px;
+      min-width: 68px;
+    }
+    body[data-layout="mobile-landscape"][data-roomy] .mobile-toolbar-btn {
+      width: 52px;
+      height: 52px;
+    }
+    body[data-layout="mobile-landscape"][data-roomy] .mobile-grid-tab {
+      width: 56px;
+      height: 56px;
+    }
+    body[data-layout="mobile-landscape"][data-roomy] .mobile-toolbar-top img,
+    body[data-layout="mobile-landscape"][data-roomy] .mobile-toolbar-top svg {
+      width: 33px;
+      height: 33px;
     }
     body[data-layout="mobile-landscape"] #mobile-canvas-wrapper {
       flex: 1 1 0;
