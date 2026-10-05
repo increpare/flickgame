@@ -32,7 +32,17 @@ Edit [`flickgame-web-manifest.txt`](flickgame-web-manifest.txt) (one path per li
 
 After mobile layout or safe-area changes, build (`make sync-ios`, then run from Xcode) and spot-check **portrait** and **landscape** on a notched device or simulator: toolbar and swatches should clear the safe area, nothing should be clipped, and the editor should remain usable when rotating.
 
+## Local-only
+
+The app never touches the network. The only way in or out is game files: share from the gallery hands a `.flickgame` file to the system share sheet, **Import…** reads one back, and opening one from AirDrop/Messages/Files imports it and plays it (`IncomingGame` in `FlickWebView.swift`). A `.flickgame` file is the same standalone HTML the website exports, under an extension the app owns (`Info.plist`); renamed to `.html` it plays in a browser.
+
+- **Strip markers.** Web code that talks to the outside world (gist sharing, GitHub login, outbound links in help) is wrapped in `<!--ios-strip-->` … `<!--/ios-strip-->` or `/*ios-strip*/` … `/*/ios-strip*/`. `sync-web-assets.sh` deletes those blocks from the copy in `www/`; the website serves the files untouched.
+- **URL guard.** After stripping, the sync script fails the build if any URL other than `flickgame.org` / `w3.org` / the FileSaver credit is left in `www/`. If it trips, wrap the offending code in strip markers.
+- **Runtime backstop.** `FlickWebView.swift` installs a content rule list that blocks all http(s)/ws/ftp loads and a navigation policy that only allows `file:` pages.
+
 ## Notes
 
-- **localStorage** (editor autosave) persists in the app’s WebKit store like a normal embedded web app.
-- **Export / download** via `FileSaver` may need follow-up work on iOS (share sheet / downloads delegate) depending on WebKit behavior—test on device when you care about export UX.
+- Projects live in the app’s WebKit store (IndexedDB); deleting the app deletes them. Exported HTML files are the backup.
+- Help opens as an overlay inside the editor (`ios_editor_menu.js`) so unsaved work is not lost.
+- The app has its own help page, `ios/help/help.html` (pictures and GIFs made from simulator screenshots), shipped as `help.html`. The website's `help.html` is not bundled.
+- A fresh install starts with one game in the gallery, taken from `ios/example.flickgame`. Replace that file with any exported game to change it.

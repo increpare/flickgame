@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flickgame</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0 20px 40px;
+      background: #000;
+      color: #ddd;
+      font: 17px/1.45 -apple-system, system-ui, sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+    main {
+      max-width: 420px;
+      margin: 0 auto;
+    }
+    nav {
+      position: sticky;
+      top: 0;
+      margin: 0 -20px;
+      padding: 10px 20px;
+      background: #000;
+      border-bottom: 1px solid #333;
+    }
+    nav a {
+      display: inline-block;
+      padding: 8px 14px;
+      border: 2px solid #666;
+      border-radius: 8px;
+      color: #fff;
+      text-decoration: none;
+    }
+    figure {
+      margin: 36px 0;
+    }
+    figure img {
+      display: block;
+      width: 100%;
+      max-width: 300px;
+      margin: 0 auto 12px;
+      border: 1px solid #444;
+      border-radius: 8px;
+      image-rendering: pixelated;
+    }
+    figcaption {
+      text-align: center;
+    }
+    ul {
+      margin: 36px 0;
+      padding: 0;
+      list-style: none;
+    }
+    li {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 16px 0;
+    }
+    li img {
+      flex: none;
+      height: 33px;
+    }
+    li span {
+      flex: 1;
+    }
+    .small {
+      margin: 36px 0 0;
+      color: #888;
+      font-size: 14px;
+      text-align: center;
+    }
+    .small a {
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html" onclick="if (window.parent !== window) { window.parent.postMessage('flick-help-close', '*'); return false; }">← Back</a>
+  </nav>
+  <main>
+    <figure>
+      <img src="help/play.gif" alt="">
+      <figcaption>A game is 16 pictures. Tap a colour to jump to another picture.</figcaption>
+    </figure>
+
+    <figure>
+      <img src="help/link.gif" alt="">
+      <figcaption>To make a colour jump, tap it twice and choose a picture.</figcaption>
+    </figure>
+
+    <figure>
+      <img src="help/pages.png" alt="">
+      <figcaption>The corner shows all 16 pictures.</figcaption>
+    </figure>
+
+    <figure>
+      <img src="help/zoom.gif" alt="">
+      <figcaption>Pinch to zoom. Two fingers to move around.</figcaption>
+    </figure>
+
+    <figure>
+      <img src="help/pointer.gif" alt="">
+      <figcaption>When playing, drag anywhere to move the pointer and tap to press. A hand means it goes somewhere.</figcaption>
+    </figure>
+
+    <ul>
+      <li><img src="help/i_copy.png" alt=""><span>Copy a picture, paste it on another.</span></li>
+      <li><img src="help/i_play.png" alt=""><span>Try the game right here. Tap again to draw.</span></li>
+      <li><img src="help/i_menu.png" alt=""><span>Name, background, palette, save.</span></li>
+      <li><img src="help/i_share.png" alt=""><span>Send a game. It opens in Flickgame on another phone or tablet.</span></li>
+      <li><img src="help/i_open.png" alt=""><span>Open a game file.</span></li>
+    </ul>
+
+    <p class="small">Games are kept on this device only.<br>A .flickgame file renamed to .html plays in a browser on a computer.</p>
+    <p class="small"><a href="#" onclick="window.webkit.messageHandlers.flickSupporter.postMessage('restore'); return false;">Restore purchase</a> · analytic@gmail.com</p>
+  </main>
+</body>
+</html>

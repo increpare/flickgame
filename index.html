@@ -338,6 +338,7 @@
       });
     }
 
+    /*ios-strip*/
     function getAuthURL() {
       return FlickgameShare.getAuthUrl();
     }
@@ -381,6 +382,7 @@
       });
       lastDownTarget = canvas;
     }
+    /*/ios-strip*/
 
     function RLE_encode(input) {
       var encoding = [];
@@ -4478,12 +4480,12 @@
                         </div>
                     </td>
                     <td class="tool-toolbar-container"  valign="top">
-                      <a href="#" onclick="shareClick();return false;">&ocir; share</a><br />
+                      <!--ios-strip--><a href="#" onclick="shareClick();return false;">&ocir; share</a><br /><!--/ios-strip-->
                       <div id="shareLink"></div>
                       <a href="#" onclick="exportClick();return false;">&sdotb; export</a><br />
                       <a href="#" onclick="document.getElementById('my_file').click();return false;">&sdotb;
                         import</a><br />
-                      <input type="file" accept=".html,.json,.txt,text/plain" id="my_file" style="display: none;" />
+                      <input type="file" accept=".flickgame,.html,.json,.txt,text/plain" id="my_file" style="display: none;" />
                       <a href="help.html" target="_blank" title="blah">? help</a>
                       <br />
                       <br />
@@ -4605,8 +4607,10 @@
       <button type="button" id="burger-btn-save-gallery" class="burger-dialog-btn" onclick="saveCurrentToGallery();">💾 Save to Gallery</button>
       <button type="button" id="burger-btn-open-gallery" class="burger-dialog-btn" onclick="openGallery();">🖼️ Gallery</button>
       <button type="button" class="burger-dialog-btn" onclick="clearPalette();">🗑️ Clear page</button>
+      <!--ios-strip-->
       <button type="button" class="burger-dialog-btn" onclick="shareClick();">📤 Share</button>
       <div id="burger-share-result" class="burger-share-result"></div>
+      <!--/ios-strip-->
       <button type="button" class="burger-dialog-btn" onclick="document.getElementById('my_file').click();">📥 Import</button>
       <button type="button" class="burger-dialog-btn" onclick="exportClick();">⬇️ Download file</button>
       <button type="button" class="burger-dialog-btn" onclick="window.open('help.html','_blank');">📖 Help</button>

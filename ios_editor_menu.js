@@ -43,6 +43,8 @@
       '#burger-dialog #burger-bg-picker-control, #burger-dialog #bgColorPickerControl{display:block;width:100%;min-width:0;}',
       '#burger-dialog #burger-bg-picker-control .background-color-trigger, #burger-dialog #bgColorPickerControl .background-color-trigger{display:flex;align-items:center;justify-content:center;width:100%;min-width:0;height:var(--ios-editor-control-height);padding:0 12px;border-width:2px;border-radius:4px;box-sizing:border-box;text-align:center;font-size:var(--ios-editor-font-size);}',
       '#burger-dialog .palette-credit-link, #burger-dialog .palette-name-link, #burger-dialog #palette-credit-link{display:none !important;}',
+      '#ios-help-overlay{position:fixed;inset:0;z-index:400;box-sizing:border-box;background:#000;padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);}',
+      '#ios-help-overlay iframe{display:block;width:100%;height:100%;border:0;}',
       '.ios-choice-overlay{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,0.72);}',
       '.ios-choice-box{width:min(360px,100%);background:#111;border:2px solid var(--muted-foreground);border-radius:12px;padding:14px;box-sizing:border-box;}',
       '.ios-choice-title{margin:0 0 12px;font-size:16px;font-weight:600;color:#fff;}',
@@ -125,6 +127,18 @@
       overlay.appendChild(box);
       document.body.appendChild(overlay);
     });
+  }
+
+  // Help opens over the editor rather than navigating away, so unsaved work survives.
+  function openHelp() {
+    if (document.getElementById('ios-help-overlay')) return;
+    ensureStyles();
+    document.body.appendChild(el('div', { id: 'ios-help-overlay' }, [el('iframe', { src: 'help.html' })]));
+  }
+
+  function closeHelp() {
+    var overlay = document.getElementById('ios-help-overlay');
+    if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
   }
 
   function handleRename() {
@@ -238,7 +252,7 @@
     var helpBtn = el('button', { type: 'button', class: 'burger-dialog-btn ios-editor-action', text: '📖 Help' });
     helpBtn.addEventListener('click', function () {
       closeBurgerDialog();
-      window.location.href = 'help.html';
+      openHelp();
     });
 
     var backBtn = el('button', { type: 'button', class: 'burger-dialog-btn ios-editor-action', text: '⬅️ Back to Gallery' });
@@ -265,6 +279,16 @@
         render();
       }, { capture: true });
     }
+    var desktopHelp = document.querySelector('a[href="help.html"]');
+    if (desktopHelp) {
+      desktopHelp.addEventListener('click', function (e) {
+        e.preventDefault();
+        openHelp();
+      });
+    }
+    window.addEventListener('message', function (e) {
+      if (e.data === 'flick-help-close') closeHelp();
+    });
     render();
   }
 

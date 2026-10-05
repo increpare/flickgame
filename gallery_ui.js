@@ -604,6 +604,8 @@
   window.addEventListener('load', function () {
     removeGalleryButtonsFromDefaultBurger();
     if (!isIosApp()) return;
+    // ?new=1 / ?id= are handled by the editor route; creating an entry here too would duplicate it.
+    if (/[?&](new|id)=/.test(window.location.search)) return;
     ensureIosActiveProjectEntry().catch(function () {});
   });
 })();

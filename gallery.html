@@ -53,6 +53,26 @@
       font-size: 24px;
       font-weight: 700;
     }
+    .gallery-supporter {
+      display: none;
+      flex: 0 0 auto;
+      padding: 0;
+      border: 0;
+      background: none;
+      color: #333;
+    }
+    .gallery-supporter svg {
+      display: block;
+      width: 28px;
+      height: 28px;
+    }
+    html[data-ios-app="true"] .gallery-supporter {
+      display: block;
+    }
+    html[data-supporter="true"] .gallery-supporter {
+      color: #f4e585;
+      pointer-events: none;
+    }
     .gallery-page-body {
       padding: 16px;
       padding-bottom: max(24px, env(safe-area-inset-bottom));
@@ -78,6 +98,7 @@
       box-sizing: border-box;
       overflow: hidden;
       min-width: 0;
+      position: relative;
     }
     .gallery-card.gallery-tile {
       background: #0a0a0a;
@@ -113,32 +134,17 @@
       height: 100%;
       image-rendering: pixelated;
     }
-    .gallery-play {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-      color: var(--ink);
-      opacity: 0.85;
-    }
-    .gallery-play svg {
-      width: 38px;
-      height: 38px;
-      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
-    }
     .gallery-x {
       position: absolute;
-      top: 5px;
-      right: 5px;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
+      top: 0;
+      right: 0;
+      width: 34px;
+      height: 34px;
+      border-radius: 0 0 0 12px;
       background: rgba(0, 0, 0, 0.55);
       color: #ff5c5c;
       border: none;
-      font-size: 15px;
+      font-size: 22px;
       font-weight: 700;
       line-height: 1;
       display: flex;
@@ -146,6 +152,11 @@
       justify-content: center;
       cursor: pointer;
       padding: 0;
+    }
+    .gallery-x::after {
+      content: "";
+      position: absolute;
+      inset: -5px;
     }
     .gallery-title {
       font-size: 13px;
@@ -164,7 +175,7 @@
     }
     .gallery-actions {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 5px;
       margin-top: 7px;
     }
@@ -184,6 +195,34 @@
       width: 20px;
       height: 20px;
       fill: currentColor;
+    }
+    /* Press feedback: shrink at once on touch-down, spring back on release. */
+    .gallery-ibtn,
+    .gallery-x,
+    .gallery-thumb-wrap,
+    .gallery-card.gallery-tile {
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.35s cubic-bezier(0.3, 1.6, 0.5, 1), opacity 0.2s ease-out;
+    }
+    .gallery-ibtn:active:not([disabled]),
+    .gallery-x:active:not([disabled]) {
+      transform: scale(0.82);
+      opacity: 0.6;
+      transition-duration: 0.06s;
+    }
+    .gallery-thumb-wrap:active,
+    .gallery-card.gallery-tile:active {
+      transform: scale(0.96);
+      opacity: 0.8;
+      transition-duration: 0.06s;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .gallery-ibtn:active:not([disabled]),
+      .gallery-x:active:not([disabled]),
+      .gallery-thumb-wrap:active,
+      .gallery-card.gallery-tile:active {
+        transform: none;
+      }
     }
     .gallery-ibtn[disabled],
     .gallery-x[disabled] {
@@ -265,8 +304,11 @@
     .gallery-toast.visible {
       display: block;
     }
-    .gallery-page-header-row .gallery-btn {
-      flex: 0 0 auto;
+    .gallery-page-header-row .gallery-ibtn {
+      flex: 0 0 44px;
+      width: 44px;
+      border: 1px solid var(--muted-foreground);
+      color: var(--text);
     }
 
     html[data-ios-app="true"] {
@@ -302,6 +344,7 @@
       gap: 8px;
       align-items: center;
       margin-top: 8px;
+      justify-content: space-evenly;
     }
     html[data-ios-app="true"] .gallery-ibtn {
       width: 44px;
@@ -309,6 +352,25 @@
       flex: 0 0 44px;
       aspect-ratio: auto;
     }
+    /* In the app the icons are Apple's own, handed over by the shell as --ios-icon-* */
+    html[data-ios-app="true"] .gallery-ibtn svg {
+      display: none;
+    }
+    html[data-ios-app="true"] .gallery-ibtn {
+      border: 0;
+    }
+    html[data-ios-app="true"] .gallery-ibtn::before {
+      content: '';
+      width: var(--icon-size, 28px);
+      height: var(--icon-size, 28px);
+      background: currentColor;
+      -webkit-mask: var(--icon) center / contain no-repeat;
+      mask: var(--icon) center / contain no-repeat;
+    }
+    html[data-ios-app="true"] .gallery-ibtn[data-icon="folder"] { --icon: var(--ios-icon-folder); }
+    html[data-ios-app="true"] .gallery-ibtn[data-icon="edit"] { --icon: var(--ios-icon-edit); --icon-size: 32px; }
+    html[data-ios-app="true"] .gallery-ibtn[data-icon="share"] { --icon: var(--ios-icon-share); }
+    html[data-ios-app="true"] .gallery-ibtn[data-icon="play"] { --icon: var(--ios-icon-play); --icon-size: 26px; }
     html[data-ios-app="true"][data-gallery-orientation="landscape"] .gallery-grid {
       grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
     }
@@ -322,11 +384,18 @@
     }
   </style>
 </head>
-<body>
+<body ontouchstart="">
   <header class="gallery-page-header">
     <div class="gallery-page-header-row">
+      <button type="button" class="gallery-supporter" onclick="window.webkit.messageHandlers.flickSupporter.postMessage('buy')">
+        <svg viewBox="0 0 64 64">
+          <path fill="currentColor" d="M17 0h21v1h-21zM15 1h28v1h-28zM14 2h36v1h-36zM13 3h39v1h-39zM12 4h42v1h-42zM11 5h44v1h-44zM10 6h46v1h-46zM9 7h12v1h-12zM35 7h22v1h-22zM8 8h12v1h-12zM38 8h20v1h-20zM7 9h12v1h-12zM45 9h13v1h-13zM6 10h11v1h-11zM47 10h12v1h-12zM5 11h11v1h-11zM49 11h10v1h-10zM4 12h11v1h-11zM50 12h10v1h-10zM4 13h11v1h-11zM51 13h9v1h-9zM3 14h11v1h-11zM51 14h10v1h-10zM3 15h10v1h-10zM52 15h9v1h-9zM3 16h9v1h-9zM52 16h9v1h-9zM2 17h9v1h-9zM19 17h5v1h-5zM53 17h8v1h-8zM2 18h8v1h-8zM18 18h7v1h-7zM43 18h5v1h-5zM54 18h7v1h-7zM2 19h8v1h-8zM18 19h7v1h-7zM42 19h7v1h-7zM54 19h7v1h-7zM2 20h8v1h-8zM18 20h7v1h-7zM42 20h7v1h-7zM54 20h8v1h-8zM2 21h7v1h-7zM18 21h7v1h-7zM42 21h7v1h-7zM54 21h8v1h-8zM1 22h8v1h-8zM18 22h7v1h-7zM42 22h7v1h-7zM54 22h8v1h-8zM1 23h8v1h-8zM19 23h5v1h-5zM42 23h7v1h-7zM54 23h8v1h-8zM1 24h8v1h-8zM43 24h5v1h-5zM54 24h8v1h-8zM1 25h8v1h-8zM55 25h7v1h-7zM1 26h7v1h-7zM55 26h7v1h-7zM1 27h7v1h-7zM55 27h7v1h-7zM1 28h7v1h-7zM55 28h7v1h-7zM1 29h7v1h-7zM55 29h7v1h-7zM1 30h7v1h-7zM18 30h5v1h-5zM55 30h7v1h-7zM1 31h7v1h-7zM17 31h7v1h-7zM43 31h5v1h-5zM55 31h7v1h-7zM1 32h7v1h-7zM17 32h7v1h-7zM42 32h7v1h-7zM55 32h7v1h-7zM1 33h8v1h-8zM17 33h7v1h-7zM42 33h7v1h-7zM55 33h7v1h-7zM1 34h8v1h-8zM17 34h7v1h-7zM42 34h7v1h-7zM55 34h7v1h-7zM1 35h8v1h-8zM17 35h7v1h-7zM42 35h7v1h-7zM55 35h7v1h-7zM1 36h8v1h-8zM17 36h7v1h-7zM42 36h7v1h-7zM55 36h7v1h-7zM2 37h8v1h-8zM17 37h8v1h-8zM41 37h8v1h-8zM55 37h7v1h-7zM2 38h8v1h-8zM17 38h9v1h-9zM40 38h9v1h-9zM54 38h8v1h-8zM2 39h8v1h-8zM17 39h11v1h-11zM40 39h9v1h-9zM54 39h8v1h-8zM2 40h8v1h-8zM17 40h17v1h-17zM38 40h11v1h-11zM54 40h8v1h-8zM2 41h8v1h-8zM18 41h30v1h-30zM54 41h8v1h-8zM3 42h7v1h-7zM18 42h30v1h-30zM54 42h7v1h-7zM3 43h7v1h-7zM19 43h28v1h-28zM53 43h8v1h-8zM3 44h7v1h-7zM20 44h26v1h-26zM53 44h8v1h-8zM3 45h8v1h-8zM22 45h24v1h-24zM53 45h8v1h-8zM3 46h8v1h-8zM24 46h21v1h-21zM52 46h9v1h-9zM3 47h9v1h-9zM29 47h14v1h-14zM52 47h8v1h-8zM3 48h10v1h-10zM51 48h9v1h-9zM3 49h11v1h-11zM51 49h9v1h-9zM4 50h11v1h-11zM50 50h9v1h-9zM5 51h12v1h-12zM50 51h9v1h-9zM5 52h15v1h-15zM49 52h10v1h-10zM6 53h16v1h-16zM47 53h11v1h-11zM7 54h17v1h-17zM46 54h12v1h-12zM8 55h19v1h-19zM44 55h13v1h-13zM9 56h48v1h-48zM11 57h45v1h-45zM13 58h42v1h-42zM15 59h38v1h-38zM18 60h34v1h-34zM20 61h30v1h-30zM23 62h25v1h-25zM38 63h6v1h-6z"/>
+        </svg>
+      </button>
       <h1 class="gallery-page-title">My Flickgames</h1>
-      <button type="button" id="gallery-import-btn" class="gallery-btn">Import...</button>
+      <button type="button" id="gallery-import-btn" class="gallery-ibtn" data-icon="folder" aria-label="Open">
+        <svg viewBox="0 0 16 16"><path d="M1 3h5l1.5 2H15v9H1zm1 1v9h12V6H7L5.5 4z"/></svg>
+      </button>
     </div>
   </header>
   <main class="gallery-page-body">
@@ -336,7 +405,7 @@
     <div id="gallery-share-sheet" class="gallery-share-sheet"></div>
   </div>
   <div id="gallery-toast" class="gallery-toast"></div>
-  <input type="file" id="gallery-import-input" accept=".html,.json,.txt,text/plain" style="display:none">
+  <input type="file" id="gallery-import-input" accept=".flickgame,.html" style="display:none">
 
   <script src="FileSaver.js"></script>
   <script src="gallery_store.js"></script>

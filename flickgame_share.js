@@ -2,7 +2,9 @@
 (function () {
   'use strict';
 
+  /*ios-strip*/
   var OAUTH_CLIENT_ID = 'eb2aad12c63aec0136b1';
+  /*/ios-strip*/
   var templatePromise = null;
 
   function getPlayTemplate() {
@@ -116,7 +118,8 @@
           bin += String.fromCharCode(u8[j]);
         }
         window.webkit.messageHandlers.flickExport.postMessage({
-          filename: filename || 'flickgame.html',
+          // same HTML, but .flickgame opens in the app when tapped on another phone
+          filename: (filename || 'flickgame.html').replace(/\.html$/, '.flickgame'),
           dataBase64: btoa(bin)
         });
         return true;
@@ -128,6 +131,7 @@
     });
   }
 
+  /*ios-strip*/
   function shareStateAsGist(stateString, callbacks) {
     callbacks = callbacks || {};
     var onSuccess = callbacks.onSuccess || function () {};
@@ -194,6 +198,7 @@
       + '&state=' + randomState
       + '&allow_signup=true';
   }
+  /*/ios-strip*/
 
   function extractStateFromStandaloneHtml(contents) {
     var fromToken = '<!--__EmbedBegin__-->';
@@ -234,19 +239,23 @@
     }
   }
 
+  /*ios-strip*/
   function resolvePlayUrl(playPath) {
     var base = window.location.protocol === 'file:' ? 'https://www.flickgame.org/' : window.location.href;
     return new URL(playPath, base).href;
   }
+  /*/ios-strip*/
 
   window.FlickgameShare = {
+    /*ios-strip*/
+    shareStateAsGist: shareStateAsGist,
+    getAuthUrl: getAuthUrl,
+    resolvePlayUrl: resolvePlayUrl,
+    /*/ios-strip*/
     buildStandaloneHtmlString: buildStandaloneHtmlString,
     downloadStandaloneHtml: downloadStandaloneHtml,
     sanitizeFilename: sanitizeFilename,
-    shareStateAsGist: shareStateAsGist,
-    getAuthUrl: getAuthUrl,
     extractStateFromStandaloneHtml: extractStateFromStandaloneHtml,
-    extractStateFromImportText: extractStateFromImportText,
-    resolvePlayUrl: resolvePlayUrl
+    extractStateFromImportText: extractStateFromImportText
   };
 })();

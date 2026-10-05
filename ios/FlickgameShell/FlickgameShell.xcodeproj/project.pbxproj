@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		8752afd728f5cc6015265d1e /* FlickgameShellApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 747e5c568212f5b8447760a2 /* FlickgameShellApp.swift */; };
 		885b028ec5281f9e297716d2 /* FlickWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 944ae5735b177417571a3737 /* FlickWebView.swift */; };
+		5b1e0c7a9d3f4e2186a7c0d1 /* Supporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3c9a7e41b2d85f60e1a4b7c2 /* Supporter.swift */; };
 		9ca7c803b803e3c417790511 /* www in Resources */ = {isa = PBXBuildFile; fileRef = fad1f5b32922edf4a72ef4ba /* www */; };
 		b4e5d6c708295c3bb1f2e3d4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = c3f4e5d609184b2aa0f1e2d3 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
@@ -17,6 +18,7 @@
 		2a9821e8f1184964a06d0a4f /* FlickgameShell.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FlickgameShell.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		747e5c568212f5b8447760a2 /* FlickgameShellApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlickgameShellApp.swift; sourceTree = "<group>"; };
 		944ae5735b177417571a3737 /* FlickWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlickWebView.swift; sourceTree = "<group>"; };
+		3c9a7e41b2d85f60e1a4b7c2 /* Supporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Supporter.swift; sourceTree = "<group>"; };
 		c3f4e5d609184b2aa0f1e2d3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		fad1f5b32922edf4a72ef4ba /* www */ = {isa = PBXFileReference; lastKnownFileType = folder; path = www; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -54,6 +56,7 @@
 				c3f4e5d609184b2aa0f1e2d3 /* Assets.xcassets */,
 				747e5c568212f5b8447760a2 /* FlickgameShellApp.swift */,
 				944ae5735b177417571a3737 /* FlickWebView.swift */,
+				3c9a7e41b2d85f60e1a4b7c2 /* Supporter.swift */,
 				fad1f5b32922edf4a72ef4ba /* www */,
 			);
 			path = FlickgameShell;
@@ -153,6 +156,7 @@
 			files = (
 				8752afd728f5cc6015265d1e /* FlickgameShellApp.swift in Sources */,
 				885b028ec5281f9e297716d2 /* FlickWebView.swift in Sources */,
+				5b1e0c7a9d3f4e2186a7c0d1 /* Supporter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -168,7 +172,9 @@
 				DEVELOPMENT_TEAM = 75426EQC98;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FlickgameShell/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Flickgame;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UIPrerenderedIcon = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -253,7 +259,9 @@
 				DEVELOPMENT_TEAM = 75426EQC98;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FlickgameShell/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Flickgame;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UIPrerenderedIcon = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

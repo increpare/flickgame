@@ -6,6 +6,7 @@ struct FlickgameShellApp: App {
         WindowGroup {
             FlickWebViewRepresentable()
                 .ignoresSafeArea()
+                .onOpenURL { IncomingGame.shared.open($0) }
         }
     }
 }

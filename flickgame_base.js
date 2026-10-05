@@ -120,6 +120,7 @@ function getData(options) {
         return true;
     }
 
+    /*ios-strip*/
     // Get ID from URL parameter
     var id = getParameterByName("p").replace(/[\\\/]/g, "");
     if (id === null || id.length === 0) {
@@ -171,4 +172,5 @@ function getData(options) {
     
     httpClient.send();
     return true;
+    /*/ios-strip*/
 }

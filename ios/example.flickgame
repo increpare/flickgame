@@ -1,0 +1,2947 @@
+<!--Save as html file-->
+ <html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<link rel="icon" 
+      type="image/png" 
+      href="favicon.png">
+<title>flickgame.org</title>
+<style>
+:root {
+    --background-color: #000000;
+    --foreground-color: #ffffff;
+    --footer-height: 30px;
+    --footer-font-size: clamp(16px, 3.4vw, 20px);
+    --footer-button-font-size: clamp(12px, 2.8vw, 15px);
+    --footer-button-padding-y: 3px;
+    --footer-button-padding-x: 10px;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+  background-color: var(--background-color);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+body {
+  position: fixed;
+  inset: 0;
+}
+
+#header h1 {
+  padding:0;
+  margin:0;
+  line-height: 40px;
+}
+#header {
+  position:absolute;
+  left:0px;
+  right:0px;
+  top:0px;
+  height:5px;
+  background-color: var(--background-color);
+  color:var(--foreground-color);
+  text-align: center;
+  padding: 0px;
+  margin:0px;
+  border:0px;
+}
+
+a {
+  color:var(--foreground-color);
+  -webkit-user-drag: none;
+}
+
+#content {
+  position: absolute;
+  top:5px;
+  bottom: var(--footer-height);
+  left:0px;
+  right:0px;
+  background-color: var(--background-color);
+  text-align: center;
+  padding:0;
+  margin:0;
+}
+
+
+#content canvas {
+ top:0;
+ bottom:0;
+ left:0;
+ right:0;
+ padding: 0;
+ margin:0; 
+ image-rendering: optimizeSpeed;
+ image-rendering: -moz-crisp-edges;
+ image-rendering: -webkit-optimize-contrast;
+ image-rendering: -o-crisp-edges;
+ image-rendering: pixelated;
+ -ms-interpolation-mode: nearest-neighbor;
+  touch-action: none;
+}
+#galleryLink,
+#hackLink {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--footer-button-padding-y) var(--footer-button-padding-x);
+  border: 1px solid var(--foreground-color);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  color: var(--foreground-color);
+  text-decoration: none;
+  line-height: 1.2;
+  font-size: var(--footer-button-font-size);
+  box-sizing: border-box;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+}
+
+#galleryLink .label-icon,
+#hackLink .label-icon {
+  display: none;
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+
+#homeLink {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+body[data-host="ios-app"] #homeLink {
+  visibility: hidden;
+}
+#footer {
+  position:absolute;
+  left:0px;
+  right:0px;
+  bottom:0px;
+  height: var(--footer-height);
+  margin:0;
+  background-color: var(--background-color);
+  color:var(--foreground-color);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  box-sizing: border-box;
+  font-size: var(--footer-font-size);
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+body[data-host="ios-app"] {
+  --footer-height: 52px;
+  --footer-font-size: clamp(18px, 4.6vw, 24px);
+  --footer-button-font-size: clamp(15px, 3.8vw, 19px);
+  --footer-button-padding-y: 7px;
+  --footer-button-padding-x: 14px;
+}
+@media (orientation: portrait) {
+  body[data-host="ios-app"] {
+    --footer-height: 82px;
+  }
+  body[data-host="ios-app"] #footer {
+    display: grid;
+    grid-template-columns: 66px 1fr 66px;
+    gap: 12px;
+    padding: 0 12px;
+    align-items: center;
+  }
+  body[data-host="ios-app"] #galleryLink,
+  body[data-host="ios-app"] #hackLink {
+    width: 66px;
+    height: 66px;
+    padding: 0;
+    border-radius: 14px;
+  }
+  body[data-host="ios-app"] #galleryLink {
+    grid-column: 1;
+    justify-self: start;
+  }
+  body[data-host="ios-app"] #homeLink {
+    grid-column: 2;
+    min-width: 0;
+  }
+  body[data-host="ios-app"] #hackLink {
+    grid-column: 3;
+    justify-self: end;
+  }
+  body[data-host="ios-app"] #galleryLink .label-icon,
+  body[data-host="ios-app"] #hackLink .label-icon {
+    display: block;
+    width: 33px;
+    height: 33px;
+  }
+  body[data-host="ios-app"] #galleryLink .label-text,
+  body[data-host="ios-app"] #hackLink .label-text {
+    display: none;
+  }
+}
+#touch-cursor-layer {
+  display: none;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+#touch-cursor-icon {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  overflow: visible;
+  transform-origin: 0 0;
+  --cursor-fill: #ffffff;
+  --cursor-stroke: #000000;
+}
+#touch-cursor-icon use {
+  display: block;
+}
+#touch-ripple-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+#touch-tutorial {
+  position: absolute;
+  max-width: 260px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  font-size: 15px;
+  line-height: 1.3;
+  text-align: left;
+  pointer-events: none;
+  z-index: 11;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 180ms ease-out, visibility 0s linear 180ms;
+}
+#touch-tutorial.visible {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 120ms ease-out;
+}
+#touch-tutorial.fading {
+  opacity: 0;
+  transition: opacity 220ms ease-out;
+}
+.touch-tutorial-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 44px;
+}
+#touch-tutorial.tutorial-drag {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  max-width: none;
+}
+#touch-tutorial.tutorial-bottom {
+  right: auto !important;
+  transform: none;
+  text-align: center;
+}
+#touch-tutorial.tutorial-anchored {
+  transform: none;
+}
+.tutorial-hand {
+  position: relative;
+  --handSize: 44px;
+  width: var(--handSize);
+  height: var(--handSize);
+  flex: 0 0 auto;
+  opacity: 0.5;
+  filter: drop-shadow(0 10px 18px rgba(0,0,0,0.55));
+  /* Make (left, top) be fingertip hotspot. */
+  --hsx: calc(var(--handSize) * 6.5 / 16);
+  --hsy: calc(var(--handSize) * 1.5 / 16);
+  transform: translate(calc(-1 * var(--hsx)), calc(-1 * var(--hsy)));
+}
+.tutorial-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.tutorial-centerMark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 3px;
+  height: 3px;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+  opacity: 0.0;
+}
+.tutorial-hand path{
+  fill: rgba(255,255,255,0.92);
+  stroke: rgba(0,0,0,0.92);
+  stroke-width: 0.9;
+  paint-order: stroke fill;
+  stroke-linejoin: round;
+}
+.tutorial-trailDot{
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.55) 45%, rgba(255,255,255,0.0) 72%);
+  transform: translate(-50%,-50%);
+  pointer-events: none;
+  opacity: 0.0;
+  animation: tutorial-dotFade 700ms ease-out forwards;
+}
+@keyframes tutorial-dotFade{
+  0% { opacity: 0.70; filter: blur(0px); }
+  100% { opacity: 0.0; filter: blur(0.6px); }
+}
+.touch-ripple {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.9);
+  transform: translate(-50%, -50%) scale(0.25);
+  opacity: 0.95;
+  animation: touch-ripple-expand 280ms ease-out forwards;
+}
+.touch-ripple.secondary {
+  border-width: 1px;
+  opacity: 0.7;
+  animation-duration: 320ms;
+}
+@keyframes touch-ripple-expand {
+  0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0.95; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+}
+.touch-color-burst {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.touch-color-dot {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+@keyframes color-burst-ring {
+  0% { transform: translate(-50%, -50%) scale(0.1); opacity: var(--burst-opacity, 0.85); }
+  40% { opacity: var(--burst-opacity, 0.85); }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+}
+@keyframes color-burst-dot {
+  0% { transform: translate(-50%, -50%) translate(0px, 0px) scale(1); opacity: 0.9; }
+  20% { opacity: 1; }
+  100% { transform: translate(-50%, -50%) translate(var(--dot-tx), var(--dot-ty)) scale(0); opacity: 0; }
+}
+</style>
+<!-- NOTE: The two scripts below (id="flickgame_base.js" and id="flickgame_vanilla.js") are
+     inlined copies of the repo-root files of the same name, so an exported standalone game is
+     self-contained. There is no build step that syncs them: if you change flickgame_base.js or
+     flickgame_vanilla.js at the repo root, mirror the change here by hand. -->
+<script id="flickgame_base.js">
+  // Flick Game JavaScript Library
+// Extracted shared functions from HTML files
+
+// Global variables
+var gameState;
+
+// Helper function to get URL parameters
+function getParameterByName(name) {
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+        results = regex.exec(location.search);
+    if (results == null) return "";
+    try {
+        return decodeURIComponent(results[1].replace(/\+/g, " "));
+    } catch (e) {
+        return "";
+    }
+}
+
+/** True when play.html is opened with ?test (loads testgame.txt from same folder). */
+function isLocalTestMode() {
+    try {
+        return new URLSearchParams(location.search).has("test");
+    } catch (e) {
+        return /[?&]test(?:&|$|=)/.test(location.search);
+    }
+}
+
+function decodeGzipArrayBufferToText(arrayBuffer) {
+    if (typeof DecompressionStream === "undefined") {
+        return Promise.reject(new Error("This browser cannot decode .gz local test files."));
+    }
+    var ds = new DecompressionStream("gzip");
+    var stream = new Blob([arrayBuffer]).stream().pipeThrough(ds);
+    return new Response(stream).text();
+}
+
+function loadLocalTestGame(onSuccess, onError) {
+    var candidates = ["testgame.txt", "testgame.txt.gz"];
+    var index = 0;
+
+    function tryNext() {
+        if (index >= candidates.length) {
+            onError("Could not find testgame.txt (or testgame.txt.gz) in this directory.");
+            return;
+        }
+        var fileName = candidates[index++];
+        fetch(qualifyURL(fileName)).then(function(response) {
+            if (!response.ok) {
+                throw new Error("HTTP " + response.status);
+            }
+            if (fileName.slice(-3) === ".gz") {
+                return response.arrayBuffer().then(decodeGzipArrayBufferToText);
+            }
+            return response.text();
+        }).then(function(text) {
+            onSuccess(text);
+        }).catch(function() {
+            tryNext();
+        });
+    }
+
+    tryNext();
+}
+
+// Helper function to strip http/https from URLs
+function strip_http(url) {
+   url = url.replace(/^https?:\/\//,'');
+   return url;
+}
+
+// Helper function to qualify URLs
+function qualifyURL(url) {
+    var aurl = document.createElement('a');
+    aurl.href = url;
+    return aurl.href;
+}
+
+function isIosAppHost() {
+    try {
+        return !!(window && (window.FLICKGAME_HOST === 'ios-app' || window.FLICKGAME_IOS_APP));
+    } catch (e) {
+        return false;
+    }
+}
+
+function shouldShowTouchTutorial() {
+    return !isIosAppHost();
+}
+
+function preventPageGesture(e) {
+    if (e && typeof e.preventDefault === 'function') {
+        e.preventDefault();
+    }
+}
+
+function disableElementDrag(id) {
+    var node = document.getElementById(id);
+    if (!node) return;
+    node.setAttribute('draggable', 'false');
+    node.addEventListener('dragstart', preventPageGesture);
+    node.addEventListener('selectstart', preventPageGesture);
+}
+
+function updateFooterLinks() {
+    var galleryLink = document.getElementById("galleryLink");
+    var hacklink = document.getElementById("hackLink");
+    var homepageLink = document.getElementById("homeLink");
+    var homepage = gameState && gameState.gameLink ? gameState.gameLink : '';
+
+    if (galleryLink) {
+        var galleryText = galleryLink.querySelector('.label-text');
+        if (isIosAppHost()) {
+            if (galleryText) galleryText.innerHTML = t("return_gallery_link_label_html");
+            galleryLink.href = 'gallery.html';
+            galleryLink.style.display = '';
+        } else {
+            galleryLink.style.display = 'none';
+            galleryLink.removeAttribute('href');
+        }
+    }
+
+    if (hacklink) {
+        var hackText = hacklink.querySelector('.label-text');
+        if (hackText) hackText.innerHTML = t("edit_link_label_html");
+        hacklink.style.display = '';
+    }
+
+    if (!homepageLink) return;
+    homepageLink.textContent = strip_http(homepage || '');
+    if (isIosAppHost()) {
+        homepageLink.removeAttribute('href');
+        homepageLink.style.pointerEvents = 'none';
+        homepageLink.style.cursor = 'default';
+        homepageLink.style.textDecoration = 'none';
+        return;
+    }
+    homepageLink.style.pointerEvents = '';
+    homepageLink.style.cursor = '';
+    homepageLink.style.textDecoration = '';
+    if (homepage && !homepage.match(/^https?:\/\//)) {
+        homepage = "http://" + homepage;
+    }
+    homepageLink.href = homepage;
+}
+
+var LOCAL_GALLERY_DB_NAME = 'flickgame';
+var LOCAL_GALLERY_DB_VERSION = 1;
+var LOCAL_GALLERY_STORE = 'projects';
+
+function openLocalGalleryDb() {
+    return new Promise(function(resolve, reject) {
+        if (typeof indexedDB === 'undefined') {
+            reject(new Error('IndexedDB not available'));
+            return;
+        }
+        var req = indexedDB.open(LOCAL_GALLERY_DB_NAME, LOCAL_GALLERY_DB_VERSION);
+        req.onupgradeneeded = function() {
+            var db = req.result;
+            if (!db.objectStoreNames.contains(LOCAL_GALLERY_STORE)) {
+                var store = db.createObjectStore(LOCAL_GALLERY_STORE, { keyPath: 'id' });
+                store.createIndex('updatedAt', 'updatedAt', { unique: false });
+                store.createIndex('createdAt', 'createdAt', { unique: false });
+            }
+        };
+        req.onerror = function() { reject(req.error || new Error('Failed to open IndexedDB')); };
+        req.onsuccess = function() { resolve(req.result); };
+    });
+}
+
+function getLocalGalleryProject(id) {
+    return openLocalGalleryDb().then(function(db) {
+        return new Promise(function(resolve, reject) {
+            var tx;
+            var store;
+            var req;
+            try {
+                tx = db.transaction(LOCAL_GALLERY_STORE, 'readonly');
+                store = tx.objectStore(LOCAL_GALLERY_STORE);
+                req = store.get(id);
+            } catch (e) {
+                reject(e);
+                return;
+            }
+            req.onerror = function() { reject(req.error || new Error('IndexedDB request failed')); };
+            req.onsuccess = function() { resolve(req.result); };
+        });
+    });
+}
+
+// RLE decode function.
+// Run counts come straight from an untrusted game file (a ?p= gist, or data embedded in
+// this very page), so targetLength (when given) bounds the output and pads it out: an
+// oversized count used to build an enormous string and lock the tab up for minutes.
+function RLE_decode(encoded, targetLength) {
+    if (!encoded || typeof encoded.length !== 'number') encoded = [];
+    var limit = (typeof targetLength === 'number' && targetLength >= 0) ? targetLength : Infinity;
+    var output = "";
+    for (var i=0;i+1<encoded.length && output.length<limit;i+=2) {
+      var count = Number(encoded[i]);
+      if (!isFinite(count) || count < 1) continue;
+      if (count > limit - output.length) count = limit - output.length;
+      var value = parseInt(encoded[i+1], 16);
+      var ch = (value >= 0 && value < 16) ? value.toString(16) : "0";
+      for (var j=0;j<count;j++){
+        output+=ch;
+      }
+    }
+    while (output.length < limit) output += "0";
+    return output;
+}
+
+
+
+// Generic getData function that can be used by both player and editor
+function getData(options) {
+    options = options || {};
+    var onSuccess = options.onSuccess || function(code) {};
+    var onError = options.onError || console.log;
+    var onEmbedded = options.onEmbedded || function(code) {};
+
+    // Handle embedded data
+    if (typeof embeddedDat !== 'undefined' && embeddedDat[0] !== '_') {
+        embeddedDat = decodeURI(embeddedDat);
+        onEmbedded(embeddedDat);
+        return true;
+    }
+
+    var localId = getParameterByName("id");
+    if (localId && localId.length > 0) {
+        getLocalGalleryProject(localId).then(function(project) {
+            if (!project || typeof project.state !== 'string') {
+                onError("Project not found");
+                return;
+            }
+            onSuccess(project.state);
+        }).catch(function(err) {
+            onError(err && err.message ? err.message : "Failed to load project");
+        });
+        return true;
+    }
+
+    // Local test mode: bypass gist loading and read testgame.txt from this directory.
+    if (isLocalTestMode()) {
+        loadLocalTestGame(onSuccess, onError);
+        return true;
+    }
+
+}
+
+</script>
+<script id="flickgame_vanilla.js">
+  // Color palettes
+
+  var palettes_compatibility_v1 = {
+  antiquity16: [
+    '#202020', '#2d211e',
+    '#452923', '#6d3d29',
+    '#b16b4a', '#e89f6e',
+    '#e8be82', '#5d7557',
+    '#8e9257', '#707b88',
+    '#8aa7ac', '#e55d4d',
+    '#f1866c', '#d26730',
+    '#de9a28', '#e8d8a5'
+  ],
+  arq16: [
+    '#ffffff', '#ffd19d',
+    '#aeb5bd', '#4d80c9',
+    '#e93841', '#100820',
+    '#3b1c2a', '#6b2c42',
+    '#ac3232', '#d95763',
+    '#d79b7d', '#f7dba7',
+    '#e5e5e5', '#b2cdd6',
+    '#8595a1', '#4a6741'
+  ],
+  'bubblegum-16': [
+    '#16171a', '#7f0622',
+    '#d62411', '#ff8426',
+    '#ffd100', '#fafdff',
+    '#ff80a4', '#ff2674',
+    '#94216a', '#430067',
+    '#234975', '#68aed4',
+    '#bfff3c', '#10d275',
+    '#007899', '#002859'
+  ],
+  colodore: [
+    '#000000', '#ffffff',
+    '#813338', '#75cec8',
+    '#8e3c97', '#56ac4d',
+    '#2e2c9b', '#edf171',
+    '#8e5029', '#553800',
+    '#c46c71', '#4a4a4a',
+    '#7b7b7b', '#a9ff9f',
+    '#706deb', '#b2b2b2'
+  ],
+  'color-graphics-adapter': [
+    '#000000', '#0000aa',
+    '#00aa00', '#00aaaa',
+    '#aa0000', '#aa00aa',
+    '#aa5500', '#aaaaaa',
+    '#555555', '#5555ff',
+    '#55ff55', '#55ffff',
+    '#ff5555', '#ff55ff',
+    '#ffff55', '#ffffff'
+  ],
+  commodore64: [
+    '#000000', '#ffffff',
+    '#880000', '#aaffee',
+    '#cc44cc', '#00cc55',
+    '#0000aa', '#eeee77',
+    '#dd8855', '#664400',
+    '#ff7777', '#333333',
+    '#777777', '#aaff66',
+    '#0088ff', '#bbbbbb'
+  ],
+  'cretaceous-16': [
+    '#1e2328', '#493c2b',
+    '#a14a76', '#e99f4b',
+    '#ed8a5b', '#f2b98a',
+    '#f7e7b2', '#c7cfcc',
+    '#a7a9ac', '#656c79',
+    '#2d2b42', '#1a1c2c',
+    '#5d275d', '#b13e53',
+    '#ef7d57', '#ffcd75'
+  ],
+  'darkseed-16': [
+    '#222323', '#f0f6f0',
+    '#94e344', '#639bff',
+    '#8b6f47', '#c4b5fd',
+    '#e06f8b', '#ffa8a8',
+    '#f4f4f4', '#c0cbdc',
+    '#8b956d', '#4a4a4a',
+    '#1e1e1e', '#3c3c3c',
+    '#8b4513', '#cd853f'
+  ],
+  'dawnbringer-16': [
+    '#140c1c', '#442434',
+    '#30346d', '#4e4a4e',
+    '#854c30', '#346524',
+    '#d04648', '#757161',
+    '#597dce', '#d27d2c',
+    '#8595a1', '#6daa2c',
+    '#d2aa99', '#6dc2ca',
+    '#dad45e', '#deeed6'
+  ],
+  'daylight-16': [
+    '#1a1c2c', '#5d275d',
+    '#b13e53', '#ef7d57',
+    '#ffcd75', '#a7f070',
+    '#38b764', '#257179',
+    '#29366f', '#3b5dc9',
+    '#41a6f6', '#73eff7',
+    '#f4f4f4', '#94b0c2',
+    '#566c86', '#333c57'
+  ],
+  'endesga-16': [
+    '#be4a2f', '#d77643',
+    '#ead4aa', '#e4a672',
+    '#b86f50', '#733e39',
+    '#3e2731', '#a22633',
+    '#e43b44', '#f77622',
+    '#feae34', '#fee761',
+    '#63c74d', '#3e8948',
+    '#265c42', '#193c3e'
+  ],
+  'eroge-copper': [
+    '#0d080d', '#4a2545',
+    '#8b4a47', '#c27d46',
+    '#e2b947', '#f5f3c1',
+    '#dae0ea', '#a8b5c4',
+    '#6d758d', '#494d5c',
+    '#2e2a2e', '#68386c',
+    '#b55088', '#f0a6a0',
+    '#f4d29c', '#dae0ea'
+  ],
+  'fading-16': [
+    '#100b0d', '#1a1a1a',
+    '#2e2e2e', '#4a4a4a',
+    '#6b6b6b', '#8d8d8d',
+    '#adadad', '#c4c4c4',
+    '#d9d9d9', '#ebebeb',
+    '#f7f7f7', '#ffffff',
+    '#e8e8e8', '#d0d0d0',
+    '#b8b8b8', '#9e9e9e'
+  ],
+  'galaxy-flame': [
+    '#0b0b0b', '#1a1a1a',
+    '#2e2e2e', '#4a4a4a',
+    '#6b6b6b', '#8d8d8d',
+    '#adadad', '#c4c4c4',
+    '#d9d9d9', '#ebebeb',
+    '#f7f7f7', '#ffffff',
+    '#e8e8e8', '#d0d0d0',
+    '#b8b8b8', '#9e9e9e'
+  ],
+  'go-line': [
+    '#0b0b0b', '#1a1a1a',
+    '#2e2e2e', '#4a4a4a',
+    '#6b6b6b', '#8d8d8d',
+    '#adadad', '#c4c4c4',
+    '#d9d9d9', '#ebebeb',
+    '#f7f7f7', '#ffffff',
+    '#e8e8e8', '#d0d0d0',
+    '#b8b8b8', '#9e9e9e'
+  ],
+  'grayscale-16': [
+    '#000000', '#111111',
+    '#222222', '#333333',
+    '#444444', '#555555',
+    '#666666', '#777777',
+    '#888888', '#999999',
+    '#aaaaaa', '#bbbbbb',
+    '#cccccc', '#dddddd',
+    '#eeeeee', '#ffffff'
+  ],
+  'island-joy-16': [
+    '#14193f', '#26234a',
+    '#4a3c57', '#68386c',
+    '#b55088', '#f0a6a0',
+    '#f4d29c', '#dae0ea',
+    '#a8b5c4', '#6d758d',
+    '#494d5c', '#2e2a2e',
+    '#68386c', '#b55088',
+    '#f0a6a0', '#f4d29c'
+  ],
+  'lost-century': [
+    '#2c1e31', '#6a4c93',
+    '#a663cc', '#e0aaff',
+    '#c77dff', '#9d4edd',
+    '#7209b7', '#560bad',
+    '#480ca8', '#3a0ca3',
+    '#3f37c9', '#4361ee',
+    '#4895ef', '#4cc9f0',
+    '#7209b7', '#560bad'
+  ],
+  'microsoft-windows': [
+    '#000000', '#800000',
+    '#008000', '#808000',
+    '#000080', '#800080',
+    '#008080', '#c0c0c0',
+    '#808080', '#ff0000',
+    '#00ff00', '#ffff00',
+    '#0000ff', '#ff00ff',
+    '#00ffff', '#ffffff'
+  ],
+  'miyazaki-16': [
+    '#1a1c2c', '#5d275d',
+    '#b13e53', '#ef7d57',
+    '#ffcd75', '#a7f070',
+    '#38b764', '#257179',
+    '#29366f', '#3b5dc9',
+    '#41a6f6', '#73eff7',
+    '#f4f4f4', '#94b0c2',
+    '#566c86', '#333c57'
+  ],
+  na16: [
+    '#140c1c', '#442434',
+    '#30346d', '#4e4a4e',
+    '#854c30', '#346524',
+    '#d04648', '#757161',
+    '#597dce', '#d27d2c',
+    '#8595a1', '#6daa2c',
+    '#d2aa99', '#6dc2ca',
+    '#dad45e', '#deeed6'
+  ],
+  'nanner-jam': [
+    '#140c1c', '#442434',
+    '#30346d', '#4e4a4e',
+    '#854c30', '#346524',
+    '#d04648', '#757161',
+    '#597dce', '#d27d2c',
+    '#8595a1', '#6daa2c',
+    '#d2aa99', '#6dc2ca',
+    '#dad45e', '#deeed6'
+  ],
+  'pico-8': [
+    '#000000', '#1d2b53',
+    '#7e2553', '#008751',
+    '#ab5236', '#5f574f',
+    '#c2c3c7', '#fff1e8',
+    '#ff004d', '#ffa300',
+    '#ffec27', '#00e436',
+    '#29adff', '#83769c',
+    '#ff77a8', '#ffccaa'
+  ],
+  'r-place': [
+    '#000000', '#898d90',
+    '#d4d7d9', '#ffffff',
+    '#6d001a', '#be0039',
+    '#ff4500', '#ffa800',
+    '#ffd635', '#00a368',
+    '#00cc78', '#7eed56',
+    '#00756f', '#009eaa',
+    '#2450a4', '#3690ea'
+  ],
+  'shido-cyberneon': [
+    '#0f0f23', '#2b2b52',
+    '#5b5b8d', '#8b8bc7',
+    '#ababf5', '#c7c7ff',
+    '#e3e3ff', '#f5f5ff',
+    '#ff8b8b', '#ffab8b',
+    '#ffcb8b', '#ffeb8b',
+    '#cbff8b', '#8bff8b',
+    '#8bffab', '#8bffcb'
+  ],
+  'steam-lords': [
+    '#140c1c', '#442434',
+    '#30346d', '#4e4a4e',
+    '#854c30', '#346524',
+    '#d04648', '#757161',
+    '#597dce', '#d27d2c',
+    '#8595a1', '#6daa2c',
+    '#d2aa99', '#6dc2ca',
+    '#dad45e', '#deeed6'
+  ],
+  'summers-past-16': [
+    '#140c1c', '#442434',
+    '#30346d', '#4e4a4e',
+    '#854c30', '#346524',
+    '#d04648', '#757161',
+    '#597dce', '#d27d2c',
+    '#8595a1', '#6daa2c',
+    '#d2aa99', '#6dc2ca',
+    '#dad45e', '#deeed6'
+  ],
+  'sweetie-16': [
+    '#1a1c2c', '#5d275d',
+    '#b13e53', '#ef7d57',
+    '#ffcd75', '#a7f070',
+    '#38b764', '#257179',
+    '#29366f', '#3b5dc9',
+    '#41a6f6', '#73eff7',
+    '#f4f4f4', '#94b0c2',
+    '#566c86', '#333c57'
+  ],
+  'taffy-16': [
+    '#140c1c', '#442434',
+    '#30346d', '#4e4a4e',
+    '#854c30', '#346524',
+    '#d04648', '#757161',
+    '#597dce', '#d27d2c',
+    '#8595a1', '#6daa2c',
+    '#d2aa99', '#6dc2ca',
+    '#dad45e', '#deeed6'
+  ],
+  'urbex-16': [
+    '#140c1c', '#442434',
+    '#30346d', '#4e4a4e',
+    '#854c30', '#346524',
+    '#d04648', '#757161',
+    '#597dce', '#d27d2c',
+    '#8595a1', '#6daa2c',
+    '#d2aa99', '#6dc2ca',
+    '#dad45e', '#deeed6'
+  ],
+  'vanilla-milkshake': [
+    '#140c1c', '#442434',
+    '#30346d', '#4e4a4e',
+    '#854c30', '#346524',
+    '#d04648', '#757161',
+    '#597dce', '#d27d2c',
+    '#8595a1', '#6daa2c',
+    '#d2aa99', '#6dc2ca',
+    '#dad45e', '#deeed6'
+  ],
+  woodspark: [
+    '#140c1c', '#442434',
+    '#30346d', '#4e4a4e',
+    '#854c30', '#346524',
+    '#d04648', '#757161',
+    '#597dce', '#d27d2c',
+    '#8595a1', '#6daa2c',
+    '#d2aa99', '#6dc2ca',
+    '#dad45e', '#deeed6'
+  ]
+};
+
+  var palettes = {
+    antiquity16: [
+        '#202020', '#2d211e',
+        '#452923', '#6d3d29',
+        '#b16b4a', '#e89f6e',
+        '#e8be82', '#5d7557',
+        '#8e9257', '#707b88',
+        '#8aa7ac', '#e55d4d',
+        '#f1866c', '#d26730',
+        '#de9a28', '#e8d8a5'
+    ],
+    arq16: [
+        '#ffffff', '#ffd19d',
+        '#aeb5bd', '#4d80c9',
+        '#e93841', '#100820',
+        '#511e43', '#054494',
+        '#f1892d', '#823e2c',
+        '#ffa9a9', '#5ae150',
+        '#ffe947', '#7d3ebf',
+        '#eb6c82', '#1e8a4c'
+    ],
+    'bubblegum-16': [
+        '#16171a', '#7f0622',
+        '#d62411', '#ff8426',
+        '#ffd100', '#fafdff',
+        '#ff80a4', '#ff2674',
+        '#94216a', '#430067',
+        '#234975', '#68aed4',
+        '#bfff3c', '#10d275',
+        '#007899', '#002859'
+    ],
+    colodore: [
+        '#000000', '#4a4a4a',
+        '#7b7b7b', '#b2b2b2',
+        '#ffffff', '#813338',
+        '#c46c71', '#553800',
+        '#8e5029', '#edf171',
+        '#a9ff9f', '#56ac4d',
+        '#75cec8', '#706deb',
+        '#2e2c9b', '#8e3c97'
+    ],
+    'color-graphics-adapter': [
+        '#000000', '#555555',
+        '#aaaaaa', '#ffffff',
+        '#0000aa', '#5555ff',
+        '#00aa00', '#55ff55',
+        '#00aaaa', '#55ffff',
+        '#aa0000', '#ff5555',
+        '#aa00aa', '#ff55ff',
+        '#aa5500', '#ffff55'
+    ],
+    commodore64: [
+        '#000000', '#626262',
+        '#898989', '#adadad',
+        '#ffffff', '#9f4e44',
+        '#cb7e75', '#6d5412',
+        '#a1683c', '#c9d487',
+        '#9ae29b', '#5cab5e',
+        '#6abfc6', '#887ecb',
+        '#50459b', '#a057a3'
+    ],
+    'cretaceous-16': [
+        '#313432', '#323e42',
+        '#454b4b', '#3a5f3b',
+        '#7c4545', '#675239',
+        '#625055', '#516b43',
+        '#796c64', '#718245',
+        '#9e805c', '#998579',
+        '#ac9086', '#a6a296',
+        '#b4ab8f', '#bcb7a5'
+    ],
+    'darkseed-16': [
+        '#000000', '#001418',
+        '#002024', '#002c38',
+        '#143444', '#443444',
+        '#583c48', '#6c4c44',
+        '#806058', '#6c706c',
+        '#888078', '#a49484',
+        '#c4ac9c', '#d8b0a8',
+        '#ecd4d0', '#fcfcfc'
+    ],
+    'dawnbringer-16': [
+        '#140c1c', '#442434',
+        '#30346d', '#4e4a4e',
+        '#854c30', '#346524',
+        '#d04648', '#757161',
+        '#597dce', '#d27d2c',
+        '#8595a1', '#6daa2c',
+        '#d2aa99', '#6dc2ca',
+        '#dad45e', '#deeed6'
+    ],
+    'daylight-16': [
+        '#f2d3ac', '#e7a76c',
+        '#c28462', '#905b54',
+        '#513a3d', '#7a6977',
+        '#878c87', '#b5c69a',
+        '#272223', '#606b31',
+        '#b19e3f', '#f8c65c',
+        '#d58b39', '#996336',
+        '#6a422c', '#b55b39'
+    ],
+    'endesga-16': [
+        '#e4a672', '#b86f50',
+        '#743f39', '#3f2832',
+        '#9e2835', '#e53b44',
+        '#fb922b', '#ffe762',
+        '#63c64d', '#327345',
+        '#193d3f', '#4f6781',
+        '#afbfd2', '#ffffff',
+        '#2ce8f4', '#0484d1'
+    ],
+    'eroge-copper': [
+        '#0d080d', '#4f2b24',
+        '#825b31', '#c59154',
+        '#f0bd77', '#fbdf9b',
+        '#fff9e4', '#bebbb2',
+        '#7bb24e', '#74adbb',
+        '#4180a0', '#32535f',
+        '#2a2349', '#7d3840',
+        '#c16c5b', '#e89973'
+    ],
+    'fading-16': [
+        '#ddcf99', '#cca87b',
+        '#b97a60', '#9c524e',
+        '#774251', '#4b3d44',
+        '#4e5463', '#5b7d73',
+        '#8e9f7d', '#645355',
+        '#8c7c79', '#a99c8d',
+        '#7d7b62', '#aaa25d',
+        '#846d59', '#a88a5e'
+    ],
+    'galaxy-flame': [
+        '#699fad', '#3a708e',
+        '#2b454f', '#111215',
+        '#151d1a', '#1d3230',
+        '#314e3f', '#4f5d42',
+        '#9a9f87', '#ede6cb',
+        '#f5d893', '#e8b26f',
+        '#b6834c', '#704d2b',
+        '#40231e', '#151015'
+    ],
+    'go-line': [
+        '#430067', '#94216a',
+        '#ff004d', '#ff8426',
+        '#ffdd34', '#50e112',
+        '#3fa66f', '#365987',
+        '#000000', '#0033ff',
+        '#29adff', '#00ffcc',
+        '#fff1e8', '#c2c3c7',
+        '#ab5236', '#5f574f'
+    ],
+    'grayscale-16': [
+        '#000000', '#181818',
+        '#282828', '#383838',
+        '#474747', '#565656',
+        '#646464', '#717171',
+        '#7e7e7e', '#8c8c8c',
+        '#9b9b9b', '#ababab',
+        '#bdbdbd', '#d1d1d1',
+        '#e7e7e7', '#ffffff'
+    ],
+    'island-joy-16': [
+        '#ffffff', '#6df7c1',
+        '#11adc1', '#606c81',
+        '#393457', '#1e8875',
+        '#5bb361', '#a1e55a',
+        '#f7e476', '#f99252',
+        '#cb4d68', '#6a3771',
+        '#c92464', '#f48cb6',
+        '#f7b69e', '#9b9c82'
+    ],
+    'lost-century': [
+        '#d1b187', '#c77b58',
+        '#ae5d40', '#79444a',
+        '#4b3d44', '#ba9158',
+        '#927441', '#4d4539',
+        '#77743b', '#b3a555',
+        '#d2c9a5', '#8caba1',
+        '#4b726e', '#574852',
+        '#847875', '#ab9b8e'
+    ],
+    'microsoft-windows': [
+        '#000000', '#7e7e7e',
+        '#bebebe', '#ffffff',
+        '#7e0000', '#fe0000',
+        '#047e00', '#06ff04',
+        '#7e7e00', '#ffff04',
+        '#00007e', '#0000ff',
+        '#7e007e', '#fe00ff',
+        '#047e7e', '#06ffff'
+    ],
+    'miyazaki-16': [
+        '#232228', '#284261',
+        '#5f5854', '#878573',
+        '#b8b095', '#c3d5c7',
+        '#ebecdc', '#2485a6',
+        '#54bad2', '#754d45',
+        '#c65046', '#e6928a',
+        '#1e7453', '#55a058',
+        '#a1bf41', '#e3c054'
+    ],
+    na16: [
+        '#8c8fae', '#584563',
+        '#3e2137', '#9a6348',
+        '#d79b7d', '#f5edba',
+        '#c0c741', '#647d34',
+        '#e4943a', '#9d303b',
+        '#d26471', '#70377f',
+        '#7ec4c1', '#34859d',
+        '#17434b', '#1f0e1c'
+    ],
+    'nanner-jam': [
+        '#352b40', '#653d48',
+        '#933f45', '#b25e46',
+        '#cc925e', '#dacb80',
+        '#f0e9c9', '#76c379',
+        '#508d76', '#535c89',
+        '#7b99c8', '#99d4e6',
+        '#be7979', '#d8b1a1',
+        '#7d6e6e', '#c2b5a9'
+    ],
+    'pico-8': [
+        '#000000', '#1D2B53',
+        '#7E2553', '#008751',
+        '#AB5236', '#5F574F',
+        '#C2C3C7', '#FFF1E8',
+        '#FF004D', '#FFA300',
+        '#FFEC27', '#00E436',
+        '#29ADFF', '#83769C',
+        '#FF77A8', '#FFCCAA'
+    ],
+    'r-place': [
+        '#FFFFFF', '#E4E4E4',
+        '#888888', '#222222',
+        '#FFA7D1', '#E50000',
+        '#E59500', '#A06A42',
+        '#E5D900', '#94E044',
+        '#02BE01', '#00D3DD',
+        '#0083C7', '#0000EA',
+        '#CF6EE4', '#820080'
+    ],
+    'shido-cyberneon': [
+        '#00033c', '#005260',
+        '#009d4a', '#0aff52',
+        '#003884', '#008ac5',
+        '#00f7ff', '#ff5cff',
+        '#ac29ce', '#600088',
+        '#b10585', '#ff004e',
+        '#2a2e79', '#4e6ea8',
+        '#add4fa', '#ffffff'
+    ],
+    'steam-lords': [
+        '#213b25', '#3a604a',
+        '#4f7754', '#a19f7c',
+        '#77744f', '#775c4f',
+        '#603b3a', '#3b2137',
+        '#170e19', '#2f213b',
+        '#433a60', '#4f5277',
+        '#65738c', '#7c94a1',
+        '#a0b9ba', '#c0d1cc'
+    ],
+    'summers-past-16': [
+        '#320011', '#5f3a60',
+        '#876672', '#b7a39d',
+        '#ece8c2', '#6db7c3',
+        '#5e80b2', '#627057',
+        '#8da24e', '#d2cb3e',
+        '#f7d554', '#e8bf92',
+        '#e78c5b', '#c66f5e',
+        '#c33846', '#933942'
+    ],
+    'sweetie-16': [
+        '#1a1c2c', '#5d275d',
+        '#b13e53', '#ef7d57',
+        '#ffcd75', '#a7f070',
+        '#38b764', '#257179',
+        '#29366f', '#3b5dc9',
+        '#41a6f6', '#73eff7',
+        '#f4f4f4', '#94b0c2',
+        '#566c86', '#333c57'
+    ],
+    'taffy-16': [
+        '#222533', '#6275ba',
+        '#a3c0e6', '#fafffc',
+        '#ffab7b', '#ff6c7a',
+        '#dc435b', '#3f48c2',
+        '#448de7', '#2bdb72',
+        '#a7f547', '#ffeb33',
+        '#f58931', '#db4b3d',
+        '#a63d57', '#36354d'
+    ],
+    'urbex-16': [
+        '#cbd1be', '#8f9389',
+        '#52534c', '#26201d',
+        '#e0a46e', '#91a47a',
+        '#5d7643', '#4d533a',
+        '#a93130', '#7a1338',
+        '#834664', '#917692',
+        '#160712', '#593084',
+        '#3870be', '#579fb4'
+    ],
+    'vanilla-milkshake': [
+        '#28282e', '#6c5671',
+        '#d9c8bf', '#f98284',
+        '#b0a9e4', '#accce4',
+        '#b3e3da', '#feaae4',
+        '#87a889', '#b0eb93',
+        '#e9f59d', '#ffe6c6',
+        '#dea38b', '#ffc384',
+        '#fff7a0', '#fff7e4'
+    ],
+    woodspark: [
+        '#f5eeb0', '#fabf61',
+        '#e08d51', '#8a5865',
+        '#452b3f', '#2c5e3b',
+        '#609c4f', '#c6cc54',
+        '#78c2d6', '#5479b0',
+        '#56546e', '#839fa6',
+        '#e0d3c8', '#f05b5b',
+        '#8f325f', '#eb6c98'
+    ]
+};
+
+  
+function upgrade_v1_to_v2(state){
+    // issue 82
+    state.version = "2";
+    return state;
+}
+
+// Load state function
+function getGameWidth() { return gameState ? (gameState.width || 160) : 160; }
+function getGameHeight() { return gameState ? (gameState.height || 100) : 100; }
+
+function loadState(code) {
+  gameState = JSON.parse(code);
+  if (gameState.width === undefined) gameState.width = 160;
+  if (gameState.height === undefined) gameState.height = 100;
+  if (typeof cursorX !== 'undefined') { cursorX = gameState.width / 2; cursorY = gameState.height / 2; }
+  if (gameState.palette_name === undefined) {
+      console.log("palette_name not defined, setting to dawnbringer-16");
+      gameState.palette_name = "dawnbringer-16";
+  }
+  if (gameState.background_color === undefined) {
+      console.log("background_color not defined, setting to #000000");
+      gameState.background_color = "#000000";
+  }
+  if (gameState.foreground_color === undefined) {
+      console.log("foreground_color not defined, setting to #ffffff");
+      gameState.foreground_color = "#ffffff";
+  }
+
+  if (gameState.version === undefined){//only introduced version numbers in v2
+    upgrade_v1_to_v2(gameState);
+  }
+
+  // Normalize untrusted/corrupt state so a malformed shared game can't crash rendering or interaction.
+  if (!Array.isArray(gameState.canvasses)) gameState.canvasses = [];
+  if (!Array.isArray(gameState.hyperlinks)) gameState.hyperlinks = [];
+  for (var _ni = 0; _ni < 16; _ni++) {
+    if (!Array.isArray(gameState.hyperlinks[_ni])) gameState.hyperlinks[_ni] = new Array(16).fill(0);
+  }
+
+  colorPalette = palettes[gameState.palette_name] || palettes['dawnbringer-16'];
+
+  // Set background color
+  document.documentElement.style.setProperty('--background-color', gameState.background_color);
+  document.documentElement.style.setProperty('--foreground-color', gameState.foreground_color);
+
+  updateFooterLinks();
+}
+</script>
+<script>
+
+//<!--__EmbedBegin__-->
+var embeddedDat="%7B%22gameLink%22:%22www.flickgame.org%22,%22activeIndex%22:9,%22canvasses%22:%5B%5B4377,%220%22,18,%226%22,140,%220%22,22,%226%22,136,%220%22,26,%226%22,132,%220%22,29,%226%22,130,%220%22,31,%226%22,26,%220%22,20,%226%22,82,%220%22,33,%226%22,21,%220%22,25,%226%22,80,%220%22,35,%226%22,18,%220%22,28,%226%22,78,%220%22,37,%226%22,15,%220%22,31,%226%22,76,%220%22,39,%226%22,12,%220%22,34,%226%22,74,%220%22,41,%226%22,10,%220%22,36,%226%22,72,%220%22,42,%226%22,8,%220%22,39,%226%22,70,%220%22,44,%226%22,6,%220%22,41,%226%22,69,%220%22,44,%226%22,5,%220%22,43,%226%22,67,%220%22,46,%226%22,3,%220%22,44,%226%22,66,%220%22,48,%226%22,1,%220%22,46,%226%22,64,%220%22,96,%226%22,63,%220%22,32,%226%22,1,%225%22,65,%226%22,62,%220%22,31,%226%22,3,%225%22,33,%226%22,2,%224%22,11,%226%22,1,%224%22,17,%226%22,61,%220%22,32,%226%22,3,%225%22,31,%226%22,5,%224%22,8,%226%22,4,%224%22,16,%226%22,60,%220%22,34,%226%22,3,%225%22,29,%226%22,5,%224%22,8,%226%22,4,%224%22,17,%226%22,60,%220%22,34,%226%22,3,%225%22,11,%226%22,1,%225%22,16,%226%22,4,%224%22,7,%226%22,6,%224%22,19,%226%22,58,%220%22,35,%226%22,3,%225%22,10,%226%22,3,%225%22,14,%226%22,4,%224%22,7,%226%22,5,%224%22,21,%226%22,57,%220%22,23,%226%22,4,%225%22,9,%226%22,3,%225%22,10,%226%22,3,%225%22,14,%226%22,3,%224%22,8,%226%22,4,%224%22,22,%226%22,57,%220%22,22,%226%22,6,%225%22,8,%226%22,3,%225%22,10,%226%22,3,%225%22,9,%226%22,1,%224%22,4,%226%22,3,%224%22,7,%226%22,3,%224%22,24,%226%22,57,%220%22,23,%226%22,6,%225%22,7,%226%22,3,%225%22,10,%226%22,3,%225%22,8,%226%22,3,%224%22,3,%226%22,3,%224%22,6,%226%22,3,%224%22,25,%226%22,57,%220%22,26,%226%22,3,%225%22,7,%226%22,3,%225%22,10,%226%22,3,%225%22,7,%226%22,3,%224%22,4,%226%22,3,%224%22,6,%226%22,3,%224%22,25,%226%22,57,%220%22,26,%226%22,3,%225%22,4,%226%22,6,%225%22,9,%226%22,3,%225%22,8,%226%22,3,%224%22,4,%226%22,3,%224%22,5,%226%22,3,%224%22,26,%226%22,56,%220%22,27,%226%22,3,%225%22,1,%226%22,12,%225%22,6,%226%22,3,%225%22,8,%226%22,3,%224%22,4,%226%22,3,%224%22,5,%226%22,3,%224%22,26,%226%22,56,%220%22,18,%226%22,2,%225%22,7,%226%22,17,%225%22,4,%226%22,3,%225%22,9,%226%22,3,%224%22,4,%226%22,3,%224%22,5,%226%22,4,%224%22,14,%226%22,3,%224%22,8,%226%22,56,%220%22,17,%226%22,4,%225%22,6,%226%22,7,%225%22,6,%22f%22,5,%225%22,2,%226%22,3,%225%22,10,%226%22,3,%224%22,3,%226%22,15,%224%22,8,%226%22,8,%224%22,7,%226%22,56,%220%22,18,%226%22,4,%225%22,4,%226%22,5,%225%22,11,%22f%22,4,%225%22,1,%226%22,3,%225%22,10,%226%22,3,%224%22,2,%226%22,19,%224%22,4,%226%22,8,%224%22,8,%226%22,56,%220%22,20,%226%22,3,%225%22,2,%226%22,5,%225%22,13,%22f%22,6,%225%22,11,%226%22,3,%224%22,1,%226%22,21,%224%22,2,%226%22,6,%224%22,11,%226%22,56,%220%22,20,%226%22,3,%225%22,1,%226%22,4,%225%22,16,%22f%22,4,%225%22,12,%226%22,7,%224%22,14,%22e%22,8,%224%22,15,%226%22,56,%220%22,20,%226%22,7,%225%22,17,%22f%22,3,%225%22,14,%226%22,5,%224%22,17,%22e%22,5,%224%22,16,%226%22,56,%220%22,21,%226%22,4,%225%22,20,%22f%22,3,%225%22,14,%226%22,3,%224%22,20,%22e%22,3,%224%22,16,%226%22,56,%220%22,21,%226%22,3,%225%22,21,%22f%22,3,%225%22,13,%226%22,3,%224%22,21,%22e%22,3,%224%22,16,%226%22,56,%220%22,20,%226%22,3,%225%22,12,%22f%22,1,%225%22,9,%22f%22,3,%225%22,13,%226%22,3,%224%22,21,%22e%22,3,%224%22,16,%226%22,56,%220%22,19,%226%22,4,%225%22,10,%22f%22,4,%225%22,8,%22f%22,3,%225%22,13,%226%22,3,%224%22,21,%22e%22,3,%224%22,1,%226%22,4,%224%22,11,%226%22,56,%220%22,19,%226%22,3,%225%22,10,%22f%22,5,%225%22,8,%22f%22,3,%225%22,13,%226%22,3,%224%22,7,%22e%22,2,%224%22,12,%22e%22,9,%224%22,10,%226%22,56,%220%22,20,%226%22,3,%225%22,9,%22f%22,5,%225%22,8,%22f%22,3,%225%22,13,%226%22,3,%224%22,6,%22e%22,6,%224%22,9,%22e%22,8,%224%22,11,%226%22,56,%220%22,20,%226%22,3,%225%22,10,%22f%22,4,%225%22,8,%22f%22,3,%225%22,13,%226%22,3,%224%22,6,%22e%22,7,%224%22,8,%22e%22,5,%224%22,14,%226%22,56,%220%22,20,%226%22,3,%225%22,12,%22f%22,1,%225%22,9,%22f%22,3,%225%22,5,%226%22,1,%223%22,1,%222%22,6,%226%22,3,%224%22,6,%22e%22,7,%224%22,8,%22e%22,3,%224%22,16,%226%22,56,%220%22,21,%226%22,3,%225%22,21,%22f%22,3,%225%22,4,%226%22,1,%223%22,3,%222%22,5,%226%22,3,%224%22,7,%22e%22,5,%224%22,9,%22e%22,3,%224%22,16,%226%22,56,%220%22,21,%226%22,3,%225%22,21,%22f%22,3,%225%22,4,%226%22,1,%223%22,3,%222%22,5,%226%22,3,%224%22,8,%22e%22,3,%224%22,10,%22e%22,3,%224%22,16,%226%22,56,%220%22,21,%226%22,4,%225%22,20,%22f%22,3,%225%22,4,%226%22,1,%223%22,4,%222%22,4,%226%22,3,%224%22,21,%22e%22,3,%224%22,16,%226%22,56,%220%22,22,%226%22,4,%225%22,18,%22f%22,3,%225%22,5,%226%22,2,%223%22,3,%222%22,4,%226%22,3,%224%22,20,%22e%22,4,%224%22,16,%226%22,56,%220%22,23,%226%22,4,%225%22,17,%22f%22,3,%225%22,5,%226%22,2,%223%22,4,%222%22,3,%226%22,3,%224%22,20,%22e%22,3,%224%22,17,%226%22,56,%220%22,24,%226%22,4,%225%22,15,%22f%22,3,%225%22,6,%226%22,3,%223%22,3,%222%22,3,%226%22,3,%224%22,18,%22e%22,4,%224%22,18,%226%22,57,%220%22,24,%226%22,4,%225%22,14,%22f%22,3,%225%22,7,%226%22,3,%223%22,3,%222%22,3,%226%22,3,%224%22,16,%22e%22,4,%224%22,19,%226%22,57,%220%22,25,%226%22,6,%225%22,9,%22f%22,4,%225%22,7,%226%22,4,%223%22,3,%222%22,3,%226%22,4,%224%22,14,%22e%22,4,%224%22,20,%226%22,57,%220%22,27,%226%22,16,%225%22,8,%226%22,4,%223%22,3,%222%22,4,%226%22,6,%224%22,8,%22e%22,6,%224%22,20,%226%22,58,%220%22,28,%226%22,14,%225%22,9,%226%22,4,%223%22,3,%222%22,5,%226%22,18,%224%22,21,%226%22,59,%220%22,30,%226%22,9,%225%22,11,%226%22,4,%223%22,3,%222%22,7,%226%22,14,%224%22,23,%226%22,59,%220%22,48,%226%22,1,%222%22,1,%226%22,4,%223%22,3,%222%22,10,%226%22,8,%224%22,26,%226%22,59,%220%22,47,%226%22,3,%222%22,4,%223%22,3,%222%22,43,%226%22,60,%220%22,47,%226%22,3,%222%22,4,%223%22,3,%222%22,43,%226%22,61,%220%22,46,%226%22,3,%222%22,4,%223%22,3,%222%22,42,%226%22,63,%220%22,45,%226%22,3,%222%22,3,%223%22,4,%222%22,41,%226%22,64,%220%22,45,%226%22,3,%222%22,4,%223%22,3,%222%22,40,%226%22,66,%220%22,43,%226%22,4,%222%22,4,%223%22,3,%222%22,40,%226%22,66,%220%22,41,%226%22,5,%222%22,5,%223%22,3,%222%22,39,%226%22,68,%220%22,39,%226%22,5,%222%22,6,%223%22,4,%222%22,38,%226%22,68,%220%22,38,%226%22,4,%222%22,9,%223%22,3,%222%22,37,%226%22,70,%220%22,36,%226%22,3,%222%22,12,%223%22,3,%222%22,35,%226%22,71,%220%22,35,%226%22,3,%222%22,14,%223%22,3,%222%22,33,%226%22,73,%220%22,33,%226%22,3,%222%22,8,%223%22,1,%222%22,6,%223%22,4,%222%22,32,%226%22,73,%220%22,33,%226%22,3,%222%22,7,%223%22,3,%222%22,6,%223%22,3,%222%22,31,%226%22,75,%220%22,32,%226%22,3,%222%22,6,%223%22,4,%222%22,6,%223%22,3,%222%22,31,%226%22,75,%220%22,32,%226%22,4,%222%22,5,%223%22,4,%222%22,6,%223%22,3,%222%22,30,%226%22,77,%220%22,32,%226%22,12,%222%22,6,%223%22,3,%222%22,29,%226%22,78,%220%22,33,%226%22,11,%222%22,4,%223%22,4,%222%22,29,%226%22,80,%220%22,33,%226%22,17,%222%22,29,%226%22,81,%220%22,41,%226%22,8,%222%22,29,%226%22,83,%220%22,41,%226%22,6,%222%22,29,%226%22,85,%220%22,74,%226%22,87,%220%22,72,%226%22,88,%220%22,35,%226%22,1,%229%22,35,%226%22,90,%220%22,28,%226%22,1,%229%22,4,%226%22,3,%229%22,33,%226%22,92,%220%22,26,%226%22,3,%229%22,2,%226%22,5,%229%22,31,%226%22,94,%220%22,23,%226%22,17,%229%22,25,%226%22,95,%220%22,18,%226%22,8,%229%22,1,%227%22,4,%229%22,2,%227%22,8,%229%22,23,%226%22,97,%220%22,16,%226%22,8,%229%22,3,%227%22,2,%229%22,5,%227%22,6,%229%22,22,%226%22,99,%220%22,16,%226%22,10,%229%22,7,%227%22,5,%229%22,22,%226%22,101,%220%22,16,%226%22,20,%229%22,22,%226%22,103,%220%22,18,%226%22,16,%229%22,20,%226%22,107,%220%22,18,%226%22,5,%22a%22,8,%229%22,21,%226%22,108,%220%22,18,%226%22,10,%22a%22,22,%226%22,110,%220%22,19,%226%22,8,%22a%22,22,%226%22,111,%220%22,23,%226%22,3,%22a%22,21,%226%22,113,%220%22,46,%226%22,115,%220%22,43,%226%22,117,%220%22,42,%226%22,119,%220%22,38,%226%22,123,%220%22,35,%226%22,126,%220%22,32,%226%22,129,%220%22,30,%226%22,131,%220%22,27,%226%22,134,%220%22,24,%226%22,137,%220%22,22,%226%22,139,%220%22,20,%226%22,141,%220%22,17,%226%22,150,%220%22,9,%226%22,5358,%220%22%5D,%5B4377,%220%22,18,%226%22,140,%220%22,22,%226%22,136,%220%22,26,%226%22,132,%220%22,29,%226%22,130,%220%22,31,%226%22,26,%220%22,20,%226%22,82,%220%22,33,%226%22,21,%220%22,25,%226%22,80,%220%22,35,%226%22,18,%220%22,28,%226%22,78,%220%22,37,%226%22,15,%220%22,31,%226%22,76,%220%22,39,%226%22,12,%220%22,34,%226%22,74,%220%22,41,%226%22,10,%220%22,36,%226%22,72,%220%22,42,%226%22,8,%220%22,39,%226%22,70,%220%22,44,%226%22,6,%220%22,41,%226%22,69,%220%22,44,%226%22,5,%220%22,43,%226%22,67,%220%22,46,%226%22,3,%220%22,44,%226%22,66,%220%22,48,%226%22,1,%220%22,46,%226%22,64,%220%22,96,%226%22,63,%220%22,98,%226%22,62,%220%22,67,%226%22,2,%224%22,11,%226%22,1,%224%22,17,%226%22,61,%220%22,66,%226%22,5,%224%22,8,%226%22,4,%224%22,16,%226%22,60,%220%22,66,%226%22,5,%224%22,8,%226%22,4,%224%22,17,%226%22,60,%220%22,65,%226%22,4,%224%22,7,%226%22,6,%224%22,19,%226%22,58,%220%22,65,%226%22,4,%224%22,7,%226%22,5,%224%22,21,%226%22,57,%220%22,66,%226%22,3,%224%22,8,%226%22,4,%224%22,22,%226%22,57,%220%22,61,%226%22,1,%224%22,4,%226%22,3,%224%22,7,%226%22,3,%224%22,24,%226%22,57,%220%22,60,%226%22,3,%224%22,3,%226%22,3,%224%22,6,%226%22,3,%224%22,25,%226%22,57,%220%22,59,%226%22,3,%224%22,4,%226%22,3,%224%22,6,%226%22,3,%224%22,25,%226%22,57,%220%22,59,%226%22,3,%224%22,4,%226%22,3,%224%22,5,%226%22,3,%224%22,26,%226%22,56,%220%22,60,%226%22,3,%224%22,4,%226%22,3,%224%22,5,%226%22,3,%224%22,26,%226%22,56,%220%22,60,%226%22,3,%224%22,4,%226%22,3,%224%22,5,%226%22,4,%224%22,14,%226%22,3,%224%22,8,%226%22,56,%220%22,60,%226%22,3,%224%22,3,%226%22,15,%224%22,8,%226%22,8,%224%22,7,%226%22,56,%220%22,60,%226%22,3,%224%22,2,%226%22,19,%224%22,4,%226%22,8,%224%22,8,%226%22,56,%220%22,60,%226%22,3,%224%22,1,%226%22,21,%224%22,2,%226%22,6,%224%22,11,%226%22,56,%220%22,60,%226%22,7,%224%22,14,%22e%22,8,%224%22,15,%226%22,56,%220%22,61,%226%22,5,%224%22,17,%22e%22,5,%224%22,16,%226%22,56,%220%22,62,%226%22,3,%224%22,20,%22e%22,3,%224%22,16,%226%22,56,%220%22,42,%226%22,1,%225%22,18,%226%22,3,%224%22,21,%22e%22,3,%224%22,16,%226%22,56,%220%22,41,%226%22,3,%225%22,17,%226%22,3,%224%22,21,%22e%22,3,%224%22,16,%226%22,56,%220%22,40,%226%22,3,%225%22,18,%226%22,3,%224%22,21,%22e%22,3,%224%22,1,%226%22,4,%224%22,11,%226%22,56,%220%22,39,%226%22,4,%225%22,18,%226%22,3,%224%22,7,%22e%22,2,%224%22,12,%22e%22,9,%224%22,10,%226%22,56,%220%22,39,%226%22,3,%225%22,19,%226%22,3,%224%22,6,%22e%22,6,%224%22,9,%22e%22,8,%224%22,11,%226%22,56,%220%22,15,%226%22,1,%225%22,23,%226%22,3,%225%22,19,%226%22,3,%224%22,6,%22e%22,7,%224%22,8,%22e%22,5,%224%22,14,%226%22,56,%220%22,14,%226%22,3,%225%22,21,%226%22,5,%225%22,10,%226%22,1,%223%22,1,%222%22,6,%226%22,3,%224%22,6,%22e%22,7,%224%22,8,%22e%22,3,%224%22,16,%226%22,56,%220%22,15,%226%22,3,%225%22,18,%226%22,7,%225%22,9,%226%22,1,%223%22,3,%222%22,5,%226%22,3,%224%22,7,%22e%22,5,%224%22,9,%22e%22,3,%224%22,16,%226%22,56,%220%22,13,%226%22,8,%225%22,13,%226%22,5,%225%22,1,%226%22,4,%225%22,8,%226%22,1,%223%22,3,%222%22,5,%226%22,3,%224%22,8,%22e%22,3,%224%22,10,%22e%22,3,%224%22,16,%226%22,56,%220%22,12,%226%22,11,%225%22,7,%226%22,8,%225%22,3,%226%22,3,%225%22,8,%226%22,1,%223%22,4,%222%22,4,%226%22,3,%224%22,21,%22e%22,3,%224%22,16,%226%22,56,%220%22,13,%226%22,3,%225%22,2,%226%22,18,%225%22,6,%226%22,3,%225%22,7,%226%22,2,%223%22,3,%222%22,4,%226%22,3,%224%22,20,%22e%22,4,%224%22,16,%226%22,56,%220%22,19,%226%22,17,%225%22,6,%226%22,3,%225%22,7,%226%22,2,%223%22,4,%222%22,3,%226%22,3,%224%22,20,%22e%22,3,%224%22,17,%226%22,56,%220%22,19,%226%22,3,%225%22,1,%226%22,8,%225%22,3,%226%22,3,%225%22,5,%226%22,3,%225%22,7,%226%22,3,%223%22,3,%222%22,3,%226%22,3,%224%22,18,%22e%22,4,%224%22,18,%226%22,57,%220%22,17,%226%22,3,%225%22,4,%226%22,3,%225%22,6,%226%22,3,%225%22,6,%226%22,3,%225%22,7,%226%22,3,%223%22,3,%222%22,3,%226%22,3,%224%22,16,%22e%22,4,%224%22,19,%226%22,57,%220%22,16,%226%22,4,%225%22,4,%226%22,3,%225%22,6,%226%22,3,%225%22,6,%226%22,3,%225%22,6,%226%22,4,%223%22,3,%222%22,3,%226%22,4,%224%22,14,%22e%22,4,%224%22,20,%226%22,57,%220%22,15,%226%22,4,%225%22,5,%226%22,3,%225%22,6,%226%22,3,%225%22,7,%226%22,1,%225%22,7,%226%22,4,%223%22,3,%222%22,4,%226%22,6,%224%22,8,%22e%22,6,%224%22,20,%226%22,58,%220%22,14,%226%22,4,%225%22,6,%226%22,3,%225%22,6,%226%22,3,%225%22,15,%226%22,4,%223%22,3,%222%22,5,%226%22,18,%224%22,21,%226%22,59,%220%22,14,%226%22,1,%225%22,8,%226%22,3,%225%22,6,%226%22,3,%225%22,15,%226%22,4,%223%22,3,%222%22,7,%226%22,14,%224%22,23,%226%22,59,%220%22,22,%226%22,3,%225%22,7,%226%22,3,%225%22,13,%226%22,1,%222%22,1,%226%22,4,%223%22,3,%222%22,10,%226%22,8,%224%22,26,%226%22,59,%220%22,21,%226%22,3,%225%22,7,%226%22,3,%225%22,13,%226%22,3,%222%22,4,%223%22,3,%222%22,43,%226%22,60,%220%22,21,%226%22,3,%225%22,6,%226%22,3,%225%22,14,%226%22,3,%222%22,4,%223%22,3,%222%22,43,%226%22,61,%220%22,18,%226%22,4,%225%22,8,%226%22,1,%225%22,15,%226%22,3,%222%22,4,%223%22,3,%222%22,42,%226%22,63,%220%22,16,%226%22,4,%225%22,25,%226%22,3,%222%22,3,%223%22,4,%222%22,41,%226%22,64,%220%22,17,%226%22,2,%225%22,26,%226%22,3,%222%22,4,%223%22,3,%222%22,40,%226%22,66,%220%22,43,%226%22,4,%222%22,4,%223%22,3,%222%22,40,%226%22,66,%220%22,41,%226%22,5,%222%22,5,%223%22,3,%222%22,39,%226%22,68,%220%22,39,%226%22,5,%222%22,6,%223%22,4,%222%22,38,%226%22,68,%220%22,38,%226%22,4,%222%22,9,%223%22,3,%222%22,37,%226%22,70,%220%22,36,%226%22,3,%222%22,12,%223%22,3,%222%22,35,%226%22,71,%220%22,35,%226%22,3,%222%22,14,%223%22,3,%222%22,33,%226%22,73,%220%22,33,%226%22,3,%222%22,8,%223%22,1,%222%22,6,%223%22,4,%222%22,32,%226%22,73,%220%22,33,%226%22,3,%222%22,7,%223%22,3,%222%22,6,%223%22,3,%222%22,31,%226%22,75,%220%22,32,%226%22,3,%222%22,6,%223%22,4,%222%22,6,%223%22,3,%222%22,31,%226%22,75,%220%22,32,%226%22,4,%222%22,5,%223%22,4,%222%22,6,%223%22,3,%222%22,30,%226%22,77,%220%22,32,%226%22,12,%222%22,6,%223%22,3,%222%22,29,%226%22,78,%220%22,33,%226%22,11,%222%22,4,%223%22,4,%222%22,29,%226%22,80,%220%22,33,%226%22,17,%222%22,29,%226%22,81,%220%22,41,%226%22,8,%222%22,29,%226%22,83,%220%22,41,%226%22,6,%222%22,29,%226%22,85,%220%22,74,%226%22,87,%220%22,72,%226%22,88,%220%22,35,%226%22,1,%229%22,35,%226%22,90,%220%22,28,%226%22,1,%229%22,4,%226%22,3,%229%22,33,%226%22,92,%220%22,26,%226%22,3,%229%22,2,%226%22,5,%229%22,31,%226%22,94,%220%22,23,%226%22,17,%229%22,25,%226%22,95,%220%22,18,%226%22,8,%229%22,1,%227%22,4,%229%22,2,%227%22,8,%229%22,23,%226%22,97,%220%22,16,%226%22,8,%229%22,3,%227%22,2,%229%22,5,%227%22,6,%229%22,22,%226%22,99,%220%22,16,%226%22,10,%229%22,7,%227%22,5,%229%22,22,%226%22,101,%220%22,16,%226%22,20,%229%22,22,%226%22,103,%220%22,18,%226%22,16,%229%22,20,%226%22,107,%220%22,18,%226%22,5,%22a%22,8,%229%22,21,%226%22,108,%220%22,18,%226%22,10,%22a%22,22,%226%22,110,%220%22,19,%226%22,8,%22a%22,22,%226%22,111,%220%22,23,%226%22,3,%22a%22,21,%226%22,113,%220%22,46,%226%22,115,%220%22,43,%226%22,117,%220%22,42,%226%22,119,%220%22,38,%226%22,123,%220%22,35,%226%22,126,%220%22,32,%226%22,129,%220%22,30,%226%22,131,%220%22,27,%226%22,134,%220%22,24,%226%22,137,%220%22,22,%226%22,139,%220%22,20,%226%22,141,%220%22,17,%226%22,150,%220%22,9,%226%22,5358,%220%22%5D,%5B4377,%220%22,18,%226%22,140,%220%22,22,%226%22,136,%220%22,26,%226%22,132,%220%22,29,%226%22,130,%220%22,31,%226%22,26,%220%22,20,%226%22,82,%220%22,33,%226%22,21,%220%22,25,%226%22,80,%220%22,35,%226%22,18,%220%22,28,%226%22,78,%220%22,37,%226%22,15,%220%22,31,%226%22,76,%220%22,39,%226%22,12,%220%22,34,%226%22,74,%220%22,41,%226%22,10,%220%22,36,%226%22,72,%220%22,42,%226%22,8,%220%22,39,%226%22,70,%220%22,44,%226%22,6,%220%22,41,%226%22,69,%220%22,44,%226%22,5,%220%22,43,%226%22,67,%220%22,46,%226%22,3,%220%22,44,%226%22,66,%220%22,48,%226%22,1,%220%22,46,%226%22,64,%220%22,96,%226%22,63,%220%22,32,%226%22,1,%225%22,65,%226%22,62,%220%22,31,%226%22,3,%225%22,64,%226%22,61,%220%22,32,%226%22,3,%225%22,64,%226%22,60,%220%22,34,%226%22,3,%225%22,63,%226%22,60,%220%22,34,%226%22,3,%225%22,11,%226%22,1,%225%22,52,%226%22,58,%220%22,35,%226%22,3,%225%22,10,%226%22,3,%225%22,51,%226%22,57,%220%22,23,%226%22,4,%225%22,9,%226%22,3,%225%22,10,%226%22,3,%225%22,51,%226%22,57,%220%22,22,%226%22,6,%225%22,8,%226%22,3,%225%22,10,%226%22,3,%225%22,51,%226%22,57,%220%22,23,%226%22,6,%225%22,7,%226%22,3,%225%22,10,%226%22,3,%225%22,51,%226%22,57,%220%22,26,%226%22,3,%225%22,7,%226%22,3,%225%22,10,%226%22,3,%225%22,51,%226%22,57,%220%22,26,%226%22,3,%225%22,4,%226%22,6,%225%22,9,%226%22,3,%225%22,52,%226%22,56,%220%22,27,%226%22,3,%225%22,1,%226%22,12,%225%22,6,%226%22,3,%225%22,40,%226%22,5,%224%22,7,%226%22,56,%220%22,18,%226%22,2,%225%22,7,%226%22,17,%225%22,4,%226%22,3,%225%22,30,%226%22,2,%224%22,8,%226%22,7,%224%22,6,%226%22,56,%220%22,17,%226%22,4,%225%22,6,%226%22,7,%225%22,6,%22f%22,5,%225%22,2,%226%22,3,%225%22,29,%226%22,5,%224%22,7,%226%22,6,%224%22,7,%226%22,56,%220%22,18,%226%22,4,%225%22,4,%226%22,5,%225%22,11,%22f%22,4,%225%22,1,%226%22,3,%225%22,28,%226%22,5,%224%22,7,%226%22,3,%224%22,6,%226%22,4,%224%22,1,%226%22,56,%220%22,20,%226%22,3,%225%22,2,%226%22,5,%225%22,13,%22f%22,6,%225%22,29,%226%22,3,%224%22,8,%226%22,3,%224%22,6,%226%22,6,%224%22,56,%220%22,20,%226%22,3,%225%22,1,%226%22,4,%225%22,16,%22f%22,4,%225%22,29,%226%22,3,%224%22,8,%226%22,3,%224%22,6,%226%22,6,%224%22,1,%226%22,56,%220%22,20,%226%22,7,%225%22,17,%22f%22,3,%225%22,29,%226%22,3,%224%22,9,%226%22,3,%224%22,6,%226%22,3,%224%22,4,%226%22,56,%220%22,21,%226%22,4,%225%22,20,%22f%22,3,%225%22,27,%226%22,3,%224%22,10,%226%22,3,%224%22,5,%226%22,3,%224%22,5,%226%22,56,%220%22,21,%226%22,3,%225%22,21,%22f%22,3,%225%22,18,%226%22,2,%224%22,7,%226%22,3,%224%22,9,%226%22,3,%224%22,5,%226%22,3,%224%22,6,%226%22,56,%220%22,20,%226%22,3,%225%22,12,%22f%22,1,%225%22,9,%22f%22,3,%225%22,17,%226%22,4,%224%22,6,%226%22,3,%224%22,9,%226%22,3,%224%22,5,%226%22,3,%224%22,6,%226%22,56,%220%22,19,%226%22,4,%225%22,10,%22f%22,4,%225%22,8,%22f%22,3,%225%22,17,%226%22,3,%224%22,7,%226%22,3,%224%22,9,%226%22,3,%224%22,4,%226%22,3,%224%22,7,%226%22,56,%220%22,19,%226%22,3,%225%22,10,%22f%22,5,%225%22,8,%22f%22,3,%225%22,17,%226%22,3,%224%22,7,%226%22,3,%224%22,9,%226%22,3,%224%22,4,%226%22,3,%224%22,7,%226%22,56,%220%22,20,%226%22,3,%225%22,9,%22f%22,5,%225%22,8,%22f%22,3,%225%22,17,%226%22,3,%224%22,7,%226%22,3,%224%22,9,%226%22,3,%224%22,2,%226%22,6,%224%22,6,%226%22,56,%220%22,20,%226%22,3,%225%22,10,%22f%22,4,%225%22,8,%22f%22,3,%225%22,18,%226%22,3,%224%22,7,%226%22,3,%224%22,8,%226%22,11,%224%22,6,%226%22,56,%220%22,20,%226%22,3,%225%22,12,%22f%22,1,%225%22,9,%22f%22,3,%225%22,5,%226%22,1,%223%22,1,%222%22,9,%226%22,34,%224%22,6,%226%22,56,%220%22,21,%226%22,3,%225%22,21,%22f%22,3,%225%22,4,%226%22,1,%223%22,3,%222%22,7,%226%22,30,%224%22,2,%22e%22,3,%224%22,6,%226%22,56,%220%22,21,%226%22,3,%225%22,21,%22f%22,3,%225%22,4,%226%22,1,%223%22,3,%222%22,8,%226%22,23,%224%22,8,%22e%22,3,%224%22,6,%226%22,56,%220%22,21,%226%22,4,%225%22,20,%22f%22,3,%225%22,4,%226%22,1,%223%22,4,%222%22,8,%226%22,3,%224%22,9,%22e%22,6,%224%22,11,%22e%22,3,%224%22,7,%226%22,56,%220%22,22,%226%22,4,%225%22,18,%22f%22,3,%225%22,5,%226%22,2,%223%22,3,%222%22,9,%226%22,3,%224%22,8,%22e%22,6,%224%22,10,%22e%22,4,%224%22,7,%226%22,56,%220%22,23,%226%22,4,%225%22,17,%22f%22,3,%225%22,5,%226%22,2,%223%22,4,%222%22,9,%226%22,4,%224%22,6,%22e%22,6,%224%22,9,%22e%22,4,%224%22,8,%226%22,56,%220%22,24,%226%22,4,%225%22,15,%22f%22,3,%225%22,6,%226%22,3,%223%22,3,%222%22,10,%226%22,4,%224%22,6,%22e%22,4,%224%22,9,%22e%22,4,%224%22,9,%226%22,57,%220%22,24,%226%22,4,%225%22,14,%22f%22,3,%225%22,7,%226%22,3,%223%22,3,%222%22,10,%226%22,4,%224%22,16,%22e%22,5,%224%22,10,%226%22,57,%220%22,25,%226%22,6,%225%22,9,%22f%22,4,%225%22,7,%226%22,4,%223%22,3,%222%22,12,%226%22,5,%224%22,10,%22e%22,6,%224%22,12,%226%22,57,%220%22,27,%226%22,16,%225%22,8,%226%22,4,%223%22,3,%222%22,13,%226%22,19,%224%22,12,%226%22,58,%220%22,28,%226%22,14,%225%22,9,%226%22,4,%223%22,3,%222%22,14,%226%22,16,%224%22,14,%226%22,59,%220%22,30,%226%22,9,%225%22,11,%226%22,4,%223%22,3,%222%22,17,%226%22,10,%224%22,17,%226%22,59,%220%22,48,%226%22,1,%222%22,1,%226%22,4,%223%22,3,%222%22,44,%226%22,59,%220%22,47,%226%22,3,%222%22,4,%223%22,3,%222%22,43,%226%22,60,%220%22,47,%226%22,3,%222%22,4,%223%22,3,%222%22,43,%226%22,61,%220%22,46,%226%22,3,%222%22,4,%223%22,3,%222%22,42,%226%22,63,%220%22,45,%226%22,3,%222%22,3,%223%22,4,%222%22,41,%226%22,64,%220%22,45,%226%22,3,%222%22,4,%223%22,3,%222%22,40,%226%22,66,%220%22,43,%226%22,4,%222%22,4,%223%22,3,%222%22,40,%226%22,66,%220%22,41,%226%22,5,%222%22,5,%223%22,3,%222%22,39,%226%22,68,%220%22,39,%226%22,5,%222%22,6,%223%22,4,%222%22,38,%226%22,68,%220%22,38,%226%22,4,%222%22,9,%223%22,3,%222%22,37,%226%22,70,%220%22,36,%226%22,3,%222%22,12,%223%22,3,%222%22,35,%226%22,71,%220%22,35,%226%22,3,%222%22,14,%223%22,3,%222%22,33,%226%22,73,%220%22,33,%226%22,3,%222%22,8,%223%22,1,%222%22,6,%223%22,4,%222%22,32,%226%22,73,%220%22,33,%226%22,3,%222%22,7,%223%22,3,%222%22,6,%223%22,3,%222%22,31,%226%22,75,%220%22,32,%226%22,3,%222%22,6,%223%22,4,%222%22,6,%223%22,3,%222%22,31,%226%22,75,%220%22,32,%226%22,4,%222%22,5,%223%22,4,%222%22,6,%223%22,3,%222%22,30,%226%22,77,%220%22,32,%226%22,12,%222%22,6,%223%22,3,%222%22,29,%226%22,78,%220%22,33,%226%22,11,%222%22,4,%223%22,4,%222%22,29,%226%22,80,%220%22,33,%226%22,17,%222%22,29,%226%22,81,%220%22,41,%226%22,8,%222%22,29,%226%22,83,%220%22,41,%226%22,6,%222%22,29,%226%22,85,%220%22,74,%226%22,87,%220%22,72,%226%22,88,%220%22,35,%226%22,1,%229%22,35,%226%22,90,%220%22,28,%226%22,1,%229%22,4,%226%22,3,%229%22,33,%226%22,92,%220%22,26,%226%22,3,%229%22,2,%226%22,5,%229%22,31,%226%22,94,%220%22,23,%226%22,17,%229%22,25,%226%22,95,%220%22,18,%226%22,8,%229%22,1,%227%22,4,%229%22,2,%227%22,8,%229%22,23,%226%22,97,%220%22,16,%226%22,8,%229%22,3,%227%22,2,%229%22,5,%227%22,6,%229%22,22,%226%22,99,%220%22,16,%226%22,10,%229%22,7,%227%22,5,%229%22,22,%226%22,101,%220%22,16,%226%22,20,%229%22,22,%226%22,103,%220%22,18,%226%22,16,%229%22,20,%226%22,107,%220%22,18,%226%22,5,%22a%22,8,%229%22,21,%226%22,108,%220%22,18,%226%22,10,%22a%22,22,%226%22,110,%220%22,19,%226%22,8,%22a%22,22,%226%22,111,%220%22,23,%226%22,3,%22a%22,21,%226%22,113,%220%22,46,%226%22,115,%220%22,43,%226%22,117,%220%22,42,%226%22,119,%220%22,38,%226%22,123,%220%22,35,%226%22,126,%220%22,32,%226%22,129,%220%22,30,%226%22,131,%220%22,27,%226%22,134,%220%22,24,%226%22,137,%220%22,22,%226%22,139,%220%22,20,%226%22,141,%220%22,17,%226%22,150,%220%22,9,%226%22,5358,%220%22%5D,%5B4377,%220%22,18,%226%22,140,%220%22,22,%226%22,136,%220%22,26,%226%22,132,%220%22,29,%226%22,130,%220%22,31,%226%22,26,%220%22,20,%226%22,82,%220%22,33,%226%22,21,%220%22,25,%226%22,80,%220%22,35,%226%22,18,%220%22,28,%226%22,78,%220%22,37,%226%22,15,%220%22,31,%226%22,76,%220%22,39,%226%22,12,%220%22,34,%226%22,74,%220%22,41,%226%22,10,%220%22,36,%226%22,72,%220%22,42,%226%22,8,%220%22,39,%226%22,70,%220%22,44,%226%22,6,%220%22,41,%226%22,69,%220%22,44,%226%22,5,%220%22,43,%226%22,67,%220%22,46,%226%22,3,%220%22,44,%226%22,66,%220%22,48,%226%22,1,%220%22,46,%226%22,64,%220%22,96,%226%22,63,%220%22,32,%226%22,1,%225%22,65,%226%22,62,%220%22,31,%226%22,3,%225%22,33,%226%22,2,%224%22,11,%226%22,1,%224%22,17,%226%22,61,%220%22,32,%226%22,3,%225%22,31,%226%22,5,%224%22,8,%226%22,4,%224%22,16,%226%22,60,%220%22,34,%226%22,3,%225%22,29,%226%22,5,%224%22,8,%226%22,4,%224%22,17,%226%22,60,%220%22,34,%226%22,3,%225%22,11,%226%22,1,%225%22,16,%226%22,4,%224%22,7,%226%22,6,%224%22,19,%226%22,58,%220%22,35,%226%22,3,%225%22,10,%226%22,3,%225%22,14,%226%22,4,%224%22,7,%226%22,5,%224%22,21,%226%22,57,%220%22,23,%226%22,4,%225%22,9,%226%22,3,%225%22,10,%226%22,3,%225%22,14,%226%22,3,%224%22,8,%226%22,4,%224%22,22,%226%22,57,%220%22,22,%226%22,6,%225%22,8,%226%22,3,%225%22,10,%226%22,3,%225%22,9,%226%22,1,%224%22,4,%226%22,3,%224%22,7,%226%22,3,%224%22,24,%226%22,57,%220%22,23,%226%22,6,%225%22,7,%226%22,3,%225%22,10,%226%22,3,%225%22,8,%226%22,3,%224%22,3,%226%22,3,%224%22,6,%226%22,3,%224%22,25,%226%22,57,%220%22,26,%226%22,3,%225%22,7,%226%22,3,%225%22,10,%226%22,3,%225%22,7,%226%22,3,%224%22,4,%226%22,3,%224%22,6,%226%22,3,%224%22,25,%226%22,57,%220%22,26,%226%22,3,%225%22,4,%226%22,6,%225%22,9,%226%22,3,%225%22,8,%226%22,3,%224%22,4,%226%22,3,%224%22,5,%226%22,3,%224%22,26,%226%22,56,%220%22,27,%226%22,3,%225%22,1,%226%22,12,%225%22,6,%226%22,3,%225%22,8,%226%22,3,%224%22,4,%226%22,3,%224%22,5,%226%22,3,%224%22,26,%226%22,56,%220%22,18,%226%22,2,%225%22,7,%226%22,17,%225%22,4,%226%22,3,%225%22,9,%226%22,3,%224%22,4,%226%22,3,%224%22,5,%226%22,4,%224%22,14,%226%22,3,%224%22,8,%226%22,56,%220%22,17,%226%22,4,%225%22,6,%226%22,7,%225%22,6,%22f%22,5,%225%22,2,%226%22,3,%225%22,10,%226%22,3,%224%22,3,%226%22,15,%224%22,8,%226%22,8,%224%22,7,%226%22,56,%220%22,18,%226%22,4,%225%22,4,%226%22,5,%225%22,11,%22f%22,4,%225%22,1,%226%22,3,%225%22,10,%226%22,3,%224%22,2,%226%22,19,%224%22,4,%226%22,8,%224%22,8,%226%22,56,%220%22,20,%226%22,3,%225%22,2,%226%22,5,%225%22,13,%22f%22,6,%225%22,11,%226%22,3,%224%22,1,%226%22,21,%224%22,2,%226%22,6,%224%22,11,%226%22,56,%220%22,20,%226%22,3,%225%22,1,%226%22,4,%225%22,16,%22f%22,4,%225%22,12,%226%22,7,%224%22,14,%22e%22,8,%224%22,15,%226%22,56,%220%22,20,%226%22,7,%225%22,17,%22f%22,3,%225%22,14,%226%22,5,%224%22,17,%22e%22,5,%224%22,16,%226%22,56,%220%22,21,%226%22,4,%225%22,20,%22f%22,3,%225%22,14,%226%22,3,%224%22,20,%22e%22,3,%224%22,16,%226%22,56,%220%22,21,%226%22,3,%225%22,21,%22f%22,3,%225%22,13,%226%22,3,%224%22,21,%22e%22,3,%224%22,16,%226%22,56,%220%22,20,%226%22,3,%225%22,12,%22f%22,1,%225%22,9,%22f%22,3,%225%22,13,%226%22,3,%224%22,21,%22e%22,3,%224%22,16,%226%22,56,%220%22,19,%226%22,4,%225%22,10,%22f%22,4,%225%22,8,%22f%22,3,%225%22,13,%226%22,3,%224%22,21,%22e%22,3,%224%22,1,%226%22,4,%224%22,11,%226%22,56,%220%22,19,%226%22,3,%225%22,10,%22f%22,5,%225%22,8,%22f%22,3,%225%22,13,%226%22,3,%224%22,7,%22e%22,2,%224%22,12,%22e%22,9,%224%22,10,%226%22,56,%220%22,20,%226%22,3,%225%22,9,%22f%22,5,%225%22,8,%22f%22,3,%225%22,13,%226%22,3,%224%22,6,%22e%22,6,%224%22,9,%22e%22,8,%224%22,11,%226%22,56,%220%22,20,%226%22,3,%225%22,10,%22f%22,4,%225%22,8,%22f%22,3,%225%22,13,%226%22,3,%224%22,6,%22e%22,7,%224%22,8,%22e%22,5,%224%22,14,%226%22,56,%220%22,20,%226%22,3,%225%22,12,%22f%22,1,%225%22,9,%22f%22,3,%225%22,13,%226%22,3,%224%22,6,%22e%22,7,%224%22,8,%22e%22,3,%224%22,16,%226%22,56,%220%22,21,%226%22,3,%225%22,21,%22f%22,3,%225%22,13,%226%22,3,%224%22,7,%22e%22,5,%224%22,9,%22e%22,3,%224%22,16,%226%22,56,%220%22,21,%226%22,3,%225%22,21,%22f%22,3,%225%22,13,%226%22,3,%224%22,8,%22e%22,3,%224%22,10,%22e%22,3,%224%22,16,%226%22,56,%220%22,21,%226%22,4,%225%22,20,%22f%22,3,%225%22,13,%226%22,3,%224%22,21,%22e%22,3,%224%22,16,%226%22,56,%220%22,22,%226%22,4,%225%22,18,%22f%22,3,%225%22,14,%226%22,3,%224%22,20,%22e%22,4,%224%22,16,%226%22,56,%220%22,23,%226%22,4,%225%22,17,%22f%22,3,%225%22,5,%226%22,1,%222%22,2,%226%22,1,%223%22,2,%226%22,1,%222%22,2,%226%22,3,%224%22,20,%22e%22,3,%224%22,17,%226%22,56,%220%22,24,%226%22,4,%225%22,15,%22f%22,3,%225%22,5,%226%22,3,%222%22,3,%223%22,3,%222%22,1,%226%22,3,%224%22,18,%22e%22,4,%224%22,18,%226%22,57,%220%22,24,%226%22,4,%225%22,14,%22f%22,3,%225%22,4,%226%22,3,%222%22,4,%223%22,3,%222%22,2,%226%22,3,%224%22,16,%22e%22,4,%224%22,19,%226%22,57,%220%22,25,%226%22,6,%225%22,9,%22f%22,4,%225%22,5,%226%22,3,%222%22,4,%223%22,3,%222%22,2,%226%22,4,%224%22,14,%22e%22,4,%224%22,20,%226%22,57,%220%22,27,%226%22,16,%225%22,6,%226%22,3,%222%22,4,%223%22,3,%222%22,3,%226%22,6,%224%22,8,%22e%22,6,%224%22,20,%226%22,58,%220%22,28,%226%22,14,%225%22,7,%226%22,3,%222%22,4,%223%22,3,%222%22,4,%226%22,18,%224%22,21,%226%22,59,%220%22,30,%226%22,9,%225%22,9,%226%22,3,%222%22,4,%223%22,3,%222%22,6,%226%22,14,%224%22,23,%226%22,59,%220%22,48,%226%22,3,%222%22,4,%223%22,3,%222%22,9,%226%22,8,%224%22,26,%226%22,59,%220%22,48,%226%22,3,%222%22,4,%223%22,3,%222%22,42,%226%22,60,%220%22,47,%226%22,3,%222%22,5,%223%22,3,%222%22,42,%226%22,61,%220%22,45,%226%22,4,%222%22,5,%223%22,3,%222%22,41,%226%22,63,%220%22,40,%226%22,7,%222%22,6,%223%22,3,%222%22,40,%226%22,64,%220%22,36,%226%22,10,%222%22,7,%223%22,4,%222%22,38,%226%22,66,%220%22,34,%226%22,10,%222%22,9,%223%22,7,%222%22,34,%226%22,66,%220%22,33,%226%22,6,%222%22,15,%223%22,7,%222%22,32,%226%22,68,%220%22,30,%226%22,5,%222%22,19,%223%22,8,%222%22,30,%226%22,68,%220%22,29,%226%22,4,%222%22,25,%223%22,5,%222%22,28,%226%22,70,%220%22,28,%226%22,3,%222%22,28,%223%22,3,%222%22,27,%226%22,71,%220%22,27,%226%22,3,%222%22,5,%223%22,3,%222%22,22,%223%22,3,%222%22,25,%226%22,73,%220%22,26,%226%22,3,%222%22,4,%223%22,5,%222%22,21,%223%22,4,%222%22,24,%226%22,73,%220%22,26,%226%22,3,%222%22,4,%223%22,6,%222%22,13,%223%22,3,%222%22,5,%223%22,3,%222%22,23,%226%22,75,%220%22,25,%226%22,3,%222%22,5,%223%22,5,%222%22,12,%223%22,5,%222%22,4,%223%22,3,%222%22,23,%226%22,75,%220%22,25,%226%22,3,%222%22,6,%223%22,3,%222%22,4,%223%22,1,%222%22,7,%223%22,6,%222%22,4,%223%22,3,%222%22,22,%226%22,77,%220%22,24,%226%22,3,%222%22,11,%223%22,4,%222%22,7,%223%22,4,%222%22,5,%223%22,3,%222%22,21,%226%22,78,%220%22,24,%226%22,4,%222%22,3,%223%22,11,%222%22,9,%223%22,1,%222%22,6,%223%22,3,%222%22,20,%226%22,80,%220%22,23,%226%22,17,%222%22,1,%226%22,4,%223%22,1,%222%22,10,%223%22,3,%222%22,20,%226%22,81,%220%22,24,%226%22,14,%222%22,4,%226%22,1,%223%22,1,%226%22,5,%222%22,6,%223%22,4,%222%22,19,%226%22,83,%220%22,25,%226%22,5,%222%22,14,%226%22,13,%222%22,19,%226%22,85,%220%22,44,%226%22,11,%222%22,19,%226%22,87,%220%22,46,%226%22,7,%222%22,19,%226%22,88,%220%22,35,%226%22,1,%229%22,35,%226%22,90,%220%22,28,%226%22,1,%229%22,4,%226%22,3,%229%22,33,%226%22,92,%220%22,26,%226%22,3,%229%22,2,%226%22,5,%229%22,31,%226%22,94,%220%22,23,%226%22,17,%229%22,25,%226%22,95,%220%22,18,%226%22,8,%229%22,1,%227%22,4,%229%22,2,%227%22,8,%229%22,23,%226%22,97,%220%22,16,%226%22,8,%229%22,3,%227%22,2,%229%22,5,%227%22,6,%229%22,22,%226%22,99,%220%22,16,%226%22,10,%229%22,7,%227%22,5,%229%22,22,%226%22,101,%220%22,16,%226%22,20,%229%22,22,%226%22,103,%220%22,18,%226%22,16,%229%22,20,%226%22,107,%220%22,18,%226%22,5,%22a%22,8,%229%22,21,%226%22,108,%220%22,18,%226%22,10,%22a%22,22,%226%22,110,%220%22,19,%226%22,8,%22a%22,22,%226%22,111,%220%22,23,%226%22,3,%22a%22,21,%226%22,113,%220%22,46,%226%22,115,%220%22,43,%226%22,117,%220%22,42,%226%22,119,%220%22,38,%226%22,123,%220%22,35,%226%22,126,%220%22,32,%226%22,129,%220%22,30,%226%22,131,%220%22,27,%226%22,134,%220%22,24,%226%22,137,%220%22,22,%226%22,139,%220%22,20,%226%22,141,%220%22,17,%226%22,150,%220%22,9,%226%22,5358,%220%22%5D,%5B4377,%220%22,18,%226%22,140,%220%22,22,%226%22,136,%220%22,26,%226%22,132,%220%22,29,%226%22,130,%220%22,31,%226%22,26,%220%22,20,%226%22,82,%220%22,33,%226%22,21,%220%22,25,%226%22,80,%220%22,35,%226%22,18,%220%22,28,%226%22,78,%220%22,37,%226%22,15,%220%22,31,%226%22,76,%220%22,39,%226%22,12,%220%22,34,%226%22,74,%220%22,41,%226%22,10,%220%22,36,%226%22,72,%220%22,42,%226%22,8,%220%22,39,%226%22,70,%220%22,44,%226%22,6,%220%22,41,%226%22,69,%220%22,44,%226%22,5,%220%22,43,%226%22,67,%220%22,46,%226%22,3,%220%22,44,%226%22,66,%220%22,48,%226%22,1,%220%22,46,%226%22,64,%220%22,96,%226%22,63,%220%22,32,%226%22,1,%225%22,65,%226%22,62,%220%22,31,%226%22,3,%225%22,33,%226%22,2,%224%22,11,%226%22,1,%224%22,17,%226%22,61,%220%22,32,%226%22,3,%225%22,31,%226%22,5,%224%22,8,%226%22,4,%224%22,16,%226%22,60,%220%22,34,%226%22,3,%225%22,29,%226%22,5,%224%22,8,%226%22,4,%224%22,17,%226%22,60,%220%22,34,%226%22,3,%225%22,11,%226%22,1,%225%22,16,%226%22,4,%224%22,7,%226%22,6,%224%22,19,%226%22,58,%220%22,35,%226%22,3,%225%22,10,%226%22,3,%225%22,14,%226%22,4,%224%22,7,%226%22,5,%224%22,21,%226%22,57,%220%22,23,%226%22,4,%225%22,9,%226%22,3,%225%22,10,%226%22,3,%225%22,14,%226%22,3,%224%22,8,%226%22,4,%224%22,22,%226%22,57,%220%22,22,%226%22,6,%225%22,8,%226%22,3,%225%22,10,%226%22,3,%225%22,9,%226%22,1,%224%22,4,%226%22,3,%224%22,7,%226%22,3,%224%22,24,%226%22,57,%220%22,23,%226%22,6,%225%22,7,%226%22,3,%225%22,10,%226%22,3,%225%22,8,%226%22,3,%224%22,3,%226%22,3,%224%22,6,%226%22,3,%224%22,25,%226%22,57,%220%22,26,%226%22,3,%225%22,7,%226%22,3,%225%22,10,%226%22,3,%225%22,7,%226%22,3,%224%22,4,%226%22,3,%224%22,6,%226%22,3,%224%22,25,%226%22,57,%220%22,26,%226%22,3,%225%22,4,%226%22,6,%225%22,9,%226%22,3,%225%22,8,%226%22,3,%224%22,4,%226%22,3,%224%22,5,%226%22,3,%224%22,26,%226%22,56,%220%22,27,%226%22,3,%225%22,1,%226%22,12,%225%22,6,%226%22,3,%225%22,8,%226%22,3,%224%22,4,%226%22,3,%224%22,5,%226%22,3,%224%22,26,%226%22,56,%220%22,18,%226%22,2,%225%22,7,%226%22,17,%225%22,4,%226%22,3,%225%22,9,%226%22,3,%224%22,4,%226%22,3,%224%22,5,%226%22,4,%224%22,14,%226%22,3,%224%22,8,%226%22,56,%220%22,17,%226%22,4,%225%22,6,%226%22,7,%225%22,6,%22f%22,5,%225%22,2,%226%22,3,%225%22,10,%226%22,3,%224%22,3,%226%22,15,%224%22,8,%226%22,8,%224%22,7,%226%22,56,%220%22,18,%226%22,4,%225%22,4,%226%22,5,%225%22,11,%22f%22,4,%225%22,1,%226%22,3,%225%22,10,%226%22,3,%224%22,2,%226%22,19,%224%22,4,%226%22,8,%224%22,8,%226%22,56,%220%22,20,%226%22,3,%225%22,2,%226%22,5,%225%22,13,%22f%22,6,%225%22,11,%226%22,3,%224%22,1,%226%22,21,%224%22,2,%226%22,6,%224%22,11,%226%22,56,%220%22,20,%226%22,3,%225%22,1,%226%22,4,%225%22,16,%22f%22,4,%225%22,12,%226%22,7,%224%22,14,%22e%22,8,%224%22,15,%226%22,56,%220%22,20,%226%22,7,%225%22,17,%22f%22,3,%225%22,14,%226%22,5,%224%22,17,%22e%22,5,%224%22,16,%226%22,56,%220%22,21,%226%22,4,%225%22,20,%22f%22,3,%225%22,14,%226%22,3,%224%22,20,%22e%22,3,%224%22,16,%226%22,56,%220%22,21,%226%22,3,%225%22,21,%22f%22,3,%225%22,13,%226%22,3,%224%22,21,%22e%22,3,%224%22,16,%226%22,56,%220%22,20,%226%22,3,%225%22,12,%22f%22,1,%225%22,9,%22f%22,3,%225%22,13,%226%22,3,%224%22,21,%22e%22,3,%224%22,16,%226%22,56,%220%22,19,%226%22,4,%225%22,10,%22f%22,4,%225%22,8,%22f%22,3,%225%22,13,%226%22,3,%224%22,21,%22e%22,3,%224%22,1,%226%22,4,%224%22,11,%226%22,56,%220%22,19,%226%22,3,%225%22,10,%22f%22,5,%225%22,8,%22f%22,3,%225%22,13,%226%22,3,%224%22,7,%22e%22,2,%224%22,12,%22e%22,9,%224%22,10,%226%22,56,%220%22,20,%226%22,3,%225%22,9,%22f%22,5,%225%22,8,%22f%22,3,%225%22,13,%226%22,3,%224%22,6,%22e%22,6,%224%22,9,%22e%22,8,%224%22,11,%226%22,56,%220%22,20,%226%22,3,%225%22,10,%22f%22,4,%225%22,8,%22f%22,3,%225%22,13,%226%22,3,%224%22,6,%22e%22,7,%224%22,8,%22e%22,5,%224%22,14,%226%22,56,%220%22,20,%226%22,3,%225%22,12,%22f%22,1,%225%22,9,%22f%22,3,%225%22,5,%226%22,1,%223%22,1,%222%22,6,%226%22,3,%224%22,6,%22e%22,7,%224%22,8,%22e%22,3,%224%22,16,%226%22,56,%220%22,21,%226%22,3,%225%22,21,%22f%22,3,%225%22,4,%226%22,1,%223%22,3,%222%22,5,%226%22,3,%224%22,7,%22e%22,5,%224%22,9,%22e%22,3,%224%22,16,%226%22,56,%220%22,21,%226%22,3,%225%22,21,%22f%22,3,%225%22,4,%226%22,1,%223%22,3,%222%22,5,%226%22,3,%224%22,8,%22e%22,3,%224%22,10,%22e%22,3,%224%22,16,%226%22,56,%220%22,21,%226%22,4,%225%22,20,%22f%22,3,%225%22,4,%226%22,1,%223%22,4,%222%22,4,%226%22,3,%224%22,21,%22e%22,3,%224%22,16,%226%22,56,%220%22,22,%226%22,4,%225%22,18,%22f%22,3,%225%22,5,%226%22,2,%223%22,3,%222%22,4,%226%22,3,%224%22,20,%22e%22,4,%224%22,16,%226%22,56,%220%22,23,%226%22,4,%225%22,17,%22f%22,3,%225%22,5,%226%22,2,%223%22,4,%222%22,3,%226%22,3,%224%22,20,%22e%22,3,%224%22,17,%226%22,56,%220%22,24,%226%22,4,%225%22,15,%22f%22,3,%225%22,6,%226%22,3,%223%22,3,%222%22,3,%226%22,3,%224%22,18,%22e%22,4,%224%22,18,%226%22,57,%220%22,24,%226%22,4,%225%22,14,%22f%22,3,%225%22,7,%226%22,3,%223%22,3,%222%22,3,%226%22,3,%224%22,16,%22e%22,4,%224%22,19,%226%22,57,%220%22,25,%226%22,6,%225%22,9,%22f%22,4,%225%22,7,%226%22,4,%223%22,3,%222%22,3,%226%22,4,%224%22,14,%22e%22,4,%224%22,20,%226%22,57,%220%22,27,%226%22,16,%225%22,8,%226%22,4,%223%22,3,%222%22,4,%226%22,6,%224%22,8,%22e%22,6,%224%22,20,%226%22,58,%220%22,28,%226%22,14,%225%22,9,%226%22,4,%223%22,3,%222%22,5,%226%22,18,%224%22,21,%226%22,59,%220%22,30,%226%22,9,%225%22,11,%226%22,4,%223%22,3,%222%22,7,%226%22,14,%224%22,23,%226%22,59,%220%22,48,%226%22,1,%222%22,1,%226%22,4,%223%22,3,%222%22,10,%226%22,8,%224%22,26,%226%22,59,%220%22,47,%226%22,3,%222%22,4,%223%22,3,%222%22,43,%226%22,60,%220%22,47,%226%22,3,%222%22,4,%223%22,3,%222%22,43,%226%22,61,%220%22,46,%226%22,3,%222%22,4,%223%22,3,%222%22,42,%226%22,63,%220%22,45,%226%22,3,%222%22,3,%223%22,4,%222%22,41,%226%22,64,%220%22,45,%226%22,3,%222%22,4,%223%22,3,%222%22,40,%226%22,66,%220%22,43,%226%22,4,%222%22,4,%223%22,3,%222%22,40,%226%22,66,%220%22,41,%226%22,5,%222%22,5,%223%22,3,%222%22,39,%226%22,68,%220%22,39,%226%22,5,%222%22,6,%223%22,4,%222%22,38,%226%22,68,%220%22,38,%226%22,4,%222%22,9,%223%22,3,%222%22,37,%226%22,70,%220%22,36,%226%22,3,%222%22,12,%223%22,3,%222%22,35,%226%22,71,%220%22,35,%226%22,3,%222%22,14,%223%22,3,%222%22,33,%226%22,73,%220%22,33,%226%22,3,%222%22,8,%223%22,1,%222%22,6,%223%22,4,%222%22,32,%226%22,73,%220%22,33,%226%22,3,%222%22,7,%223%22,3,%222%22,6,%223%22,3,%222%22,31,%226%22,75,%220%22,32,%226%22,3,%222%22,6,%223%22,4,%222%22,6,%223%22,3,%222%22,31,%226%22,75,%220%22,32,%226%22,4,%222%22,5,%223%22,4,%222%22,6,%223%22,3,%222%22,30,%226%22,77,%220%22,32,%226%22,12,%222%22,6,%223%22,3,%222%22,29,%226%22,78,%220%22,33,%226%22,11,%222%22,4,%223%22,4,%222%22,29,%226%22,80,%220%22,33,%226%22,17,%222%22,29,%226%22,81,%220%22,22,%226%22,3,%229%22,7,%226%22,2,%229%22,7,%226%22,8,%222%22,29,%226%22,83,%220%22,20,%226%22,6,%229%22,4,%226%22,4,%229%22,3,%226%22,2,%229%22,2,%226%22,6,%222%22,29,%226%22,85,%220%22,19,%226%22,9,%229%22,1,%226%22,4,%229%22,2,%226%22,4,%229%22,35,%226%22,87,%220%22,18,%226%22,3,%229%22,1,%227%22,10,%229%22,1,%226%22,5,%229%22,34,%226%22,88,%220%22,19,%226%22,3,%229%22,2,%227%22,14,%229%22,33,%226%22,90,%220%22,18,%226%22,4,%229%22,4,%227%22,2,%229%22,1,%227%22,5,%229%22,1,%227%22,3,%229%22,31,%226%22,92,%220%22,18,%226%22,4,%229%22,7,%227%22,3,%229%22,2,%227%22,3,%229%22,3,%226%22,2,%229%22,25,%226%22,94,%220%22,18,%226%22,4,%229%22,7,%227%22,1,%229%22,4,%227%22,3,%229%22,1,%226%22,4,%229%22,23,%226%22,95,%220%22,19,%226%22,6,%229%22,10,%227%22,6,%229%22,23,%226%22,97,%220%22,19,%226%22,10,%229%22,5,%227%22,5,%229%22,23,%226%22,99,%220%22,20,%226%22,18,%229%22,22,%226%22,101,%220%22,18,%226%22,3,%22a%22,15,%229%22,22,%226%22,103,%220%22,18,%226%22,7,%22a%22,8,%229%22,21,%226%22,107,%220%22,17,%226%22,9,%22a%22,26,%226%22,108,%220%22,19,%226%22,7,%22a%22,24,%226%22,110,%220%22,49,%226%22,111,%220%22,47,%226%22,113,%220%22,46,%226%22,115,%220%22,43,%226%22,117,%220%22,42,%226%22,119,%220%22,38,%226%22,123,%220%22,35,%226%22,126,%220%22,32,%226%22,129,%220%22,30,%226%22,131,%220%22,27,%226%22,134,%220%22,24,%226%22,137,%220%22,22,%226%22,139,%220%22,20,%226%22,141,%220%22,17,%226%22,150,%220%22,9,%226%22,5358,%220%22%5D,%5B4377,%220%22,18,%226%22,140,%220%22,22,%226%22,136,%220%22,26,%226%22,132,%220%22,29,%226%22,130,%220%22,31,%226%22,26,%220%22,20,%226%22,82,%220%22,33,%226%22,21,%220%22,25,%226%22,80,%220%22,35,%226%22,18,%220%22,28,%226%22,78,%220%22,37,%226%22,15,%220%22,31,%226%22,76,%220%22,39,%226%22,12,%220%22,34,%226%22,74,%220%22,41,%226%22,10,%220%22,36,%226%22,72,%220%22,42,%226%22,8,%220%22,39,%226%22,70,%220%22,44,%226%22,6,%220%22,41,%226%22,69,%220%22,44,%226%22,5,%220%22,43,%226%22,67,%220%22,46,%226%22,3,%220%22,44,%226%22,66,%220%22,48,%226%22,1,%220%22,46,%226%22,64,%220%22,96,%226%22,63,%220%22,32,%226%22,1,%225%22,65,%226%22,62,%220%22,31,%226%22,3,%225%22,33,%226%22,2,%224%22,11,%226%22,1,%224%22,17,%226%22,61,%220%22,32,%226%22,3,%225%22,31,%226%22,5,%224%22,8,%226%22,4,%224%22,16,%226%22,60,%220%22,34,%226%22,3,%225%22,29,%226%22,5,%224%22,8,%226%22,4,%224%22,17,%226%22,60,%220%22,34,%226%22,3,%225%22,11,%226%22,1,%225%22,16,%226%22,4,%224%22,7,%226%22,6,%224%22,19,%226%22,58,%220%22,35,%226%22,3,%225%22,10,%226%22,3,%225%22,14,%226%22,4,%224%22,7,%226%22,5,%224%22,21,%226%22,57,%220%22,23,%226%22,4,%225%22,9,%226%22,3,%225%22,10,%226%22,3,%225%22,14,%226%22,3,%224%22,8,%226%22,4,%224%22,22,%226%22,57,%220%22,22,%226%22,6,%225%22,8,%226%22,3,%225%22,10,%226%22,3,%225%22,9,%226%22,1,%224%22,4,%226%22,3,%224%22,7,%226%22,3,%224%22,24,%226%22,57,%220%22,23,%226%22,6,%225%22,7,%226%22,3,%225%22,10,%226%22,3,%225%22,8,%226%22,3,%224%22,3,%226%22,3,%224%22,6,%226%22,3,%224%22,25,%226%22,57,%220%22,26,%226%22,3,%225%22,7,%226%22,3,%225%22,10,%226%22,3,%225%22,7,%226%22,3,%224%22,4,%226%22,3,%224%22,6,%226%22,3,%224%22,25,%226%22,57,%220%22,26,%226%22,3,%225%22,4,%226%22,6,%225%22,9,%226%22,3,%225%22,8,%226%22,3,%224%22,4,%226%22,3,%224%22,5,%226%22,3,%224%22,26,%226%22,56,%220%22,27,%226%22,3,%225%22,1,%226%22,12,%225%22,6,%226%22,3,%225%22,8,%226%22,3,%224%22,4,%226%22,3,%224%22,5,%226%22,3,%224%22,26,%226%22,56,%220%22,18,%226%22,2,%225%22,7,%226%22,17,%225%22,4,%226%22,3,%225%22,9,%226%22,3,%224%22,4,%226%22,3,%224%22,5,%226%22,4,%224%22,14,%226%22,3,%224%22,8,%226%22,56,%220%22,17,%226%22,4,%225%22,6,%226%22,7,%225%22,6,%22f%22,5,%225%22,2,%226%22,3,%225%22,10,%226%22,3,%224%22,3,%226%22,15,%224%22,8,%226%22,8,%224%22,7,%226%22,56,%220%22,18,%226%22,4,%225%22,4,%226%22,5,%225%22,11,%22f%22,4,%225%22,1,%226%22,3,%225%22,10,%226%22,3,%224%22,2,%226%22,19,%224%22,4,%226%22,8,%224%22,8,%226%22,56,%220%22,20,%226%22,3,%225%22,2,%226%22,5,%225%22,13,%22f%22,6,%225%22,11,%226%22,3,%224%22,1,%226%22,21,%224%22,2,%226%22,6,%224%22,11,%226%22,56,%220%22,20,%226%22,3,%225%22,1,%226%22,4,%225%22,16,%22f%22,4,%225%22,12,%226%22,7,%224%22,14,%22e%22,8,%224%22,15,%226%22,56,%220%22,20,%226%22,7,%225%22,17,%22f%22,3,%225%22,14,%226%22,5,%224%22,17,%22e%22,5,%224%22,16,%226%22,56,%220%22,21,%226%22,4,%225%22,20,%22f%22,3,%225%22,14,%226%22,3,%224%22,20,%22e%22,3,%224%22,16,%226%22,56,%220%22,21,%226%22,3,%225%22,21,%22f%22,3,%225%22,13,%226%22,3,%224%22,21,%22e%22,3,%224%22,16,%226%22,56,%220%22,20,%226%22,3,%225%22,12,%22f%22,1,%225%22,9,%22f%22,3,%225%22,13,%226%22,3,%224%22,21,%22e%22,3,%224%22,16,%226%22,56,%220%22,19,%226%22,4,%225%22,10,%22f%22,4,%225%22,8,%22f%22,3,%225%22,13,%226%22,3,%224%22,21,%22e%22,3,%224%22,1,%226%22,4,%224%22,11,%226%22,56,%220%22,19,%226%22,3,%225%22,10,%22f%22,5,%225%22,8,%22f%22,3,%225%22,13,%226%22,3,%224%22,7,%22e%22,2,%224%22,12,%22e%22,9,%224%22,10,%226%22,56,%220%22,20,%226%22,3,%225%22,9,%22f%22,5,%225%22,8,%22f%22,3,%225%22,13,%226%22,3,%224%22,6,%22e%22,6,%224%22,9,%22e%22,8,%224%22,11,%226%22,56,%220%22,20,%226%22,3,%225%22,10,%22f%22,4,%225%22,8,%22f%22,3,%225%22,13,%226%22,3,%224%22,6,%22e%22,7,%224%22,8,%22e%22,5,%224%22,14,%226%22,56,%220%22,20,%226%22,3,%225%22,12,%22f%22,1,%225%22,9,%22f%22,3,%225%22,5,%226%22,1,%223%22,1,%222%22,6,%226%22,3,%224%22,6,%22e%22,7,%224%22,8,%22e%22,3,%224%22,16,%226%22,56,%220%22,21,%226%22,3,%225%22,21,%22f%22,3,%225%22,4,%226%22,1,%223%22,3,%222%22,5,%226%22,3,%224%22,7,%22e%22,5,%224%22,9,%22e%22,3,%224%22,16,%226%22,56,%220%22,21,%226%22,3,%225%22,21,%22f%22,3,%225%22,4,%226%22,1,%223%22,3,%222%22,5,%226%22,3,%224%22,8,%22e%22,3,%224%22,10,%22e%22,3,%224%22,16,%226%22,56,%220%22,21,%226%22,4,%225%22,20,%22f%22,3,%225%22,4,%226%22,1,%223%22,4,%222%22,4,%226%22,3,%224%22,21,%22e%22,3,%224%22,16,%226%22,56,%220%22,22,%226%22,4,%225%22,18,%22f%22,3,%225%22,5,%226%22,2,%223%22,3,%222%22,4,%226%22,3,%224%22,20,%22e%22,4,%224%22,16,%226%22,56,%220%22,23,%226%22,4,%225%22,17,%22f%22,3,%225%22,5,%226%22,2,%223%22,4,%222%22,3,%226%22,3,%224%22,20,%22e%22,3,%224%22,17,%226%22,56,%220%22,24,%226%22,4,%225%22,15,%22f%22,3,%225%22,6,%226%22,3,%223%22,3,%222%22,3,%226%22,3,%224%22,18,%22e%22,4,%224%22,18,%226%22,57,%220%22,24,%226%22,4,%225%22,14,%22f%22,3,%225%22,7,%226%22,3,%223%22,3,%222%22,3,%226%22,3,%224%22,16,%22e%22,4,%224%22,19,%226%22,57,%220%22,25,%226%22,6,%225%22,9,%22f%22,4,%225%22,7,%226%22,4,%223%22,3,%222%22,3,%226%22,4,%224%22,14,%22e%22,4,%224%22,20,%226%22,57,%220%22,27,%226%22,16,%225%22,8,%226%22,4,%223%22,3,%222%22,4,%226%22,6,%224%22,8,%22e%22,6,%224%22,20,%226%22,58,%220%22,28,%226%22,14,%225%22,9,%226%22,4,%223%22,3,%222%22,5,%226%22,18,%224%22,21,%226%22,59,%220%22,30,%226%22,9,%225%22,11,%226%22,4,%223%22,3,%222%22,7,%226%22,14,%224%22,23,%226%22,59,%220%22,48,%226%22,1,%222%22,1,%226%22,4,%223%22,3,%222%22,10,%226%22,8,%224%22,26,%226%22,59,%220%22,47,%226%22,3,%222%22,4,%223%22,3,%222%22,43,%226%22,60,%220%22,47,%226%22,3,%222%22,4,%223%22,3,%222%22,43,%226%22,61,%220%22,46,%226%22,3,%222%22,4,%223%22,3,%222%22,42,%226%22,63,%220%22,45,%226%22,3,%222%22,3,%223%22,4,%222%22,41,%226%22,64,%220%22,45,%226%22,3,%222%22,4,%223%22,3,%222%22,40,%226%22,66,%220%22,43,%226%22,4,%222%22,4,%223%22,3,%222%22,40,%226%22,66,%220%22,41,%226%22,5,%222%22,5,%223%22,3,%222%22,39,%226%22,68,%220%22,39,%226%22,5,%222%22,6,%223%22,4,%222%22,38,%226%22,68,%220%22,38,%226%22,4,%222%22,9,%223%22,3,%222%22,37,%226%22,70,%220%22,36,%226%22,3,%222%22,12,%223%22,3,%222%22,35,%226%22,71,%220%22,35,%226%22,3,%222%22,14,%223%22,3,%222%22,33,%226%22,73,%220%22,33,%226%22,3,%222%22,8,%223%22,1,%222%22,6,%223%22,4,%222%22,32,%226%22,73,%220%22,33,%226%22,3,%222%22,7,%223%22,3,%222%22,6,%223%22,3,%222%22,31,%226%22,75,%220%22,32,%226%22,3,%222%22,6,%223%22,4,%222%22,6,%223%22,3,%222%22,31,%226%22,75,%220%22,32,%226%22,4,%222%22,5,%223%22,4,%222%22,6,%223%22,3,%222%22,30,%226%22,77,%220%22,32,%226%22,12,%222%22,6,%223%22,3,%222%22,29,%226%22,78,%220%22,33,%226%22,11,%222%22,4,%223%22,4,%222%22,29,%226%22,80,%220%22,33,%226%22,17,%222%22,29,%226%22,81,%220%22,41,%226%22,8,%222%22,29,%226%22,83,%220%22,41,%226%22,6,%222%22,29,%226%22,85,%220%22,74,%226%22,87,%220%22,28,%226%22,2,%229%22,4,%226%22,2,%229%22,36,%226%22,88,%220%22,28,%226%22,2,%229%22,4,%226%22,2,%229%22,35,%226%22,90,%220%22,27,%226%22,2,%229%22,3,%226%22,4,%229%22,33,%226%22,92,%220%22,25,%226%22,11,%229%22,31,%226%22,94,%220%22,24,%226%22,13,%229%22,28,%226%22,95,%220%22,22,%226%22,4,%229%22,8,%227%22,3,%229%22,27,%226%22,97,%220%22,20,%226%22,4,%229%22,8,%227%22,3,%229%22,27,%226%22,99,%220%22,19,%226%22,15,%229%22,26,%226%22,101,%220%22,18,%226%22,14,%229%22,26,%226%22,103,%220%22,19,%226%22,11,%22a%22,24,%226%22,107,%220%22,18,%226%22,11,%22a%22,23,%226%22,108,%220%22,18,%226%22,10,%22a%22,22,%226%22,110,%220%22,19,%226%22,4,%22a%22,1,%226%22,4,%22a%22,21,%226%22,111,%220%22,20,%226%22,2,%22a%22,3,%226%22,2,%22a%22,20,%226%22,113,%220%22,46,%226%22,115,%220%22,43,%226%22,117,%220%22,42,%226%22,119,%220%22,38,%226%22,123,%220%22,35,%226%22,126,%220%22,32,%226%22,129,%220%22,30,%226%22,131,%220%22,27,%226%22,134,%220%22,24,%226%22,137,%220%22,22,%226%22,139,%220%22,20,%226%22,141,%220%22,17,%226%22,150,%220%22,9,%226%22,5358,%220%22%5D,%5B4377,%220%22,18,%226%22,140,%220%22,22,%226%22,136,%220%22,26,%226%22,132,%220%22,29,%226%22,130,%220%22,31,%226%22,26,%220%22,20,%226%22,82,%220%22,33,%226%22,21,%220%22,25,%226%22,80,%220%22,35,%226%22,18,%220%22,28,%226%22,78,%220%22,37,%226%22,15,%220%22,31,%226%22,76,%220%22,39,%226%22,12,%220%22,34,%226%22,74,%220%22,41,%226%22,10,%220%22,36,%226%22,72,%220%22,42,%226%22,8,%220%22,39,%226%22,70,%220%22,44,%226%22,6,%220%22,41,%226%22,69,%220%22,44,%226%22,5,%220%22,43,%226%22,67,%220%22,46,%226%22,3,%220%22,44,%226%22,66,%220%22,48,%226%22,1,%220%22,46,%226%22,64,%220%22,96,%226%22,63,%220%22,98,%226%22,62,%220%22,98,%226%22,61,%220%22,99,%226%22,60,%220%22,100,%226%22,60,%220%22,101,%226%22,58,%220%22,102,%226%22,57,%220%22,103,%226%22,57,%220%22,103,%226%22,57,%220%22,103,%226%22,57,%220%22,103,%226%22,57,%220%22,103,%226%22,56,%220%22,92,%226%22,5,%224%22,7,%226%22,56,%220%22,81,%226%22,2,%224%22,8,%226%22,7,%224%22,6,%226%22,56,%220%22,79,%226%22,5,%224%22,7,%226%22,6,%224%22,7,%226%22,56,%220%22,78,%226%22,5,%224%22,7,%226%22,3,%224%22,6,%226%22,4,%224%22,1,%226%22,56,%220%22,78,%226%22,3,%224%22,8,%226%22,3,%224%22,6,%226%22,6,%224%22,56,%220%22,77,%226%22,3,%224%22,8,%226%22,3,%224%22,6,%226%22,6,%224%22,1,%226%22,56,%220%22,76,%226%22,3,%224%22,9,%226%22,3,%224%22,6,%226%22,3,%224%22,4,%226%22,56,%220%22,75,%226%22,3,%224%22,10,%226%22,3,%224%22,5,%226%22,3,%224%22,5,%226%22,56,%220%22,66,%226%22,2,%224%22,7,%226%22,3,%224%22,9,%226%22,3,%224%22,5,%226%22,3,%224%22,6,%226%22,56,%220%22,65,%226%22,4,%224%22,6,%226%22,3,%224%22,9,%226%22,3,%224%22,5,%226%22,3,%224%22,6,%226%22,56,%220%22,65,%226%22,3,%224%22,7,%226%22,3,%224%22,9,%226%22,3,%224%22,4,%226%22,3,%224%22,7,%226%22,56,%220%22,65,%226%22,3,%224%22,7,%226%22,3,%224%22,9,%226%22,3,%224%22,4,%226%22,3,%224%22,7,%226%22,56,%220%22,65,%226%22,3,%224%22,7,%226%22,3,%224%22,9,%226%22,3,%224%22,2,%226%22,6,%224%22,6,%226%22,56,%220%22,15,%226%22,1,%225%22,27,%226%22,2,%225%22,21,%226%22,3,%224%22,7,%226%22,3,%224%22,8,%226%22,11,%224%22,6,%226%22,56,%220%22,14,%226%22,3,%225%22,25,%226%22,4,%225%22,7,%226%22,1,%223%22,1,%222%22,9,%226%22,34,%224%22,6,%226%22,56,%220%22,10,%226%22,1,%225%22,3,%226%22,3,%225%22,24,%226%22,4,%225%22,7,%226%22,1,%223%22,3,%222%22,7,%226%22,30,%224%22,2,%22e%22,3,%224%22,6,%226%22,56,%220%22,9,%226%22,9,%225%22,22,%226%22,4,%225%22,8,%226%22,1,%223%22,3,%222%22,8,%226%22,23,%224%22,8,%22e%22,3,%224%22,6,%226%22,56,%220%22,10,%226%22,11,%225%22,18,%226%22,4,%225%22,9,%226%22,1,%223%22,4,%222%22,8,%226%22,3,%224%22,9,%22e%22,6,%224%22,11,%22e%22,3,%224%22,7,%226%22,56,%220%22,11,%226%22,4,%225%22,1,%226%22,11,%225%22,11,%226%22,3,%225%22,11,%226%22,2,%223%22,3,%222%22,9,%226%22,3,%224%22,8,%22e%22,6,%224%22,10,%22e%22,4,%224%22,7,%226%22,56,%220%22,18,%226%22,24,%225%22,10,%226%22,2,%223%22,4,%222%22,9,%226%22,4,%224%22,6,%22e%22,6,%224%22,9,%22e%22,4,%224%22,8,%226%22,56,%220%22,19,%226%22,23,%225%22,10,%226%22,3,%223%22,3,%222%22,10,%226%22,4,%224%22,6,%22e%22,4,%224%22,9,%22e%22,4,%224%22,9,%226%22,57,%220%22,18,%226%22,3,%225%22,5,%226%22,11,%225%22,1,%226%22,3,%225%22,11,%226%22,3,%223%22,3,%222%22,10,%226%22,4,%224%22,16,%22e%22,5,%224%22,10,%226%22,57,%220%22,18,%226%22,3,%225%22,8,%226%22,2,%225%22,7,%226%22,3,%225%22,10,%226%22,4,%223%22,3,%222%22,12,%226%22,5,%224%22,10,%22e%22,6,%224%22,12,%226%22,57,%220%22,18,%226%22,3,%225%22,7,%226%22,3,%225%22,7,%226%22,3,%225%22,10,%226%22,4,%223%22,3,%222%22,13,%226%22,19,%224%22,12,%226%22,58,%220%22,17,%226%22,3,%225%22,7,%226%22,3,%225%22,8,%226%22,3,%225%22,10,%226%22,4,%223%22,3,%222%22,14,%226%22,16,%224%22,14,%226%22,59,%220%22,14,%226%22,4,%225%22,8,%226%22,3,%225%22,7,%226%22,3,%225%22,11,%226%22,4,%223%22,3,%222%22,17,%226%22,10,%224%22,17,%226%22,59,%220%22,12,%226%22,5,%225%22,9,%226%22,3,%225%22,7,%226%22,3,%225%22,9,%226%22,1,%222%22,1,%226%22,4,%223%22,3,%222%22,44,%226%22,59,%220%22,11,%226%22,5,%225%22,9,%226%22,3,%225%22,7,%226%22,3,%225%22,9,%226%22,3,%222%22,4,%223%22,3,%222%22,43,%226%22,60,%220%22,12,%226%22,2,%225%22,10,%226%22,3,%225%22,9,%226%22,1,%225%22,10,%226%22,3,%222%22,4,%223%22,3,%222%22,43,%226%22,61,%220%22,22,%226%22,3,%225%22,21,%226%22,3,%222%22,4,%223%22,3,%222%22,42,%226%22,63,%220%22,20,%226%22,3,%225%22,22,%226%22,3,%222%22,3,%223%22,4,%222%22,41,%226%22,64,%220%22,21,%226%22,1,%225%22,23,%226%22,3,%222%22,4,%223%22,3,%222%22,40,%226%22,66,%220%22,43,%226%22,4,%222%22,4,%223%22,3,%222%22,40,%226%22,66,%220%22,41,%226%22,5,%222%22,5,%223%22,3,%222%22,39,%226%22,68,%220%22,39,%226%22,5,%222%22,6,%223%22,4,%222%22,38,%226%22,68,%220%22,38,%226%22,4,%222%22,9,%223%22,3,%222%22,37,%226%22,70,%220%22,36,%226%22,3,%222%22,12,%223%22,3,%222%22,35,%226%22,71,%220%22,35,%226%22,3,%222%22,14,%223%22,3,%222%22,33,%226%22,73,%220%22,33,%226%22,3,%222%22,8,%223%22,1,%222%22,6,%223%22,4,%222%22,32,%226%22,73,%220%22,33,%226%22,3,%222%22,7,%223%22,3,%222%22,6,%223%22,3,%222%22,31,%226%22,75,%220%22,32,%226%22,3,%222%22,6,%223%22,4,%222%22,6,%223%22,3,%222%22,31,%226%22,75,%220%22,32,%226%22,4,%222%22,5,%223%22,4,%222%22,6,%223%22,3,%222%22,30,%226%22,77,%220%22,32,%226%22,12,%222%22,6,%223%22,3,%222%22,29,%226%22,78,%220%22,33,%226%22,11,%222%22,4,%223%22,4,%222%22,29,%226%22,80,%220%22,33,%226%22,17,%222%22,29,%226%22,81,%220%22,41,%226%22,8,%222%22,29,%226%22,83,%220%22,41,%226%22,6,%222%22,29,%226%22,85,%220%22,74,%226%22,87,%220%22,72,%226%22,88,%220%22,35,%226%22,1,%229%22,35,%226%22,90,%220%22,28,%226%22,1,%229%22,4,%226%22,3,%229%22,33,%226%22,92,%220%22,26,%226%22,3,%229%22,2,%226%22,5,%229%22,31,%226%22,94,%220%22,23,%226%22,17,%229%22,25,%226%22,95,%220%22,18,%226%22,8,%229%22,1,%227%22,4,%229%22,2,%227%22,8,%229%22,23,%226%22,97,%220%22,16,%226%22,8,%229%22,3,%227%22,2,%229%22,5,%227%22,6,%229%22,22,%226%22,99,%220%22,16,%226%22,10,%229%22,7,%227%22,5,%229%22,22,%226%22,101,%220%22,16,%226%22,20,%229%22,22,%226%22,103,%220%22,18,%226%22,16,%229%22,20,%226%22,107,%220%22,18,%226%22,5,%22a%22,8,%229%22,21,%226%22,108,%220%22,18,%226%22,10,%22a%22,22,%226%22,110,%220%22,19,%226%22,8,%22a%22,22,%226%22,111,%220%22,23,%226%22,3,%22a%22,21,%226%22,113,%220%22,46,%226%22,115,%220%22,43,%226%22,117,%220%22,42,%226%22,119,%220%22,38,%226%22,123,%220%22,35,%226%22,126,%220%22,32,%226%22,129,%220%22,30,%226%22,131,%220%22,27,%226%22,134,%220%22,24,%226%22,137,%220%22,22,%226%22,139,%220%22,20,%226%22,141,%220%22,17,%226%22,150,%220%22,9,%226%22,5358,%220%22%5D,%5B4377,%220%22,18,%226%22,140,%220%22,22,%226%22,136,%220%22,26,%226%22,132,%220%22,29,%226%22,130,%220%22,31,%226%22,26,%220%22,20,%226%22,82,%220%22,33,%226%22,21,%220%22,25,%226%22,80,%220%22,35,%226%22,18,%220%22,28,%226%22,78,%220%22,37,%226%22,15,%220%22,31,%226%22,76,%220%22,39,%226%22,12,%220%22,34,%226%22,74,%220%22,41,%226%22,10,%220%22,36,%226%22,72,%220%22,42,%226%22,8,%220%22,39,%226%22,70,%220%22,44,%226%22,6,%220%22,41,%226%22,69,%220%22,44,%226%22,5,%220%22,43,%226%22,67,%220%22,46,%226%22,3,%220%22,44,%226%22,66,%220%22,48,%226%22,1,%220%22,46,%226%22,64,%220%22,96,%226%22,63,%220%22,98,%226%22,62,%220%22,98,%226%22,61,%220%22,99,%226%22,60,%220%22,100,%226%22,60,%220%22,101,%226%22,58,%220%22,102,%226%22,57,%220%22,103,%226%22,57,%220%22,103,%226%22,57,%220%22,103,%226%22,57,%220%22,103,%226%22,57,%220%22,103,%226%22,56,%220%22,92,%226%22,5,%224%22,7,%226%22,56,%220%22,81,%226%22,2,%224%22,8,%226%22,7,%224%22,6,%226%22,56,%220%22,79,%226%22,5,%224%22,7,%226%22,6,%224%22,7,%226%22,56,%220%22,78,%226%22,5,%224%22,7,%226%22,3,%224%22,6,%226%22,4,%224%22,1,%226%22,56,%220%22,78,%226%22,3,%224%22,8,%226%22,3,%224%22,6,%226%22,6,%224%22,56,%220%22,77,%226%22,3,%224%22,8,%226%22,3,%224%22,6,%226%22,6,%224%22,1,%226%22,56,%220%22,76,%226%22,3,%224%22,9,%226%22,3,%224%22,6,%226%22,3,%224%22,4,%226%22,56,%220%22,75,%226%22,3,%224%22,10,%226%22,3,%224%22,5,%226%22,3,%224%22,5,%226%22,56,%220%22,66,%226%22,2,%224%22,7,%226%22,3,%224%22,9,%226%22,3,%224%22,5,%226%22,3,%224%22,6,%226%22,56,%220%22,65,%226%22,4,%224%22,6,%226%22,3,%224%22,9,%226%22,3,%224%22,5,%226%22,3,%224%22,6,%226%22,56,%220%22,65,%226%22,3,%224%22,7,%226%22,3,%224%22,9,%226%22,3,%224%22,4,%226%22,3,%224%22,7,%226%22,56,%220%22,65,%226%22,3,%224%22,7,%226%22,3,%224%22,9,%226%22,3,%224%22,4,%226%22,3,%224%22,7,%226%22,56,%220%22,65,%226%22,3,%224%22,7,%226%22,3,%224%22,9,%226%22,3,%224%22,2,%226%22,6,%224%22,6,%226%22,56,%220%22,15,%226%22,1,%225%22,27,%226%22,2,%225%22,21,%226%22,3,%224%22,7,%226%22,3,%224%22,8,%226%22,11,%224%22,6,%226%22,56,%220%22,14,%226%22,3,%225%22,25,%226%22,4,%225%22,18,%226%22,34,%224%22,6,%226%22,56,%220%22,10,%226%22,1,%225%22,3,%226%22,3,%225%22,24,%226%22,4,%225%22,18,%226%22,30,%224%22,2,%22e%22,3,%224%22,6,%226%22,56,%220%22,9,%226%22,9,%225%22,22,%226%22,4,%225%22,20,%226%22,23,%224%22,8,%22e%22,3,%224%22,6,%226%22,56,%220%22,10,%226%22,11,%225%22,18,%226%22,4,%225%22,22,%226%22,3,%224%22,9,%22e%22,6,%224%22,11,%22e%22,3,%224%22,7,%226%22,56,%220%22,11,%226%22,4,%225%22,1,%226%22,11,%225%22,11,%226%22,3,%225%22,8,%226%22,1,%222%22,8,%226%22,1,%222%22,7,%226%22,3,%224%22,8,%22e%22,6,%224%22,10,%22e%22,4,%224%22,7,%226%22,56,%220%22,18,%226%22,24,%225%22,6,%226%22,3,%222%22,3,%226%22,2,%223%22,1,%226%22,3,%222%22,7,%226%22,4,%224%22,6,%22e%22,6,%224%22,9,%22e%22,4,%224%22,8,%226%22,56,%220%22,19,%226%22,23,%225%22,7,%226%22,3,%222%22,1,%226%22,4,%223%22,3,%222%22,8,%226%22,4,%224%22,6,%22e%22,4,%224%22,9,%22e%22,4,%224%22,9,%226%22,57,%220%22,18,%226%22,3,%225%22,5,%226%22,11,%225%22,1,%226%22,3,%225%22,7,%226%22,3,%222%22,4,%223%22,3,%222%22,10,%226%22,4,%224%22,16,%22e%22,5,%224%22,10,%226%22,57,%220%22,18,%226%22,3,%225%22,8,%226%22,2,%225%22,7,%226%22,3,%225%22,7,%226%22,3,%222%22,4,%223%22,3,%222%22,12,%226%22,5,%224%22,10,%22e%22,6,%224%22,12,%226%22,57,%220%22,18,%226%22,3,%225%22,7,%226%22,3,%225%22,7,%226%22,3,%225%22,7,%226%22,3,%222%22,4,%223%22,4,%222%22,12,%226%22,19,%224%22,12,%226%22,58,%220%22,17,%226%22,3,%225%22,7,%226%22,3,%225%22,8,%226%22,3,%225%22,7,%226%22,3,%222%22,5,%223%22,3,%222%22,13,%226%22,16,%224%22,14,%226%22,59,%220%22,14,%226%22,4,%225%22,8,%226%22,3,%225%22,7,%226%22,3,%225%22,8,%226%22,3,%222%22,5,%223%22,3,%222%22,16,%226%22,10,%224%22,17,%226%22,59,%220%22,12,%226%22,5,%225%22,9,%226%22,3,%225%22,7,%226%22,3,%225%22,8,%226%22,3,%222%22,6,%223%22,3,%222%22,42,%226%22,59,%220%22,11,%226%22,5,%225%22,9,%226%22,3,%225%22,7,%226%22,3,%225%22,9,%226%22,3,%222%22,7,%223%22,3,%222%22,40,%226%22,60,%220%22,12,%226%22,2,%225%22,10,%226%22,3,%225%22,9,%226%22,1,%225%22,9,%226%22,4,%222%22,8,%223%22,3,%222%22,39,%226%22,61,%220%22,22,%226%22,3,%225%22,11,%226%22,13,%222%22,8,%223%22,4,%222%22,37,%226%22,63,%220%22,20,%226%22,3,%225%22,11,%226%22,13,%222%22,10,%223%22,5,%222%22,34,%226%22,64,%220%22,21,%226%22,1,%225%22,10,%226%22,13,%222%22,13,%223%22,5,%222%22,32,%226%22,66,%220%22,30,%226%22,4,%222%22,25,%223%22,4,%222%22,31,%226%22,66,%220%22,30,%226%22,3,%222%22,28,%223%22,3,%222%22,29,%226%22,68,%220%22,28,%226%22,3,%222%22,6,%223%22,3,%222%22,16,%223%22,3,%222%22,2,%223%22,3,%222%22,28,%226%22,68,%220%22,28,%226%22,3,%222%22,4,%223%22,6,%222%22,14,%223%22,5,%222%22,2,%223%22,3,%222%22,26,%226%22,70,%220%22,27,%226%22,3,%222%22,3,%223%22,7,%222%22,12,%223%22,8,%222%22,2,%223%22,3,%222%22,24,%226%22,71,%220%22,26,%226%22,3,%222%22,4,%223%22,6,%222%22,12,%223%22,9,%222%22,2,%223%22,3,%222%22,23,%226%22,73,%220%22,25,%226%22,3,%222%22,3,%223%22,7,%222%22,12,%223%22,9,%222%22,2,%223%22,3,%222%22,23,%226%22,73,%220%22,25,%226%22,3,%222%22,3,%223%22,6,%222%22,14,%223%22,8,%222%22,2,%223%22,3,%222%22,22,%226%22,75,%220%22,24,%226%22,3,%222%22,4,%223%22,2,%222%22,9,%223%22,1,%222%22,8,%223%22,6,%222%22,3,%223%22,3,%222%22,22,%226%22,75,%220%22,24,%226%22,3,%222%22,13,%223%22,4,%222%22,16,%223%22,3,%222%22,21,%226%22,77,%220%22,23,%226%22,3,%222%22,11,%223%22,7,%222%22,15,%223%22,3,%222%22,20,%226%22,78,%220%22,23,%226%22,5,%222%22,7,%223%22,6,%222%22,1,%226%22,4,%222%22,13,%223%22,3,%222%22,19,%226%22,80,%220%22,23,%226%22,16,%222%22,3,%226%22,5,%222%22,10,%223%22,3,%222%22,19,%226%22,81,%220%22,24,%226%22,13,%222%22,6,%226%22,5,%222%22,8,%223%22,4,%222%22,18,%226%22,83,%220%22,25,%226%22,8,%222%22,11,%226%22,6,%222%22,3,%223%22,5,%222%22,18,%226%22,85,%220%22,45,%226%22,11,%222%22,18,%226%22,87,%220%22,45,%226%22,9,%222%22,18,%226%22,88,%220%22,35,%226%22,1,%229%22,12,%226%22,3,%222%22,20,%226%22,90,%220%22,28,%226%22,1,%229%22,4,%226%22,3,%229%22,33,%226%22,92,%220%22,26,%226%22,3,%229%22,2,%226%22,5,%229%22,31,%226%22,94,%220%22,23,%226%22,15,%229%22,27,%226%22,95,%220%22,18,%226%22,8,%229%22,1,%227%22,4,%229%22,2,%227%22,6,%229%22,25,%226%22,97,%220%22,16,%226%22,8,%229%22,3,%227%22,2,%229%22,5,%227%22,5,%229%22,23,%226%22,99,%220%22,16,%226%22,10,%229%22,7,%227%22,5,%229%22,22,%226%22,101,%220%22,16,%226%22,20,%229%22,22,%226%22,103,%220%22,18,%226%22,16,%229%22,20,%226%22,107,%220%22,18,%226%22,5,%22a%22,8,%229%22,21,%226%22,108,%220%22,18,%226%22,10,%22a%22,22,%226%22,110,%220%22,19,%226%22,8,%22a%22,22,%226%22,111,%220%22,23,%226%22,3,%22a%22,21,%226%22,113,%220%22,46,%226%22,115,%220%22,43,%226%22,117,%220%22,42,%226%22,119,%220%22,38,%226%22,123,%220%22,35,%226%22,126,%220%22,32,%226%22,129,%220%22,30,%226%22,131,%220%22,27,%226%22,134,%220%22,24,%226%22,137,%220%22,22,%226%22,139,%220%22,20,%226%22,141,%220%22,17,%226%22,150,%220%22,9,%226%22,5358,%220%22%5D,%5B4377,%220%22,18,%226%22,140,%220%22,22,%226%22,136,%220%22,26,%226%22,132,%220%22,29,%226%22,130,%220%22,31,%226%22,26,%220%22,20,%226%22,82,%220%22,33,%226%22,21,%220%22,25,%226%22,80,%220%22,35,%226%22,18,%220%22,28,%226%22,78,%220%22,37,%226%22,15,%220%22,31,%226%22,76,%220%22,39,%226%22,12,%220%22,34,%226%22,74,%220%22,41,%226%22,10,%220%22,36,%226%22,72,%220%22,42,%226%22,8,%220%22,39,%226%22,70,%220%22,44,%226%22,6,%220%22,41,%226%22,69,%220%22,44,%226%22,5,%220%22,43,%226%22,67,%220%22,46,%226%22,3,%220%22,44,%226%22,66,%220%22,48,%226%22,1,%220%22,46,%226%22,64,%220%22,96,%226%22,63,%220%22,98,%226%22,62,%220%22,98,%226%22,61,%220%22,99,%226%22,60,%220%22,100,%226%22,60,%220%22,101,%226%22,58,%220%22,102,%226%22,57,%220%22,103,%226%22,57,%220%22,103,%226%22,57,%220%22,103,%226%22,57,%220%22,103,%226%22,57,%220%22,103,%226%22,56,%220%22,92,%226%22,5,%224%22,7,%226%22,56,%220%22,81,%226%22,2,%224%22,8,%226%22,7,%224%22,6,%226%22,56,%220%22,79,%226%22,5,%224%22,7,%226%22,6,%224%22,7,%226%22,56,%220%22,78,%226%22,5,%224%22,7,%226%22,3,%224%22,6,%226%22,4,%224%22,1,%226%22,56,%220%22,78,%226%22,3,%224%22,8,%226%22,3,%224%22,6,%226%22,6,%224%22,56,%220%22,77,%226%22,3,%224%22,8,%226%22,3,%224%22,6,%226%22,6,%224%22,1,%226%22,56,%220%22,76,%226%22,3,%224%22,9,%226%22,3,%224%22,6,%226%22,3,%224%22,4,%226%22,56,%220%22,75,%226%22,3,%224%22,10,%226%22,3,%224%22,5,%226%22,3,%224%22,5,%226%22,56,%220%22,66,%226%22,2,%224%22,7,%226%22,3,%224%22,9,%226%22,3,%224%22,5,%226%22,3,%224%22,6,%226%22,56,%220%22,65,%226%22,4,%224%22,6,%226%22,3,%224%22,9,%226%22,3,%224%22,5,%226%22,3,%224%22,6,%226%22,56,%220%22,65,%226%22,3,%224%22,7,%226%22,3,%224%22,9,%226%22,3,%224%22,4,%226%22,3,%224%22,7,%226%22,56,%220%22,65,%226%22,3,%224%22,7,%226%22,3,%224%22,9,%226%22,3,%224%22,4,%226%22,3,%224%22,7,%226%22,56,%220%22,65,%226%22,3,%224%22,7,%226%22,3,%224%22,9,%226%22,3,%224%22,2,%226%22,6,%224%22,6,%226%22,56,%220%22,15,%226%22,1,%225%22,27,%226%22,2,%225%22,21,%226%22,3,%224%22,7,%226%22,3,%224%22,8,%226%22,11,%224%22,6,%226%22,56,%220%22,14,%226%22,3,%225%22,25,%226%22,4,%225%22,18,%226%22,34,%224%22,6,%226%22,56,%220%22,10,%226%22,1,%225%22,3,%226%22,3,%225%22,24,%226%22,4,%225%22,18,%226%22,30,%224%22,2,%22e%22,3,%224%22,6,%226%22,56,%220%22,9,%226%22,9,%225%22,22,%226%22,4,%225%22,20,%226%22,23,%224%22,8,%22e%22,3,%224%22,6,%226%22,56,%220%22,10,%226%22,11,%225%22,18,%226%22,4,%225%22,22,%226%22,3,%224%22,9,%22e%22,6,%224%22,11,%22e%22,3,%224%22,7,%226%22,56,%220%22,11,%226%22,4,%225%22,1,%226%22,11,%225%22,11,%226%22,3,%225%22,8,%226%22,1,%222%22,8,%226%22,1,%222%22,7,%226%22,3,%224%22,8,%22e%22,6,%224%22,10,%22e%22,4,%224%22,7,%226%22,56,%220%22,18,%226%22,24,%225%22,6,%226%22,3,%222%22,3,%226%22,2,%223%22,1,%226%22,3,%222%22,7,%226%22,4,%224%22,6,%22e%22,6,%224%22,9,%22e%22,4,%224%22,8,%226%22,56,%220%22,19,%226%22,23,%225%22,7,%226%22,3,%222%22,1,%226%22,4,%223%22,3,%222%22,8,%226%22,4,%224%22,6,%22e%22,4,%224%22,9,%22e%22,4,%224%22,9,%226%22,57,%220%22,18,%226%22,3,%225%22,5,%226%22,11,%225%22,1,%226%22,3,%225%22,7,%226%22,3,%222%22,4,%223%22,3,%222%22,10,%226%22,4,%224%22,16,%22e%22,5,%224%22,10,%226%22,57,%220%22,18,%226%22,3,%225%22,8,%226%22,2,%225%22,7,%226%22,3,%225%22,7,%226%22,3,%222%22,4,%223%22,3,%222%22,12,%226%22,5,%224%22,10,%22e%22,6,%224%22,12,%226%22,57,%220%22,18,%226%22,3,%225%22,7,%226%22,3,%225%22,7,%226%22,3,%225%22,7,%226%22,3,%222%22,4,%223%22,4,%222%22,12,%226%22,19,%224%22,12,%226%22,58,%220%22,17,%226%22,3,%225%22,7,%226%22,3,%225%22,8,%226%22,3,%225%22,7,%226%22,3,%222%22,5,%223%22,3,%222%22,13,%226%22,16,%224%22,14,%226%22,59,%220%22,14,%226%22,4,%225%22,8,%226%22,3,%225%22,7,%226%22,3,%225%22,8,%226%22,3,%222%22,5,%223%22,3,%222%22,16,%226%22,10,%224%22,17,%226%22,59,%220%22,12,%226%22,5,%225%22,9,%226%22,3,%225%22,7,%226%22,3,%225%22,8,%226%22,3,%222%22,6,%223%22,3,%222%22,42,%226%22,59,%220%22,11,%226%22,5,%225%22,9,%226%22,3,%225%22,7,%226%22,3,%225%22,9,%226%22,3,%222%22,7,%223%22,3,%222%22,40,%226%22,60,%220%22,12,%226%22,2,%225%22,10,%226%22,3,%225%22,9,%226%22,1,%225%22,9,%226%22,4,%222%22,8,%223%22,3,%222%22,39,%226%22,61,%220%22,22,%226%22,3,%225%22,11,%226%22,13,%222%22,8,%223%22,4,%222%22,37,%226%22,63,%220%22,20,%226%22,3,%225%22,11,%226%22,13,%222%22,10,%223%22,5,%222%22,34,%226%22,64,%220%22,21,%226%22,1,%225%22,10,%226%22,13,%222%22,13,%223%22,5,%222%22,32,%226%22,66,%220%22,30,%226%22,4,%222%22,25,%223%22,4,%222%22,31,%226%22,66,%220%22,30,%226%22,3,%222%22,28,%223%22,3,%222%22,29,%226%22,68,%220%22,28,%226%22,3,%222%22,6,%223%22,3,%222%22,16,%223%22,3,%222%22,2,%223%22,3,%222%22,28,%226%22,68,%220%22,28,%226%22,3,%222%22,4,%223%22,6,%222%22,14,%223%22,5,%222%22,2,%223%22,3,%222%22,26,%226%22,70,%220%22,27,%226%22,3,%222%22,3,%223%22,7,%222%22,12,%223%22,8,%222%22,2,%223%22,3,%222%22,24,%226%22,71,%220%22,26,%226%22,3,%222%22,4,%223%22,6,%222%22,12,%223%22,9,%222%22,2,%223%22,3,%222%22,23,%226%22,73,%220%22,25,%226%22,3,%222%22,3,%223%22,7,%222%22,12,%223%22,9,%222%22,2,%223%22,3,%222%22,23,%226%22,73,%220%22,25,%226%22,3,%222%22,3,%223%22,6,%222%22,14,%223%22,8,%222%22,2,%223%22,3,%222%22,22,%226%22,75,%220%22,24,%226%22,3,%222%22,4,%223%22,2,%222%22,9,%223%22,1,%222%22,8,%223%22,6,%222%22,3,%223%22,3,%222%22,22,%226%22,75,%220%22,24,%226%22,3,%222%22,13,%223%22,4,%222%22,16,%223%22,3,%222%22,21,%226%22,77,%220%22,23,%226%22,3,%222%22,11,%223%22,7,%222%22,15,%223%22,3,%222%22,20,%226%22,78,%220%22,23,%226%22,5,%222%22,7,%223%22,6,%222%22,1,%226%22,4,%222%22,13,%223%22,3,%222%22,19,%226%22,80,%220%22,23,%226%22,16,%222%22,3,%226%22,5,%222%22,10,%223%22,3,%222%22,19,%226%22,81,%220%22,24,%226%22,13,%222%22,6,%226%22,5,%222%22,8,%223%22,4,%222%22,18,%226%22,83,%220%22,25,%226%22,8,%222%22,11,%226%22,6,%222%22,3,%223%22,5,%222%22,18,%226%22,85,%220%22,28,%226%22,1,%229%22,7,%226%22,2,%229%22,7,%226%22,11,%222%22,18,%226%22,87,%220%22,26,%226%22,3,%229%22,5,%226%22,4,%229%22,7,%226%22,9,%222%22,18,%226%22,88,%220%22,26,%226%22,3,%229%22,4,%226%22,5,%229%22,10,%226%22,3,%222%22,20,%226%22,90,%220%22,25,%226%22,4,%229%22,3,%226%22,5,%229%22,9,%226%22,1,%229%22,22,%226%22,92,%220%22,24,%226%22,5,%229%22,1,%226%22,6,%229%22,8,%226%22,3,%229%22,20,%226%22,94,%220%22,13,%226%22,1,%229%22,9,%226%22,12,%229%22,7,%226%22,4,%229%22,19,%226%22,95,%220%22,12,%226%22,3,%229%22,8,%226%22,8,%229%22,1,%227%22,4,%229%22,6,%226%22,4,%229%22,18,%226%22,97,%220%22,11,%226%22,3,%229%22,7,%226%22,4,%229%22,1,%227%22,3,%229%22,3,%227%22,4,%229%22,4,%226%22,5,%229%22,17,%226%22,99,%220%22,10,%226%22,3,%229%22,7,%226%22,3,%229%22,3,%227%22,1,%229%22,5,%227%22,12,%229%22,16,%226%22,101,%220%22,9,%226%22,4,%229%22,5,%226%22,4,%229%22,10,%227%22,10,%229%22,16,%226%22,103,%220%22,8,%226%22,12,%229%22,3,%227%22,4,%229%22,6,%227%22,8,%229%22,13,%226%22,107,%220%22,8,%226%22,21,%229%22,5,%227%22,5,%229%22,13,%226%22,108,%220%22,9,%226%22,14,%229%22,1,%22a%22,14,%229%22,12,%226%22,110,%220%22,10,%226%22,9,%229%22,6,%22a%22,12,%229%22,12,%226%22,111,%220%22,11,%226%22,7,%229%22,10,%22a%22,7,%229%22,12,%226%22,113,%220%22,19,%226%22,9,%22a%22,18,%226%22,115,%220%22,19,%226%22,7,%22a%22,17,%226%22,117,%220%22,20,%226%22,4,%22a%22,18,%226%22,119,%220%22,38,%226%22,123,%220%22,35,%226%22,126,%220%22,32,%226%22,129,%220%22,30,%226%22,131,%220%22,27,%226%22,134,%220%22,24,%226%22,137,%220%22,22,%226%22,139,%220%22,20,%226%22,141,%220%22,17,%226%22,150,%220%22,9,%226%22,5358,%220%22%5D,%5B4377,%220%22,18,%226%22,140,%220%22,22,%226%22,136,%220%22,26,%226%22,132,%220%22,29,%226%22,130,%220%22,31,%226%22,26,%220%22,20,%226%22,82,%220%22,33,%226%22,21,%220%22,25,%226%22,80,%220%22,35,%226%22,18,%220%22,28,%226%22,78,%220%22,37,%226%22,15,%220%22,31,%226%22,76,%220%22,39,%226%22,12,%220%22,34,%226%22,74,%220%22,41,%226%22,10,%220%22,36,%226%22,72,%220%22,42,%226%22,8,%220%22,39,%226%22,70,%220%22,44,%226%22,6,%220%22,41,%226%22,69,%220%22,44,%226%22,5,%220%22,43,%226%22,67,%220%22,46,%226%22,3,%220%22,44,%226%22,66,%220%22,48,%226%22,1,%220%22,46,%226%22,64,%220%22,96,%226%22,63,%220%22,98,%226%22,62,%220%22,98,%226%22,61,%220%22,99,%226%22,60,%220%22,100,%226%22,60,%220%22,101,%226%22,58,%220%22,102,%226%22,57,%220%22,103,%226%22,57,%220%22,103,%226%22,57,%220%22,103,%226%22,57,%220%22,103,%226%22,57,%220%22,103,%226%22,56,%220%22,92,%226%22,5,%224%22,7,%226%22,56,%220%22,81,%226%22,2,%224%22,8,%226%22,7,%224%22,6,%226%22,56,%220%22,79,%226%22,5,%224%22,7,%226%22,6,%224%22,7,%226%22,56,%220%22,78,%226%22,5,%224%22,7,%226%22,3,%224%22,6,%226%22,4,%224%22,1,%226%22,56,%220%22,78,%226%22,3,%224%22,8,%226%22,3,%224%22,6,%226%22,6,%224%22,56,%220%22,77,%226%22,3,%224%22,8,%226%22,3,%224%22,6,%226%22,6,%224%22,1,%226%22,56,%220%22,76,%226%22,3,%224%22,9,%226%22,3,%224%22,6,%226%22,3,%224%22,4,%226%22,56,%220%22,75,%226%22,3,%224%22,10,%226%22,3,%224%22,5,%226%22,3,%224%22,5,%226%22,56,%220%22,66,%226%22,2,%224%22,7,%226%22,3,%224%22,9,%226%22,3,%224%22,5,%226%22,3,%224%22,6,%226%22,56,%220%22,65,%226%22,4,%224%22,6,%226%22,3,%224%22,9,%226%22,3,%224%22,5,%226%22,3,%224%22,6,%226%22,56,%220%22,65,%226%22,3,%224%22,7,%226%22,3,%224%22,9,%226%22,3,%224%22,4,%226%22,3,%224%22,7,%226%22,56,%220%22,65,%226%22,3,%224%22,7,%226%22,3,%224%22,9,%226%22,3,%224%22,4,%226%22,3,%224%22,7,%226%22,56,%220%22,65,%226%22,3,%224%22,7,%226%22,3,%224%22,9,%226%22,3,%224%22,2,%226%22,6,%224%22,6,%226%22,56,%220%22,15,%226%22,1,%225%22,27,%226%22,2,%225%22,21,%226%22,3,%224%22,7,%226%22,3,%224%22,8,%226%22,11,%224%22,6,%226%22,56,%220%22,14,%226%22,3,%225%22,25,%226%22,4,%225%22,18,%226%22,34,%224%22,6,%226%22,56,%220%22,10,%226%22,1,%225%22,3,%226%22,3,%225%22,24,%226%22,4,%225%22,18,%226%22,30,%224%22,2,%22e%22,3,%224%22,6,%226%22,56,%220%22,9,%226%22,9,%225%22,22,%226%22,4,%225%22,20,%226%22,23,%224%22,8,%22e%22,3,%224%22,6,%226%22,56,%220%22,10,%226%22,11,%225%22,18,%226%22,4,%225%22,22,%226%22,3,%224%22,9,%22e%22,6,%224%22,11,%22e%22,3,%224%22,7,%226%22,56,%220%22,11,%226%22,4,%225%22,1,%226%22,11,%225%22,11,%226%22,3,%225%22,8,%226%22,1,%222%22,8,%226%22,1,%222%22,7,%226%22,3,%224%22,8,%22e%22,6,%224%22,10,%22e%22,4,%224%22,7,%226%22,56,%220%22,18,%226%22,24,%225%22,6,%226%22,3,%222%22,3,%226%22,2,%223%22,1,%226%22,3,%222%22,7,%226%22,4,%224%22,6,%22e%22,6,%224%22,9,%22e%22,4,%224%22,8,%226%22,56,%220%22,19,%226%22,23,%225%22,7,%226%22,3,%222%22,1,%226%22,4,%223%22,3,%222%22,8,%226%22,4,%224%22,6,%22e%22,4,%224%22,9,%22e%22,4,%224%22,9,%226%22,57,%220%22,18,%226%22,3,%225%22,5,%226%22,11,%225%22,1,%226%22,3,%225%22,7,%226%22,3,%222%22,4,%223%22,3,%222%22,10,%226%22,4,%224%22,16,%22e%22,5,%224%22,10,%226%22,57,%220%22,18,%226%22,3,%225%22,8,%226%22,2,%225%22,7,%226%22,3,%225%22,7,%226%22,3,%222%22,4,%223%22,3,%222%22,12,%226%22,5,%224%22,10,%22e%22,6,%224%22,12,%226%22,57,%220%22,18,%226%22,3,%225%22,7,%226%22,3,%225%22,7,%226%22,3,%225%22,7,%226%22,3,%222%22,4,%223%22,4,%222%22,12,%226%22,19,%224%22,12,%226%22,58,%220%22,17,%226%22,3,%225%22,7,%226%22,3,%225%22,8,%226%22,3,%225%22,7,%226%22,3,%222%22,5,%223%22,3,%222%22,13,%226%22,16,%224%22,14,%226%22,59,%220%22,14,%226%22,4,%225%22,8,%226%22,3,%225%22,7,%226%22,3,%225%22,8,%226%22,3,%222%22,5,%223%22,3,%222%22,16,%226%22,10,%224%22,17,%226%22,59,%220%22,12,%226%22,5,%225%22,9,%226%22,3,%225%22,7,%226%22,3,%225%22,8,%226%22,3,%222%22,6,%223%22,3,%222%22,42,%226%22,59,%220%22,11,%226%22,5,%225%22,9,%226%22,3,%225%22,7,%226%22,3,%225%22,9,%226%22,3,%222%22,7,%223%22,3,%222%22,40,%226%22,60,%220%22,12,%226%22,2,%225%22,10,%226%22,3,%225%22,9,%226%22,1,%225%22,9,%226%22,4,%222%22,8,%223%22,3,%222%22,39,%226%22,61,%220%22,22,%226%22,3,%225%22,11,%226%22,13,%222%22,8,%223%22,4,%222%22,37,%226%22,63,%220%22,20,%226%22,3,%225%22,11,%226%22,13,%222%22,10,%223%22,5,%222%22,34,%226%22,64,%220%22,21,%226%22,1,%225%22,10,%226%22,13,%222%22,13,%223%22,5,%222%22,32,%226%22,66,%220%22,30,%226%22,4,%222%22,25,%223%22,4,%222%22,31,%226%22,66,%220%22,30,%226%22,3,%222%22,28,%223%22,3,%222%22,29,%226%22,68,%220%22,28,%226%22,3,%222%22,6,%223%22,3,%222%22,16,%223%22,3,%222%22,2,%223%22,3,%222%22,28,%226%22,68,%220%22,28,%226%22,3,%222%22,4,%223%22,6,%222%22,14,%223%22,5,%222%22,2,%223%22,3,%222%22,26,%226%22,70,%220%22,27,%226%22,3,%222%22,3,%223%22,7,%222%22,12,%223%22,8,%222%22,2,%223%22,3,%222%22,24,%226%22,71,%220%22,26,%226%22,3,%222%22,4,%223%22,6,%222%22,12,%223%22,9,%222%22,2,%223%22,3,%222%22,23,%226%22,73,%220%22,25,%226%22,3,%222%22,3,%223%22,7,%222%22,12,%223%22,9,%222%22,2,%223%22,3,%222%22,23,%226%22,73,%220%22,25,%226%22,3,%222%22,3,%223%22,6,%222%22,14,%223%22,8,%222%22,2,%223%22,3,%222%22,22,%226%22,75,%220%22,24,%226%22,3,%222%22,4,%223%22,2,%222%22,9,%223%22,1,%222%22,8,%223%22,6,%222%22,3,%223%22,3,%222%22,22,%226%22,75,%220%22,24,%226%22,3,%222%22,13,%223%22,4,%222%22,16,%223%22,3,%222%22,21,%226%22,77,%220%22,23,%226%22,3,%222%22,11,%223%22,7,%222%22,15,%223%22,3,%222%22,20,%226%22,78,%220%22,23,%226%22,5,%222%22,7,%223%22,6,%222%22,1,%226%22,4,%222%22,13,%223%22,3,%222%22,19,%226%22,80,%220%22,23,%226%22,16,%222%22,3,%226%22,5,%222%22,10,%223%22,3,%222%22,19,%226%22,81,%220%22,24,%226%22,13,%222%22,6,%226%22,5,%222%22,8,%223%22,4,%222%22,18,%226%22,83,%220%22,25,%226%22,8,%222%22,11,%226%22,6,%222%22,3,%223%22,5,%222%22,18,%226%22,85,%220%22,28,%226%22,1,%229%22,7,%226%22,2,%229%22,7,%226%22,11,%222%22,18,%226%22,87,%220%22,26,%226%22,3,%229%22,5,%226%22,4,%229%22,7,%226%22,9,%222%22,18,%226%22,88,%220%22,26,%226%22,3,%229%22,4,%226%22,5,%229%22,10,%226%22,3,%222%22,20,%226%22,90,%220%22,25,%226%22,4,%229%22,3,%226%22,5,%229%22,9,%226%22,1,%229%22,22,%226%22,92,%220%22,24,%226%22,5,%229%22,1,%226%22,6,%229%22,8,%226%22,3,%229%22,20,%226%22,94,%220%22,13,%226%22,1,%229%22,9,%226%22,12,%229%22,7,%226%22,4,%229%22,19,%226%22,95,%220%22,12,%226%22,3,%229%22,8,%226%22,8,%229%22,1,%227%22,4,%229%22,6,%226%22,4,%229%22,18,%226%22,97,%220%22,11,%226%22,3,%229%22,7,%226%22,4,%229%22,1,%227%22,3,%229%22,3,%227%22,4,%229%22,4,%226%22,5,%229%22,17,%226%22,99,%220%22,10,%226%22,3,%229%22,7,%226%22,3,%229%22,3,%227%22,1,%229%22,5,%227%22,12,%229%22,16,%226%22,101,%220%22,9,%226%22,4,%229%22,5,%226%22,4,%229%22,10,%227%22,10,%229%22,16,%226%22,103,%220%22,8,%226%22,12,%229%22,2,%227%22,7,%229%22,4,%227%22,8,%229%22,13,%226%22,107,%220%22,8,%226%22,21,%229%22,5,%227%22,5,%229%22,13,%226%22,108,%220%22,9,%226%22,29,%229%22,12,%226%22,110,%220%22,10,%226%22,12,%229%22,5,%22a%22,10,%229%22,12,%226%22,111,%220%22,11,%226%22,7,%229%22,10,%22a%22,7,%229%22,12,%226%22,113,%220%22,16,%226%22,14,%22a%22,3,%229%22,13,%226%22,115,%220%22,15,%226%22,16,%22a%22,12,%226%22,117,%220%22,15,%226%22,16,%22a%22,11,%226%22,119,%220%22,14,%226%22,9,%22a%22,1,%226%22,6,%22a%22,8,%226%22,123,%220%22,14,%226%22,7,%22a%22,3,%226%22,5,%22a%22,6,%226%22,126,%220%22,14,%226%22,5,%22a%22,4,%226%22,5,%22a%22,4,%226%22,129,%220%22,23,%226%22,3,%22a%22,4,%226%22,131,%220%22,27,%226%22,90,%220%22,24,%22d%22,20,%220%22,24,%226%22,88,%220%22,13,%22d%22,1,%22f%22,15,%22d%22,20,%220%22,22,%226%22,88,%220%22,13,%22d%22,3,%22f%22,14,%22d%22,21,%220%22,20,%226%22,88,%220%22,13,%22d%22,3,%22f%22,15,%22d%22,22,%220%22,17,%226%22,90,%220%22,12,%22d%22,3,%22f%22,16,%22d%22,29,%220%22,9,%226%22,91,%220%22,12,%22d%22,3,%22f%22,16,%22d%22,126,%220%22,14,%22d%22,3,%22f%22,2,%22d%22,4,%22f%22,11,%22d%22,125,%220%22,15,%22d%22,11,%22f%22,9,%22d%22,125,%220%22,14,%22d%22,13,%22f%22,8,%22d%22,125,%220%22,13,%22d%22,6,%22f%22,5,%22d%22,4,%22f%22,7,%22d%22,125,%220%22,13,%22d%22,9,%22f%22,3,%22d%22,3,%22f%22,7,%22d%22,125,%220%22,14,%22d%22,9,%22f%22,2,%22d%22,3,%22f%22,7,%22d%22,125,%220%22,19,%22d%22,4,%22f%22,2,%22d%22,3,%22f%22,7,%22d%22,125,%220%22,21,%22d%22,1,%22f%22,3,%22d%22,3,%22f%22,7,%22d%22,125,%220%22,25,%22d%22,3,%22f%22,7,%22d%22,125,%220%22,25,%22d%22,3,%22f%22,7,%22d%22,125,%220%22,12,%22d%22,1,%22f%22,12,%22d%22,3,%22f%22,7,%22d%22,125,%220%22,11,%22d%22,3,%22f%22,10,%22d%22,4,%22f%22,7,%22d%22,125,%220%22,11,%22d%22,5,%22f%22,6,%22d%22,5,%22f%22,8,%22d%22,125,%220%22,12,%22d%22,13,%22f%22,10,%22d%22,125,%220%22,14,%22d%22,10,%22f%22,11,%22d%22,125,%220%22,16,%22d%22,6,%22f%22,13,%22d%22,125,%220%22,35,%22d%22,125,%220%22,35,%22d%22,125,%220%22,35,%22d%22,125,%220%22,35,%22d%22,125,%220%22,35,%22d%22,125,%220%22,34,%22d%22,127,%220%22,24,%22d%22,1566,%220%22%5D,%5B4377,%220%22,18,%226%22,140,%220%22,22,%226%22,136,%220%22,26,%226%22,132,%220%22,29,%226%22,130,%220%22,31,%226%22,26,%220%22,20,%226%22,82,%220%22,33,%226%22,21,%220%22,25,%226%22,80,%220%22,35,%226%22,18,%220%22,28,%226%22,78,%220%22,37,%226%22,15,%220%22,31,%226%22,76,%220%22,39,%226%22,12,%220%22,34,%226%22,74,%220%22,41,%226%22,10,%220%22,36,%226%22,72,%220%22,42,%226%22,8,%220%22,39,%226%22,70,%220%22,44,%226%22,6,%220%22,41,%226%22,69,%220%22,44,%226%22,5,%220%22,43,%226%22,67,%220%22,46,%226%22,3,%220%22,44,%226%22,66,%220%22,48,%226%22,1,%220%22,46,%226%22,64,%220%22,96,%226%22,63,%220%22,98,%226%22,62,%220%22,98,%226%22,61,%220%22,99,%226%22,60,%220%22,100,%226%22,60,%220%22,101,%226%22,58,%220%22,102,%226%22,57,%220%22,103,%226%22,57,%220%22,103,%226%22,57,%220%22,103,%226%22,57,%220%22,103,%226%22,57,%220%22,103,%226%22,56,%220%22,104,%226%22,56,%220%22,104,%226%22,56,%220%22,104,%226%22,56,%220%22,104,%226%22,56,%220%22,104,%226%22,56,%220%22,104,%226%22,56,%220%22,104,%226%22,56,%220%22,104,%226%22,56,%220%22,104,%226%22,56,%220%22,104,%226%22,56,%220%22,104,%226%22,56,%220%22,104,%226%22,56,%220%22,104,%226%22,56,%220%22,104,%226%22,56,%220%22,104,%226%22,56,%220%22,104,%226%22,56,%220%22,104,%226%22,56,%220%22,104,%226%22,56,%220%22,104,%226%22,56,%220%22,104,%226%22,56,%220%22,104,%226%22,57,%220%22,103,%226%22,57,%220%22,103,%226%22,57,%220%22,102,%226%22,58,%220%22,58,%226%22,2,%224%22,42,%226%22,59,%220%22,33,%226%22,1,%224%22,23,%226%22,4,%224%22,40,%226%22,59,%220%22,32,%226%22,5,%224%22,21,%226%22,6,%224%22,37,%226%22,59,%220%22,33,%226%22,5,%224%22,21,%226%22,7,%224%22,34,%226%22,60,%220%22,34,%226%22,5,%224%22,22,%226%22,6,%224%22,33,%226%22,61,%220%22,36,%226%22,3,%224%22,24,%226%22,4,%224%22,31,%226%22,63,%220%22,36,%226%22,3,%224%22,25,%226%22,3,%224%22,29,%226%22,64,%220%22,37,%226%22,3,%224%22,25,%226%22,3,%224%22,27,%226%22,66,%220%22,37,%226%22,3,%224%22,24,%226%22,3,%224%22,27,%226%22,66,%220%22,37,%226%22,3,%224%22,25,%226%22,3,%224%22,25,%226%22,68,%220%22,36,%226%22,3,%224%22,25,%226%22,3,%224%22,25,%226%22,68,%220%22,37,%226%22,3,%224%22,24,%226%22,3,%224%22,24,%226%22,70,%220%22,36,%226%22,3,%224%22,24,%226%22,3,%224%22,23,%226%22,71,%220%22,36,%226%22,3,%224%22,24,%226%22,3,%224%22,22,%226%22,73,%220%22,35,%226%22,3,%224%22,24,%226%22,3,%224%22,22,%226%22,73,%220%22,35,%226%22,3,%224%22,24,%226%22,3,%224%22,21,%226%22,75,%220%22,34,%226%22,3,%224%22,24,%226%22,3,%224%22,21,%226%22,75,%220%22,34,%226%22,3,%224%22,24,%226%22,3,%224%22,20,%226%22,77,%220%22,33,%226%22,3,%224%22,24,%226%22,3,%224%22,19,%226%22,78,%220%22,33,%226%22,3,%224%22,24,%226%22,3,%224%22,18,%226%22,80,%220%22,32,%226%22,3,%224%22,24,%226%22,3,%224%22,17,%226%22,81,%220%22,32,%226%22,3,%224%22,24,%226%22,3,%224%22,16,%226%22,83,%220%22,30,%226%22,3,%224%22,24,%226%22,3,%224%22,16,%226%22,85,%220%22,28,%226%22,3,%224%22,24,%226%22,3,%224%22,16,%226%22,87,%220%22,27,%226%22,3,%224%22,24,%226%22,3,%224%22,15,%226%22,88,%220%22,26,%226%22,3,%224%22,24,%226%22,3,%224%22,15,%226%22,90,%220%22,25,%226%22,3,%224%22,23,%226%22,3,%224%22,15,%226%22,92,%220%22,23,%226%22,3,%224%22,24,%226%22,3,%224%22,14,%226%22,94,%220%22,17,%226%22,7,%224%22,24,%226%22,3,%224%22,14,%226%22,95,%220%22,15,%226%22,8,%224%22,23,%226%22,4,%224%22,14,%226%22,97,%220%22,13,%226%22,8,%224%22,23,%226%22,4,%224%22,14,%226%22,99,%220%22,13,%226%22,2,%224%22,26,%226%22,5,%224%22,14,%226%22,101,%220%22,39,%226%22,4,%224%22,15,%226%22,103,%220%22,37,%226%22,4,%224%22,13,%226%22,107,%220%22,35,%226%22,4,%224%22,13,%226%22,108,%220%22,35,%226%22,3,%224%22,12,%226%22,110,%220%22,36,%226%22,1,%224%22,12,%226%22,111,%220%22,47,%226%22,113,%220%22,46,%226%22,115,%220%22,43,%226%22,117,%220%22,42,%226%22,119,%220%22,38,%226%22,123,%220%22,35,%226%22,88,%220%22,10,%22d%22,28,%220%22,32,%226%22,83,%220%22,21,%22d%22,25,%220%22,30,%226%22,80,%220%22,28,%22d%22,23,%220%22,27,%226%22,81,%220%22,30,%22d%22,23,%220%22,25,%226%22,82,%220%22,31,%22d%22,23,%220%22,23,%226%22,83,%220%22,31,%22d%22,24,%220%22,20,%226%22,85,%220%22,10,%22d%22,1,%22f%22,4,%22d%22,3,%22f%22,13,%22d%22,25,%220%22,17,%226%22,87,%220%22,9,%22d%22,3,%22f%22,2,%22d%22,6,%22f%22,11,%22d%22,32,%220%22,9,%226%22,88,%220%22,9,%22d%22,3,%22f%22,1,%22d%22,9,%22f%22,9,%22d%22,129,%220%22,9,%22d%22,7,%22f%22,1,%22d%22,6,%22f%22,8,%22d%22,129,%220%22,10,%22d%22,5,%22f%22,5,%22d%22,4,%22f%22,7,%22d%22,129,%220%22,10,%22d%22,4,%22f%22,2,%22d%22,3,%22f%22,2,%22d%22,3,%22f%22,7,%22d%22,129,%220%22,11,%22d%22,9,%22f%22,1,%22d%22,3,%22f%22,7,%22d%22,129,%220%22,11,%22d%22,8,%22f%22,2,%22d%22,3,%22f%22,7,%22d%22,129,%220%22,12,%22d%22,4,%22f%22,5,%22d%22,3,%22f%22,7,%22d%22,129,%220%22,20,%22d%22,3,%22f%22,8,%22d%22,129,%220%22,20,%22d%22,3,%22f%22,8,%22d%22,129,%220%22,19,%22d%22,3,%22f%22,9,%22d%22,129,%220%22,10,%22d%22,1,%22f%22,8,%22d%22,3,%22f%22,9,%22d%22,129,%220%22,9,%22d%22,5,%22f%22,3,%22d%22,4,%22f%22,9,%22d%22,130,%220%22,9,%22d%22,11,%22f%22,10,%22d%22,130,%220%22,10,%22d%22,9,%22f%22,11,%22d%22,130,%220%22,13,%22d%22,5,%22f%22,12,%22d%22,130,%220%22,29,%22d%22,131,%220%22,29,%22d%22,131,%220%22,28,%22d%22,132,%220%22,28,%22d%22,132,%220%22,28,%22d%22,132,%220%22,27,%22d%22,134,%220%22,25,%22d%22,1884,%220%22%5D,%5B25920,%220%22%5D,%5B25920,%220%22%5D,%5B25920,%220%22%5D,%5B25920,%220%22%5D,%5B4377,%220%22,18,%226%22,140,%220%22,22,%226%22,136,%220%22,26,%226%22,132,%220%22,29,%226%22,130,%220%22,31,%226%22,26,%220%22,20,%226%22,82,%220%22,33,%226%22,21,%220%22,25,%226%22,80,%220%22,35,%226%22,18,%220%22,28,%226%22,78,%220%22,37,%226%22,15,%220%22,31,%226%22,76,%220%22,39,%226%22,12,%220%22,34,%226%22,74,%220%22,41,%226%22,10,%220%22,36,%226%22,72,%220%22,42,%226%22,8,%220%22,39,%226%22,70,%220%22,44,%226%22,6,%220%22,41,%226%22,69,%220%22,44,%226%22,5,%220%22,43,%226%22,67,%220%22,46,%226%22,3,%220%22,44,%226%22,66,%220%22,48,%226%22,1,%220%22,46,%226%22,64,%220%22,96,%226%22,63,%220%22,32,%226%22,1,%225%22,65,%226%22,62,%220%22,31,%226%22,3,%225%22,33,%226%22,2,%224%22,11,%226%22,1,%224%22,17,%226%22,61,%220%22,32,%226%22,3,%225%22,31,%226%22,5,%224%22,8,%226%22,4,%224%22,16,%226%22,60,%220%22,34,%226%22,3,%225%22,29,%226%22,5,%224%22,8,%226%22,4,%224%22,17,%226%22,60,%220%22,34,%226%22,3,%225%22,11,%226%22,1,%225%22,16,%226%22,4,%224%22,7,%226%22,6,%224%22,19,%226%22,58,%220%22,35,%226%22,3,%225%22,10,%226%22,3,%225%22,14,%226%22,4,%224%22,7,%226%22,5,%224%22,21,%226%22,57,%220%22,23,%226%22,4,%225%22,9,%226%22,3,%225%22,10,%226%22,3,%225%22,14,%226%22,3,%224%22,8,%226%22,4,%224%22,22,%226%22,57,%220%22,22,%226%22,6,%225%22,8,%226%22,3,%225%22,10,%226%22,3,%225%22,9,%226%22,1,%224%22,4,%226%22,3,%224%22,7,%226%22,3,%224%22,24,%226%22,57,%220%22,23,%226%22,6,%225%22,7,%226%22,3,%225%22,10,%226%22,3,%225%22,8,%226%22,3,%224%22,3,%226%22,3,%224%22,6,%226%22,3,%224%22,25,%226%22,57,%220%22,26,%226%22,3,%225%22,7,%226%22,3,%225%22,10,%226%22,3,%225%22,7,%226%22,3,%224%22,4,%226%22,3,%224%22,6,%226%22,3,%224%22,25,%226%22,57,%220%22,26,%226%22,3,%225%22,4,%226%22,6,%225%22,9,%226%22,3,%225%22,8,%226%22,3,%224%22,4,%226%22,3,%224%22,5,%226%22,3,%224%22,26,%226%22,56,%220%22,27,%226%22,3,%225%22,1,%226%22,12,%225%22,6,%226%22,3,%225%22,8,%226%22,3,%224%22,4,%226%22,3,%224%22,5,%226%22,3,%224%22,26,%226%22,56,%220%22,18,%226%22,2,%225%22,7,%226%22,17,%225%22,4,%226%22,3,%225%22,9,%226%22,3,%224%22,4,%226%22,3,%224%22,5,%226%22,4,%224%22,14,%226%22,3,%224%22,8,%226%22,56,%220%22,17,%226%22,4,%225%22,6,%226%22,7,%225%22,6,%22f%22,5,%225%22,2,%226%22,3,%225%22,10,%226%22,3,%224%22,3,%226%22,15,%224%22,8,%226%22,8,%224%22,7,%226%22,56,%220%22,18,%226%22,4,%225%22,4,%226%22,5,%225%22,11,%22f%22,4,%225%22,1,%226%22,3,%225%22,10,%226%22,3,%224%22,2,%226%22,19,%224%22,4,%226%22,8,%224%22,8,%226%22,56,%220%22,20,%226%22,3,%225%22,2,%226%22,5,%225%22,13,%22f%22,6,%225%22,11,%226%22,3,%224%22,1,%226%22,21,%224%22,2,%226%22,6,%224%22,11,%226%22,56,%220%22,20,%226%22,3,%225%22,1,%226%22,4,%225%22,16,%22f%22,4,%225%22,12,%226%22,7,%224%22,14,%22e%22,8,%224%22,15,%226%22,56,%220%22,20,%226%22,7,%225%22,17,%22f%22,3,%225%22,14,%226%22,5,%224%22,17,%22e%22,5,%224%22,16,%226%22,56,%220%22,21,%226%22,4,%225%22,20,%22f%22,3,%225%22,14,%226%22,3,%224%22,20,%22e%22,3,%224%22,16,%226%22,56,%220%22,21,%226%22,3,%225%22,21,%22f%22,3,%225%22,13,%226%22,3,%224%22,21,%22e%22,3,%224%22,16,%226%22,56,%220%22,20,%226%22,3,%225%22,12,%22f%22,1,%225%22,9,%22f%22,3,%225%22,13,%226%22,3,%224%22,21,%22e%22,3,%224%22,16,%226%22,56,%220%22,19,%226%22,4,%225%22,10,%22f%22,4,%225%22,8,%22f%22,3,%225%22,13,%226%22,3,%224%22,21,%22e%22,3,%224%22,1,%226%22,4,%224%22,11,%226%22,56,%220%22,19,%226%22,3,%225%22,10,%22f%22,5,%225%22,8,%22f%22,3,%225%22,13,%226%22,3,%224%22,7,%22e%22,2,%224%22,12,%22e%22,9,%224%22,10,%226%22,56,%220%22,20,%226%22,3,%225%22,9,%22f%22,5,%225%22,8,%22f%22,3,%225%22,13,%226%22,3,%224%22,6,%22e%22,6,%224%22,9,%22e%22,8,%224%22,11,%226%22,56,%220%22,20,%226%22,3,%225%22,10,%22f%22,4,%225%22,8,%22f%22,3,%225%22,13,%226%22,3,%224%22,6,%22e%22,7,%224%22,8,%22e%22,5,%224%22,14,%226%22,56,%220%22,20,%226%22,3,%225%22,12,%22f%22,1,%225%22,9,%22f%22,3,%225%22,5,%226%22,1,%223%22,1,%222%22,6,%226%22,3,%224%22,6,%22e%22,7,%224%22,8,%22e%22,3,%224%22,16,%226%22,56,%220%22,21,%226%22,3,%225%22,21,%22f%22,3,%225%22,4,%226%22,1,%223%22,3,%222%22,5,%226%22,3,%224%22,7,%22e%22,5,%224%22,9,%22e%22,3,%224%22,16,%226%22,56,%220%22,21,%226%22,3,%225%22,21,%22f%22,3,%225%22,4,%226%22,1,%223%22,3,%222%22,5,%226%22,3,%224%22,8,%22e%22,3,%224%22,10,%22e%22,3,%224%22,16,%226%22,56,%220%22,21,%226%22,4,%225%22,20,%22f%22,3,%225%22,4,%226%22,1,%223%22,4,%222%22,4,%226%22,3,%224%22,21,%22e%22,3,%224%22,16,%226%22,56,%220%22,22,%226%22,4,%225%22,18,%22f%22,3,%225%22,5,%226%22,2,%223%22,3,%222%22,4,%226%22,3,%224%22,20,%22e%22,4,%224%22,16,%226%22,56,%220%22,23,%226%22,4,%225%22,17,%22f%22,3,%225%22,5,%226%22,2,%223%22,4,%222%22,3,%226%22,3,%224%22,20,%22e%22,3,%224%22,17,%226%22,56,%220%22,24,%226%22,4,%225%22,15,%22f%22,3,%225%22,6,%226%22,3,%223%22,3,%222%22,3,%226%22,3,%224%22,18,%22e%22,4,%224%22,18,%226%22,57,%220%22,24,%226%22,4,%225%22,14,%22f%22,3,%225%22,7,%226%22,3,%223%22,3,%222%22,3,%226%22,3,%224%22,16,%22e%22,4,%224%22,19,%226%22,57,%220%22,25,%226%22,6,%225%22,9,%22f%22,4,%225%22,7,%226%22,4,%223%22,3,%222%22,3,%226%22,4,%224%22,14,%22e%22,4,%224%22,20,%226%22,57,%220%22,27,%226%22,16,%225%22,8,%226%22,4,%223%22,3,%222%22,4,%226%22,6,%224%22,8,%22e%22,6,%224%22,20,%226%22,58,%220%22,28,%226%22,14,%225%22,9,%226%22,4,%223%22,3,%222%22,5,%226%22,18,%224%22,21,%226%22,59,%220%22,30,%226%22,9,%225%22,11,%226%22,4,%223%22,3,%222%22,7,%226%22,14,%224%22,23,%226%22,59,%220%22,48,%226%22,1,%222%22,1,%226%22,4,%223%22,3,%222%22,10,%226%22,8,%224%22,26,%226%22,59,%220%22,47,%226%22,3,%222%22,4,%223%22,3,%222%22,43,%226%22,60,%220%22,47,%226%22,3,%222%22,4,%223%22,3,%222%22,43,%226%22,61,%220%22,46,%226%22,3,%222%22,4,%223%22,3,%222%22,42,%226%22,63,%220%22,45,%226%22,3,%222%22,3,%223%22,4,%222%22,41,%226%22,64,%220%22,45,%226%22,3,%222%22,4,%223%22,3,%222%22,40,%226%22,66,%220%22,43,%226%22,4,%222%22,4,%223%22,3,%222%22,40,%226%22,66,%220%22,41,%226%22,5,%222%22,5,%223%22,3,%222%22,39,%226%22,68,%220%22,39,%226%22,5,%222%22,6,%223%22,4,%222%22,38,%226%22,68,%220%22,38,%226%22,4,%222%22,9,%223%22,3,%222%22,37,%226%22,70,%220%22,36,%226%22,3,%222%22,12,%223%22,3,%222%22,35,%226%22,71,%220%22,35,%226%22,3,%222%22,14,%223%22,3,%222%22,33,%226%22,73,%220%22,33,%226%22,3,%222%22,8,%223%22,1,%222%22,6,%223%22,4,%222%22,32,%226%22,73,%220%22,33,%226%22,3,%222%22,7,%223%22,3,%222%22,6,%223%22,3,%222%22,31,%226%22,75,%220%22,32,%226%22,3,%222%22,6,%223%22,4,%222%22,6,%223%22,3,%222%22,31,%226%22,75,%220%22,32,%226%22,4,%222%22,5,%223%22,4,%222%22,6,%223%22,3,%222%22,30,%226%22,77,%220%22,32,%226%22,12,%222%22,6,%223%22,3,%222%22,29,%226%22,78,%220%22,33,%226%22,11,%222%22,4,%223%22,4,%222%22,29,%226%22,80,%220%22,33,%226%22,17,%222%22,29,%226%22,81,%220%22,41,%226%22,8,%222%22,29,%226%22,83,%220%22,41,%226%22,6,%222%22,29,%226%22,85,%220%22,74,%226%22,87,%220%22,72,%226%22,88,%220%22,35,%226%22,1,%229%22,35,%226%22,90,%220%22,28,%226%22,1,%229%22,4,%226%22,3,%229%22,33,%226%22,92,%220%22,26,%226%22,3,%229%22,2,%226%22,5,%229%22,31,%226%22,94,%220%22,23,%226%22,17,%229%22,25,%226%22,95,%220%22,18,%226%22,8,%229%22,1,%227%22,4,%229%22,2,%227%22,8,%229%22,23,%226%22,97,%220%22,16,%226%22,8,%229%22,3,%227%22,2,%229%22,5,%227%22,6,%229%22,22,%226%22,99,%220%22,16,%226%22,10,%229%22,7,%227%22,5,%229%22,22,%226%22,101,%220%22,16,%226%22,20,%229%22,22,%226%22,103,%220%22,18,%226%22,16,%229%22,20,%226%22,107,%220%22,18,%226%22,5,%22a%22,8,%229%22,21,%226%22,108,%220%22,18,%226%22,10,%22a%22,22,%226%22,110,%220%22,19,%226%22,8,%22a%22,22,%226%22,111,%220%22,23,%226%22,3,%22a%22,21,%226%22,113,%220%22,46,%226%22,115,%220%22,43,%226%22,117,%220%22,42,%226%22,119,%220%22,38,%226%22,123,%220%22,35,%226%22,126,%220%22,32,%226%22,129,%220%22,30,%226%22,131,%220%22,27,%226%22,134,%220%22,24,%226%22,137,%220%22,22,%226%22,139,%220%22,20,%226%22,141,%220%22,17,%226%22,150,%220%22,9,%226%22,5358,%220%22%5D%5D,%22palette_name%22:%22shido-cyberneon%22,%22background_color%22:%22#000000%22,%22foreground_color%22:%22#ffffff%22,%22version%22:%222%22,%22width%22:160,%22height%22:162,%22hyperlinks%22:%5B%5B0,0,4,4,3,2,0,5,0,5,6,0,0,0,3,2%5D,%5B0,0,4,4,7,0,1,5,0,5,6,0,0,0,7,0%5D,%5B0,0,4,4,0,7,1,5,0,5,6,0,0,0,0,7%5D,%5B0,0,0,0,3,2,1,5,0,5,6,0,0,0,3,2%5D,%5B0,0,4,4,3,2,1,0,0,0,6,0,0,0,3,2%5D,%5B0,0,4,4,3,2,0,5,0,5,6,0,0,0,3,2%5D,%5B0,0,8,8,0,2,1,5,0,5,6,0,0,0,0,2%5D,%5B0,0,4,4,0,2,1,9,0,9,6,0,0,0,0,2%5D,%5B0,0,4,4,0,2,1,5,0,5,10,0,0,0,0,2%5D,%5B0,0,0,0,0,0,0,0,0,0,0,0,0,11,0,11%5D,%5B0,0,0,0,0,0,0,0,0,0,0,0,0,10,0,10%5D,%5B0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0%5D,%5B0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0%5D,%5B0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0%5D,%5B0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0%5D,%5B0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,2%5D%5D%7D";
+//<!--__EmbedEnd__-->
+
+function getUrlVars() {
+    var vars = {};
+    var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi,    
+    function(m,key,value) {
+      vars[key] = value;
+    });
+    return vars;
+}
+
+var urlVars = getUrlVars();
+if (!("frameCount" in urlVars)){
+  urlVars["frameCount"]=1;
+}
+if (!("animationLength" in urlVars)){
+  urlVars["animationLength"]=0.5;
+}
+
+urlVars["frameCount"]=parseFloat(urlVars["frameCount"])
+urlVars["animationLength"]=parseFloat(urlVars["animationLength"])
+var frameCount=urlVars["frameCount"];
+var animationLength=urlVars["animationLength"];
+
+if(urlVars["a"]==="1"){
+  frameCount=8;
+  animationLength=0.5;
+}
+var showAnimation = frameCount>1;
+
+// Localizable UI strings
+var i18nStrings = {
+  en: {
+    tutorial_move_cursor: "Drag anywhere to move the cursor. Can you find a link?",
+    tutorial_tap_link: "Tap to go to the hovered link!",
+    edit_link_label_html: "&sdotb; edit",
+    return_gallery_link_label_html: "&lt;&lt; Gallery"
+  },
+  de: {
+    tutorial_move_cursor: "Zieh herum, um den Cursor zu bewegen. Kannst du einen Link finden?",
+    tutorial_tap_link: "Tappen, um einem Link zu folgen!",
+    edit_link_label_html: "&sdotb; bearbeiten",
+    return_gallery_link_label_html: "&lt;&lt; Galerie"
+  }
+};
+function resolveI18nLocale() {
+  var requested = getParameterByName("lang");
+  if (!requested && typeof navigator !== "undefined" && navigator.language) {
+    requested = navigator.language;
+  }
+  if (!requested) return "en";
+
+  requested = String(requested).replace("_", "-").toLowerCase();
+  if (Object.prototype.hasOwnProperty.call(i18nStrings, requested)) {
+    return requested;
+  }
+
+  var base = requested.split("-")[0];
+  if (Object.prototype.hasOwnProperty.call(i18nStrings, base)) {
+    return base;
+  }
+  return "en";
+}
+var i18nLocale = resolveI18nLocale();
+
+function t(key) {
+  var localeDict = i18nStrings[i18nLocale] || i18nStrings.en;
+  return (localeDict && localeDict[key] !== undefined) ? localeDict[key] : key;
+}
+
+
+var animating=false;
+var zoom=1;
+var currentIndex=0;
+
+// Touch cursor constants
+var POINTER_SPEED = 1.0;
+var TAP_THRESHOLD = 10;
+var TAP_TIME_THRESHOLD = 300;
+var DARK_LUMINANCE = 0.3;
+var TOUCH_CURSOR_CALIBRATION = {
+  arrow: {
+    // SVG viewBox-space hotspot (0..16) for where this icon should point.
+    hotspot: { x: 2.5, y: 2.5 },
+    // Extra visual nudge (also in 0..16 units). Keep at 0 unless tuning.
+    nudge: { x: 0, y: 0 }
+  },
+  hand: {
+    hotspot: { x: 7.5, y: 2.5 },
+    nudge: { x: -1.0, y: -1.0 }
+  }
+};
+
+// Touch cursor state
+var touchMode = false;
+var cursorX = 80.0;
+var cursorY = 50.0;
+var cursorVisible = false;
+var hoveredIsLink = false;
+var hoveredColorIndex = -1;
+var lastTouchTime = 0;
+var activeTouchId = null;
+var touchStartX = 0;
+var touchStartY = 0;
+var touchStartTime = 0;
+var tapSavedCursorX = 0;
+var tapSavedCursorY = 0;
+var lastTouchX = 0;
+var lastTouchY = 0;
+
+// Letterbox offsets (promoted from local vars in redraw/mouseMove)
+var dx = 0;
+var dy = 0;
+
+// Touch cursor overlay refs/state
+var cursorLayerEl = null;
+var cursorIconEl = null;
+var cursorUseEl = null;
+var rippleLayerEl = null;
+var tutorialEl = null;
+var tutorialTimeoutId = 0;
+var tutorialPendingDuration = 0;
+var tutorialCountdownEnabled = false;
+var tutorialHasMoved = false;
+/** After first movement, true once cursor has been off a link pixel (non-clickable area). Required before tap hint; avoids tap when "started" on a link. */
+var tutorialWasOffLinkAfterMove = false;
+/** After user follows any link once, never show the tap hint again (this session). */
+var tutorialTapHintDisabled = false;
+var wasHoverLink = false;
+var cursorDragging = false;
+var cursorTapUntil = 0;
+var cursorOffsetX = 0;
+var cursorOffsetY = 0;
+var cursorOffsetStartX = 0;
+var cursorOffsetStartY = 0;
+var cursorOffsetTargetX = 0;
+var cursorOffsetTargetY = 0;
+var cursorOffsetStartTs = 0;
+var cursorOffsetDuration = 0;
+var cursorOverlayRaf = 0;
+
+function initTouchCursorOverlay() {
+  cursorLayerEl = document.getElementById('touch-cursor-layer');
+  cursorIconEl = document.getElementById('touch-cursor-icon');
+  cursorUseEl = document.getElementById('touch-cursor-use');
+  rippleLayerEl = document.getElementById('touch-ripple-layer');
+  tutorialEl = document.getElementById('touch-tutorial');
+}
+
+function hexToRgb(hex) {
+  var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : {r: 0, g: 0, b: 0};
+}
+
+function getCursorBaseSize() {
+  return Math.max(44, Math.min(92, Math.round(zoom * 18)));
+}
+
+function getCursorAnchorPx() {
+  var px = Math.floor(cursorX);
+  var py = Math.floor(cursorY);
+  return {
+    x: dx + px * zoom + zoom * 0.5,
+    y: dy + py * zoom + zoom * 0.5
+  };
+}
+
+function getEffectiveCursorGamePos() {
+  var gw = getGameWidth();
+  var gh = getGameHeight();
+  var z = (zoom && zoom > 0) ? zoom : 1;
+  var gx = cursorX + (cursorOffsetX / z);
+  var gy = cursorY + (cursorOffsetY / z);
+  if (gx < 0) gx = 0;
+  if (gy < 0) gy = 0;
+  if (gx > gw - 1) gx = gw - 1;
+  if (gy > gh - 1) gy = gh - 1;
+  return { x: gx, y: gy };
+}
+
+/** Same link test as updateCursorHover, for a specific floored game cell (used before cursor jumps). */
+function isLinkAtGameCell(px, py) {
+  if (!gameState || !gameState.imageDats || !gameState.imageDats[currentIndex]) return false;
+  var gw = getGameWidth();
+  var gh = getGameHeight();
+  if (px < 0 || py < 0 || px >= gw || py >= gh) return false;
+  var ch = gameState.imageDats[currentIndex][px + gw * py];
+  var colIndex = parseInt(ch, 16);
+  return gameState.hyperlinks[currentIndex][colIndex] !== 0;
+}
+
+function resetCursorOffset() {
+  cursorOffsetX = 0;
+  cursorOffsetY = 0;
+  cursorOffsetStartX = 0;
+  cursorOffsetStartY = 0;
+  cursorOffsetTargetX = 0;
+  cursorOffsetTargetY = 0;
+  cursorOffsetDuration = 0;
+}
+
+function commitCursorOffsetToPosition() {
+  if (Math.abs(cursorOffsetX) < 0.01 && Math.abs(cursorOffsetY) < 0.01) return;
+  var effective = getEffectiveCursorGamePos();
+  cursorX = effective.x;
+  cursorY = effective.y;
+  resetCursorOffset();
+}
+
+function getCursorHotspot(iconSize, isHand) {
+  var iconType = isHand ? 'hand' : 'arrow';
+  var calibration = TOUCH_CURSOR_CALIBRATION[iconType] || TOUCH_CURSOR_CALIBRATION.arrow;
+  var iconScale = iconSize / 16;
+  return {
+    x: (calibration.hotspot.x + calibration.nudge.x) * iconScale,
+    y: (calibration.hotspot.y + calibration.nudge.y) * iconScale
+  };
+}
+
+function getContrastingStroke(fillHex) {
+  var rgb = hexToRgb(fillHex);
+  var luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
+  return luminance < DARK_LUMINANCE ? '#ffffff' : '#000000';
+}
+
+function distanceSqRgb(a, b) {
+  var dr = a.r - b.r;
+  var dg = a.g - b.g;
+  var db = a.b - b.b;
+  return dr * dr + dg * dg + db * db;
+}
+
+function chooseClosestBlackOrWhite(hex) {
+  var c = hexToRgb(hex);
+  var white = { r: 255, g: 255, b: 255 };
+  var black = { r: 0, g: 0, b: 0 };
+  var dWhite = distanceSqRgb(c, white);
+  var dBlack = distanceSqRgb(c, black);
+  return dBlack <= dWhite ? '#000000' : '#ffffff';
+}
+
+function getCursorReferenceBackgroundColor(isHand) {
+  if (isHand && hoveredIsLink && hoveredColorIndex >= 0 && hoveredColorIndex < colorPalette.length) {
+    return colorPalette[hoveredColorIndex];
+  }
+  return (gameState && gameState.background_color) ? gameState.background_color : '#000000';
+}
+
+function setCursorOffsetTarget(tx, ty, durationMs) {
+  cursorOffsetStartX = cursorOffsetX;
+  cursorOffsetStartY = cursorOffsetY;
+  cursorOffsetTargetX = tx;
+  cursorOffsetTargetY = ty;
+  cursorOffsetStartTs = Date.now();
+  cursorOffsetDuration = durationMs;
+  if (durationMs > 0) {
+    startCursorOverlayAnimation();
+  }
+}
+
+function updateCursorOffset(now) {
+  if (cursorOffsetDuration <= 0) {
+    cursorOffsetX = cursorOffsetTargetX;
+    cursorOffsetY = cursorOffsetTargetY;
+    return;
+  }
+  var t = (now - cursorOffsetStartTs) / cursorOffsetDuration;
+  if (t >= 1) {
+    cursorOffsetX = cursorOffsetTargetX;
+    cursorOffsetY = cursorOffsetTargetY;
+    cursorOffsetDuration = 0;
+    return;
+  }
+  if (t < 0) t = 0;
+  var eased = 1 - Math.pow(1 - t, 3);
+  cursorOffsetX = cursorOffsetStartX + (cursorOffsetTargetX - cursorOffsetStartX) * eased;
+  cursorOffsetY = cursorOffsetStartY + (cursorOffsetTargetY - cursorOffsetStartY) * eased;
+}
+
+function needsCursorOverlayAnimation(now) {
+  return cursorOffsetDuration > 0 || now < cursorTapUntil;
+}
+
+function startCursorOverlayAnimation() {
+  if (cursorOverlayRaf) return;
+  function tick() {
+    cursorOverlayRaf = 0;
+    renderTouchCursorOverlay();
+    if (!touchMode) return;
+    if (needsCursorOverlayAnimation(Date.now())) {
+      cursorOverlayRaf = requestAnimationFrame(tick);
+    }
+  }
+  cursorOverlayRaf = requestAnimationFrame(tick);
+}
+
+function chooseCursorOffset(anchorX, anchorY, iconSize, hotspot) {
+  var choices = [
+    { x: -56, y: -56 },
+    { x: -60, y: 0 },
+    { x: 0, y: -80 },
+    { x: 90, y: 0 },
+    { x: 0, y: 90 }
+  ];
+  updateZoom();
+  var gw = getGameWidth();
+  var gh = getGameHeight();
+  var margin = 6;
+  var canvasLeft = dx + margin;
+  var canvasTop = dy + margin;
+  var canvasRight = dx + gw * zoom - margin;
+  var canvasBottom = dy + gh * zoom - margin;
+
+  for (var i = 0; i < choices.length; i++) {
+    var c = choices[i];
+    var left = anchorX + c.x - hotspot.x;
+    var top = anchorY + c.y - hotspot.y;
+    var right = left + iconSize;
+    var bottom = top + iconSize;
+    if (left >= canvasLeft && top >= canvasTop && right <= canvasRight && bottom <= canvasBottom) {
+      return c;
+    }
+  }
+  return { x: 0, y: 0 };
+}
+
+var tutorialFadeTimeoutId = 0;
+
+function cancelTutorialFadeOut() {
+  if (tutorialFadeTimeoutId) {
+    clearTimeout(tutorialFadeTimeoutId);
+    tutorialFadeTimeoutId = 0;
+  }
+  if (tutorialEl) tutorialEl.classList.remove('fading');
+}
+
+function hideTutorialMessage() {
+  if (tutorialTimeoutId) {
+    clearTimeout(tutorialTimeoutId);
+    tutorialTimeoutId = 0;
+  }
+  tutorialPendingDuration = 0;
+  cancelTutorialFadeOut();
+  stopTutorialAnimation();
+  tutorialMode = '';
+  if (tutorialEl) tutorialEl.classList.remove('visible', 'fading');
+}
+
+function fadeOutTutorialMessage() {
+  if (!tutorialEl) return;
+  if (!tutorialEl.classList.contains('visible')) return;
+  // Stop generating new animation artifacts immediately; let existing dots fade naturally.
+  stopTutorialAnimation();
+  cancelTutorialFadeOut();
+  tutorialEl.classList.add('fading');
+  tutorialFadeTimeoutId = setTimeout(function() {
+    tutorialFadeTimeoutId = 0;
+    if (!tutorialEl) return;
+    tutorialEl.classList.remove('visible', 'fading');
+  }, 240);
+}
+
+function startTutorialTimeout(durationMs) {
+  if (!durationMs || durationMs <= 0) return;
+  if (tutorialTimeoutId) {
+    clearTimeout(tutorialTimeoutId);
+  }
+  tutorialTimeoutId = setTimeout(function() {
+    tutorialTimeoutId = 0;
+    if (tutorialEl) tutorialEl.classList.remove('visible');
+  }, durationMs);
+}
+
+var tutorialMode = '';
+var tutorialAnimRaf = 0;
+var tutorialLastDotTs = 0;
+var tutorialDragStartTs = 0;
+var tutorialTapStartTs = 0;
+/** Last box size from layoutDragTutorialBox; used when getBoundingClientRect is still 0 before first layout flush. */
+var tutorialLayoutW = 0;
+var tutorialLayoutH = 0;
+
+function stopTutorialAnimation() {
+  if (tutorialAnimRaf) {
+    cancelAnimationFrame(tutorialAnimRaf);
+    tutorialAnimRaf = 0;
+  }
+  tutorialLastDotTs = 0;
+  tutorialDragStartTs = 0;
+  tutorialTapStartTs = 0;
+  tutorialLayoutW = 0;
+  tutorialLayoutH = 0;
+}
+
+function tutorialHandSvgHtml() {
+  // hand.svg path (single path) with CSS stroke outline.
+  return '<svg class="tutorial-hand" viewBox="0 0 16 16" aria-hidden="true" focusable="false" shape-rendering="geometricPrecision">' +
+    '<path d="M6.75 1a.75.75 0 0 1 .75.75V8a.5.5 0 0 0 1 0V5.467l.086-.004c.317-.012.637-.008.816.027.134.027.294.096.448.182.077.042.15.147.15.314V8a.5.5 0 1 0 1 0V6.435l.106-.01c.316-.024.584-.01.708.04.118.046.3.207.486.43.081.096.15.19.2.259V8.5a.5.5 0 0 0 1 0v-1h.342a1 1 0 0 1 .995 1.1l-.271 2.715a2.5 2.5 0 0 1-.317.991l-1.395 2.442a.5.5 0 0 1-.434.252H6.035a.5.5 0 0 1-.416-.223l-1.433-2.15a1.5 1.5 0 0 1-.243-.666l-.345-3.105a.5.5 0 0 1 .399-.546L5 8.11V9a.5.5 0 0 0 1 0V1.75A.75.75 0 0 1 6.75 1M8.5 4.466V1.75a1.75 1.75 0 1 0-3.5 0v5.34l-1.2.24a1.5 1.5 0 0 0-1.196 1.636l.345 3.106a2.5 2.5 0 0 0 .405 1.11l1.433 2.15A1.5 1.5 0 0 0 6.035 16h6.385a1.5 1.5 0 0 0 1.302-.756l1.395-2.441a3.5 3.5 0 0 0 .444-1.389l.271-2.715a2 2 0 0 0-1.99-2.199h-.581a5 5 0 0 0-.195-.248c-.191-.229-.51-.568-.88-.716-.364-.146-.846-.132-1.158-.108l-.132.012a1.26 1.26 0 0 0-.56-.642 2.6 2.6 0 0 0-.738-.288c-.31-.062-.739-.058-1.05-.046zm2.094 2.025"/>' +
+    '</svg>';
+}
+
+function setTutorialMode(mode) {
+  if (!tutorialEl) return;
+  if (!shouldShowTouchTutorial()) {
+    tutorialMode = '';
+    stopTutorialAnimation();
+    tutorialEl.classList.remove('visible', 'fading', 'tutorial-bottom', 'tutorial-anchored', 'tutorial-drag');
+    tutorialEl.innerHTML = '';
+    return;
+  }
+  if (tutorialMode === mode && tutorialEl.classList.contains('visible')) return;
+  cancelTutorialFadeOut();
+  tutorialMode = mode || '';
+  stopTutorialAnimation();
+  tutorialEl.classList.remove('tutorial-bottom', 'tutorial-anchored', 'tutorial-drag');
+  tutorialEl.innerHTML = '';
+
+  if (mode === 'drag') {
+    tutorialEl.classList.add('tutorial-drag');
+    tutorialEl.classList.add('tutorial-bottom');
+    tutorialEl.innerHTML = '<div class="tutorial-stage" aria-hidden="true">' + tutorialHandSvgHtml() + '</div>';
+    startTutorialDragAnimation();
+  } else if (mode === 'tap') {
+    tutorialEl.classList.add('tutorial-drag');
+    tutorialEl.classList.add('tutorial-bottom');
+    tutorialEl.innerHTML = '<div class="tutorial-stage" aria-hidden="true">' + tutorialHandSvgHtml() + '</div>';
+    startTutorialTapAnimation();
+  }
+}
+
+function fig8Point(t, cx, cy, a, b) {
+  var s = Math.sin(t);
+  var c = Math.cos(t);
+  return { x: cx + a * s, y: cy + b * s * c };
+}
+
+function spawnTutorialTrailDot(x, y) {
+  if (!tutorialEl) return;
+  var d = document.createElement('div');
+  d.className = 'tutorial-trailDot';
+  d.style.left = x + 'px';
+  d.style.top = y + 'px';
+  tutorialEl.appendChild(d);
+  setTimeout(function(){ if (d.parentNode) d.parentNode.removeChild(d); }, 800);
+}
+
+function layoutDragTutorialBox() {
+  if (!tutorialEl || !mainCanvasContainer) return;
+  var cw = mainCanvasContainer.clientWidth || 0;
+  var ch = mainCanvasContainer.clientHeight || 0;
+  if (cw <= 0 || ch <= 0) {
+    return;
+  }
+
+  // Large, centered at bottom-middle; clamp upward if it would clip.
+  var margin = 10;
+  var desiredW = Math.min(520, Math.max(280, Math.round(cw * 0.78)));
+  var desiredH = Math.min(260, Math.max(150, Math.round(ch * 0.28)));
+  if (tutorialMode === 'tap') {
+    // Keep tap stage compact so it can usually fit just below the drawn game.
+    desiredW = Math.min(340, Math.max(220, Math.round(cw * 0.62)));
+    desiredH = Math.min(132, Math.max(96, Math.round(ch * 0.18)));
+  }
+
+  var left = Math.round((cw - desiredW) * 0.5);
+  var top = Math.round(ch - margin - desiredH);
+  var placement = 'containerBottom';
+  var anchorX = null;
+  var anchorY = null;
+
+  // Tap tutorial should sit just below the drawn game canvas (not container bottom),
+  // and move above the game only when there isn't enough room below.
+  if (tutorialMode === 'tap') {
+    updateZoom();
+    var gameLeft = dx;
+    var gameTop = dy;
+    var gameW = getGameWidth() * zoom;
+    var gameH = getGameHeight() * zoom;
+    anchorX = gameLeft + gameW * 0.5;
+    anchorY = gameTop + gameH;
+    var gap = 8;
+    left = Math.round(anchorX - desiredW * 0.5);
+    top = Math.round(anchorY + gap);
+    placement = 'belowGame';
+    if (top + desiredH > ch - margin) {
+      top = Math.round(anchorY - gap - desiredH);
+      placement = 'aboveGameFallback';
+    }
+  }
+
+  var rawLeft = left;
+  var rawTop = top;
+  var clampedTop = false;
+  var clampedBottom = false;
+  var clampedLeftMin = false;
+  var clampedLeftMax = false;
+  if (top < margin) {
+    top = margin;
+    clampedTop = true;
+  }
+  if (top + desiredH > ch - margin) {
+    top = ch - margin - desiredH;
+    clampedBottom = true;
+  }
+  if (left < margin) {
+    left = margin;
+    clampedLeftMin = true;
+  }
+  if (left + desiredW > cw - margin) {
+    left = cw - margin - desiredW;
+    clampedLeftMax = true;
+  }
+
+  tutorialEl.style.left = left + 'px';
+  tutorialEl.style.top = top + 'px';
+  tutorialEl.style.width = desiredW + 'px';
+  tutorialEl.style.height = desiredH + 'px';
+  tutorialLayoutW = desiredW;
+  tutorialLayoutH = desiredH;
+}
+
+function startTutorialDragAnimation() {
+  if (!tutorialEl) return;
+  var hand = tutorialEl.querySelector('.tutorial-hand');
+  if (!hand) return;
+  tutorialDragStartTs = performance.now();
+
+  // Make the drag tutorial hand significantly larger.
+  hand.style.setProperty('--handSize', '96px');
+
+  function tick(now) {
+    tutorialAnimRaf = 0;
+    if (!tutorialEl || !tutorialEl.classList.contains('visible') || tutorialMode !== 'drag') return;
+
+    layoutDragTutorialBox();
+
+    var rect = tutorialEl.getBoundingClientRect();
+    var localW = rect.width > 0.5 ? rect.width : tutorialLayoutW;
+    var localH = rect.height > 0.5 ? rect.height : tutorialLayoutH;
+    // Large motion centered in the stage, biased slightly downward.
+    var cx = localW * 0.50;
+    var cy = localH * 0.62;
+    var a = Math.max(70, Math.min(170, localW * 0.28));
+    var b = Math.max(42, Math.min(120, localH * 0.34));
+    var t = ((now - tutorialDragStartTs) / 1900) * Math.PI * 2;
+    var p = fig8Point(t, cx, cy, a, b);
+
+    // Place hand such that its fingertip hotspot is at p.
+    hand.style.position = 'absolute';
+    hand.style.left = p.x + 'px';
+    hand.style.top = p.y + 'px';
+
+    if (!tutorialLastDotTs || (now - tutorialLastDotTs) > 45) {
+      tutorialLastDotTs = now;
+      spawnTutorialTrailDot(p.x, p.y);
+    }
+    tutorialAnimRaf = requestAnimationFrame(tick);
+  }
+  tutorialAnimRaf = requestAnimationFrame(tick);
+}
+
+function startTutorialTapAnimation() {
+  if (!tutorialEl) return;
+  var hand = tutorialEl.querySelector('.tutorial-hand');
+  if (!hand) return;
+  tutorialTapStartTs = performance.now();
+  hand.style.setProperty('--handSize', '96px');
+
+  function tick(now) {
+    tutorialAnimRaf = 0;
+    if (!tutorialEl || !tutorialEl.classList.contains('visible') || tutorialMode !== 'tap') return;
+
+    layoutDragTutorialBox();
+
+    var rect = tutorialEl.getBoundingClientRect();
+    var localW = rect.width > 0.5 ? rect.width : tutorialLayoutW;
+    var localH = rect.height > 0.5 ? rect.height : tutorialLayoutH;
+    var cx = localW * 0.50;
+    var cy = localH * 0.62;
+
+    // Keep tap hand fully visible inside the stage across portrait/landscape.
+    var fitHandSize = Math.max(56, Math.min(104, Math.round(localH * 0.72)));
+    hand.style.setProperty('--handSize', fitHandSize + 'px');
+    var hsyForFit = fitHandSize * 1.5 / 16;
+    var minCy = hsyForFit + 4;
+    var maxCy = localH - fitHandSize + hsyForFit - 4;
+    if (maxCy < minCy) {
+      cy = localH * 0.5;
+    } else {
+      if (cy < minCy) cy = minCy;
+      if (cy > maxCy) cy = maxCy;
+    }
+
+    // Faster tap loop; tap occurs ~100ms after showing.
+    var cycleMs = 650;
+    var elapsed = now - tutorialTapStartTs;
+    var phase = (elapsed % cycleMs) / cycleMs;
+    var scale = 1;
+    // Press between ~80ms..160ms.
+    if (phase > 0.12 && phase < 0.25) {
+      var k = (phase - 0.12) / (0.25 - 0.12);
+      scale = 1 - 0.12 * Math.sin(k * Math.PI);
+    }
+
+    hand.style.position = 'absolute';
+    hand.style.left = cx + 'px';
+    hand.style.top = cy + 'px';
+    hand.style.transform = 'translate(calc(-1 * var(--hsx)), calc(-1 * var(--hsy))) scale(' + scale.toFixed(3) + ')';
+
+    tutorialAnimRaf = requestAnimationFrame(tick);
+  }
+  tutorialAnimRaf = requestAnimationFrame(tick);
+}
+
+function armTutorialCountdown() {
+  if (tutorialCountdownEnabled) return;
+  tutorialCountdownEnabled = true;
+  if (tutorialEl && tutorialEl.classList.contains('visible') && tutorialPendingDuration > 0) {
+    startTutorialTimeout(tutorialPendingDuration);
+    tutorialPendingDuration = 0;
+  }
+}
+
+function showTutorialMessage(text, durationMs) {
+  if (!tutorialEl) return;
+  if (!shouldShowTouchTutorial()) return;
+  if (tutorialTimeoutId) {
+    clearTimeout(tutorialTimeoutId);
+    tutorialTimeoutId = 0;
+  }
+  tutorialPendingDuration = 0;
+  tutorialEl.textContent = text;
+  tutorialEl.classList.add('visible');
+  if (durationMs && durationMs > 0) {
+    if (tutorialCountdownEnabled) {
+      startTutorialTimeout(durationMs);
+    } else {
+      tutorialPendingDuration = durationMs;
+    }
+  }
+}
+
+function positionTutorial(anchorX, anchorY) {
+  if (!tutorialEl || !tutorialEl.classList.contains('visible') || !mainCanvasContainer) return;
+  if (tutorialEl.classList.contains('tutorial-bottom')) return;
+  var containerW = mainCanvasContainer.clientWidth;
+  var containerH = mainCanvasContainer.clientHeight;
+  var bubbleW = tutorialEl.offsetWidth || 220;
+  var bubbleH = tutorialEl.offsetHeight || 48;
+  var x = anchorX + 16;
+  var y = anchorY - bubbleH - 18;
+  if (x + bubbleW > containerW - 8) x = containerW - bubbleW - 8;
+  if (x < 8) x = 8;
+  if (y < 8) y = anchorY + 18;
+  if (y + bubbleH > containerH - 8) y = containerH - bubbleH - 8;
+  tutorialEl.style.left = Math.round(x) + 'px';
+  tutorialEl.style.top = Math.round(y) + 'px';
+}
+
+function maybeStartOcclusionOffset(touch) {
+  if (!mainCanvasContainer) {
+    setCursorOffsetTarget(0, 0, 110);
+    return;
+  }
+  var rect = mainCanvasContainer.getBoundingClientRect();
+  var localTouchX = touch.clientX - rect.left;
+  var localTouchY = touch.clientY - rect.top;
+  var anchor = getCursorAnchorPx();
+  var iconSize = getCursorBaseSize();
+  var hotspot = getCursorHotspot(iconSize, hoveredIsLink);
+  var iconLeft = anchor.x + cursorOffsetX - hotspot.x;
+  var iconTop = anchor.y + cursorOffsetY - hotspot.y;
+  var iconCx = iconLeft + iconSize * 0.5;
+  var iconCy = iconTop + iconSize * 0.5;
+  var dxTouch = localTouchX - iconCx;
+  var dyTouch = localTouchY - iconCy;
+  var radius = iconSize * 0.95;
+  if (dxTouch * dxTouch + dyTouch * dyTouch <= radius * radius) {
+    // Displace relative to finger position, not cursor anchor, so the cursor
+    // dodges away from where the finger actually is
+    var fingerDx = localTouchX - anchor.x;
+    var fingerDy = localTouchY - anchor.y;
+    var offset = chooseCursorOffset(localTouchX, localTouchY, iconSize, hotspot);
+    setCursorOffsetTarget(offset.x + fingerDx, offset.y + fingerDy, 300);
+  } else {
+    setCursorOffsetTarget(0, 0, 110);
+  }
+}
+
+function emitTapRipple(localX, localY) {
+  if (!rippleLayerEl) return;
+  var rings = [
+    { cls: 'touch-ripple', size: 34, color: 'rgba(255,255,255,0.95)', ttl: 340 },
+    { cls: 'touch-ripple secondary', size: 50, color: 'rgba(0,0,0,0.95)', ttl: 360 },
+    { cls: 'touch-ripple secondary', size: 66, color: 'rgba(255,255,255,0.85)', ttl: 390 }
+  ];
+  for (var i = 0; i < rings.length; i++) {
+    (function(ring) {
+      var el = document.createElement('div');
+      el.className = ring.cls;
+      el.style.left = localX + 'px';
+      el.style.top = localY + 'px';
+      el.style.width = ring.size + 'px';
+      el.style.height = ring.size + 'px';
+      el.style.borderColor = ring.color;
+      rippleLayerEl.appendChild(el);
+      setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, ring.ttl);
+    })(rings[i]);
+  }
+}
+
+function emitColorBurst(localX, localY, hexColor) {
+  if (!rippleLayerEl) return;
+
+  var rgb = hexToRgb(hexColor);
+  var r = rgb.r, g = rgb.g, b = rgb.b;
+
+  // Expanding colour rings — staggered sizes and delays
+  var rings = [
+    { size: 60,  border: 3,   opacity: 0.9,  delay: 0,   duration: 420 },
+    { size: 90,  border: 2.5, opacity: 0.75, delay: 50,  duration: 480 },
+    { size: 130, border: 2,   opacity: 0.6,  delay: 110, duration: 540 },
+    { size: 170, border: 1.5, opacity: 0.4,  delay: 180, duration: 600 },
+  ];
+  for (var i = 0; i < rings.length; i++) {
+    (function(ring) {
+      var el = document.createElement('div');
+      el.className = 'touch-color-burst';
+      el.style.left = localX + 'px';
+      el.style.top = localY + 'px';
+      el.style.width = ring.size + 'px';
+      el.style.height = ring.size + 'px';
+      el.style.border = ring.border + 'px solid rgba(' + r + ',' + g + ',' + b + ',' + ring.opacity + ')';
+      el.style.setProperty('--burst-opacity', String(ring.opacity));
+      el.style.animation = 'color-burst-ring ' + ring.duration + 'ms ease-out ' + ring.delay + 'ms forwards';
+      rippleLayerEl.appendChild(el);
+      setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, ring.delay + ring.duration + 50);
+    })(rings[i]);
+  }
+
+  // Radiating dots/particles flying outward
+  var dotCount = 10;
+  for (var j = 0; j < dotCount; j++) {
+    (function(idx) {
+      var angle = (Math.PI * 2 * idx / dotCount) + (Math.random() - 0.5) * 0.4;
+      var dist = 35 + Math.random() * 40;
+      var tx = Math.cos(angle) * dist;
+      var ty = Math.sin(angle) * dist;
+      var dotSize = 3 + Math.random() * 3;
+      var duration = 350 + Math.random() * 200;
+      var delay = Math.random() * 80;
+
+      var el = document.createElement('div');
+      el.className = 'touch-color-dot';
+      el.style.left = localX + 'px';
+      el.style.top = localY + 'px';
+      el.style.width = dotSize + 'px';
+      el.style.height = dotSize + 'px';
+      el.style.backgroundColor = 'rgba(' + r + ',' + g + ',' + b + ',0.95)';
+      el.style.setProperty('--dot-tx', tx + 'px');
+      el.style.setProperty('--dot-ty', ty + 'px');
+      el.style.animation = 'color-burst-dot ' + duration + 'ms ease-out ' + delay + 'ms forwards';
+      rippleLayerEl.appendChild(el);
+      setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, delay + duration + 50);
+    })(j);
+  }
+
+  // Central flash — a brief filled circle
+  var flash = document.createElement('div');
+  flash.className = 'touch-color-burst';
+  flash.style.left = localX + 'px';
+  flash.style.top = localY + 'px';
+  flash.style.width = '20px';
+  flash.style.height = '20px';
+  flash.style.backgroundColor = 'rgba(' + r + ',' + g + ',' + b + ',0.7)';
+  flash.style.animation = 'color-burst-ring 300ms ease-out forwards';
+  flash.style.setProperty('--burst-opacity', '0.7');
+  rippleLayerEl.appendChild(flash);
+  setTimeout(function() { if (flash.parentNode) flash.parentNode.removeChild(flash); }, 350);
+}
+
+function renderTouchCursorOverlay() {
+  if (!cursorLayerEl || !cursorIconEl || !cursorUseEl) return;
+  if (!touchMode || !cursorVisible || gameState == null || images.length === 0) {
+    cursorLayerEl.style.display = 'none';
+    return;
+  }
+
+  var now = Date.now();
+  updateCursorOffset(now);
+  updateCursorHover();
+
+  var isHand = hoveredIsLink;
+  var baseSize = getCursorBaseSize();
+  var dragScale = cursorDragging ? 1.07 : 1.0;
+  var tapScale = now < cursorTapUntil ? 0.90 : 1.0;
+  var iconSize = Math.round(baseSize * dragScale * tapScale);
+  var anchor = getCursorAnchorPx();
+  var hotspot = getCursorHotspot(iconSize, isHand);
+  var left = Math.round(anchor.x + cursorOffsetX - hotspot.x);
+  var top = Math.round(anchor.y + cursorOffsetY - hotspot.y);
+
+  var referenceColor = getCursorReferenceBackgroundColor(isHand);
+  var fillColor = chooseClosestBlackOrWhite(referenceColor);
+  if (isHand && hoveredIsLink && hoveredColorIndex >= 0 && hoveredColorIndex < colorPalette.length) {
+    fillColor = colorPalette[hoveredColorIndex];
+  }
+  var strokeColor = getContrastingStroke(fillColor);
+
+  cursorUseEl.setAttribute('href', isHand ? '#icon-cursor-hand' : '#icon-cursor-arrow');
+  cursorIconEl.style.left = left + 'px';
+  cursorIconEl.style.top = top + 'px';
+  cursorIconEl.style.width = iconSize + 'px';
+  cursorIconEl.style.height = iconSize + 'px';
+  cursorIconEl.style.setProperty('--cursor-fill', fillColor);
+  cursorIconEl.style.setProperty('--cursor-stroke', strokeColor);
+  cursorLayerEl.style.display = 'block';
+  positionTutorial(anchor.x + cursorOffsetX, anchor.y + cursorOffsetY);
+}
+
+function updateCursorHover() {
+  var effective = getEffectiveCursorGamePos();
+  var px = Math.floor(effective.x);
+  var py = Math.floor(effective.y);
+  var gw = getGameWidth();
+  var gh = getGameHeight();
+  if (gameState && gameState.imageDats && px >= 0 && px < gw && py >= 0 && py < gh) {
+    var ch = gameState.imageDats[currentIndex][px + gw * py];
+    hoveredColorIndex = parseInt(ch, 16);
+    hoveredIsLink = gameState.hyperlinks[currentIndex][hoveredColorIndex] !== 0;
+  } else {
+    hoveredColorIndex = -1;
+    hoveredIsLink = false;
+  }
+
+  // Tap hint: only after user has been off-link at least once since first movement (re-entry rule).
+  // While over a link: show tap; when leaving: fade. Navigating clears state in activateLink.
+  if (touchMode && tutorialHasMoved && !hoveredIsLink) {
+    tutorialWasOffLinkAfterMove = true;
+  }
+  if (shouldShowTouchTutorial() && touchMode && tutorialHasMoved && tutorialWasOffLinkAfterMove && hoveredIsLink && !tutorialTapHintDisabled) {
+    if (tutorialMode !== 'tap' || !tutorialEl.classList.contains('visible')) {
+      setTutorialMode('tap');
+      tutorialEl.classList.add('visible');
+      cancelTutorialFadeOut();
+    }
+  } else if (touchMode && tutorialMode === 'tap' && tutorialEl && tutorialEl.classList.contains('visible') && !hoveredIsLink) {
+    fadeOutTutorialMessage();
+  }
+  wasHoverLink = hoveredIsLink;
+}
+
+function touchStart(e) {
+  if (gameState == null || images.length === 0) return;
+  e.preventDefault();
+
+  // Only track the first finger
+  if (activeTouchId !== null) return;
+  var touch = e.changedTouches[0];
+  activeTouchId = touch.identifier;
+
+  // Enter touch mode
+  if (!touchMode) {
+    touchMode = true;
+    mainCanvas.style.cursor = 'none';
+    tutorialCountdownEnabled = false;
+    tutorialHasMoved = false;
+  }
+
+  // Show cursor at center if not yet visible
+  if (!cursorVisible) {
+    var gw = getGameWidth();
+    var gh = getGameHeight();
+    cursorX = gw / 2;
+    cursorY = gh / 2;
+    cursorVisible = true;
+    updateCursorHover();
+    redraw();
+  }
+
+  // Record for tap detection
+  touchStartX = touch.clientX;
+  touchStartY = touch.clientY;
+  touchStartTime = Date.now();
+  lastTouchX = touch.clientX;
+  lastTouchY = touch.clientY;
+  cursorDragging = false;
+  // Save cursor position before occlusion offset moves it, so taps activate the original spot
+  var preTap = getEffectiveCursorGamePos();
+  tapSavedCursorX = preTap.x;
+  tapSavedCursorY = preTap.y;
+  maybeStartOcclusionOffset(touch);
+  renderTouchCursorOverlay();
+}
+
+function findTrackedTouch(e) {
+  for (var i = 0; i < e.changedTouches.length; i++) {
+    if (e.changedTouches[i].identifier === activeTouchId) {
+      return e.changedTouches[i];
+    }
+  }
+  return null;
+}
+
+function updateZoom() {
+  var gw = getGameWidth();
+  var gh = getGameHeight();
+  var w = mainCanvas.width;
+  var h = mainCanvas.height;
+  var wd = w / gw;
+  var hd = h / gh;
+  zoom = (wd < hd) ? wd : hd;
+  if (zoom < 1) zoom = 1;
+  dx = (w - gw * zoom) / 2;
+  dy = (h - gh * zoom) / 2;
+}
+
+function activateLink(linkTarget) {
+  tutorialTapHintDisabled = true;
+  if (tutorialMode === 'tap' && tutorialEl && tutorialEl.classList.contains('visible')) {
+    fadeOutTutorialMessage();
+  }
+  tutorialWasOffLinkAfterMove = false;
+
+  if (showAnimation) {
+    transition(currentIndex, linkTarget - 1);
+    currentIndex = linkTarget - 1;
+    doAnimation();
+  } else {
+    currentIndex = linkTarget - 1;
+    redraw();
+  }
+}
+
+function touchMove(e) {
+  if (gameState == null || images.length === 0) return;
+  e.preventDefault();
+
+  var touch = findTrackedTouch(e);
+  if (!touch) return;
+
+  // Merge occlusion offset into cursor before applying drag delta so movement tracks the
+  // visible hotspot (otherwise cursorX/Y and offset fight and the bottom row can become unreachable).
+  updateCursorOffset(Date.now());
+
+  // Snapshot cell before this move: a fast stroke can jump non-link→link in one event with no
+  // intermediate frame, so tutorialWasOffLinkAfterMove would stay false until a wiggle.
+  var preMove = getEffectiveCursorGamePos();
+  commitCursorOffsetToPosition();
+  var oldPx = Math.floor(preMove.x);
+  var oldPy = Math.floor(preMove.y);
+
+  // Calculate delta in screen pixels
+  var deltaX = touch.clientX - lastTouchX;
+  var deltaY = touch.clientY - lastTouchY;
+  lastTouchX = touch.clientX;
+  lastTouchY = touch.clientY;
+  if (Math.abs(deltaX) + Math.abs(deltaY) > 1) {
+    cursorDragging = true;
+    tutorialHasMoved = true;
+    armTutorialCountdown();
+  }
+
+  // Convert to game-pixel delta
+  var gameDeltaX = (deltaX / zoom) * POINTER_SPEED;
+  var gameDeltaY = (deltaY / zoom) * POINTER_SPEED;
+
+  // Update cursor position (float)
+  var gw = getGameWidth();
+  var gh = getGameHeight();
+  cursorX = Math.max(0, Math.min(gw - 1, cursorX + gameDeltaX));
+  cursorY = Math.max(0, Math.min(gh - 1, cursorY + gameDeltaY));
+
+  if (touchMode && tutorialHasMoved && !isLinkAtGameCell(oldPx, oldPy)) {
+    tutorialWasOffLinkAfterMove = true;
+  }
+
+  updateCursorHover();
+  // Drag hint: stay until user leaves a link if they "started" on one; otherwise fade once movement counts.
+  if (tutorialHasMoved && tutorialMode === 'drag') {
+    if (!hoveredIsLink || tutorialWasOffLinkAfterMove) {
+      fadeOutTutorialMessage();
+    }
+  }
+  redraw();
+}
+
+function touchEnd(e) {
+  if (gameState == null || images.length === 0) return;
+  e.preventDefault();
+
+  var touch = findTrackedTouch(e);
+  if (!touch) return;
+
+  activeTouchId = null;
+  lastTouchTime = Date.now();
+  cursorDragging = false;
+
+  // Tap detection
+  var totalMove = Math.abs(touch.clientX - touchStartX) + Math.abs(touch.clientY - touchStartY);
+  var elapsed = Date.now() - touchStartTime;
+
+  if (totalMove < TAP_THRESHOLD && elapsed < TAP_TIME_THRESHOLD) {
+    // Snap cursor back to pre-offset position so the tap activates
+    // what was under the cursor before occlusion moved it
+    cursorX = tapSavedCursorX;
+    cursorY = tapSavedCursorY;
+    resetCursorOffset();
+    updateCursorHover();
+    cursorTapUntil = Date.now() + 120;
+    startCursorOverlayAnimation();
+    var anchor = getCursorAnchorPx();
+    emitTapRipple(anchor.x, anchor.y);
+    // It's a tap — activate hovered link; emit a colour burst for feedback
+    if (hoveredIsLink && !animating && hoveredColorIndex >= 0) {
+      if (hoveredColorIndex < colorPalette.length) {
+        emitColorBurst(anchor.x, anchor.y, colorPalette[hoveredColorIndex]);
+      }
+      var linkTarget = gameState.hyperlinks[currentIndex][hoveredColorIndex];
+      if (linkTarget > 0) {
+        activateLink(linkTarget);
+        updateCursorHover();
+      }
+    }
+  } else {
+    commitCursorOffsetToPosition();
+    updateCursorHover();
+  }
+}
+
+function redraw(){
+  var cw = mainCanvasContainer.clientWidth;
+  var ch = mainCanvasContainer.clientHeight;
+  if (mainCanvas.width !== cw || mainCanvas.height !== ch) {
+    mainCanvas.width = cw;
+    mainCanvas.height = ch;
+  }
+
+  if (images.length>0){
+
+    mainCanvasCtx.imageSmoothingEnabled = false;
+    mainCanvasCtx.mozImageSmoothingEnabled = false;
+    mainCanvasCtx.oImageSmoothingEnabled = false;
+    mainCanvasCtx.webkitImageSmoothingEnabled = false;
+    mainCanvasCtx.msImageSmoothingEnabled = false;
+
+    var gw = getGameWidth();
+    var gh = getGameHeight();
+    updateZoom();
+    mainCanvasCtx.fillStyle=gameState.background_color;
+    mainCanvasCtx.fillRect(0,0,mainCanvas.width,mainCanvas.height);
+    if (curCanvasToDraw===null){
+      mainCanvasCtx.drawImage(images[currentIndex],0,0,gw,gh,dx,dy,gw*zoom,gh*zoom);
+    } else {
+      mainCanvasCtx.drawImage(curCanvasToDraw,0,0,gw,gh,dx,dy,gw*zoom,gh*zoom);
+    }
+    renderTouchCursorOverlay();
+  } else {
+    renderTouchCursorOverlay();
+    mainCanvasCtx.fillStyle = "#000000";
+    mainCanvasCtx.fillRect(0,0,mainCanvas.width,mainCanvas.height);
+  }
+}
+
+
+  function getCoords(e) {
+    var x,y; 
+    if(e.offsetX) {
+        x = e.offsetX;
+        y = e.offsetY;
+    }
+    else if(e.layerX) {
+        x = e.layerX;
+        y = e.layerY;
+    }
+
+    return [x,y];
+  }
+
+  var target=0;
+
+  function printNonZeros(a,stack){
+    var gw = getGameWidth();
+    var gh = getGameHeight();
+    var count=0;
+    for (var i=0;i<gw;i++){
+      for (var j=0;j<gh;j++){
+        if (a[j][i]!==null)
+          count++;
+      }
+    }
+    window.console.log(count + " non-zero entries.");
+    window.console.log("stack length " + stack.length+".");
+  }
+
+  var hex=['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f']
+
+  function calcHeatmap(cal,col,fromCal){
+    var gw = getGameWidth();
+    var gh = getGameHeight();
+    var map = []
+    var stack = []
+    var c = hex[col]
+
+    //initialize
+    for (var j=0;j<gh;j++){
+      for (var i=0;i<gw;i++){
+        if (cal[i+gw*j]===c){
+          var entry = [0,i,j]
+          map.push([0,i,j])
+          stack.push([i,j,0,i,j])
+        } else {
+          map.push(null)
+        }
+      }
+    }
+
+    //should replace this with a center of mass calculation from the old one
+    if (stack.length===0){
+      var cx=0;
+      var cy=0;
+      var count=0;
+      for (var i=0;i<gw;i++){
+        for (var j=0;j<gh;j++){
+          if (fromCal[i+gw*j]===c){
+            cx+=i;
+            cy+=j;
+            count++;
+          }
+        }
+      }
+      if (count>0){
+        cx=Math.round(cx/count);
+        cy=Math.round(cy/count);
+        for (var j=0;j<gh;j++){
+          for (var i=0;i<gw;i++){
+            map[i+gw*j]=[0,cx,cy];
+          }
+        }
+      }
+    }
+
+    //propagate
+    var head = 0;
+    while(head<stack.length){
+      var entry = stack[head++];
+      //[fromx,fromy,dist,tox,toy]
+      var x0=entry[0];
+      var y0=entry[1];
+      var d0=entry[2];
+      var xtarget=entry[3];
+      var ytarget=entry[4];
+      var d1=d0+1;
+      var neighbours = [[x0-1,y0],[x0+1,y0],[x0,y0-1],[x0,y0+1]];
+      for (var i=0;i<4;i++){
+        var n = neighbours[i];
+        var nx=n[0];
+        var ny=n[1];
+        if (nx<0||ny<0||nx>=gw||ny>=gh){
+          continue;
+        }
+        var existing = map[nx+gw*ny];
+        if (existing===null||d1<existing[0]){
+          map[nx+gw*ny]=[d1,xtarget,ytarget]
+          stack.push([nx,ny,d1,xtarget,ytarget])
+        }
+      }
+    }
+
+    return map;
+  }
+
+  function generateParticleMotions(sourceCanvas,targetHeatMap,colIndex,particles,reverse){
+    var gw = getGameWidth();
+    var gh = getGameHeight();
+    var c = hex[colIndex];
+    for (var i=0;i<gw;i++){
+      for (var j=0;j<gh;j++){
+        var pixel = sourceCanvas[i+gw*j];
+        if (pixel===c){
+          var target = targetHeatMap[i+gw*j];
+          var tx = target[1];
+          var ty = target[2];
+          if (reverse){
+            if (i!==tx||j!==ty)
+              particles.push([tx,ty,i,j])
+          } else {
+            particles.push([i,j,tx,ty])
+          }
+        }
+      }
+    }
+  }
+
+  function generateFrame(sourceImage,particleMap,progress){
+    var gw = getGameWidth();
+    var gh = getGameHeight();
+    var frame = sourceImage.split('');
+
+    for (var cIndex=0;cIndex<particleMap.length;cIndex++){      
+      var c = hex[cIndex]
+      var particles = particleMap[cIndex]
+      for (var i=0;i<particles.length;i++){
+        var p = particles[i]
+        var x0=p[0]
+        var y0=p[1]
+        var x1=p[2]
+        var y1=p[3]
+        var dx=x1-x0
+        var dy=y1-y0
+        if (dx!==0||dy!==0){
+//          var xt = Math.round(x0+progress*dx+Math.random()*0.5-0.25)
+//          var yt = Math.round(y0+progress*dy+Math.random()*0.5-0.25)
+          var xt = Math.round(x0+progress*dx)
+          var yt = Math.round(y0+progress*dy)
+          frame[xt+gw*yt]=c;
+        }
+      }
+    }
+    return frame;
+  }
+
+  function calcTransitionGrids(oldCanvas,newCanvas){
+    //generate 32 canvasses, for each color, for each direction
+    var particleMaps = []
+    for (var i=0;i<16;i++){
+      var forwardHeatmap = calcHeatmap(newCanvas,i,oldCanvas);
+      var backwardHeatmap = calcHeatmap(oldCanvas,i,newCanvas);
+      var particles=[]
+      generateParticleMotions(oldCanvas,forwardHeatmap,i,particles,false);
+      generateParticleMotions(newCanvas,backwardHeatmap,i,particles,true);
+      particleMaps.push(particles);      
+    }
+    var frames=[];
+    frames.push(oldCanvas)
+    for (var i=1;i<frameCount;i++){
+      var frame = generateFrame(oldCanvas,particleMaps,i/frameCount)
+      frames.push(frame);
+    }
+    frames.push(newCanvas)
+    return frames;
+  }
+
+  var curCanvasToDraw=null;
+  var curAnimationFrames=null;
+  function transition(oldIndex,newIndex){
+    var oldCanvas = gameState.imageDats[oldIndex];
+    var newCanvas = gameState.imageDats[newIndex];
+    var frames = calcTransitionGrids(oldCanvas,newCanvas);
+    curAnimationFrames = frames;
+    return frames;
+  }
+
+  function drawNextFrame(){
+      var result = printCanvas(curAnimationFrames[animationIndex], _animScratchCanvas);
+      _animScratchCanvas = result[0];
+      _animScratchCtx = result[1];
+      curCanvasToDraw = _animScratchCanvas;
+      redraw();
+      animationIndex++;
+      if (animationIndex<curAnimationFrames.length){
+        setTimeout(drawNextFrame,1000*animationLength/frameCount);
+      } else {
+        animating=false;
+      }
+  }
+  var animationIndex=1;
+  function doAnimation(){
+    animating=true;
+    animationIndex=1;
+    drawNextFrame();
+  }
+
+  function mouseDown(e){
+    mouseMove(e);
+    if (target>0){
+      activateLink(target);
+      mouseMove(e);
+    }
+  }
+  function mouseMove(e){
+
+    if (gameState==null){
+      return;
+    }
+
+    // Switch back from touch mode if real mouse detected
+    if (touchMode && (e.movementX !== 0 || e.movementY !== 0)) {
+      if (Date.now() - lastTouchTime > 500) {
+        touchMode = false;
+        cursorVisible = false;
+        cursorDragging = false;
+        mainCanvas.style.cursor = 'default';
+        if (cursorLayerEl) cursorLayerEl.style.display = 'none';
+        hideTutorialMessage();
+      }
+    }
+
+    // Skip mouse cursor style changes while in touch mode
+    if (touchMode) return;
+
+    var coords = getCoords(e);
+
+    var gw = getGameWidth();
+    var gh = getGameHeight();
+    updateZoom();
+
+    var x=Math.floor((coords[0]-dx)/zoom);
+    var y=Math.floor((coords[1]-dy)/zoom);
+    target=0;
+    if(x>=0&&x<gw&&y>=0&&y<gh) {
+      var ch = gameState.imageDats[currentIndex][x+gw*y];
+      var colIndex = parseInt(ch,16);
+      target=gameState.hyperlinks[currentIndex][colIndex];
+      mainCanvas.style.cursor = target !== 0 ? "pointer" : "default";
+
+    } else {
+      mainCanvas.style.cursor="default";
+    }
+    
+  }
+
+
+function get_page_data() {
+    return getData({
+        onSuccess: function(code) {
+            loadState(code);
+
+            var hacklink = document.getElementById("hackLink");
+            if (hacklink) {
+                if (isLocalTestMode()) {
+                    hacklink.href = qualifyURL("index.html?test");
+                } else if (getParameterByName("id")) {
+                    hacklink.href = qualifyURL("index.html?id=" + getParameterByName("id"));
+                } else {
+                    var id = getParameterByName("p").replace(/[\\\/]/g, "");
+                    hacklink.href = qualifyURL("index.html?p=" + id);
+                }
+                var hackText2 = hacklink.querySelector('.label-text');
+                if (hackText2) hackText2.innerHTML = t("edit_link_label_html");
+            }
+            updateFooterLinks();
+            
+            // Call renderImages if it exists
+            if (typeof renderImages === 'function') {
+                renderImages();
+            }
+        },
+        onEmbedded: function(code) {
+            loadState(code);
+            updateFooterLinks();
+            
+            renderImages();
+        }
+        ,
+        onError: function(message) {
+            console.error(message);
+            alert(message);
+            if (getParameterByName("id")) {
+                window.location.href = 'gallery.html';
+            }
+        }
+    });
+}
+
+
+var mainCanvas;
+var mainCanvasCtx;
+var mainCanvasContainer;
+var viewportSettleRaf = 0;
+var viewportSettleTimeout = 0;
+
+function cancelViewportSettleRedraw() {
+  if (viewportSettleRaf) {
+    cancelAnimationFrame(viewportSettleRaf);
+    viewportSettleRaf = 0;
+  }
+  if (viewportSettleTimeout) {
+    clearTimeout(viewportSettleTimeout);
+    viewportSettleTimeout = 0;
+  }
+}
+
+function getViewportMetrics() {
+  var vv = window.visualViewport;
+  return {
+    width: Math.round((vv && vv.width) ? vv.width : (window.innerWidth || 0)),
+    height: Math.round((vv && vv.height) ? vv.height : (window.innerHeight || 0))
+  };
+}
+
+function getCanvasContainerMetrics() {
+  if (!mainCanvasContainer) {
+    return { width: 0, height: 0 };
+  }
+  var rect = mainCanvasContainer.getBoundingClientRect();
+  return {
+    width: Math.round(rect.width || mainCanvasContainer.clientWidth || 0),
+    height: Math.round(rect.height || mainCanvasContainer.clientHeight || 0)
+  };
+}
+
+function settleViewportRedraw(attempt) {
+  viewportSettleRaf = 0;
+  redraw();
+  if (!isIosAppHost() || !mainCanvasContainer) return;
+
+  var viewport = getViewportMetrics();
+  var container = getCanvasContainerMetrics();
+  var tooEarly = (
+    container.width <= 0 ||
+    container.height <= 0 ||
+    container.width > viewport.width + 2 ||
+    container.height > viewport.height + 2
+  );
+
+  if (attempt >= 5) return;
+  if (tooEarly || attempt < 2) {
+    viewportSettleRaf = requestAnimationFrame(function () {
+      settleViewportRedraw(attempt + 1);
+    });
+  }
+}
+
+function handleViewportChange() {
+  if (!isIosAppHost()) {
+    redraw();
+    return;
+  }
+  cancelViewportSettleRedraw();
+  settleViewportRedraw(0);
+  viewportSettleTimeout = setTimeout(function () {
+    viewportSettleTimeout = 0;
+    settleViewportRedraw(0);
+  }, 180);
+}
+
+function init(){
+  if (isIosAppHost()) {
+    document.body.setAttribute('data-host', 'ios-app');
+  }
+  window.addEventListener('resize', handleViewportChange, false);
+  window.addEventListener('orientationchange', handleViewportChange, false);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', handleViewportChange, false);
+  }
+  document.addEventListener('touchmove', preventPageGesture, {passive: false});
+  document.addEventListener('gesturestart', preventPageGesture, {passive: false});
+  document.addEventListener('gesturechange', preventPageGesture, {passive: false});
+  document.addEventListener('gestureend', preventPageGesture, {passive: false});
+  document.addEventListener('dragstart', preventPageGesture);
+  document.addEventListener('selectstart', preventPageGesture);
+  disableElementDrag('galleryLink');
+  disableElementDrag('hackLink');
+  disableElementDrag('homeLink');
+
+
+  mainCanvas=document.getElementById("mainCanvas");
+  mainCanvasCtx=mainCanvas.getContext("2d");
+  mainCanvasContainer=document.getElementById("content");
+
+  mainCanvas.addEventListener('mousemove', mouseMove,false);
+  mainCanvas.addEventListener('mousedown', mouseDown,false);
+
+  mainCanvas.addEventListener('touchstart', touchStart, {passive: false});
+  mainCanvas.addEventListener('touchmove', touchMove, {passive: false});
+  mainCanvas.addEventListener('touchend', touchEnd, {passive: false});
+  mainCanvas.addEventListener('touchcancel', function(e) {
+    activeTouchId = null;
+    lastTouchTime = Date.now();
+    cursorDragging = false;
+    commitCursorOffsetToPosition();
+    updateCursorHover();
+    redraw();
+  }, false);
+
+  initTouchCursorOverlay();
+
+  var hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
+  if (hasTouch) {
+    touchMode = true;
+    cursorVisible = true;
+    mainCanvas.style.cursor = 'none';
+    tutorialCountdownEnabled = false;
+    tutorialHasMoved = false;
+    if (shouldShowTouchTutorial()) {
+      setTutorialMode('drag');
+      tutorialEl.classList.add('visible');
+      // Persist until first movement; fade out when tutorialHasMoved becomes true.
+    }
+  }
+
+  redraw();
+
+  get_page_data();
+
+}
+
+
+
+
+
+
+
+
+ var colorPalette = [];
+
+var images = new Array();
+var imageCtxts = new Array();
+var _animScratchCanvas = null;
+var _animScratchCtx = null;
+
+var _paletteRgba = null;
+function getPaletteRgba() {
+  if (_paletteRgba && _paletteRgba.palette === colorPalette) return _paletteRgba.data;
+  var data = new Array(16);
+  for (var i = 0; i < 16; i++) {
+    var rgb = hexToRgb(colorPalette[i] || '#000000');
+    data[i] = [rgb.r, rgb.g, rgb.b, 255];
+  }
+  _paletteRgba = { palette: colorPalette, data: data };
+  return data;
+}
+
+function printCanvas(descriptionString, reuseCanvas){
+    var gw = getGameWidth();
+    var gh = getGameHeight();
+    var canvas, ctx;
+    if (reuseCanvas && reuseCanvas.width === gw && reuseCanvas.height === gh) {
+      canvas = reuseCanvas;
+      ctx = canvas.getContext("2d");
+    } else {
+      canvas = document.createElement('canvas');
+      canvas.width = gw;
+      canvas.height = gh;
+      ctx = canvas.getContext("2d");
+    }
+    var imgData = ctx.createImageData(gw, gh);
+    var pixels = imgData.data;
+    var rgba = getPaletteRgba();
+    for (var j=0;j<descriptionString.length;j++){
+      var colIndex = parseInt(descriptionString[j],16);
+      var c = rgba[colIndex];
+      var off = j * 4;
+      pixels[off]   = c[0];
+      pixels[off+1] = c[1];
+      pixels[off+2] = c[2];
+      pixels[off+3] = 255;
+    }
+    ctx.putImageData(imgData, 0, 0);
+    return [canvas,ctx];
+}
+
+function renderImages(){
+  gameState.imageDats = new Array();
+
+  for (var i=0;i<16;i++){
+    var descriptionArray = gameState.canvasses[i];
+    if (!Array.isArray(descriptionArray)) descriptionArray = [getGameWidth() * getGameHeight(), "0"];
+    var descriptionString = RLE_decode(descriptionArray, getGameWidth() * getGameHeight());
+
+    var canvas_context=printCanvas(descriptionString);
+    var canvas=canvas_context[0];
+    var ctx=canvas_context[1];
+
+    gameState.imageDats.push(descriptionString);
+    images.push(canvas);
+    imageCtxts.push(ctx);
+  }
+  redraw();
+}
+
+function goFullscreen(evt){    
+  evt = evt || window.event;
+ if (evt.keyCode===70) { //f
+    var elem = document.getElementById("mainCanvas");
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen();
+    } else if (elem.msRequestFullscreen) {
+      elem.msRequestFullscreen();
+    } else if (elem.mozRequestFullScreen) {
+      elem.mozRequestFullScreen();
+    } else if (elem.webkitRequestFullscreen) {
+      elem.webkitRequestFullscreen();
+    }
+  }
+}
+
+</script>
+</head>
+<body onload="init()" onkeydown="goFullscreen(event);">
+<svg id="touch-cursor-symbols" xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true" focusable="false">
+  <symbol id="icon-cursor-arrow" viewBox="0 0 16 16">
+    <g transform="translate(16,0) scale(-1,1)">
+      <path fill="var(--cursor-fill, #ffffff)" d="M2.25 8.184l3.897 1.67a.5.5 0 0 1 .262.263l1.67 3.897L12.743 3.52z"/>
+      <path fill="var(--cursor-stroke, #000000)" d="M14.082 2.182a.5.5 0 0 1 .103.557L8.528 15.467a.5.5 0 0 1-.917-.007L5.57 10.694.803 8.652a.5.5 0 0 1-.006-.916l12.728-5.657a.5.5 0 0 1 .556.103zM2.25 8.184l3.897 1.67a.5.5 0 0 1 .262.263l1.67 3.897L12.743 3.52z"/>
+    </g>
+  </symbol>
+  <symbol id="icon-cursor-hand" viewBox="0 0 16 16">
+    <path fill="var(--cursor-fill, #ffffff)" d="M8.5 4.466V1.75a1.75 1.75 0 1 0-3.5 0v5.34l-1.2.24a1.5 1.5 0 0 0-1.196 1.636l.345 3.106a2.5 2.5 0 0 0 .405 1.11l1.433 2.15A1.5 1.5 0 0 0 6.035 16h6.385a1.5 1.5 0 0 0 1.302-.756l1.395-2.441a3.5 3.5 0 0 0 .444-1.389l.271-2.715a2 2 0 0 0-1.99-2.199h-.581a5 5 0 0 0-.195-.248c-.191-.229-.51-.568-.88-.716-.364-.146-.846-.132-1.158-.108l-.132.012a1.26 1.26 0 0 0-.56-.642 2.6 2.6 0 0 0-.738-.288c-.31-.062-.739-.058-1.05-.046zm2.094 2.025"/>
+    <path fill="var(--cursor-stroke, #000000)" d="M6.75 1a.75.75 0 0 1 .75.75V8a.5.5 0 0 0 1 0V5.467l.086-.004c.317-.012.637-.008.816.027.134.027.294.096.448.182.077.042.15.147.15.314V8a.5.5 0 1 0 1 0V6.435l.106-.01c.316-.024.584-.01.708.04.118.046.3.207.486.43.081.096.15.19.2.259V8.5a.5.5 0 0 0 1 0v-1h.342a1 1 0 0 1 .995 1.1l-.271 2.715a2.5 2.5 0 0 1-.317.991l-1.395 2.442a.5.5 0 0 1-.434.252H6.035a.5.5 0 0 1-.416-.223l-1.433-2.15a1.5 1.5 0 0 1-.243-.666l-.345-3.105a.5.5 0 0 1 .399-.546L5 8.11V9a.5.5 0 0 0 1 0V1.75A.75.75 0 0 1 6.75 1M8.5 4.466V1.75a1.75 1.75 0 1 0-3.5 0v5.34l-1.2.24a1.5 1.5 0 0 0-1.196 1.636l.345 3.106a2.5 2.5 0 0 0 .405 1.11l1.433 2.15A1.5 1.5 0 0 0 6.035 16h6.385a1.5 1.5 0 0 0 1.302-.756l1.395-2.441a3.5 3.5 0 0 0 .444-1.389l.271-2.715a2 2 0 0 0-1.99-2.199h-.581a5 5 0 0 0-.195-.248c-.191-.229-.51-.568-.88-.716-.364-.146-.846-.132-1.158-.108l-.132.012a1.26 1.26 0 0 0-.56-.642 2.6 2.6 0 0 0-.738-.288c-.31-.062-.739-.058-1.05-.046zm2.094 2.025"/>
+  </symbol>
+</svg>
+<div id="header">
+</div>
+<div id="content">
+<canvas id="mainCanvas"></canvas>
+<div id="touch-cursor-layer" aria-hidden="true">
+  <svg id="touch-cursor-icon" viewBox="0 0 16 16">
+    <use id="touch-cursor-use" href="#icon-cursor-arrow"></use>
+  </svg>
+  <div id="touch-ripple-layer"></div>
+  <div id="touch-tutorial"></div>
+</div>
+</div>
+<div id="footer">
+ <a href="gallery.html" id="galleryLink" aria-label="Gallery"><svg class="label-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2v2H2V2zm1 12v-2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1m0-5V7a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1m0-5V2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1m5 10v-2a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1m0-5V7a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1m0-5V2a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1M9 2v2H7V2zm5 0v2h-2V2zM4 7v2H2V7zm5 0v2H7V7zm5 0h-2v2h2zM4 12v2H2v-2zm5 0v2H7v-2zm5 0v2h-2v-2zM12 1a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zm-1 6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1zm1 4a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1z"/></svg><span class="label-text"></span></a> <a href="http://www.flickgame.org" id="hackLink" aria-label="Edit"><svg class="label-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/></svg><span class="label-text"></span></a> <a id="homeLink" href="http://www.flickgame.org"></a>
+</div>
+</body>
+</html>

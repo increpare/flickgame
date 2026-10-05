@@ -16,13 +16,17 @@ fi
 
 mkdir -p "$DEST_WWW"
 
+# www is bundled whole, so clear out anything left from earlier syncs:
+# only files in the manifest may ship.
+find "$DEST_WWW" -type f ! -name .gitkeep -delete
+
 missing=0
 while IFS= read -r line || [ -n "$line" ]; do
   case "$line" in
     ''|\#*) continue ;;
   esac
-  rel="$line"
-  src="${REPO_ROOT}/${rel}"
+  rel="${line%%=*}"
+  src="${REPO_ROOT}/${line#*=}"
   if [ ! -f "$src" ]; then
     echo "error: missing source file: $src (listed in manifest)" >&2
     missing=1
@@ -33,6 +37,30 @@ while IFS= read -r line || [ -n "$line" ]; do
 done < "$MANIFEST"
 
 if [ "$missing" -ne 0 ]; then
+  exit 1
+fi
+
+# The example game that a fresh install starts with. ios/example.flickgame is an ordinary
+# exported game; only its embedded game data is shipped.
+perl -0ne '
+  if (m{__EmbedBegin__-->\s*var embeddedDat="([^"]*)"}) {
+    print "window.FLICKGAME_EXAMPLE_STATE = decodeURI(\"$1\");\n";
+  } else {
+    die "no embedded game data in example.flickgame\n";
+  }
+' "${SCRIPT_DIR}/../example.flickgame" > "$DEST_WWW/example_game.js"
+
+# The app is local-only. Drop everything between ios-strip markers
+# (<!--ios-strip--> ... <!--/ios-strip--> or /*ios-strip*/ ... /*/ios-strip*/),
+# then refuse to build if any outside-world URL is still in the bundle.
+find "$DEST_WWW" -type f \( -name '*.html' -o -name '*.js' \) -exec perl -0pi -e '
+  s{[ \t]*(?:<!--|/\*)ios-strip(?:-->|\*/).*?(?:<!--|/\*)/ios-strip(?:-->|\*/)[ \t]*\n?}{}gs;
+  s{https://github\.com/increpare/flickgame/issues/}{issue }g;
+' {} +
+
+if grep -rnoE 'ios-strip|(https?:)?//(www\.)?[a-z0-9.-]+\.[a-z]{2,}/?|mailto:' "$DEST_WWW" --include='*.html' --include='*.js' --include='*.css' \
+  | grep -vE '//(www\.)?(w3\.org|flickgame\.org|purl\.eligrey\.com)'; then
+  echo "error: outside-world URL left in the iOS web bundle (see above)" >&2
   exit 1
 fi
 

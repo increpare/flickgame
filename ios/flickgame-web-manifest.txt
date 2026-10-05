@@ -1,5 +1,6 @@
 # Static assets for flickgame editor, gallery, and player.
 # Paths are relative to the repository root. One path per line; # comments allowed.
+# "dest=src" ships src under the name dest (an iOS-specific replacement for a web file).
 
 index.html
 gallery.html
@@ -24,6 +25,14 @@ palette.png
 list.svg
 link.svg
 eyedropper.png
-help.html
-help.css
-helpimage.png
+help.html=ios/help/help.html
+help/play.gif=ios/help/play.gif
+help/link.gif=ios/help/link.gif
+help/pages.png=ios/help/pages.png
+help/zoom.gif=ios/help/zoom.gif
+help/pointer.gif=ios/help/pointer.gif
+help/i_copy.png=ios/help/i_copy.png
+help/i_play.png=ios/help/i_play.png
+help/i_menu.png=ios/help/i_menu.png
+help/i_share.png=ios/help/i_share.png
+help/i_open.png=ios/help/i_open.png

@@ -2,6 +2,44 @@ import SwiftUI
 import UIKit
 import WebKit
 
+/// A game file opened from outside the app (AirDrop, Messages, Files). It waits here until the
+/// gallery page says it is ready, then is imported and played.
+final class IncomingGame {
+    static let shared = IncomingGame()
+    weak var webView: WKWebView?
+    private var pending: (name: String, data: Data)?
+
+    func open(_ url: URL) {
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        guard let data = try? Data(contentsOf: url) else { return }
+        pending = (url.lastPathComponent, data)
+        // Go (back) to the gallery, keeping any unsaved work in the editor first.
+        let script = """
+        (function () {
+          function go() { window.location.href = 'gallery.html'; }
+          var ui = window.FlickGalleryUI;
+          if (typeof saveCurrentToGallery === 'function' && ui && ui.isDirty && ui.isDirty()) {
+            saveCurrentToGallery({ silent: true }).then(go, go);
+          } else {
+            go();
+          }
+        })();
+        """
+        webView?.evaluateJavaScript(script, completionHandler: nil)
+    }
+
+    func deliver() {
+        guard let game = pending, let webView else { return }
+        pending = nil
+        guard let nameJSON = try? JSONSerialization.data(withJSONObject: [game.name]),
+              let nameArray = String(data: nameJSON, encoding: .utf8)
+        else { return }
+        let script = "window.FlickGalleryPage.importIncoming('\(game.data.base64EncodedString())', \(nameArray)[0]);"
+        webView.evaluateJavaScript(script, completionHandler: nil)
+    }
+}
+
 /// Hosts flickgame (`index.html` + bundled assets) in a `WKWebView`.
 struct FlickWebViewRepresentable: UIViewRepresentable {
     func makeCoordinator() -> Coordinator {
@@ -16,13 +54,19 @@ struct FlickWebViewRepresentable: UIViewRepresentable {
         window.FLICKGAME_HOST = 'ios-app';
         window.FLICKGAME_IOS_APP = true;
         """
-        let hostScript = WKUserScript(source: hostFlag, injectionTime: .atDocumentStart, forMainFrameOnly: true)
+        let hostScript = WKUserScript(source: hostFlag, injectionTime: .atDocumentStart, forMainFrameOnly: false)
         contentController.addUserScript(hostScript)
         Self.addStandaloneTemplateUserScript(to: contentController)
+        Self.addSystemIconsUserScript(to: contentController)
         contentController.add(context.coordinator, name: "flickExport")
+        contentController.add(context.coordinator, name: "flickIncoming")
+        contentController.add(context.coordinator, name: "flickSupporter")
         config.userContentController = contentController
         let webView = WKWebView(frame: .zero, configuration: config)
         context.coordinator.shareAnchorWebView = webView
+        IncomingGame.shared.webView = webView
+        Supporter.shared.webView = webView
+        Supporter.shared.start()
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
         webView.isOpaque = false
@@ -31,14 +75,31 @@ struct FlickWebViewRepresentable: UIViewRepresentable {
         context.coordinator.normalizeScrollGeometry(for: webView)
         webView.allowsBackForwardNavigationGestures = true
 
-        if let url = Bundle.main.url(forResource: "gallery", withExtension: "html", subdirectory: "www") {
-            let dir = url.deletingLastPathComponent()
-            webView.loadFileURL(url, allowingReadAccessTo: dir)
-        } else {
-            context.coordinator.loadMissingBundleError(on: webView)
+        // The app is local-only: block every network request before the first page loads.
+        let coordinator = context.coordinator
+        WKContentRuleListStore.default().compileContentRuleList(
+            forIdentifier: "flickgame-offline",
+            encodedContentRuleList: Self.offlineRules
+        ) { ruleList, _ in
+            assert(ruleList != nil, "offline rule list failed to compile")
+            if let ruleList {
+                contentController.add(ruleList)
+            }
+            if let url = Bundle.main.url(forResource: "gallery", withExtension: "html", subdirectory: "www") {
+                let dir = url.deletingLastPathComponent()
+                webView.loadFileURL(url, allowingReadAccessTo: dir)
+            } else {
+                coordinator.loadMissingBundleError(on: webView)
+            }
         }
         return webView
     }
+
+    private static let offlineRules = """
+    [{"trigger": {"url-filter": "^https?:"}, "action": {"type": "block"}},
+     {"trigger": {"url-filter": "^wss?:"}, "action": {"type": "block"}},
+     {"trigger": {"url-filter": "^ftp:"}, "action": {"type": "block"}}]
+    """
 
     func updateUIView(_ uiView: WKWebView, context: Context) {}
 
@@ -55,6 +116,25 @@ struct FlickWebViewRepresentable: UIViewRepresentable {
         let source = "window.FLICKGAME_STANDALONE_PLAY_HTML_B64='\(b64)';"
         let script = WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true)
         contentController.addUserScript(script)
+    }
+
+    /// Hands the pages Apple's own icons (SF Symbols) as CSS variables, e.g. `--ios-icon-folder`,
+    /// so buttons in the app look native while the website keeps its own drawings.
+    private static func addSystemIconsUserScript(to contentController: WKUserContentController) {
+        let symbols = ["folder": "folder", "edit": "paintbrush.pointed", "share": "square.and.arrow.up", "play": "play"]
+        let config = UIImage.SymbolConfiguration(pointSize: 22, weight: .regular)
+        var source = ""
+        for (name, symbol) in symbols {
+            guard let image = UIImage(systemName: symbol, withConfiguration: config) else { continue }
+            let format = UIGraphicsImageRendererFormat()
+            format.scale = 3
+            let png = UIGraphicsImageRenderer(size: image.size, format: format).pngData { _ in
+                image.withTintColor(.black, renderingMode: .alwaysOriginal).draw(at: .zero)
+            }
+            source += "document.documentElement.style.setProperty('--ios-icon-\(name)', "
+                + "'url(data:image/png;base64,\(png.base64EncodedString()))');"
+        }
+        contentController.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
     }
 
     final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler {
@@ -89,6 +169,16 @@ struct FlickWebViewRepresentable: UIViewRepresentable {
             webView.evaluateJavaScript(script, completionHandler: nil)
         }
 
+        /// Only bundled pages may be navigated to; links to the outside world do nothing.
+        func webView(
+            _ webView: WKWebView,
+            decidePolicyFor navigationAction: WKNavigationAction,
+            decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
+        ) {
+            let scheme = navigationAction.request.url?.scheme?.lowercased()
+            decisionHandler(scheme == "file" || scheme == "about" ? .allow : .cancel)
+        }
+
         /// `target=_blank` / `window.open` — load in the same web view.
         func webView(
             _ webView: WKWebView,
@@ -103,6 +193,15 @@ struct FlickWebViewRepresentable: UIViewRepresentable {
         }
 
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+            if message.name == "flickIncoming" {
+                IncomingGame.shared.deliver()
+                return
+            }
+            if message.name == "flickSupporter" {
+                let restoring = message.body as? String == "restore"
+                Task { restoring ? await Supporter.shared.restore() : await Supporter.shared.buy() }
+                return
+            }
             guard message.name == "flickExport" else { return }
             guard let body = message.body as? [String: Any],
                   let b64 = body["dataBase64"] as? String,
@@ -112,8 +211,11 @@ struct FlickWebViewRepresentable: UIViewRepresentable {
                 return
             }
             let safeName = (filename as NSString).lastPathComponent
-            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + "-" + safeName)
+            // A unique folder rather than a unique filename, so the shared file keeps its real name.
+            let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+            let tempURL = tempDir.appendingPathComponent(safeName)
             do {
+                try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
                 try data.write(to: tempURL)
             } catch {
                 return
@@ -123,7 +225,7 @@ struct FlickWebViewRepresentable: UIViewRepresentable {
                 guard let vc = self.topViewController() else { return }
                 let av = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
                 av.completionWithItemsHandler = { _, _, _, _ in
-                    try? FileManager.default.removeItem(at: tempURL)
+                    try? FileManager.default.removeItem(at: tempDir)
                 }
                 if let pop = av.popoverPresentationController, let anchor = self.shareAnchorWebView {
                     pop.sourceView = anchor
@@ -132,6 +234,10 @@ struct FlickWebViewRepresentable: UIViewRepresentable {
                 }
                 vc.present(av, animated: true)
             }
+        }
+
+        func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
+            Supporter.shared.show()
         }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
