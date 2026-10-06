@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { loadPalettes, normalizeGame, resolvePalette } from '../src/flickgame.js';
-import { renderFramePng } from '../src/render.js';
+import { loadPalettes, normalizeGame, resolvePalette } from '../src/core/flickgame.js';
+import { renderFramePng } from '../src/core/render.js';
 import { readPng } from './helpers/readPng.js';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');

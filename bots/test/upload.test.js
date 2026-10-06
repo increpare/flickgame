@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { extractGameText, normalizeGame } from '../src/flickgame.js';
-import { pickGameAttachment, fetchAttachmentText, MAX_FILE_BYTES } from '../src/upload.js';
+import { extractGameText, normalizeGame } from '../src/core/flickgame.js';
+import { pickGameAttachment, fetchAttachmentText, MAX_FILE_BYTES } from '../src/core/upload.js';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const gameJson = fs.readFileSync(path.join(repoRoot, 'testgame.txt'), 'utf8');

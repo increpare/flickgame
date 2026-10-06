@@ -55,6 +55,8 @@ export function normalizeGame(json) {
   const height = clampInt(g.height, 1, MAX_DIM, 100);
   const paletteName = typeof g.palette_name === 'string' ? g.palette_name : DEFAULT_PALETTE;
   const canvasses = Array.isArray(g.canvasses) ? g.canvasses : [];
+  const backgroundColor = typeof g.background_color === 'string' && /^#[0-9a-f]{6}$/i.test(g.background_color)
+    ? g.background_color.toLowerCase() : '#000000';
   const hyperlinks = [];
   for (let f = 0; f < 16; f++) {
     const row = Array.isArray(g.hyperlinks) && Array.isArray(g.hyperlinks[f]) ? g.hyperlinks[f] : [];
@@ -63,7 +65,7 @@ export function normalizeGame(json) {
       return Number.isInteger(t) && t >= 1 && t <= 16 ? t : 0;
     }));
   }
-  return { width, height, paletteName, canvasses, hyperlinks };
+  return { width, height, paletteName, backgroundColor, canvasses, hyperlinks };
 }
 
 export function resolvePalette(palettes, game) {

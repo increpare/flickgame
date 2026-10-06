@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { nextFrame, reactionsForFrame } from '../src/bot.js';
-import { RESET_EMOJI } from '../src/session.js';
+import { nextFrame, reactionsForFrame } from '../src/discord/bot.js';
+import { RESET_EMOJI } from '../src/discord/session.js';
 
 const palette = ['#000000', '#111111', '#222222', '#333333'];
 const game = {
@@ -31,7 +31,7 @@ test('reactionsForFrame lists link colours in palette order then reset', () => {
 });
 
 test('PLAY_COMMAND is /play with a required link option', async () => {
-  const { PLAY_COMMAND } = await import('../src/bot.js');
+  const { PLAY_COMMAND } = await import('../src/discord/bot.js');
   const json = PLAY_COMMAND.toJSON();
   assert.equal(json.name, 'play');
   assert.deepEqual(json.options.map((o) => [o.name, o.required]), [['link', true]]);

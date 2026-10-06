@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { gistIdFromText, fetchGameJson } from '../src/gist.js';
+import { gistIdFromText, fetchGameJson } from '../src/core/gist.js';
 
 const ID = '9dad50f8a7a20878adaca64febc32b62';
 

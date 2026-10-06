@@ -1,0 +1,17 @@
+{
+  "name": "flickgame-bots",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Play flickgames in Discord and Telegram",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node src/discord/index.js",
+    "start:discord": "node src/discord/index.js",
+    "start:telegram": "node src/telegram/index.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.16.0"
+  }
+}

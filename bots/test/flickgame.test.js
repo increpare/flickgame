@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import {
   rleDecode, parsePaletteText, loadPalettes, normalizeGame,
   resolvePalette, framePixels, linksForFrame,
-} from '../src/flickgame.js';
+} from '../src/core/flickgame.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, '../..');
@@ -41,6 +41,8 @@ test('normalizeGame applies defaults and sanitises hyperlinks', () => {
   assert.equal(g.width, 160);
   assert.equal(g.height, 100);
   assert.equal(g.paletteName, 'dawnbringer-16');
+  assert.equal(g.backgroundColor, '#000000');
+  assert.equal(normalizeGame({ background_color: '#ABCDEF' }).backgroundColor, '#abcdef');
   assert.equal(g.hyperlinks.length, 16);
   assert.deepEqual(g.hyperlinks[0], [0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
   assert.deepEqual(g.hyperlinks[15], new Array(16).fill(0));

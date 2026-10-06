@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { encodeIndexedPng, crc32 } from '../src/png.js';
+import { encodeIndexedPng, crc32 } from '../src/core/png.js';
 import { readPng } from './helpers/readPng.js';
 
 test('crc32 matches the known value for "123456789"', () => {

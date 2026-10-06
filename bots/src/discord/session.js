@@ -1,4 +1,4 @@
-import { gistIdFromText } from './gist.js';
+import { gistIdFromText } from '../core/gist.js';
 
 export const RESET_EMOJI = '🔄';
 export const PLAY_BASE = 'https://www.flickgame.org/play.html?p=';

@@ -1,4 +1,4 @@
-import { encodeIndexedPng } from './png.js';
+import { encodeIndexedPng } from '../core/png.js';
 
 const NAME_RE = /^c_([0-9a-f]{6})$/;
 const SWATCH_SIZE = 128;

@@ -1,10 +1,10 @@
 import { Client, GatewayIntentBits, Partials, SlashCommandBuilder, MessageFlags } from 'discord.js';
-import { normalizeGame, resolvePalette, linksForFrame, extractGameText } from './flickgame.js';
-import { renderFramePng, DEFAULT_SCALE } from './render.js';
-import { gistIdFromText } from './gist.js';
+import { normalizeGame, resolvePalette, linksForFrame, extractGameText } from '../core/flickgame.js';
+import { renderFramePng, DEFAULT_SCALE } from '../core/render.js';
+import { gistIdFromText } from '../core/gist.js';
 import { EmojiStore, hexFromEmojiName } from './emoji.js';
 import { SessionStore, RESET_EMOJI, playLinkLine, frameFileName, recoverSessionInfo } from './session.js';
-import { pickGameAttachment, fetchAttachmentText } from './upload.js';
+import { pickGameAttachment, fetchAttachmentText } from '../core/upload.js';
 
 // Which frame a reaction leads to, or null if it does nothing.
 export function nextFrame(session, emojiName) {

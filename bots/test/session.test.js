@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { playLinkLine, frameFileName, recoverSessionInfo, SessionStore, RESET_EMOJI } from '../src/session.js';
+import { playLinkLine, frameFileName, recoverSessionInfo, SessionStore, RESET_EMOJI } from '../src/discord/session.js';
 
 const ID = '9dad50f8a7a20878adaca64febc32b62';
 

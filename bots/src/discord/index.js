@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { loadPalettes } from './flickgame.js';
-import { fetchGameJson } from './gist.js';
+import { loadPalettes } from '../core/flickgame.js';
+import { fetchGameJson } from '../core/gist.js';
 import { createBot } from './bot.js';
 
 function need(name) {
@@ -14,7 +14,7 @@ function need(name) {
 }
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const palettesDir = process.env.PALETTES_DIR || path.resolve(here, '../../palettes');
+const palettesDir = process.env.PALETTES_DIR || path.resolve(here, '../../../palettes');
 const palettes = loadPalettes(palettesDir);
 console.log(`loaded ${Object.keys(palettes).length} palettes from ${palettesDir}`);
 

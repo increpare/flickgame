@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { emojiNameForHex, hexFromEmojiName, swatchPng, EmojiStore } from '../src/emoji.js';
+import { emojiNameForHex, hexFromEmojiName, swatchPng, EmojiStore } from '../src/discord/emoji.js';
 import { readPng } from './helpers/readPng.js';
 
 test('emoji names round-trip hex colours', () => {

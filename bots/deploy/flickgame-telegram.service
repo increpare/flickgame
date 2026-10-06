@@ -1,13 +1,13 @@
 [Unit]
-Description=flickgame Discord play bot
+Description=flickgame Telegram play bot
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=%h/flickgame-bot/discord
-EnvironmentFile=%h/flickgame-bot/discord/.env
-ExecStart=/usr/bin/node src/index.js
+WorkingDirectory=%h/flickgame-bot/bots
+EnvironmentFile=%h/flickgame-bot/bots/.env
+ExecStart=/usr/bin/node src/telegram/index.js
 Restart=on-failure
 RestartSec=10
 NoNewPrivileges=true
