@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, Partials } from 'discord.js';
+import { Client, GatewayIntentBits, Partials, SlashCommandBuilder, MessageFlags } from 'discord.js';
 import { normalizeGame, resolvePalette, linksForFrame } from './flickgame.js';
 import { renderFramePng, DEFAULT_SCALE } from './render.js';
 import { gistIdFromText } from './gist.js';
@@ -26,12 +26,16 @@ export function reactionsForFrame(session, emojiStore) {
   return out;
 }
 
-export function createBot({ token, playChannelId, palettes, loadGame, scale = DEFAULT_SCALE }) {
+export const PLAY_COMMAND = new SlashCommandBuilder()
+  .setName('play')
+  .setDescription('Play a flickgame here')
+  .addStringOption((o) => o.setName('link').setDescription('flickgame link or gist id').setRequired(true));
+
+export function createBot({ token, palettes, loadGame, scale = DEFAULT_SCALE }) {
   const client = new Client({
     intents: [
       GatewayIntentBits.Guilds,
       GatewayIntentBits.GuildMessages,
-      GatewayIntentBits.MessageContent,
       GatewayIntentBits.GuildMessageReactions,
     ],
     partials: [Partials.Message, Partials.Reaction, Partials.Channel],
@@ -67,11 +71,12 @@ export function createBot({ token, playChannelId, palettes, loadGame, scale = DE
     };
   }
 
-  async function postNew(userMessage, session) {
-    const posted = await userMessage.reply({ ...payload(session), allowedMentions: { repliedUser: false } });
-    sessions.set(posted.id, session);
-    await addReactions(posted, session);
-    return posted;
+  async function registerCommands(guild) {
+    try {
+      await guild.commands.set([PLAY_COMMAND.toJSON()]);
+    } catch (err) {
+      console.error('command registration failed for', guild.name, err.message);
+    }
   }
 
   async function showFrame(message, session) {
@@ -81,6 +86,7 @@ export function createBot({ token, playChannelId, palettes, loadGame, scale = DE
   }
 
   client.once('clientReady', () => {
+    for (const guild of client.guilds.cache.values()) registerCommands(guild);
     emojiStore = new EmojiStore(client.application.emojis);
     emojiReady = emojiStore.load().then(() => {
       console.log(`ready as ${client.user.tag}; ${emojiStore.size} swatches known`);
@@ -90,15 +96,24 @@ export function createBot({ token, playChannelId, palettes, loadGame, scale = DE
     });
   });
 
-  client.on('messageCreate', async (message) => {
-    if (message.author.bot || message.channelId !== playChannelId) return;
-    const gistId = gistIdFromText(message.content);
-    if (!gistId) return;
+  client.on('guildCreate', (guild) => registerCommands(guild));
+
+  client.on('interactionCreate', async (interaction) => {
+    if (!interaction.isChatInputCommand() || interaction.commandName !== 'play') return;
+    const gistId = gistIdFromText(interaction.options.getString('link', true));
+    if (!gistId) {
+      await interaction.reply({ content: '❌', flags: MessageFlags.Ephemeral }).catch(() => {});
+      return;
+    }
     try {
-      await postNew(message, await buildSession(gistId));
+      await interaction.deferReply();
+      const session = await buildSession(gistId);
+      const posted = await interaction.editReply(payload(session));
+      sessions.set(posted.id, session);
+      await addReactions(posted, session);
     } catch (err) {
       console.error('load failed', gistId, err.message);
-      message.react('❌').catch(() => {});
+      await interaction.editReply({ content: '❌' }).catch(() => {});
     }
   });
 
@@ -107,7 +122,7 @@ export function createBot({ token, playChannelId, palettes, loadGame, scale = DE
       if (user.bot) return;
       if (reaction.partial) await reaction.fetch();
       const message = reaction.message.partial ? await reaction.message.fetch() : reaction.message;
-      if (message.channelId !== playChannelId || message.author?.id !== client.user.id) return;
+      if (message.author?.id !== client.user.id) return;
 
       let session = sessions.get(message.id);
       if (!session) {

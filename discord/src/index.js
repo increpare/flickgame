@@ -20,7 +20,6 @@ console.log(`loaded ${Object.keys(palettes).length} palettes from ${palettesDir}
 
 const bot = createBot({
   token: need('DISCORD_TOKEN'),
-  playChannelId: need('PLAY_CHANNEL_ID'),
   palettes,
   loadGame: (id) => fetchGameJson(id, {
     githubToken: process.env.GITHUB_TOKEN,

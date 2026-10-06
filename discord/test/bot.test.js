@@ -29,3 +29,10 @@ test('reactionsForFrame lists link colours in palette order then reset', () => {
   assert.deepEqual(reactionsForFrame(session, emojiStore), ['<:c_111111:1>', '<:c_333333:3>', RESET_EMOJI]);
   assert.deepEqual(reactionsForFrame({ ...session, frame: 1 }, emojiStore), [RESET_EMOJI]);
 });
+
+test('PLAY_COMMAND is /play with a required link option', async () => {
+  const { PLAY_COMMAND } = await import('../src/bot.js');
+  const json = PLAY_COMMAND.toJSON();
+  assert.equal(json.name, 'play');
+  assert.deepEqual(json.options.map((o) => [o.name, o.required]), [['link', true]]);
+});
