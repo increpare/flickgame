@@ -1,8 +1,9 @@
 # flickgame Discord play bot
 
-Type `/play <link or gist id>` in any channel; the bot posts the first frame
-and one reaction per colour that links somewhere, plus 🔄. Tap a colour to
-follow its link. Anyone in the channel can play.
+Type `/play <link or gist id>` in any channel, or upload a `.flickgame` file
+(or a standalone flickgame `.html`, or the game's `.txt`/`.json`); the bot
+posts the first frame and one reaction per colour that links somewhere, plus
+🔄. Tap a colour to follow its link. Anyone in the channel can play.
 
 Colours are exact: the app owns one custom emoji per palette colour
 (`c_rrggbb`), created on first start. Game data comes from the share link's
@@ -14,7 +15,8 @@ Smoke-tested 2026-10-06: reactions with application emoji work; the app owns
 ## Setup (once)
 
 1. https://discord.com/developers/applications → New Application → "flickgame".
-2. Bot tab: Reset Token and keep it for `.env`. No privileged intents needed.
+2. Bot tab: enable **Message Content Intent** (needed to see uploaded files).
+   Reset Token and keep it for `.env`.
 3. OAuth2 → URL Generator: scopes `bot` and `applications.commands`;
    permissions View Channels, Send Messages, Read Message History, Attach
    Files, Add Reactions, Manage Messages (permissions integer `109632`). Open

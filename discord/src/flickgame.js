@@ -82,3 +82,28 @@ export function linksForFrame(game, frame) {
   }
   return out;
 }
+
+// Port of FlickgameShare.extractStateFromImportText: accepts a standalone
+// flickgame .html/.flickgame file (JSON embedded between marker comments,
+// URI-encoded) or a plain game JSON file. Returns the game JSON text.
+export function extractGameText(text) {
+  const s = String(text);
+  const from = '<!--__EmbedBegin__-->';
+  const end = '<!--__EmbedEnd__-->';
+  const a = s.indexOf(from);
+  const b = s.indexOf(end);
+  if (a >= 0 && b > a) {
+    const inner = s.slice(a + from.length, b);
+    const q1 = inner.indexOf('"');
+    if (q1 < 0) throw new Error('embedded flickgame data is malformed');
+    const decoded = decodeURI(inner.slice(q1 + 1));
+    const q2 = decoded.lastIndexOf('"');
+    if (q2 < 0) throw new Error('embedded flickgame data is malformed');
+    return decoded.slice(0, q2);
+  }
+  const parsed = JSON.parse(s);
+  if (!parsed || typeof parsed !== 'object' || !parsed.canvasses || !parsed.hyperlinks) {
+    throw new Error('not a flickgame');
+  }
+  return s;
+}

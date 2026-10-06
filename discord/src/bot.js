@@ -1,9 +1,10 @@
 import { Client, GatewayIntentBits, Partials, SlashCommandBuilder, MessageFlags } from 'discord.js';
-import { normalizeGame, resolvePalette, linksForFrame } from './flickgame.js';
+import { normalizeGame, resolvePalette, linksForFrame, extractGameText } from './flickgame.js';
 import { renderFramePng, DEFAULT_SCALE } from './render.js';
 import { gistIdFromText } from './gist.js';
 import { EmojiStore, hexFromEmojiName } from './emoji.js';
 import { SessionStore, RESET_EMOJI, playLinkLine, frameFileName, recoverSessionInfo } from './session.js';
+import { pickGameAttachment, fetchAttachmentText } from './upload.js';
 
 // Which frame a reaction leads to, or null if it does nothing.
 export function nextFrame(session, emojiName) {
@@ -36,6 +37,7 @@ export function createBot({ token, palettes, loadGame, scale = DEFAULT_SCALE }) 
     intents: [
       GatewayIntentBits.Guilds,
       GatewayIntentBits.GuildMessages,
+      GatewayIntentBits.MessageContent, // needed to see attachments on uploads
       GatewayIntentBits.GuildMessageReactions,
     ],
     partials: [Partials.Message, Partials.Reaction, Partials.Channel],
@@ -45,12 +47,20 @@ export function createBot({ token, palettes, loadGame, scale = DEFAULT_SCALE }) 
   let emojiStore = null;
   let emojiReady = null;
 
-  async function buildSession(gistId, frame = 0) {
-    const game = normalizeGame(await loadGame(gistId));
+  // loadText yields the game JSON text; gistId is null for uploaded files.
+  async function buildSession(loadText, gistId, frame = 0) {
+    const game = normalizeGame(await loadText());
     const palette = resolvePalette(palettes, game);
     await emojiReady;
     await emojiStore.ensure(palette);
     return { gistId, game, palette, frame, busy: false };
+  }
+
+  async function sessionFromUpload(message, frame = 0) {
+    const pick = pickGameAttachment(message.attachments.values());
+    if (!pick) return null;
+    const text = await fetchAttachmentText(pick.attachment);
+    return buildSession(() => extractGameText(text), null, frame);
   }
 
   async function addReactions(message, session) {
@@ -66,9 +76,15 @@ export function createBot({ token, palettes, loadGame, scale = DEFAULT_SCALE }) 
   function payload(session) {
     const png = renderFramePng(session.game, session.palette, session.frame, scale);
     return {
-      content: playLinkLine(session.gistId),
+      content: session.gistId ? playLinkLine(session.gistId) : '',
       files: [{ attachment: png, name: frameFileName(session.frame) }],
     };
+  }
+
+  async function showFrame(message, session) {
+    await message.reactions.removeAll();
+    await message.edit({ ...payload(session), attachments: [] });
+    await addReactions(message, session);
   }
 
   async function registerCommands(guild) {
@@ -77,12 +93,6 @@ export function createBot({ token, palettes, loadGame, scale = DEFAULT_SCALE }) 
     } catch (err) {
       console.error('command registration failed for', guild.name, err.message);
     }
-  }
-
-  async function showFrame(message, session) {
-    await message.reactions.removeAll();
-    await message.edit({ ...payload(session), attachments: [] });
-    await addReactions(message, session);
   }
 
   client.once('clientReady', () => {
@@ -107,13 +117,37 @@ export function createBot({ token, palettes, loadGame, scale = DEFAULT_SCALE }) 
     }
     try {
       await interaction.deferReply();
-      const session = await buildSession(gistId);
+      const session = await buildSession(() => loadGame(gistId), gistId);
       const posted = await interaction.editReply(payload(session));
       sessions.set(posted.id, session);
       await addReactions(posted, session);
     } catch (err) {
       console.error('load failed', gistId, err.message);
       await interaction.editReply({ content: '❌' }).catch(() => {});
+    }
+  });
+
+  // Uploaded .flickgame / standalone .html / game .txt or .json files.
+  client.on('messageCreate', async (message) => {
+    if (message.author.bot) return;
+    const pick = pickGameAttachment(message.attachments.values());
+    if (!pick) return;
+    let session;
+    try {
+      session = await sessionFromUpload(message);
+    } catch (err) {
+      if (pick.strict) {
+        console.error('upload failed', pick.attachment.name, err.message);
+        message.react('❌').catch(() => {});
+      }
+      return;
+    }
+    try {
+      const posted = await message.reply({ ...payload(session), allowedMentions: { repliedUser: false } });
+      sessions.set(posted.id, session);
+      await addReactions(posted, session);
+    } catch (err) {
+      console.error('upload reply failed', err.message);
     }
   });
 
@@ -128,7 +162,13 @@ export function createBot({ token, palettes, loadGame, scale = DEFAULT_SCALE }) 
       if (!session) {
         const info = recoverSessionInfo(message);
         if (!info) return;
-        session = await buildSession(info.gistId, info.frame);
+        if (info.gistId) {
+          session = await buildSession(() => loadGame(info.gistId), info.gistId, info.frame);
+        } else if (message.reference?.messageId) {
+          const original = await message.channel.messages.fetch(message.reference.messageId);
+          session = await sessionFromUpload(original, info.frame);
+        }
+        if (!session) return;
         sessions.set(message.id, session);
       }
 

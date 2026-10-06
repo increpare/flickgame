@@ -17,7 +17,9 @@ test('recoverSessionInfo rebuilds gist id and frame from a bot message', () => {
     attachments: new Map([['a1', { name: 'frame-07.png' }]]),
   };
   assert.deepEqual(recoverSessionInfo(message), { gistId: ID, frame: 7 });
-  assert.deepEqual(recoverSessionInfo({ content: playLinkLine(ID), attachments: new Map() }), { gistId: ID, frame: 0 });
+  // uploaded-file games have no link line; the frame file alone marks a game message
+  assert.deepEqual(recoverSessionInfo({ content: '', attachments: new Map([['a', { name: 'frame-02.png' }]]) }), { gistId: null, frame: 2 });
+  assert.equal(recoverSessionInfo({ content: playLinkLine(ID), attachments: new Map() }), null);
   assert.equal(recoverSessionInfo({ content: 'hello', attachments: new Map() }), null);
 });
 

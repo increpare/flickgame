@@ -13,17 +13,18 @@ export function frameFileName(frame) {
   return `frame-${String(frame).padStart(2, '0')}.png`;
 }
 
-// A bot message carries its own state: the link line names the game and the
-// attachment name holds the frame, so sessions survive restarts.
+// A bot message carries its own state: the attachment name holds the frame,
+// and the link line names the gist (null for games that came from an
+// uploaded file, which are recovered from the message the bot replied to).
+// Returns null if the message is not a game message at all.
 export function recoverSessionInfo(message) {
-  const gistId = gistIdFromText(message.content || '');
-  if (!gistId) return null;
-  let frame = 0;
+  let frame = null;
   for (const a of message.attachments.values()) {
     const m = FILE_RE.exec(a.name || '');
     if (m) frame = Math.min(Number(m[1]), 15);
   }
-  return { gistId, frame };
+  if (frame === null) return null;
+  return { gistId: gistIdFromText(message.content || ''), frame };
 }
 
 export class SessionStore {
