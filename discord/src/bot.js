@@ -80,7 +80,7 @@ export function createBot({ token, playChannelId, palettes, loadGame, scale = DE
     await addReactions(message, session);
   }
 
-  client.once('ready', () => {
+  client.once('clientReady', () => {
     emojiStore = new EmojiStore(client.application.emojis);
     emojiReady = emojiStore.load().then(() => {
       console.log(`ready as ${client.user.tag}; ${emojiStore.size} swatches known`);

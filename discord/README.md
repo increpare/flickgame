@@ -8,6 +8,9 @@ Colours are exact: the app owns one custom emoji per palette colour
 (`c_rrggbb`), created on first start. Game data comes from the share link's
 GitHub gist, so the bot works even if flickgame.org is down.
 
+Smoke-tested 2026-10-06: reactions with application emoji work; the app owns
+485 swatches after the first sync.
+
 ## Setup (once)
 
 1. https://discord.com/developers/applications → New Application → "flickgame".
