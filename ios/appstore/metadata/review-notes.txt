@@ -1,0 +1,20 @@
+Flickgame is a drawing tool for making simple picture-based games. A game is 16 pictures; a colour in one picture can lead to another picture.
+
+NO ACCOUNT, NO NETWORK
+No sign-in is needed. The app makes no network requests of its own; its web views are blocked from loading anything outside the app bundle. The only network use is StoreKit for the optional purchase below.
+
+HOW TO TRY IT
+1. On first launch the gallery contains a game called "example". Tap the play triangle to play it: drag anywhere to move the pointer, tap to press. A hand pointer means that spot leads to another picture.
+2. From the gallery, tap the paintbrush to open a game in the editor. Draw with a finger. Tap a colour swatch twice to choose which picture that colour leads to. The grid in the top corner switches between the 16 pictures.
+3. The menu button (three lines) in the editor has Save, Help and Back to Gallery.
+
+FILES
+Games are shared as .flickgame files (a document type the app exports, org.flickgame.game) through the system share sheet. Opening a .flickgame file from Files, AirDrop or Messages imports it into the gallery and plays it. The folder button in the gallery opens the system file picker to import one. The app includes a Quick Look preview extension that shows the first picture of a .flickgame file.
+
+IN-APP PURCHASE
+"Supporter" (com.increpare.Flickgame.supporter) is a one-time, non-consumable purchase. Tap the smiley face at the top left of the gallery to buy it. It changes the smiley's appearance and unlocks no features. "Restore purchase" is at the bottom of the Help page (editor menu > Help).
+
+USER CONTENT
+Everything a user makes stays on their device. There is no online gallery, no upload and no in-app way to browse other people's games.
+
+Contact: analytic@gmail.com
