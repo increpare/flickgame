@@ -1,0 +1,17 @@
+[Unit]
+Description=flickgame Discord play bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/flickgame-bot/discord
+EnvironmentFile=%h/flickgame-bot/discord/.env
+ExecStart=/usr/bin/node src/index.js
+Restart=on-failure
+RestartSec=10
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=default.target
