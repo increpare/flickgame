@@ -101,16 +101,33 @@ export function createTelegramBot({ token, palettes, loadGame, uploadStore, api,
     }
   }
 
+  const busy = new Set(); // "chatId:messageId" with an edit in flight
+  const seen = new Map(); // callback ids answered recently, to drop client retries
+
+  function alreadySeen(id) {
+    const now = Date.now();
+    for (const [k, t] of seen) if (now - t > 60000) seen.delete(k);
+    if (seen.has(id)) return true;
+    seen.set(id, now);
+    return false;
+  }
+
   async function handleCallback(cq) {
-    const answer = (extra = {}) => api.call('answerCallbackQuery', { callback_query_id: cq.id, ...extra }).catch(() => {});
+    if (alreadySeen(cq.id)) return;
+    // Answer first: the client stops its spinner and will not retry the tap.
+    api.call('answerCallbackQuery', { callback_query_id: cq.id }).catch(() => {});
     const data = decodeCallback(cq.data);
-    if (!data || !cq.message) return answer();
+    if (!data || !cq.message) return;
+    const key = `${cq.message.chat.id}:${cq.message.message_id}`;
+    if (busy.has(key)) return; // a move is already being drawn; ignore extra taps
+    busy.add(key);
+    const started = Date.now();
     try {
       const entry = await loadByKey(data.kind, data.id);
       let next = 0;
       if (data.colour !== RESET) {
         const target = entry.game.hyperlinks[data.frame][data.colour];
-        if (!(target > 0)) return answer();
+        if (!(target > 0)) return;
         next = target - 1;
       }
       const { png, reply_markup, filename } = framePayload(data.kind, data.id, entry, next);
@@ -120,10 +137,12 @@ export function createTelegramBot({ token, palettes, loadGame, uploadStore, api,
         media: { type: 'photo', media: 'attach://photo' },
         reply_markup,
       }, { photo: { buffer: png, filename } });
+      log.log(`move ${cq.data} -> frame ${next} in ${Date.now() - started} ms (${png.length} bytes)`);
     } catch (err) {
-      if (!/not modified/i.test(err.message)) log.error('callback failed', cq.data, err.message);
+      if (!/not modified/i.test(err.message)) log.error('callback failed', cq.data, err.message, `after ${Date.now() - started} ms`);
+    } finally {
+      busy.delete(key);
     }
-    return answer();
   }
 
   async function handleUpdate(update) {

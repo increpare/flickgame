@@ -170,10 +170,13 @@ test('bot: a tapped colour edits the photo to the target frame; dead colours onl
   assert.equal(edit.params.message_id, 10);
   assert.equal(edit.files.photo.filename, 'frame-01.png');
   assert.deepEqual(edit.params.media, { type: 'photo', media: 'attach://photo' });
-  assert.equal(api.calls.at(-1).method, 'answerCallbackQuery');
+  assert.equal(api.calls[0].method, 'answerCallbackQuery', 'the tap is answered before the edit');
   api.calls.length = 0;
   await bot.handleCallback({ id: 'cq2', data: `g:${ID}:0:0`, message });
   assert.deepEqual(api.calls.map((c) => c.method), ['answerCallbackQuery']);
+  api.calls.length = 0;
+  await bot.handleCallback({ id: 'cq2', data: `g:${ID}:0:7`, message });
+  assert.deepEqual(api.calls, [], 'a retried callback id is ignored');
   await bot.handleCallback({ id: 'cq3', data: `g:${ID}:5:r`, message });
   assert.equal(api.calls.find((c) => c.method === 'editMessageMedia').files.photo.filename, 'frame-00.png');
 });
