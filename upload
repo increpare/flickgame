@@ -1,11 +1,18 @@
 #!/bin/bash
-REMOTE="locus@ded.increpare.com:sites/flickgame/beta"
+REMOTE="locus@95.211.62.202:/home/locus/sites/flickgame"
 
 rsync -avz --checksum \
-  --include='*.*' \
   --exclude='.git' \
+  --exclude='.DS_Store' \
   --exclude='node_modules' \
   --exclude='agent-transcripts' \
+  --exclude='/.claude' \
+  --exclude='/.superpowers' \
+  --exclude='/.github' \
+  --exclude='/ios' \
+  --exclude='/bots' \
+  --exclude='/discord' \
+  --exclude='/docs/superpowers' \
   . "$REMOTE"
 
-ssh locus@ded.increpare.com 'cd sites/flickgame/beta && perl gzipper'
+ssh locus@95.211.62.202 'cd /home/locus/sites/flickgame && perl gzipper'
