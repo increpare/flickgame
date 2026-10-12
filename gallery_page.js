@@ -439,9 +439,9 @@
     reader.readAsText(file);
   }
 
-  // iOS: a fresh install starts with one example game in the gallery.
+  // iOS: a fresh install starts with a few example games in the gallery.
   var EXAMPLE_SEEDED_KEY = 'flickgame_ios_example_seeded_v1';
-  function seedExampleGame() {
+  function seedExampleGames() {
     try {
       if (localStorage.getItem(EXAMPLE_SEEDED_KEY)) return;
       localStorage.setItem(EXAMPLE_SEEDED_KEY, '1');
@@ -451,11 +451,16 @@
     var script = document.createElement('script');
     script.src = 'example_game.js';
     script.onload = function () {
-      var state = window.FLICKGAME_EXAMPLE_STATE;
-      if (typeof state !== 'string') return;
-      var thumb = '';
-      try { thumb = renderPreviewFromState(state).src; } catch (e) {}
-      window.FlickGalleryStore.putProject({ title: T('example'), state: state, thumb: thumb }).then(renderGrid);
+      var examples = window.FLICKGAME_EXAMPLES;
+      if (!Array.isArray(examples)) return;
+      // The gallery lists the newest first, so the first example is saved last.
+      examples.slice().reverse().reduce(function (saved, example) {
+        return saved.then(function () {
+          var thumb = '';
+          try { thumb = renderPreviewFromState(example.state).src; } catch (e) {}
+          return window.FlickGalleryStore.putProject({ title: example.title, state: example.state, thumb: thumb });
+        });
+      }, Promise.resolve()).then(renderGrid);
     };
     document.head.appendChild(script);
   }
@@ -513,7 +518,7 @@
     if (pageTitle) pageTitle.textContent = T('My Flickgames');
     if (importBtn) importBtn.setAttribute('aria-label', T('Open'));
     renderGrid();
-    if (isIosApp()) seedExampleGame();
+    if (isIosApp()) seedExampleGames();
     if (isIosApp() && window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.flickIncoming) {
       window.FlickGalleryPage = { importIncoming: importIncoming };
       window.webkit.messageHandlers.flickIncoming.postMessage('ready');

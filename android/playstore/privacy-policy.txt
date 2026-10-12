@@ -1,0 +1,25 @@
+Flickgame for Android — Privacy Policy
+
+Flickgame is made by Stephen Lavelle. Contact: analytic@gmail.com.
+
+Your games and drawings stay in the gallery on your device. Flickgame does not
+create an account, upload your work, show advertisements or collect app analytics.
+The editor, gallery, player, examples and help work offline. The app's WebView cannot
+load websites or connect to outside servers, and the app has no internet permission.
+
+When you choose a game using the system file picker or open one from another app,
+Flickgame reads that file to import it. When you share a game, Android gives the app
+you choose temporary read access to that exported file. The recipient app's own
+privacy policy applies to what it does with your file.
+
+Games are stored in app data. Automatic cloud backup and Android device transfer
+are disabled. Uninstalling Flickgame or clearing its app data deletes the gallery.
+Exported files remain wherever you chose to keep them. Export your games to make
+backups; temporary copies used for sharing are cleaned up on a later launch after
+24 hours.
+
+There is an optional, one-time supporter purchase through Google Play. It changes
+only the supporter smiley and does not unlock features. Google Play processes the
+payment according to Google's policies; Flickgame does not receive your payment
+card details. The app checks and stores the purchase entitlement locally. Google Play's purchase service may
+use the network even though the game tools do not.
