@@ -7,7 +7,12 @@
   var STORE_PROJECTS = 'projects';
   var dbPromise = null;
 
-  function nowMs() { return Date.now(); }
+  // Strictly increasing, so projects saved within the same millisecond keep their order.
+  var lastMs = 0;
+  function nowMs() {
+    lastMs = Math.max(Date.now(), lastMs + 1);
+    return lastMs;
+  }
 
   function uuid() {
     if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
@@ -111,8 +116,9 @@
     var p = Object.assign({}, project);
     if (!p.id) p.id = uuid();
     if (!p.title) p.title = 'Untitled';
-    if (!p.createdAt) p.createdAt = nowMs();
-    p.updatedAt = nowMs();
+    var now = nowMs();
+    if (!p.createdAt) p.createdAt = now;
+    p.updatedAt = now;
     return withStore('readwrite', function (store) {
       return reqToPromise(store.put(p)).then(function () { return p; });
     });

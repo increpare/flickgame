@@ -14,3 +14,12 @@ ios/FlickgameShell/FlickgameShell/www/*
 .DS_Store
 ios/FlickgameShell/FlickgameShell.xcodeproj/project.xcworkspace/xcuserdata/stephenlavelle.xcuserdatad/UserInterfaceState.xcuserstate
 ios/FlickgameShell/FlickgameShell.xcodeproj/xcuserdata/
+
+# Android: build products, SDK location and signing credentials.
+/android/.gradle/
+/android/.toolchain/
+/android/**/build/
+/android/local.properties
+/android/*.jks
+/android/*.keystore
+/android/.idea/

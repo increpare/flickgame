@@ -1,0 +1,58 @@
+plugins { id 'com.android.application' }
+
+def playLicenseKey = (System.getenv('FLICKGAME_PLAY_LICENSE_KEY') ?: '').replaceAll(/\s/, '')
+if (playLicenseKey && !(playLicenseKey ==~ /[A-Za-z0-9+\/=]+/)) {
+    throw new GradleException('FLICKGAME_PLAY_LICENSE_KEY must be the base64 Play RSA public key')
+}
+
+android {
+    namespace 'com.increpare.flickgame'
+    compileSdk 36
+    buildFeatures { buildConfig true }
+    defaultConfig {
+        applicationId 'com.increpare.flickgame'
+        minSdk 23
+        targetSdk 36
+        versionCode 1
+        versionName '1.0'
+        buildConfigField 'String', 'PLAY_LICENSE_KEY', '"' + playLicenseKey + '"'
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+    }
+    signingConfigs {
+        release {
+            if (System.getenv('FLICKGAME_KEYSTORE')) {
+                storeFile file(System.getenv('FLICKGAME_KEYSTORE'))
+                storePassword System.getenv('FLICKGAME_STORE_PASSWORD')
+                keyAlias System.getenv('FLICKGAME_KEY_ALIAS')
+                keyPassword System.getenv('FLICKGAME_KEY_PASSWORD')
+            }
+        }
+    }
+    buildTypes {
+        release {
+            if (System.getenv('FLICKGAME_KEYSTORE')) signingConfig signingConfigs.release
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    sourceSets.main.assets.srcDir layout.buildDirectory.dir('generated/flickgame/assets')
+}
+
+def repoRoot = rootProject.projectDir.parentFile
+// Always regenerate: the mobile manifest, translations and examples are shared with iOS.
+def syncWebAssets = tasks.register('syncWebAssets', Exec) {
+    commandLine 'node', new File(repoRoot, 'android/scripts/sync-web-assets.cjs').absolutePath,
+            repoRoot.absolutePath, layout.buildDirectory.dir('generated/flickgame/assets/www').get().asFile.absolutePath
+}
+tasks.named('preBuild').configure { dependsOn syncWebAssets }
+
+dependencies {
+    implementation 'com.android.billingclient:billing:8.3.0'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test:runner:1.7.0'
+}
