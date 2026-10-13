@@ -65,7 +65,7 @@ Android host/generated bundle. The web and iOS source files were preserved.
 - `app/build/outputs/bundle/release/app-release.aab` — unsigned release compilation.
 - `playstore/` — listing, privacy text, review notes, icons, feature graphic and screenshots.
 
-SHA-256 for this build:
+SHA-256 for the original build recorded above (before the Windows preparation):
 
 ```text
 APK  568d1bf6fcbe0cd5bd68d6efe542ac46cc731d318349ed1d4e689151d7b04689
@@ -84,3 +84,40 @@ refund/revocation need a Play-distributed build and license tester; they cannot 
 certified with this sideloaded emulator build. Publish the prepared privacy text at
 a public URL and complete Play's account/content forms before submission. Follow
 [playstore/RELEASE.md](playstore/RELEASE.md).
+
+## Windows build preparation — 12 October 2026
+
+Rebuilt on branch `codex/pre-wipe-2026-10-12/flickgame-42951473/working-files`
+with portable Temurin JDK 17.0.20.1, SDK Platform 36, Build Tools 35.0.0,
+Gradle 8.13 and AGP 8.13.2. Local Java, SDK and Gradle downloads are ignored under
+`.toolchain/`. Run `android/build.ps1 -Target All` from the repository root.
+
+Android asset generation now uses Node.js directly, without requiring a Unix shell,
+Perl or Unix file utilities. It preserves the shared manifest, translations, examples,
+offline stripping and Android-specific editor/import adaptations. Text processing
+normalizes Windows line endings; expected source hooks must exist or the build fails.
+The shell entry point delegates to the same portable script.
+
+| Check | Windows result |
+| --- | --- |
+| Node asset/bridge tests | 6 passed, including import persistence/retry and safe regeneration |
+| Java unit tests | 5 passed, 0 skipped/failures/errors |
+| Debug APK | Built; `apksigner verify` passed with v1 and v2 signatures |
+| Device-test APK | Built; device execution was not repeated in this Windows session |
+| Debug lint | 0 errors, 7 warnings |
+| Release AAB | Built with R8 and release lint; `jarsigner -verify` confirms unsigned |
+| Packaged manifest | Package `com.increpare.flickgame`, minimum API 23, target API 36; only Billing permission |
+
+The first Gradle run hit a transient Windows dependency-cache file lock. Retrying
+the same command succeeded. Earlier device/visual verification above is a separate
+record; this session certifies the Windows build and automated checks.
+
+SHA-256 for the current Windows artifacts:
+
+```text
+APK  5357135c86ca216d26577bb9fddee6920678692b039d738eed5686178954f0eb
+AAB  359d7f27ce2e1a10048b7a5b362f8d52c2f1d8cb69170f4c91c046bed5a4a361
+```
+
+The release AAB still needs the developer's upload keystore and Play configuration
+before submission. No Play submission or purchase/device testing was performed here.

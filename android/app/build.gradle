@@ -45,7 +45,7 @@ android {
 def repoRoot = rootProject.projectDir.parentFile
 // Always regenerate: the mobile manifest, translations and examples are shared with iOS.
 def syncWebAssets = tasks.register('syncWebAssets', Exec) {
-    commandLine 'sh', new File(repoRoot, 'android/scripts/sync-web-assets.sh').absolutePath,
+    commandLine 'node', new File(repoRoot, 'android/scripts/sync-web-assets.cjs').absolutePath,
             repoRoot.absolutePath, layout.buildDirectory.dir('generated/flickgame/assets/www').get().asFile.absolutePath
 }
 tasks.named('preBuild').configure { dependsOn syncWebAssets }
