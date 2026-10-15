@@ -51,6 +51,15 @@ for (const { source, target } of manifest) {
   fs.mkdirSync(path.dirname(target), { recursive: true });
   fs.copyFileSync(source, target);
 }
+// Keep the in-app policy identical to the public document submitted to Play.
+const privacyPage = read(path.join(root, 'android/playstore/privacy-policy.html'));
+const privacyContent = privacyPage.match(/<main>([\s\S]*?)<\/main>/);
+if (!privacyContent) throw new Error('Privacy policy content not found');
+write('help.html', replaceRequired(read(path.join(dest, 'help.html')), /<\/main>/,
+  '<p class="small"><a href="#privacy-policy" onclick="document.getElementById(\'privacy-policy\').open = true;" data-t>Privacy policy</a></p>\n'
+  + '<details id="privacy-policy"><summary data-t>Privacy policy</summary>'
+  + privacyContent[1].replace(/<h1>/g, '<h2>').replace(/<\/h1>/g, '</h2>')
+  + '</details>\n  </main>', 'Help privacy policy'));
 
 const examples = ['icecream', 'heart', 'cat'].map(name => {
   const game = read(path.join(root, 'ios/examples', `${name}.flickgame`));

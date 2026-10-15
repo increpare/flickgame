@@ -19,6 +19,11 @@ test('Android bundle is offline, localized and exports self-contained compatible
     assert.match(gallery, /android_bootstrap\.js/);
     assert.ok(gallery.indexOf('android_bootstrap.js') < gallery.indexOf('FLICKGAME_HOST'));
     assert.match(gallery, /android-app/);
+    const help = fs.readFileSync(path.join(dest, 'help.html'), 'utf8');
+    assert.match(help, /href="#privacy-policy"/);
+    assert.match(help, /<details id="privacy-policy">/);
+    assert.match(help, /Flickgame for Android — Privacy Policy/);
+    assert.match(help, /Google Play processes the/);
     const i18n = fs.readFileSync(path.join(dest, 'i18n.js'), 'utf8');
     assert.match(i18n, /FLICKGAME_LANGUAGES/);
     assert.doesNotMatch(i18n, /Couldn't reach the App Store/);

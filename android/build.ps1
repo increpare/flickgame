@@ -34,12 +34,12 @@ if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
 if ((Test-Path $taskTools) -and -not $env:GRADLE_USER_HOME) {
     $env:GRADLE_USER_HOME = Join-Path $taskTools 'gradle'
 }
-$taskGradleTargets = switch ($Target) {
+$taskGradleTargets = @(switch ($Target) {
     'Debug' { 'assembleDebug' }
     'Release' { 'bundleRelease' }
     'Verify' { 'testDebugUnitTest'; 'lintDebug'; 'assembleDebugAndroidTest' }
     'All' { 'testDebugUnitTest'; 'lintDebug'; 'assembleDebug'; 'assembleDebugAndroidTest'; 'bundleRelease' }
-}
+})
 Push-Location $PSScriptRoot
 try {
     if ($Target -in @('Verify', 'All')) {
