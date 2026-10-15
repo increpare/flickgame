@@ -337,7 +337,9 @@
       padding-right: max(16px, env(safe-area-inset-right));
     }
     html[data-ios-app="true"] .gallery-grid {
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      /* Never fewer than two columns: a 360px-wide phone (720x1600 at 320dpi) has only 328px
+         for the grid, and two fixed 160px columns plus the gap need 330px. */
+      grid-template-columns: repeat(auto-fit, minmax(min(160px, calc(50% - 5px)), 1fr));
     }
     html[data-ios-app="true"] .gallery-actions {
       display: flex;

@@ -133,6 +133,21 @@ public final class ShellTest {
         waitFor("location.pathname.endsWith('/gallery.html')");
         getInstrumentation().runOnMainSync(() -> activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT));
     }
+    @Test public void testGalleryColumnsAndNewGameFitsCanvasArea() throws Exception {
+        // A 720x1600 phone at 320dpi is only 360 CSS px wide; the gallery must still show two columns.
+        assertTrue("Gallery shows a single column", Integer.parseInt(js(
+                "getComputedStyle(document.getElementById('gallery-grid')).gridTemplateColumns.split(' ').length")) >= 2);
+        assertEquals("false", js("document.documentElement.scrollWidth > innerWidth"));
+        js("document.querySelector('.gallery-tile').click()");
+        waitFor("location.pathname.endsWith('/index.html') && location.search.includes('id=') && window.FlickGalleryUI && document.getElementById('mainCanvas')");
+        waitFor("!window.FlickGalleryUI.isDirty()");
+        // The new canvas is shaped like the space it has, not like the screen or the 160x100 default.
+        assertEquals("true", js("Math.max(width, height) === 160"));
+        assertEquals("New game does not fit its canvas area", "true", js(
+                "(function(){var r=document.getElementById('mobile-canvas-container').getBoundingClientRect();"
+                + "return Math.abs(width/height - r.width/r.height) < 0.03;})()"));
+        screenshot("07-new-game");
+    }
     @Test public void testHelpAndSaveDiscardBackFlow() throws Exception {
         editFirst();
         js("canvasses[0][0] = (canvasses[0][0]+1)%16; saveFlickgameState();");

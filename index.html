@@ -2131,27 +2131,11 @@
       setVisuals(true);
       setColor(colorIndex);
 
-      if (getDataIndex()===false){
-        var saved = loadFlickgameState();
-        if (saved) {
-          try {
-            stringToState(saved, 'storage');
-            setVisuals(true);
-            setLayer(canvasIndex + 1);
-            setDropdowns();
-          } catch (err) {
-            saved = null;
-          }
-        }
-        if (!saved) {
-          //set random color palette for fun
-          var palette_names = Object.keys(palettes);
-          var random_palette_name = palette_names[Math.floor(Math.random() * palette_names.length)];
-          set_color_palette(random_palette_name,false);
-          setVisuals(true);
-        }
-      }
-
+      // Arrange the layout before the route handler runs: a new game from the gallery
+      // (index.html?new=1) is fitted to the mobile canvas container, and that container
+      // only has its final shape once the palette and brush strip have been moved into
+      // the mobile layout. The Android bundle keeps a blank game's first dimensions
+      // through later layout settling, so the first fit has to be measured correctly.
       window.onLayoutModeChange = function() {
         resetViewTransform();
         var canvas = document.getElementById('mainCanvas');
@@ -2200,6 +2184,27 @@
         if (isMobileLayout()) updateMobileCanvasSize();
       };
       window.onLayoutModeChange();
+      if (getDataIndex()===false){
+        var saved = loadFlickgameState();
+        if (saved) {
+          try {
+            stringToState(saved, 'storage');
+            setVisuals(true);
+            setLayer(canvasIndex + 1);
+            setDropdowns();
+          } catch (err) {
+            saved = null;
+          }
+        }
+        if (!saved) {
+          //set random color palette for fun
+          var palette_names = Object.keys(palettes);
+          var random_palette_name = palette_names[Math.floor(Math.random() * palette_names.length)];
+          set_color_palette(random_palette_name,false);
+          setVisuals(true);
+        }
+      }
+
       requestAnimationFrame(function() { updateDesktopScale(); });
     }
 
