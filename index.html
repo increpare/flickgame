@@ -1625,9 +1625,10 @@
     var layoutMode = 'desktop';
     var hasTouch = false;
 
-    function updateLayoutMode() {
+    // Which layout the current viewport gets. Also used by the inline script at the top of
+    // <body>, before anything has painted, so a phone never flashes the desktop editor.
+    function computeLayoutMode() {
       var touch = ('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
-      hasTouch = touch;
       var smallViewport = Math.min(window.innerWidth, window.innerHeight) < 768;
       var portrait;
       var vvWidth = window.visualViewport ? window.visualViewport.width : window.innerWidth;
@@ -1646,7 +1647,12 @@
       }
       // The iOS app never uses the desktop layout, even on a big iPad: only the mobile ones have the gallery.
       var mobile = (touch && smallViewport) || !!window.FLICKGAME_IOS_APP;
-      var next = mobile ? (portrait ? 'mobile-portrait' : 'mobile-landscape') : 'desktop';
+      return mobile ? (portrait ? 'mobile-portrait' : 'mobile-landscape') : 'desktop';
+    }
+
+    function updateLayoutMode() {
+      hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
+      var next = computeLayoutMode();
       if (next !== layoutMode) {
         var prev = layoutMode;
         layoutMode = next;
@@ -1889,9 +1895,6 @@
     var bgColorSelectOptions=[];
     var burgerBgSelectOptions=[];
     function init() {
-      if (window.FLICKGAME_IOS_APP) {
-        document.body.setAttribute('data-host', 'ios-app');
-      }
       updatePaletteRGB();
       for (var i = 0; i < 16; i++) {
         paletteContrastColors[i] = contrastTextColor(colorPalette[i]);
@@ -3842,6 +3845,12 @@
       overflow: hidden;
       display: inline-block;
     }
+    /* Nothing paints until init() has moved the canvas, palette and brush strip into the
+       chosen layout and sized them; otherwise the page shows a half-built editor first. */
+    body:not([data-ready]) #desktop-editor-wrapper,
+    body:not([data-ready]) #mobile-editor-wrapper {
+      visibility: hidden;
+    }
     /* Desktop: scale editor to fit viewport proportionally, no page scroll */
     body[data-layout="desktop"] {
       overflow: hidden;
@@ -4443,7 +4452,12 @@
   </title>
 </head>
 
-<body data-layout="desktop" onload="init();" ondragstart="return false;">
+<body data-layout="desktop" onload="try { init(); } finally { document.body.setAttribute('data-ready', 'true'); }" ondragstart="return false;">
+  <script>
+    // Runs before the editor markup exists, so the first paint already uses the right layout.
+    if (window.FLICKGAME_IOS_APP) document.body.setAttribute('data-host', 'ios-app');
+    document.body.setAttribute('data-layout', computeLayoutMode());
+  </script>
   <div id="desktop-editor-wrapper">
   <div id="desktop-editor-inner">
   <center>
