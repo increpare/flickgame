@@ -1,0 +1,4 @@
+First Android release of Flickgame.
+
+Draw pictures, link colours, and make tiny games. Includes an offline gallery,
+file import and sharing, three starter games, and an optional Supporter purchase.
