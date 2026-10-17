@@ -11,10 +11,10 @@ android {
     buildFeatures { buildConfig true }
     defaultConfig {
         applicationId 'com.increpare.flickgame'
-        minSdk 23
+        minSdk 24
         targetSdk 36
-        versionCode 1
-        versionName '1.0'
+        versionCode 3
+        versionName '1.0.1'
         buildConfigField 'String', 'PLAY_LICENSE_KEY', '"' + playLicenseKey + '"'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }

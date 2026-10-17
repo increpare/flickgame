@@ -1,7 +1,7 @@
 # Flickgame for Android
 
 Offline Android shell around the same editor, gallery and player as the web and
-[iOS app](../ios/README.md). Supports Android 6.0 (API 23) and later; targets Android
+[iOS app](../ios/README.md). Supports Android 7.0 (API 24) and later; targets Android
 16 (API 36). Phone and tablet layouts, all mobile translations and the three starter
 games are shared with iOS.
 
@@ -109,8 +109,12 @@ blocks network connections. The final app requests only `com.android.vending.BIL
 no internet, location, media or storage permissions. Network permissions introduced
 by Billing's telemetry dependencies are explicitly removed from the merged manifest.
 The optional purchase talks to the Google Play service in a separate process.
+The minimum SDK is 24 to support the app's enabled Google Play automatic protection.
 
-No account, ads, remote gallery or app analytics. See [privacy text](playstore/privacy-policy.txt).
+No account, ads, remote gallery or app analytics. The privacy policy is available
+offline in Help. Publish [the standalone HTML policy](playstore/privacy-policy.html)
+at a public URL for the Play listing; [plain text](playstore/privacy-policy.txt) is
+also provided.
 
 ## Supporter and release
 

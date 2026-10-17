@@ -21,19 +21,28 @@ developer account; they are not created or published by the local build.
    viewports. Use feature-graphic.png for the Play feature graphic. The interface
    already shares all the iOS translations.
    iOS description translations can be adapted later; they are not Android listings.
-6. Publish privacy-policy.txt at a stable public URL you control and enter that URL
+6. Publish privacy-policy.html at a stable public URL you control and enter that URL
    in Play Console. Review Data safety with the final SDK/build: the app does not
    upload work, access contacts/location, collect app analytics or run ads. Purchases
    are handled by Google's service; do not describe app-owned payment-card storage.
+   The same policy is included offline under Help > Privacy policy in Android.
+   Current public policy: https://www.flickgame.org/privacy-policy.html.
 7. Complete Play's content-rating, app-access, audience and account-verification
    forms using the established product/account decisions. This is a user-created
    drawing tool with no online user-content discovery or account requirements.
 8. Increment versionCode for later uploads. Run the verification commands, then
    submit the signed release bundle after the internal purchase tests pass.
 
-This preparation does not submit or publish the app. The locally built unsigned
-AAB demonstrates that the release compiler and R8 pipeline work; it is not a signed
-upload artifact.
+The original unsigned AAB demonstrated that the release compiler and R8 pipeline
+worked; it was not a signed upload artifact.
+
+On 14 October 2026, signed version 1.0 (version code 2, Android 7+) and all listing
+and policy changes were submitted to Google Play. Automated checks completed and
+Console confirms the changes are under review. Production targets 178 regions;
+Supporter is active in 174 regions, with USD 4.99 in the US and Google-generated
+local prices. Managed publishing is off. Keep the upload key and its password in
+the protected `C:\Users\Anwender\Documents\Flickgame-release` folder private and
+back them up. See [verification details](../VERIFICATION.md).
 
 Official references:
 - [Target API requirement](https://developer.android.com/google/play/requirements/target-sdk)

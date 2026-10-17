@@ -22,3 +22,6 @@ and unlocks no features. Restore purchase is at the bottom of Help and also happ
 automatically when the app resumes.
 
 Contact: analytic@gmail.com
+
+Privacy policy: open the editor menu, choose Help, and tap Privacy policy near the
+bottom. The full policy is included offline in the app.

@@ -121,3 +121,44 @@ AAB  359d7f27ce2e1a10048b7a5b362f8d52c2f1d8cb69170f4c91c046bed5a4a361
 
 The release AAB still needs the developer's upload keystore and Play configuration
 before submission. No Play submission or purchase/device testing was performed here.
+
+## Play submission preparation — 14 October 2026
+
+Prepared version 1.0, version code 2, minimum API 24 and target API 36. The owner
+approved raising the minimum to Android 7 after Play rejected the API 23 bundle
+because automatic protection requires API 24. Play's existing protection remains
+enabled. Version code 2 was accepted into the production release draft.
+
+The public HTML privacy policy is also embedded offline in Android Help, with a
+clickable Privacy policy link. Asset generation/bridge tests (6), Java unit tests
+(5), debug/device-test APK builds, debug lint and the R8 release build passed.
+Debug lint reported 0 errors and 8 warnings; the additional warning is a now
+redundant API-24 compatibility check after the minimum-SDK change.
+
+Created the owner-approved RSA-3072 upload key outside Git in the protected
+`C:\Users\Anwender\Documents\Flickgame-release` folder. The signed bundle passed
+`jarsigner -verify`. The app embeds its validated RSA-2048 Play licensing public key.
+The final packaged permissions remain limited to `com.android.vending.BILLING`.
+
+SHA-256 for the accepted signed AAB:
+
+```text
+4aaa455c769710033122b53d4ffb065784dd3f720337cfe6052783fd3338c510
+```
+
+The store listing was saved as ready for review. The owner approved worldwide
+availability: production targets 178 countries/regions. The Supporter product
+`com.increpare.flickgame.supporter`, purchase option `supporter`, is active in
+174 countries/regions, with USD 4.99 in the US and Google-generated local prices.
+New-region availability is enabled for the product. No real payment was made.
+
+Verified the owner-hosted policy at https://www.flickgame.org/privacy-policy.html
+in the browser, then saved the privacy URL and Data safety declaration. The final
+form declares no reportable data collection or sharing, consistent with local
+storage and the user-initiated sharing/payment-service exceptions.
+
+Submitted all 11 queued changes, including the production release, worldwide
+availability, listing and declarations. Play's automated pre-review checks finished,
+and Console confirms that the changes are now under review. No approval or public
+availability is claimed. Managed publishing is off. Play purchase, refund and restore
+flows still need validation with a Play-distributed build and license tester.
