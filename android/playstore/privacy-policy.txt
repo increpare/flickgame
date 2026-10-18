@@ -14,6 +14,7 @@ privacy policy applies to what it does with your file.
 
 Games are stored in app data. Automatic cloud backup and Android device transfer
 are disabled. Uninstalling Flickgame or clearing its app data deletes the gallery.
+You can also delete individual games from the gallery.
 Exported files remain wherever you chose to keep them. Export your games to make
 backups; temporary copies used for sharing are cleaned up on a later launch after
 24 hours.

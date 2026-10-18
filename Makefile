@@ -9,7 +9,7 @@ ios-icons:
 
 .PHONY: sync-android android-icons android-test android-debug android-release
 sync-android:
-	android/scripts/sync-web-assets.sh "$(CURDIR)" android/app/build/generated/flickgame/assets/www
+	node android/scripts/sync-web-assets.cjs "$(CURDIR)" android/app/build/generated/flickgame/assets/www
 android-icons:
 	android/scripts/generate-icons.sh
 android-test:

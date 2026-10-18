@@ -11,10 +11,10 @@ android {
     buildFeatures { buildConfig true }
     defaultConfig {
         applicationId 'com.increpare.flickgame'
-        minSdk 23
+        minSdk 24
         targetSdk 36
-        versionCode 1
-        versionName '1.0'
+        versionCode 3
+        versionName '1.0.1'
         buildConfigField 'String', 'PLAY_LICENSE_KEY', '"' + playLicenseKey + '"'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
@@ -45,7 +45,7 @@ android {
 def repoRoot = rootProject.projectDir.parentFile
 // Always regenerate: the mobile manifest, translations and examples are shared with iOS.
 def syncWebAssets = tasks.register('syncWebAssets', Exec) {
-    commandLine 'sh', new File(repoRoot, 'android/scripts/sync-web-assets.sh').absolutePath,
+    commandLine 'node', new File(repoRoot, 'android/scripts/sync-web-assets.cjs').absolutePath,
             repoRoot.absolutePath, layout.buildDirectory.dir('generated/flickgame/assets/www').get().asFile.absolutePath
 }
 tasks.named('preBuild').configure { dependsOn syncWebAssets }

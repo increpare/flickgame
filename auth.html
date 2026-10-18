@@ -68,6 +68,11 @@ xhr.onreadystatechange = function() {
 		return;
 	}
 
+	if (typeof result.access_token !== "string" || !result.access_token.trim() || result.access_token === "undefined" || result.access_token === "null") {
+		pre.innerText = "Login did not return a valid access token. Please start the login again from the editor.";
+		return;
+	}
+
 	window.localStorage.setItem("oauth_access_token", result.access_token);
 	pre.innerText = "OK! You’re all set up. You can close this window and share your game :)";
 }

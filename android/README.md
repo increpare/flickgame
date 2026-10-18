@@ -1,7 +1,7 @@
 # Flickgame for Android
 
 Offline Android shell around the same editor, gallery and player as the web and
-[iOS app](../ios/README.md). Supports Android 6.0 (API 23) and later; targets Android
+[iOS app](../ios/README.md). Supports Android 7.0 (API 24) and later; targets Android
 16 (API 36). Phone and tablet layouts, all mobile translations and the three starter
 games are shared with iOS.
 
@@ -9,6 +9,32 @@ games are shared with iOS.
 
 Open this `android/` directory in Android Studio. Install SDK Platform 36 and Build
 Tools 35.0.0. Use JDK 17 (Android Studio's bundled JDK is suitable).
+Install Node.js 18 or newer and make `node` available on `PATH`; Gradle uses it to
+generate the offline assets on Windows, macOS and Linux.
+
+### Windows (PowerShell)
+
+From the repository root:
+
+```powershell
+.\android\build.ps1 -Target All
+```
+
+This runs the asset/bridge tests, Java unit tests and lint, builds the installable
+debug APK and device-test APK, and builds the release AAB. Use `-Target Debug`
+(the default), `Release`, or `Verify` to run only that group. Device tests still
+require a connected phone or emulator and `gradlew.bat connectedDebugAndroidTest`.
+
+Set `JAVA_HOME` to your JDK and `ANDROID_HOME` to your Android SDK, or use Android
+Studio's SDK location in `android/local.properties`. The helper also detects the
+default Android Studio installation and SDK. On this checkout it can reuse the
+portable Java/SDK in ignored `android/.toolchain/`; that folder and its downloaded
+Gradle cache are local tools and are not included in the branch.
+
+You can also run `android\gradlew.bat -p android assembleDebug` directly when
+`JAVA_HOME`, the SDK location and `node` are configured.
+
+### macOS / Linux
 
 From the repository root:
 
@@ -33,9 +59,11 @@ to 8.13.2 and Play Billing to 8.3.0.
 Every build regenerates `app/build/generated/flickgame/assets/www/`. Edit source
 web files at the repository root. Do not edit or commit the generated web bundle.
 `make sync-android` refreshes it without building.
+On Windows, run
+`node android/scripts/sync-web-assets.cjs . android/app/build/generated/flickgame/assets/www`.
 
-The Android sync script runs the existing iOS offline pipeline (manifest, stripped
-network code, help, translations and starter games), then adapts generated host
+The portable Node.js sync script uses the shared iOS manifest, offline strip markers,
+help, translations and starter games, then adapts generated host
 flags and store wording for Android. It supplies Material icons and a small adapter
 for the established native message channels. The in-app player bootstrap is injected
 only when served; exported HTML never depends on Android scripts or assets.
@@ -81,8 +109,12 @@ blocks network connections. The final app requests only `com.android.vending.BIL
 no internet, location, media or storage permissions. Network permissions introduced
 by Billing's telemetry dependencies are explicitly removed from the merged manifest.
 The optional purchase talks to the Google Play service in a separate process.
+The minimum SDK is 24 to support the app's enabled Google Play automatic protection.
 
-No account, ads, remote gallery or app analytics. See [privacy text](playstore/privacy-policy.txt).
+No account, ads, remote gallery or app analytics. The privacy policy is available
+offline in Help. Publish [the standalone HTML policy](playstore/privacy-policy.html)
+at a public URL for the Play listing; [plain text](playstore/privacy-policy.txt) is
+also provided.
 
 ## Supporter and release
 
