@@ -4,7 +4,6 @@
   "Modified:": "Label before a date/time, e.g. 'Modified: 5 Oct 2026, 13:20'. Keep the colon (or the language's equivalent).",
   "Delete “{name}”? This cannot be undone.": "Confirmation question before deleting a game. {name} is the game's title; keep {name} exactly and use the language's own quotation marks around it.",
   "Untitled": "Name shown for a game that has no title.",
-  "example": "Title of the example game that comes with the app. Lower case if the language allows.",
   "Play": "Accessibility label of a button that plays a game.",
   "Edit": "Accessibility label of a button that opens a game for drawing/editing.",
   "Share": "Accessibility label of a button that sends a game file to someone.",

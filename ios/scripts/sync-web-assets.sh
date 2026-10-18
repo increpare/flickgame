@@ -40,15 +40,22 @@ if [ "$missing" -ne 0 ]; then
   exit 1
 fi
 
-# The example game that a fresh install starts with. ios/example.flickgame is an ordinary
-# exported game; only its embedded game data is shipped.
-perl -0ne '
-  if (m{__EmbedBegin__-->\s*var embeddedDat="([^"]*)"}) {
-    print "window.FLICKGAME_EXAMPLE_STATE = decodeURI(\"$1\");\n";
-  } else {
-    die "no embedded game data in example.flickgame\n";
-  }
-' "${SCRIPT_DIR}/../example.flickgame" > "$DEST_WWW/example_game.js"
+# The example games that a fresh install starts with, in gallery order. Each
+# ios/examples/<name>.flickgame is an ordinary exported game; only its embedded game data
+# is shipped, and the file name is its title.
+{
+  echo 'window.FLICKGAME_EXAMPLES = ['
+  for name in icecream heart cat; do
+    NAME="$name" perl -0ne '
+      if (m{__EmbedBegin__-->\s*var embeddedDat="([^"]*)"}) {
+        print "{ title: \"$ENV{NAME}\", state: decodeURI(\"$1\") },\n";
+      } else {
+        die "no embedded game data in $ENV{NAME}.flickgame\n";
+      }
+    ' < "${SCRIPT_DIR}/../examples/${name}.flickgame"
+  done
+  echo '];'
+} > "$DEST_WWW/example_game.js"
 
 # Translations: one JSON file per language in ios/i18n, keyed by the English text.
 {

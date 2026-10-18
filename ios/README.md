@@ -56,4 +56,4 @@ The app's interface and help are translated; the website is English only.
 - Help opens as an overlay inside the editor (`ios_editor_menu.js`) so unsaved work is not lost.
 - The app has its own help page, `ios/help/help.html` (pictures and GIFs made from simulator screenshots), shipped as `help.html`. The website's `help.html` is not bundled.
 - `FlickgamePreview` is a Quick Look extension: it shows a game's first picture when a `.flickgame` file is previewed (the screen AirDrop shows on receipt). The app writes that picture into the file on export as a `<!--flickgame-preview:…-->` comment; files without it have no preview.
-- A fresh install starts with one game in the gallery, taken from `ios/example.flickgame`. Replace that file with any exported game to change it.
+- A fresh install starts with three games in the gallery, taken from `ios/examples/`. Each is an ordinary exported game whose file name is its title; `sync-web-assets.sh` lists which ones ship and in what order.

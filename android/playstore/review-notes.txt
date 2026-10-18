@@ -1,0 +1,24 @@
+Flickgame is a drawing tool for making simple picture-based games. A game is 16
+pictures; a colour in one picture can lead to another picture.
+
+No sign-in is needed. All games stay on the device. There is no in-app online gallery,
+no uploads, no ads and no app analytics. Only the optional Google Play purchase
+uses Google's purchase service; WebView traffic is blocked outside bundled assets.
+
+On first launch the gallery includes icecream, heart and cat. Tap a play triangle to
+play, or the paintbrush to edit. In the player, drag to move the pointer and tap to
+press; a hand means that spot links to another picture. In the editor, draw with a
+finger and tap a colour twice to choose which picture it leads to. The grid button
+switches between the 16 pictures. The menu contains Save, Help and Back to Gallery.
+
+The folder button opens Android's document picker. Games are exported through the
+Android share sheet as .flickgame files. They are compatible with Flickgame on iOS;
+renaming to .html makes a standalone game for a browser. Opening/sharing one from
+another app imports it and opens the player. No broad storage permission is needed.
+
+Supporter (com.increpare.flickgame.supporter) is an optional one-time non-consumable.
+Tap the smiley at the top left of the gallery to buy it. It changes only the smiley
+and unlocks no features. Restore purchase is at the bottom of Help and also happens
+automatically when the app resumes.
+
+Contact: analytic@gmail.com
