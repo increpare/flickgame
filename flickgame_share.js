@@ -143,7 +143,8 @@
     var onUnauthorized = callbacks.onUnauthorized || onError;
 
     var token = window.localStorage.getItem('oauth_access_token');
-    if (typeof token !== 'string') {
+    if (typeof token !== 'string' || !token.trim() || token === 'undefined' || token === 'null') {
+      window.localStorage.removeItem('oauth_access_token');
       onUnauthorized();
       return;
     }
@@ -172,7 +173,8 @@
         return;
       }
       if (req.status !== 200 && req.status !== 201) {
-        if (req.statusText === 'Unauthorized') {
+        // HTTP/2 has no reason phrase, so statusText may be empty even for a 401.
+        if (req.status === 401) {
           window.localStorage.removeItem('oauth_access_token');
           onUnauthorized();
         } else {
