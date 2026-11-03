@@ -42,6 +42,8 @@
 
   function buildStandaloneHtmlString(stateString) {
     return getPlayTemplate().then(function (template) {
+      // Standalone downloads have no editor route for their embedded game.
+      template = template.replace(/<a\b[^>]*\bid="hackLink"[^>]*>[\s\S]*?<\/a>/g, '');
       var encodedState = encodeURI(stateString);
       var html = template.split('__EMBED__').join(encodedState);
       return '<!--Save as html file-->\n ' + html;
