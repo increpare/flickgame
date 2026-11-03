@@ -130,6 +130,30 @@ test('mobile page icon previews the active group of 16 Big pages', () => {
   assert.equal(previews.get('mobile-grid-thumb-15'), 'page-128');
 });
 
+test('mobile page icon keeps the active border within its 16-page group', () => {
+  const { context } = editor();
+  const position = {};
+  const border = { setAttribute: (name, value) => { position[name] = value; } };
+  const cells = Array.from({ length: 16 }, () => ({
+    classList: { add() {}, remove() {} }
+  }));
+  context.document.getElementById = id => {
+    if (id === 'mobile-grid-icon') return {};
+    if (id === 'mobile-grid-active-border') return border;
+    if (id === 'mobile-frame-btn') return { setAttribute() {} };
+    const match = /^grid-cell-(\d+)$/.exec(id);
+    return match ? cells[Number(match[1])] : null;
+  };
+  context.isCanvasEmpty = () => false;
+  context.canvasIndex = 16;
+  context.updateGridIconHighlight();
+  assert.equal(position.y, 0.25);
+  context.canvasIndex = 127;
+  context.updateGridIconHighlight();
+  assert.equal(position.x, 12.25);
+  assert.equal(position.y, 12.25);
+});
+
 test('modern player renders every page of a Big game', () => {
   const html = fs.readFileSync(path.join(root, 'play.html'), 'utf8');
   const renderImages = extractFunction(html, 'renderImages');

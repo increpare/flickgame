@@ -1508,7 +1508,8 @@
       }
       var activeBorder = document.getElementById('mobile-grid-active-border');
       if (activeBorder) {
-        var col = canvasIndex % 4, row = Math.floor(canvasIndex / 4);
+        var bankIndex = canvasIndex - bankStart;
+        var col = bankIndex % 4, row = Math.floor(bankIndex / 4);
         activeBorder.setAttribute('x', 0.25 + col * 4);
         activeBorder.setAttribute('y', 0.25 + row * 4);
         activeBorder.setAttribute('width', 3.5);
@@ -3331,6 +3332,8 @@
       width: 80px;
       padding-left: 0;
       margin: 0;
+      box-sizing: border-box;
+      border: 1px solid white;
     }
 
     input {
