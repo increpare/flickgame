@@ -213,6 +213,15 @@
     opts = opts || {};
     return window.FlickGalleryStore.getProject(id).then(function (full) {
       if (!full || typeof full.state !== 'string') throw new Error('Missing project data');
+      var savedGame = JSON.parse(full.state);
+      var savedPages = savedGame && Array.isArray(savedGame.canvasses) ? savedGame.canvasses.length : 0;
+      var editorPages = typeof FRAME_COUNT === 'number' ? FRAME_COUNT : 16;
+      if (savedPages > editorPages) {
+        if (isIosApp()) throw new Error('Big Flickgames can only be edited on the website.');
+        if (savedPages > 128) throw new Error('This Flickgame has more pages than the editor supports.');
+        window.location.href = 'index_big.html?id=' + encodeURIComponent(full.id);
+        return full;
+      }
       loadProjectStateString(full.state);
       setCurrentProjectIdentity(full.id, full.state);
       if (opts.closeGallery && typeof closeGallery === 'function') closeGallery();

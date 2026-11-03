@@ -522,7 +522,14 @@ function updateFooterLinks() {
     if (hacklink) {
         var hackText = hacklink.querySelector('.label-text');
         if (hackText) hackText.innerHTML = t("edit_link_label_html");
-        hacklink.style.display = '';
+        if (gameState && (gameState.originalPageCount > 128 ||
+            (isIosAppHost() && gameState.canvasses && gameState.canvasses.length > 16))) {
+            // Native bundles omit Big, and neither editor can preserve over-cap projects.
+            hacklink.style.display = 'none';
+            hacklink.removeAttribute('href');
+        } else {
+            hacklink.style.display = '';
+        }
     }
 
     if (!homepageLink) return;
@@ -1386,7 +1393,13 @@ function loadState(code) {
   // Normalize untrusted/corrupt state so a malformed shared game can't crash rendering or interaction.
   if (!Array.isArray(gameState.canvasses)) gameState.canvasses = [];
   if (!Array.isArray(gameState.hyperlinks)) gameState.hyperlinks = [];
-  for (var _ni = 0; _ni < 16; _ni++) {
+  gameState.originalPageCount = gameState.canvasses.length;
+  if (gameState.canvasses.length > 128) gameState.canvasses.length = 128;
+  while (gameState.canvasses.length < 16) {
+    gameState.canvasses.push([gameState.width * gameState.height, "0"]);
+  }
+  gameState.hyperlinks.length = gameState.canvasses.length;
+  for (var _ni = 0; _ni < gameState.canvasses.length; _ni++) {
     if (!Array.isArray(gameState.hyperlinks[_ni])) gameState.hyperlinks[_ni] = new Array(16).fill(0);
   }
 
@@ -2737,13 +2750,14 @@ function get_page_data() {
 
             var hacklink = document.getElementById("hackLink");
             if (hacklink) {
+                var editorPath = gameState.canvasses.length > 16 ? "index_big.html" : "index.html";
                 if (isLocalTestMode()) {
-                    hacklink.href = qualifyURL("index.html?test");
+                    hacklink.href = qualifyURL(editorPath + "?test");
                 } else if (getParameterByName("id")) {
-                    hacklink.href = qualifyURL("index.html?id=" + getParameterByName("id"));
+                    hacklink.href = qualifyURL(editorPath + "?id=" + getParameterByName("id"));
                 } else {
                     var id = getParameterByName("p").replace(/[\\\/]/g, "");
-                    hacklink.href = qualifyURL("index.html?p=" + id);
+                    hacklink.href = qualifyURL(editorPath + "?p=" + id);
                 }
                 var hackText2 = hacklink.querySelector('.label-text');
                 if (hackText2) hackText2.innerHTML = t("edit_link_label_html");
@@ -2962,8 +2976,10 @@ function printCanvas(descriptionString, reuseCanvas){
 
 function renderImages(){
   gameState.imageDats = new Array();
+  images.length = 0;
+  imageCtxts.length = 0;
 
-  for (var i=0;i<16;i++){
+  for (var i=0;i<gameState.canvasses.length;i++){
     var descriptionArray = gameState.canvasses[i];
     if (!Array.isArray(descriptionArray)) descriptionArray = [getGameWidth() * getGameHeight(), "0"];
     var descriptionString = RLE_decode(descriptionArray, getGameWidth() * getGameHeight());

@@ -100,6 +100,18 @@
     window.location.href = url;
   }
 
+  function editorPageForState(state) {
+    try {
+      var game = JSON.parse(state);
+      if (game && Array.isArray(game.canvasses) && game.canvasses.length > 16) {
+        if (game.canvasses.length > 128) return null;
+        // Native bundles contain only the standard editor.
+        return isIosApp() ? null : 'index_big.html';
+      }
+    } catch (e) {}
+    return 'index.html';
+  }
+
   function decodeRleCanvas(rle, pixelCount) {
     var out = new Uint8Array(pixelCount);
     var index = 0;
@@ -339,7 +351,12 @@
       e.preventDefault();
       e.stopPropagation();
       if (isBusy(project.id)) return;
-      navigate('index.html?id=' + encodeURIComponent(project.id));
+      var editorPage = editorPageForState(project.state);
+      if (!editorPage) {
+        showToast(T('Big Flickgames can only be edited on the website.'));
+        return;
+      }
+      navigate(editorPage + '?id=' + encodeURIComponent(project.id));
     });
 
     var shareBtn = el('button', { type: 'button', class: 'gallery-ibtn', 'data-icon': 'share', 'aria-label': T('Share') });
@@ -406,6 +423,9 @@
     } catch (err) {
       showToast(err && err.message ? err.message : T('Failed to import'));
       return;
+    }
+    if (page === 'index.html' && typeof editorPageForState === 'function') {
+      page = editorPageForState(state) || 'play.html';
     }
     window.FlickGalleryStore.listProjects().then(function (items) {
       var baseName = (fileName || 'imported').replace(/\.[^.]+$/, '');
